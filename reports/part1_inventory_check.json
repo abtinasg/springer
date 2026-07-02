@@ -1,0 +1,176 @@
+{
+  "files": [
+    {
+      "path": "README.md",
+      "exists": true,
+      "expected_size": 2823,
+      "actual_size": 2823,
+      "expected_sha256_16": "17e22fcc709f8b66",
+      "actual_sha256_16": "17e22fcc709f8b66",
+      "status": "pass"
+    },
+    {
+      "path": "data/raw/cm1.csv",
+      "exists": true,
+      "expected_size": 41410,
+      "actual_size": 41410,
+      "expected_sha256_16": "c05e4834217c7b0a",
+      "actual_sha256_16": "c05e4834217c7b0a",
+      "status": "pass"
+    },
+    {
+      "path": "data/raw/jm1.csv",
+      "exists": true,
+      "expected_size": 1039663,
+      "actual_size": 1039663,
+      "expected_sha256_16": "013cb035b07f176e",
+      "actual_sha256_16": "013cb035b07f176e",
+      "status": "pass"
+    },
+    {
+      "path": "data/raw/kc1.csv",
+      "exists": true,
+      "expected_size": 153640,
+      "actual_size": 153640,
+      "expected_sha256_16": "bdc2221d5490243b",
+      "actual_sha256_16": "bdc2221d5490243b",
+      "status": "pass"
+    },
+    {
+      "path": "data/raw/kc2.csv",
+      "exists": true,
+      "expected_size": 38782,
+      "actual_size": 38782,
+      "expected_sha256_16": "fedb0f8b4e131dad",
+      "actual_sha256_16": "fedb0f8b4e131dad",
+      "status": "pass"
+    },
+    {
+      "path": "data/raw/pc1.csv",
+      "exists": true,
+      "expected_size": 91139,
+      "actual_size": 91139,
+      "expected_sha256_16": "9331ea04c83dfbcb",
+      "actual_sha256_16": "9331ea04c83dfbcb",
+      "status": "pass"
+    },
+    {
+      "path": "docs/reproducibility_table_S1.docx",
+      "exists": true,
+      "expected_size": 39204,
+      "actual_size": 39204,
+      "expected_sha256_16": "fceb8c237eefc9bb",
+      "actual_sha256_16": "fceb8c237eefc9bb",
+      "status": "pass"
+    },
+    {
+      "path": "requirements.txt",
+      "exists": true,
+      "expected_size": 35,
+      "actual_size": 35,
+      "expected_sha256_16": "830704621b5125a3",
+      "actual_sha256_16": "830704621b5125a3",
+      "status": "pass"
+    },
+    {
+      "path": "results/dataset_profile.csv",
+      "exists": true,
+      "expected_size": 225,
+      "actual_size": 225,
+      "expected_sha256_16": "486b6c38749a8d0a",
+      "actual_sha256_16": "486b6c38749a8d0a",
+      "status": "pass"
+    },
+    {
+      "path": "results/decision_metadata.json",
+      "exists": true,
+      "expected_size": 588,
+      "actual_size": 588,
+      "expected_sha256_16": "59ff603a5cf00ba9",
+      "actual_sha256_16": "59ff603a5cf00ba9",
+      "status": "pass"
+    },
+    {
+      "path": "results/repeated_all_results.csv",
+      "exists": true,
+      "expected_size": 141581,
+      "actual_size": 141581,
+      "expected_sha256_16": "7c7a0d3323c69c32",
+      "actual_sha256_16": "7c7a0d3323c69c32",
+      "status": "pass"
+    },
+    {
+      "path": "results/repeated_results_workbook.xlsx",
+      "exists": true,
+      "expected_size": 157764,
+      "actual_size": 157764,
+      "expected_sha256_16": "11c95d39a0a5e7e0",
+      "actual_sha256_16": "11c95d39a0a5e7e0",
+      "status": "pass"
+    },
+    {
+      "path": "results/repeated_summary_mean_std.csv",
+      "exists": true,
+      "expected_size": 11252,
+      "actual_size": 11252,
+      "expected_sha256_16": "8259b264f57ac70a",
+      "actual_sha256_16": "8259b264f57ac70a",
+      "status": "pass"
+    },
+    {
+      "path": "results/table_cross_project_mean_sd.csv",
+      "exists": true,
+      "expected_size": 771,
+      "actual_size": 771,
+      "expected_sha256_16": "b2f398d8abe784a5",
+      "actual_sha256_16": "b2f398d8abe784a5",
+      "status": "pass"
+    },
+    {
+      "path": "results/table_soft_top3_delta_vs_best_baseline.csv",
+      "exists": true,
+      "expected_size": 1425,
+      "actual_size": 1425,
+      "expected_sha256_16": "13f193e8cd47394e",
+      "actual_sha256_16": "13f193e8cd47394e",
+      "status": "pass"
+    },
+    {
+      "path": "results/table_within_project_mean_sd.csv",
+      "exists": true,
+      "expected_size": 771,
+      "actual_size": 771,
+      "expected_sha256_16": "93bf162b5abfc7b0",
+      "actual_sha256_16": "93bf162b5abfc7b0",
+      "status": "pass"
+    },
+    {
+      "path": "results/validation_log.csv",
+      "exists": true,
+      "expected_size": 187869,
+      "actual_size": 187869,
+      "expected_sha256_16": "a8c8a63669bd9e8c",
+      "actual_sha256_16": "a8c8a63669bd9e8c",
+      "status": "pass"
+    },
+    {
+      "path": "scripts/make_manuscript_tables.py",
+      "exists": true,
+      "expected_size": 3729,
+      "actual_size": 3729,
+      "expected_sha256_16": "152f4568025420bf",
+      "actual_sha256_16": "152f4568025420bf",
+      "status": "pass"
+    },
+    {
+      "path": "scripts/run_repeated_evaluation.py",
+      "exists": true,
+      "expected_size": 20118,
+      "actual_size": 20118,
+      "expected_sha256_16": "c517be98c9906ce0",
+      "actual_sha256_16": "c517be98c9906ce0",
+      "status": "pass"
+    }
+  ],
+  "overall_status": "pass"
+}
