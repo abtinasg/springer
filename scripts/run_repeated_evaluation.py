@@ -444,10 +444,10 @@ def write_outputs(projects: dict, allres: pd.DataFrame, vallog: pd.DataFrame, ou
     vallog.to_csv(out_dir / "validation_log.csv", index=False)
     summary.to_csv(out_dir / "repeated_summary_mean_std.csv", index=False)
     with pd.ExcelWriter(out_dir / "repeated_results_workbook.xlsx") as writer:
-        profile_df.to_excel(writer, "Dataset_Profile", index=False)
-        allres.to_excel(writer, "All_Results", index=False)
-        summary.to_excel(writer, "Summary_Mean_SD", index=False)
-        vallog.to_excel(writer, "Validation_Log", index=False)
+        profile_df.to_excel(writer, sheet_name="Dataset_Profile", index=False)
+        allres.to_excel(writer, sheet_name="All_Results", index=False)
+        summary.to_excel(writer, sheet_name="Summary_Mean_SD", index=False)
+        vallog.to_excel(writer, sheet_name="Validation_Log", index=False)
 
     decision = {
         "stage": "Stage-43 clean supplementary reproduction script",
