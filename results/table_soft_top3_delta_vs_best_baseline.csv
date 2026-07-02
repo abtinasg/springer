@@ -1,0 +1,17 @@
+Setting,Metric,Direction,Soft-top-3 mean,Best baseline,Best baseline mean,Delta,AQRPE outcome
+cross_project,mcc,higher is better,0.293463,LR-C0.1,0.28687,0.006592,better
+cross_project,avg_precision,higher is better,0.359273,LR-C1,0.356339,0.002934,better
+cross_project,f1,higher is better,0.393335,LR-C0.1,0.387321,0.006014,better
+cross_project,balanced_accuracy,higher is better,0.685915,LR-C1,0.674898,0.011017,better
+cross_project,precision_at_10pct,higher is better,0.400087,ET-L5,0.414298,-0.014211,worse
+cross_project,recall_at_10pct,higher is better,0.283987,ET-L5,0.304315,-0.020328,worse
+cross_project,lift_at_10pct,higher is better,2.825839,ET-L5,3.028701,-0.202862,worse
+cross_project,brier,lower is better,0.181151,ET-L5,0.162478,0.018673,worse
+within_project,mcc,higher is better,0.340068,LR-C0.1,0.31835,0.021718,better
+within_project,avg_precision,higher is better,0.440253,ET-L5,0.421389,0.018864,better
+within_project,f1,higher is better,0.424034,ET-L5,0.406668,0.017366,better
+within_project,balanced_accuracy,higher is better,0.694637,LR-C1,0.689859,0.004777,better
+within_project,precision_at_10pct,higher is better,0.458026,LR-C1,0.455959,0.002067,better
+within_project,recall_at_10pct,higher is better,0.361307,ET-L5,0.345597,0.01571,better
+within_project,lift_at_10pct,higher is better,3.527434,ET-L5,3.368219,0.159215,better
+within_project,brier,lower is better,0.148333,DT-L5,0.134191,0.014142,worse

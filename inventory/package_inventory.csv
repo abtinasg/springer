@@ -1,0 +1,21 @@
+path,size_bytes,sha256_16,purpose
+README.md,2823,17e22fcc709f8b66,Package overview and reproduction instructions
+data/raw/cm1.csv,41410,c05e4834217c7b0a,Raw public dataset CSV
+data/raw/jm1.csv,1039663,013cb035b07f176e,Raw public dataset CSV
+data/raw/kc1.csv,153640,bdc2221d5490243b,Raw public dataset CSV
+data/raw/kc2.csv,38782,fedb0f8b4e131dad,Raw public dataset CSV
+data/raw/pc1.csv,91139,9331ea04c83dfbcb,Raw public dataset CSV
+docs/reproducibility_table_S1.docx,39204,fceb8c237eefc9bb,Supplementary reproducibility protocol table; patched to report 20 common predictors
+requirements.txt,35,830704621b5125a3,Python dependency list
+results/dataset_profile.csv,225,486b6c38749a8d0a,Dataset profile produced by the pipeline after common-schema standardization
+results/decision_metadata.json,588,59ff603a5cf00ba9,Machine-readable reproduction metadata
+results/repeated_all_results.csv,141581,7c7a0d3323c69c32,Row-level repeated evaluation results from zero-run verification
+results/repeated_results_workbook.xlsx,157764,11c95d39a0a5e7e0,Workbook copy of repeated results and summary outputs
+results/repeated_summary_mean_std.csv,11252,8259b264f57ac70a,Mean/SD summary used for manuscript tables
+results/table_cross_project_mean_sd.csv,771,b2f398d8abe784a5,Generated manuscript table source from zero-run verification
+results/table_soft_top3_delta_vs_best_baseline.csv,1425,13f193e8cd47394e,Generated manuscript table source from zero-run verification
+results/table_within_project_mean_sd.csv,771,93bf162b5abfc7b0,Generated manuscript table source from zero-run verification
+results/validation_log.csv,187869,a8c8a63669bd9e8c,Validation-stage candidate/threshold/objective log
+scripts/make_manuscript_tables.py,3729,152f4568025420bf,Reproduction script used for this manuscript version
+scripts/run_repeated_evaluation.py,20118,c517be98c9906ce0,Reproduction script used for this manuscript version
+inventory/package_inventory.csv,self-reference,not_used,Self-reference; checksum and size are not used because the file changes when regenerated.
