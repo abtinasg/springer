@@ -18,5 +18,5 @@
 - Fri Jul  3 00:25:20 +0330 2026
 
 ## Virtual Environment
-- Python path: /Users/aliehpourdast/Desktop/springer/springer/.venv/bin/python
+- Python path: .venv/bin/python
 - pip check: No broken requirements found.
