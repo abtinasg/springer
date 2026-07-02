@@ -1,0 +1,25 @@
+{
+  "stage": "Stage-43 clean supplementary reproduction script",
+  "seeds": [
+    7,
+    13,
+    29,
+    42,
+    101
+  ],
+  "candidate_pool": [
+    "LR_std_C0.1",
+    "LR_std_C1",
+    "DT_leaf5",
+    "ET_leaf5"
+  ],
+  "aqrpe_variants": [
+    "AQRPE_v2_balanced",
+    "AQRPE_v2_rank",
+    "AQRPE_v2_mcc",
+    "AQRPE_v2_soft_top3"
+  ],
+  "threshold_grid": "unique(concat(linspace(0.03, 0.97, 41), quantile(validation_scores, linspace(0.03, 0.97, 25))))",
+  "integrity_control": "Training fits models; validation selects candidates/thresholds/soft-top-3; test is final evaluation only.",
+  "rows": 64
+}
