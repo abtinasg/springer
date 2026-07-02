@@ -1,0 +1,3 @@
+project,n_rows,n_features,defective,defect_rate
+CM1,80,20,30,0.375
+JM1,80,20,30,0.375
