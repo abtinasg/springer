@@ -4,7 +4,7 @@
 - Darwin 25.2.0
 
 ## Python Version
-- Python 3.14.0
+- Python 3.13.5
 
 ## Python Packages
 - NumPy: 2.5.0
@@ -16,3 +16,7 @@
 
 ## Execution Date
 - Fri Jul  3 00:25:20 +0330 2026
+
+## Virtual Environment
+- Python path: /Users/aliehpourdast/Desktop/springer/springer/.venv/bin/python
+- pip check: No broken requirements found.
