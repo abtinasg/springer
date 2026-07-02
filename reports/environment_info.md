@@ -12,6 +12,7 @@
 - scikit-learn: 1.9.0
 - SciPy: 1.18.0
 - OpenPyXL: 3.1.5
+- numexpr: 2.10.2
 
 ## Execution Date
-- Thu Jul  2 19:38:08 +0330 2026
+- Fri Jul  3 00:25:20 +0330 2026
