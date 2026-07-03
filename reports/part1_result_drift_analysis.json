@@ -1,32 +1,96 @@
 {
   "summary": {
     "total_combinations": 16,
-    "best_overall_identity_changes": [
+    "best_overall_winner_set_changes": [
       {
         "setting": "cross_project",
         "metric": "brier",
-        "reference_best": "AQRPE_v2_balanced",
-        "locked_best": "AQRPE_v2_mcc"
+        "reference_best_models": [
+          "AQRPE_v2_balanced",
+          "AQRPE_v2_mcc",
+          "AQRPE_v2_rank",
+          "ET_leaf5"
+        ],
+        "locked_best_models": [
+          "AQRPE_v2_mcc",
+          "AQRPE_v2_rank",
+          "ET_leaf5"
+        ],
+        "winner_sets_overlap": true,
+        "disjoint_winner_change": false
       }
     ],
-    "best_baseline_identity_changes": [
+    "best_overall_disjoint_winner_changes": [],
+    "best_baseline_winner_set_changes": [
       {
         "setting": "within_project",
         "metric": "mcc",
-        "reference_best": "LR_std_C0.1",
-        "locked_best": "ET_leaf5"
+        "reference_best_models": [
+          "LR_std_C0.1"
+        ],
+        "locked_best_models": [
+          "ET_leaf5"
+        ],
+        "winner_sets_overlap": false,
+        "disjoint_winner_change": true
+      },
+      {
+        "setting": "within_project",
+        "metric": "recall_at_10pct",
+        "reference_best_models": [
+          "ET_leaf5"
+        ],
+        "locked_best_models": [
+          "LR_std_C1",
+          "ET_leaf5"
+        ],
+        "winner_sets_overlap": true,
+        "disjoint_winner_change": false
       },
       {
         "setting": "within_project",
         "metric": "lift_at_10pct",
-        "reference_best": "ET_leaf5",
-        "locked_best": "LR_std_C1"
+        "reference_best_models": [
+          "ET_leaf5"
+        ],
+        "locked_best_models": [
+          "LR_std_C1"
+        ],
+        "winner_sets_overlap": false,
+        "disjoint_winner_change": true
+      }
+    ],
+    "best_baseline_disjoint_winner_changes": [
+      {
+        "setting": "within_project",
+        "metric": "mcc",
+        "reference_best_models": [
+          "LR_std_C0.1"
+        ],
+        "locked_best_models": [
+          "ET_leaf5"
+        ]
+      },
+      {
+        "setting": "within_project",
+        "metric": "lift_at_10pct",
+        "reference_best_models": [
+          "ET_leaf5"
+        ],
+        "locked_best_models": [
+          "LR_std_C1"
+        ]
       }
     ],
     "soft_top3_outcome_changes": [],
-    "combinations_with_any_rank_change": 6,
-    "min_spearman_correlation": 0.8571428571428572,
-    "max_absolute_mean_value_change": 0.11153603962595415
+    "combinations_with_any_tie_aware_rank_change": 9,
+    "min_tie_aware_spearman_correlation": 0.9036144578313252,
+    "max_absolute_mean_value_change": 0.11153603962595415,
+    "max_absolute_mean_value_change_location": {
+      "setting": "within_project",
+      "metric": "lift_at_10pct",
+      "model": "DT_leaf5"
+    }
   },
   "detailed_results": [
     {
@@ -34,25 +98,37 @@
       "metric": "mcc",
       "best_overall": {
         "reference": {
-          "model": "AQRPE_v2_rank",
+          "models": [
+            "AQRPE_v2_rank"
+          ],
           "value": 0.3559217508392053
         },
         "locked": {
-          "model": "AQRPE_v2_rank",
+          "models": [
+            "AQRPE_v2_rank"
+          ],
           "value": 0.3547453365643457
         },
-        "identity_changed": false
+        "winner_set_changed": false,
+        "winner_sets_overlap": true,
+        "disjoint_winner_change": false
       },
       "best_baseline": {
         "reference": {
-          "model": "LR_std_C0.1",
+          "models": [
+            "LR_std_C0.1"
+          ],
           "value": 0.3183500176382744
         },
         "locked": {
-          "model": "ET_leaf5",
+          "models": [
+            "ET_leaf5"
+          ],
           "value": 0.3204405476563132
         },
-        "identity_changed": true
+        "winner_set_changed": true,
+        "winner_sets_overlap": false,
+        "disjoint_winner_change": true
       },
       "soft_top3": {
         "reference_value": 0.3400683989058126,
@@ -63,71 +139,71 @@
       },
       "ranks": {
         "reference": {
-          "AQRPE_v2_rank": 1,
-          "AQRPE_v2_soft_top3": 2,
-          "LR_std_C0.1": 3,
-          "ET_leaf5": 4,
-          "AQRPE_v2_mcc": 5,
-          "LR_std_C1": 6,
-          "AQRPE_v2_balanced": 7,
-          "DT_leaf5": 8
+          "AQRPE_v2_rank": 1.0,
+          "AQRPE_v2_soft_top3": 2.0,
+          "LR_std_C0.1": 3.0,
+          "ET_leaf5": 4.0,
+          "AQRPE_v2_mcc": 5.0,
+          "LR_std_C1": 6.0,
+          "AQRPE_v2_balanced": 7.0,
+          "DT_leaf5": 8.0
         },
         "locked": {
-          "AQRPE_v2_rank": 1,
-          "AQRPE_v2_soft_top3": 2,
-          "ET_leaf5": 3,
-          "LR_std_C0.1": 4,
-          "AQRPE_v2_mcc": 5,
-          "AQRPE_v2_balanced": 6,
-          "LR_std_C1": 7,
-          "DT_leaf5": 8
+          "AQRPE_v2_rank": 1.0,
+          "AQRPE_v2_soft_top3": 2.0,
+          "ET_leaf5": 3.0,
+          "LR_std_C0.1": 4.0,
+          "AQRPE_v2_mcc": 5.0,
+          "AQRPE_v2_balanced": 6.0,
+          "LR_std_C1": 7.0,
+          "DT_leaf5": 8.0
         },
         "models_with_changed_rank": 4,
-        "max_rank_change": 1,
+        "max_rank_change": 1.0,
         "rank_changes_detail": {
           "AQRPE_v2_balanced": {
-            "reference_rank": 7,
-            "locked_rank": 6,
-            "change": 1
+            "reference_rank": 7.0,
+            "locked_rank": 6.0,
+            "change": 1.0
           },
           "AQRPE_v2_mcc": {
-            "reference_rank": 5,
-            "locked_rank": 5,
-            "change": 0
+            "reference_rank": 5.0,
+            "locked_rank": 5.0,
+            "change": 0.0
           },
           "AQRPE_v2_rank": {
-            "reference_rank": 1,
-            "locked_rank": 1,
-            "change": 0
+            "reference_rank": 1.0,
+            "locked_rank": 1.0,
+            "change": 0.0
           },
           "AQRPE_v2_soft_top3": {
-            "reference_rank": 2,
-            "locked_rank": 2,
-            "change": 0
+            "reference_rank": 2.0,
+            "locked_rank": 2.0,
+            "change": 0.0
           },
           "DT_leaf5": {
-            "reference_rank": 8,
-            "locked_rank": 8,
-            "change": 0
+            "reference_rank": 8.0,
+            "locked_rank": 8.0,
+            "change": 0.0
           },
           "ET_leaf5": {
-            "reference_rank": 4,
-            "locked_rank": 3,
-            "change": 1
+            "reference_rank": 4.0,
+            "locked_rank": 3.0,
+            "change": 1.0
           },
           "LR_std_C0.1": {
-            "reference_rank": 3,
-            "locked_rank": 4,
-            "change": 1
+            "reference_rank": 3.0,
+            "locked_rank": 4.0,
+            "change": 1.0
           },
           "LR_std_C1": {
-            "reference_rank": 6,
-            "locked_rank": 7,
-            "change": 1
+            "reference_rank": 6.0,
+            "locked_rank": 7.0,
+            "change": 1.0
           }
         }
       },
-      "spearman_correlation": 0.9523809523809524,
+      "tie_aware_spearman_correlation": 0.9523809523809524,
       "max_absolute_mean_value_change": 0.006168699192276916
     },
     {
@@ -135,25 +211,37 @@
       "metric": "avg_precision",
       "best_overall": {
         "reference": {
-          "model": "AQRPE_v2_rank",
+          "models": [
+            "AQRPE_v2_rank"
+          ],
           "value": 0.4555528901382356
         },
         "locked": {
-          "model": "AQRPE_v2_rank",
+          "models": [
+            "AQRPE_v2_rank"
+          ],
           "value": 0.4542303095506402
         },
-        "identity_changed": false
+        "winner_set_changed": false,
+        "winner_sets_overlap": true,
+        "disjoint_winner_change": false
       },
       "best_baseline": {
         "reference": {
-          "model": "ET_leaf5",
+          "models": [
+            "ET_leaf5"
+          ],
           "value": 0.4213886549852915
         },
         "locked": {
-          "model": "ET_leaf5",
+          "models": [
+            "ET_leaf5"
+          ],
           "value": 0.4202930999421929
         },
-        "identity_changed": false
+        "winner_set_changed": false,
+        "winner_sets_overlap": true,
+        "disjoint_winner_change": false
       },
       "soft_top3": {
         "reference_value": 0.4402526533263654,
@@ -164,71 +252,71 @@
       },
       "ranks": {
         "reference": {
-          "AQRPE_v2_rank": 1,
-          "AQRPE_v2_soft_top3": 2,
-          "ET_leaf5": 3,
-          "LR_std_C0.1": 4,
-          "LR_std_C1": 5,
-          "AQRPE_v2_balanced": 6,
-          "AQRPE_v2_mcc": 7,
-          "DT_leaf5": 8
+          "AQRPE_v2_rank": 1.0,
+          "AQRPE_v2_soft_top3": 2.0,
+          "ET_leaf5": 3.0,
+          "LR_std_C0.1": 4.0,
+          "LR_std_C1": 5.0,
+          "AQRPE_v2_balanced": 6.5,
+          "AQRPE_v2_mcc": 6.5,
+          "DT_leaf5": 8.0
         },
         "locked": {
-          "AQRPE_v2_rank": 1,
-          "AQRPE_v2_soft_top3": 2,
-          "ET_leaf5": 3,
-          "LR_std_C0.1": 4,
-          "LR_std_C1": 5,
-          "AQRPE_v2_balanced": 6,
-          "AQRPE_v2_mcc": 7,
-          "DT_leaf5": 8
+          "AQRPE_v2_rank": 1.0,
+          "AQRPE_v2_soft_top3": 2.0,
+          "ET_leaf5": 3.0,
+          "LR_std_C0.1": 4.0,
+          "LR_std_C1": 5.0,
+          "AQRPE_v2_balanced": 6.5,
+          "AQRPE_v2_mcc": 6.5,
+          "DT_leaf5": 8.0
         },
         "models_with_changed_rank": 0,
-        "max_rank_change": 0,
+        "max_rank_change": 0.0,
         "rank_changes_detail": {
           "AQRPE_v2_balanced": {
-            "reference_rank": 6,
-            "locked_rank": 6,
-            "change": 0
+            "reference_rank": 6.5,
+            "locked_rank": 6.5,
+            "change": 0.0
           },
           "AQRPE_v2_mcc": {
-            "reference_rank": 7,
-            "locked_rank": 7,
-            "change": 0
+            "reference_rank": 6.5,
+            "locked_rank": 6.5,
+            "change": 0.0
           },
           "AQRPE_v2_rank": {
-            "reference_rank": 1,
-            "locked_rank": 1,
-            "change": 0
+            "reference_rank": 1.0,
+            "locked_rank": 1.0,
+            "change": 0.0
           },
           "AQRPE_v2_soft_top3": {
-            "reference_rank": 2,
-            "locked_rank": 2,
-            "change": 0
+            "reference_rank": 2.0,
+            "locked_rank": 2.0,
+            "change": 0.0
           },
           "DT_leaf5": {
-            "reference_rank": 8,
-            "locked_rank": 8,
-            "change": 0
+            "reference_rank": 8.0,
+            "locked_rank": 8.0,
+            "change": 0.0
           },
           "ET_leaf5": {
-            "reference_rank": 3,
-            "locked_rank": 3,
-            "change": 0
+            "reference_rank": 3.0,
+            "locked_rank": 3.0,
+            "change": 0.0
           },
           "LR_std_C0.1": {
-            "reference_rank": 4,
-            "locked_rank": 4,
-            "change": 0
+            "reference_rank": 4.0,
+            "locked_rank": 4.0,
+            "change": 0.0
           },
           "LR_std_C1": {
-            "reference_rank": 5,
-            "locked_rank": 5,
-            "change": 0
+            "reference_rank": 5.0,
+            "locked_rank": 5.0,
+            "change": 0.0
           }
         }
       },
-      "spearman_correlation": 1.0,
+      "tie_aware_spearman_correlation": 0.9999999999999998,
       "max_absolute_mean_value_change": 0.0026167739727542827
     },
     {
@@ -236,25 +324,37 @@
       "metric": "f1",
       "best_overall": {
         "reference": {
-          "model": "AQRPE_v2_rank",
+          "models": [
+            "AQRPE_v2_rank"
+          ],
           "value": 0.4484725373656926
         },
         "locked": {
-          "model": "AQRPE_v2_rank",
+          "models": [
+            "AQRPE_v2_rank"
+          ],
           "value": 0.4476016275559039
         },
-        "identity_changed": false
+        "winner_set_changed": false,
+        "winner_sets_overlap": true,
+        "disjoint_winner_change": false
       },
       "best_baseline": {
         "reference": {
-          "model": "ET_leaf5",
+          "models": [
+            "ET_leaf5"
+          ],
           "value": 0.4066684196280537
         },
         "locked": {
-          "model": "ET_leaf5",
+          "models": [
+            "ET_leaf5"
+          ],
           "value": 0.4088307367237175
         },
-        "identity_changed": false
+        "winner_set_changed": false,
+        "winner_sets_overlap": true,
+        "disjoint_winner_change": false
       },
       "soft_top3": {
         "reference_value": 0.4240339285146347,
@@ -265,71 +365,71 @@
       },
       "ranks": {
         "reference": {
-          "AQRPE_v2_rank": 1,
-          "AQRPE_v2_soft_top3": 2,
-          "ET_leaf5": 3,
-          "AQRPE_v2_balanced": 4,
-          "AQRPE_v2_mcc": 5,
-          "LR_std_C0.1": 6,
-          "LR_std_C1": 7,
-          "DT_leaf5": 8
+          "AQRPE_v2_rank": 1.0,
+          "AQRPE_v2_soft_top3": 2.0,
+          "ET_leaf5": 3.0,
+          "AQRPE_v2_balanced": 4.0,
+          "AQRPE_v2_mcc": 5.0,
+          "LR_std_C0.1": 6.0,
+          "LR_std_C1": 7.0,
+          "DT_leaf5": 8.0
         },
         "locked": {
-          "AQRPE_v2_rank": 1,
-          "AQRPE_v2_soft_top3": 2,
-          "ET_leaf5": 3,
-          "AQRPE_v2_balanced": 4,
-          "AQRPE_v2_mcc": 5,
-          "LR_std_C0.1": 6,
-          "LR_std_C1": 7,
-          "DT_leaf5": 8
+          "AQRPE_v2_rank": 1.0,
+          "AQRPE_v2_soft_top3": 2.0,
+          "ET_leaf5": 3.0,
+          "AQRPE_v2_balanced": 4.0,
+          "AQRPE_v2_mcc": 5.0,
+          "LR_std_C0.1": 6.0,
+          "LR_std_C1": 7.0,
+          "DT_leaf5": 8.0
         },
         "models_with_changed_rank": 0,
-        "max_rank_change": 0,
+        "max_rank_change": 0.0,
         "rank_changes_detail": {
           "AQRPE_v2_balanced": {
-            "reference_rank": 4,
-            "locked_rank": 4,
-            "change": 0
+            "reference_rank": 4.0,
+            "locked_rank": 4.0,
+            "change": 0.0
           },
           "AQRPE_v2_mcc": {
-            "reference_rank": 5,
-            "locked_rank": 5,
-            "change": 0
+            "reference_rank": 5.0,
+            "locked_rank": 5.0,
+            "change": 0.0
           },
           "AQRPE_v2_rank": {
-            "reference_rank": 1,
-            "locked_rank": 1,
-            "change": 0
+            "reference_rank": 1.0,
+            "locked_rank": 1.0,
+            "change": 0.0
           },
           "AQRPE_v2_soft_top3": {
-            "reference_rank": 2,
-            "locked_rank": 2,
-            "change": 0
+            "reference_rank": 2.0,
+            "locked_rank": 2.0,
+            "change": 0.0
           },
           "DT_leaf5": {
-            "reference_rank": 8,
-            "locked_rank": 8,
-            "change": 0
+            "reference_rank": 8.0,
+            "locked_rank": 8.0,
+            "change": 0.0
           },
           "ET_leaf5": {
-            "reference_rank": 3,
-            "locked_rank": 3,
-            "change": 0
+            "reference_rank": 3.0,
+            "locked_rank": 3.0,
+            "change": 0.0
           },
           "LR_std_C0.1": {
-            "reference_rank": 6,
-            "locked_rank": 6,
-            "change": 0
+            "reference_rank": 6.0,
+            "locked_rank": 6.0,
+            "change": 0.0
           },
           "LR_std_C1": {
-            "reference_rank": 7,
-            "locked_rank": 7,
-            "change": 0
+            "reference_rank": 7.0,
+            "locked_rank": 7.0,
+            "change": 0.0
           }
         }
       },
-      "spearman_correlation": 1.0,
+      "tie_aware_spearman_correlation": 1.0,
       "max_absolute_mean_value_change": 0.0023261370138548676
     },
     {
@@ -337,25 +437,37 @@
       "metric": "balanced_accuracy",
       "best_overall": {
         "reference": {
-          "model": "AQRPE_v2_rank",
+          "models": [
+            "AQRPE_v2_rank"
+          ],
           "value": 0.7240394607340923
         },
         "locked": {
-          "model": "AQRPE_v2_rank",
+          "models": [
+            "AQRPE_v2_rank"
+          ],
           "value": 0.7230228088690464
         },
-        "identity_changed": false
+        "winner_set_changed": false,
+        "winner_sets_overlap": true,
+        "disjoint_winner_change": false
       },
       "best_baseline": {
         "reference": {
-          "model": "LR_std_C1",
+          "models": [
+            "LR_std_C1"
+          ],
           "value": 0.6898594813730522
         },
         "locked": {
-          "model": "LR_std_C1",
+          "models": [
+            "LR_std_C1"
+          ],
           "value": 0.6898594813730522
         },
-        "identity_changed": false
+        "winner_set_changed": false,
+        "winner_sets_overlap": true,
+        "disjoint_winner_change": false
       },
       "soft_top3": {
         "reference_value": 0.6946369526830218,
@@ -366,71 +478,71 @@
       },
       "ranks": {
         "reference": {
-          "AQRPE_v2_rank": 1,
-          "AQRPE_v2_soft_top3": 2,
-          "LR_std_C1": 3,
-          "LR_std_C0.1": 4,
-          "ET_leaf5": 5,
-          "AQRPE_v2_balanced": 6,
-          "AQRPE_v2_mcc": 7,
-          "DT_leaf5": 8
+          "AQRPE_v2_rank": 1.0,
+          "AQRPE_v2_soft_top3": 2.0,
+          "LR_std_C1": 3.0,
+          "LR_std_C0.1": 4.0,
+          "ET_leaf5": 5.0,
+          "AQRPE_v2_balanced": 6.0,
+          "AQRPE_v2_mcc": 7.0,
+          "DT_leaf5": 8.0
         },
         "locked": {
-          "AQRPE_v2_rank": 1,
-          "AQRPE_v2_soft_top3": 2,
-          "LR_std_C1": 3,
-          "LR_std_C0.1": 4,
-          "ET_leaf5": 5,
-          "AQRPE_v2_balanced": 6,
-          "AQRPE_v2_mcc": 7,
-          "DT_leaf5": 8
+          "AQRPE_v2_rank": 1.0,
+          "AQRPE_v2_soft_top3": 2.0,
+          "LR_std_C1": 3.0,
+          "LR_std_C0.1": 4.0,
+          "ET_leaf5": 5.0,
+          "AQRPE_v2_balanced": 6.0,
+          "AQRPE_v2_mcc": 7.0,
+          "DT_leaf5": 8.0
         },
         "models_with_changed_rank": 0,
-        "max_rank_change": 0,
+        "max_rank_change": 0.0,
         "rank_changes_detail": {
           "AQRPE_v2_balanced": {
-            "reference_rank": 6,
-            "locked_rank": 6,
-            "change": 0
+            "reference_rank": 6.0,
+            "locked_rank": 6.0,
+            "change": 0.0
           },
           "AQRPE_v2_mcc": {
-            "reference_rank": 7,
-            "locked_rank": 7,
-            "change": 0
+            "reference_rank": 7.0,
+            "locked_rank": 7.0,
+            "change": 0.0
           },
           "AQRPE_v2_rank": {
-            "reference_rank": 1,
-            "locked_rank": 1,
-            "change": 0
+            "reference_rank": 1.0,
+            "locked_rank": 1.0,
+            "change": 0.0
           },
           "AQRPE_v2_soft_top3": {
-            "reference_rank": 2,
-            "locked_rank": 2,
-            "change": 0
+            "reference_rank": 2.0,
+            "locked_rank": 2.0,
+            "change": 0.0
           },
           "DT_leaf5": {
-            "reference_rank": 8,
-            "locked_rank": 8,
-            "change": 0
+            "reference_rank": 8.0,
+            "locked_rank": 8.0,
+            "change": 0.0
           },
           "ET_leaf5": {
-            "reference_rank": 5,
-            "locked_rank": 5,
-            "change": 0
+            "reference_rank": 5.0,
+            "locked_rank": 5.0,
+            "change": 0.0
           },
           "LR_std_C0.1": {
-            "reference_rank": 4,
-            "locked_rank": 4,
-            "change": 0
+            "reference_rank": 4.0,
+            "locked_rank": 4.0,
+            "change": 0.0
           },
           "LR_std_C1": {
-            "reference_rank": 3,
-            "locked_rank": 3,
-            "change": 0
+            "reference_rank": 3.0,
+            "locked_rank": 3.0,
+            "change": 0.0
           }
         }
       },
-      "spearman_correlation": 1.0,
+      "tie_aware_spearman_correlation": 1.0,
       "max_absolute_mean_value_change": 0.002791790298937502
     },
     {
@@ -438,25 +550,37 @@
       "metric": "precision_at_10pct",
       "best_overall": {
         "reference": {
-          "model": "AQRPE_v2_rank",
+          "models": [
+            "AQRPE_v2_rank"
+          ],
           "value": 0.4778865912689671
         },
         "locked": {
-          "model": "AQRPE_v2_rank",
+          "models": [
+            "AQRPE_v2_rank"
+          ],
           "value": 0.4734600884168391
         },
-        "identity_changed": false
+        "winner_set_changed": false,
+        "winner_sets_overlap": true,
+        "disjoint_winner_change": false
       },
       "best_baseline": {
         "reference": {
-          "model": "LR_std_C1",
+          "models": [
+            "LR_std_C1"
+          ],
           "value": 0.4559586671222209
         },
         "locked": {
-          "model": "LR_std_C1",
+          "models": [
+            "LR_std_C1"
+          ],
           "value": 0.4559586671222209
         },
-        "identity_changed": false
+        "winner_set_changed": false,
+        "winner_sets_overlap": true,
+        "disjoint_winner_change": false
       },
       "soft_top3": {
         "reference_value": 0.4580259769991345,
@@ -467,71 +591,71 @@
       },
       "ranks": {
         "reference": {
-          "AQRPE_v2_rank": 1,
-          "AQRPE_v2_soft_top3": 2,
-          "LR_std_C1": 3,
-          "ET_leaf5": 4,
-          "LR_std_C0.1": 5,
-          "AQRPE_v2_balanced": 6,
-          "AQRPE_v2_mcc": 7,
-          "DT_leaf5": 8
+          "AQRPE_v2_rank": 1.0,
+          "AQRPE_v2_soft_top3": 2.0,
+          "LR_std_C1": 3.0,
+          "ET_leaf5": 4.0,
+          "LR_std_C0.1": 5.0,
+          "AQRPE_v2_balanced": 6.5,
+          "AQRPE_v2_mcc": 6.5,
+          "DT_leaf5": 8.0
         },
         "locked": {
-          "AQRPE_v2_rank": 1,
-          "AQRPE_v2_soft_top3": 2,
-          "LR_std_C1": 3,
-          "LR_std_C0.1": 4,
-          "ET_leaf5": 5,
-          "AQRPE_v2_balanced": 6,
-          "AQRPE_v2_mcc": 7,
-          "DT_leaf5": 8
+          "AQRPE_v2_rank": 1.0,
+          "AQRPE_v2_soft_top3": 2.0,
+          "LR_std_C1": 3.0,
+          "LR_std_C0.1": 4.0,
+          "ET_leaf5": 5.0,
+          "AQRPE_v2_balanced": 6.5,
+          "AQRPE_v2_mcc": 6.5,
+          "DT_leaf5": 8.0
         },
         "models_with_changed_rank": 2,
-        "max_rank_change": 1,
+        "max_rank_change": 1.0,
         "rank_changes_detail": {
           "AQRPE_v2_balanced": {
-            "reference_rank": 6,
-            "locked_rank": 6,
-            "change": 0
+            "reference_rank": 6.5,
+            "locked_rank": 6.5,
+            "change": 0.0
           },
           "AQRPE_v2_mcc": {
-            "reference_rank": 7,
-            "locked_rank": 7,
-            "change": 0
+            "reference_rank": 6.5,
+            "locked_rank": 6.5,
+            "change": 0.0
           },
           "AQRPE_v2_rank": {
-            "reference_rank": 1,
-            "locked_rank": 1,
-            "change": 0
+            "reference_rank": 1.0,
+            "locked_rank": 1.0,
+            "change": 0.0
           },
           "AQRPE_v2_soft_top3": {
-            "reference_rank": 2,
-            "locked_rank": 2,
-            "change": 0
+            "reference_rank": 2.0,
+            "locked_rank": 2.0,
+            "change": 0.0
           },
           "DT_leaf5": {
-            "reference_rank": 8,
-            "locked_rank": 8,
-            "change": 0
+            "reference_rank": 8.0,
+            "locked_rank": 8.0,
+            "change": 0.0
           },
           "ET_leaf5": {
-            "reference_rank": 4,
-            "locked_rank": 5,
-            "change": 1
+            "reference_rank": 4.0,
+            "locked_rank": 5.0,
+            "change": 1.0
           },
           "LR_std_C0.1": {
-            "reference_rank": 5,
-            "locked_rank": 4,
-            "change": 1
+            "reference_rank": 5.0,
+            "locked_rank": 4.0,
+            "change": 1.0
           },
           "LR_std_C1": {
-            "reference_rank": 3,
-            "locked_rank": 3,
-            "change": 0
+            "reference_rank": 3.0,
+            "locked_rank": 3.0,
+            "change": 0.0
           }
         }
       },
-      "spearman_correlation": 0.9761904761904763,
+      "tie_aware_spearman_correlation": 0.9759036144578312,
       "max_absolute_mean_value_change": 0.00831173092698928
     },
     {
@@ -539,25 +663,38 @@
       "metric": "recall_at_10pct",
       "best_overall": {
         "reference": {
-          "model": "AQRPE_v2_rank",
+          "models": [
+            "AQRPE_v2_rank"
+          ],
           "value": 0.3723658289454014
         },
         "locked": {
-          "model": "AQRPE_v2_rank",
+          "models": [
+            "AQRPE_v2_rank"
+          ],
           "value": 0.3695198578143946
         },
-        "identity_changed": false
+        "winner_set_changed": false,
+        "winner_sets_overlap": true,
+        "disjoint_winner_change": false
       },
       "best_baseline": {
         "reference": {
-          "model": "ET_leaf5",
+          "models": [
+            "ET_leaf5"
+          ],
           "value": 0.3455965981761706
         },
         "locked": {
-          "model": "ET_leaf5",
+          "models": [
+            "LR_std_C1",
+            "ET_leaf5"
+          ],
           "value": 0.3415198578143946
         },
-        "identity_changed": false
+        "winner_set_changed": true,
+        "winner_sets_overlap": true,
+        "disjoint_winner_change": false
       },
       "soft_top3": {
         "reference_value": 0.3613068008792474,
@@ -568,71 +705,71 @@
       },
       "ranks": {
         "reference": {
-          "AQRPE_v2_rank": 1,
-          "AQRPE_v2_soft_top3": 2,
-          "ET_leaf5": 3,
-          "LR_std_C1": 4,
-          "AQRPE_v2_balanced": 5,
-          "AQRPE_v2_mcc": 6,
-          "LR_std_C0.1": 7,
-          "DT_leaf5": 8
+          "AQRPE_v2_rank": 1.0,
+          "AQRPE_v2_soft_top3": 2.0,
+          "ET_leaf5": 3.0,
+          "LR_std_C1": 4.0,
+          "AQRPE_v2_balanced": 5.5,
+          "AQRPE_v2_mcc": 5.5,
+          "LR_std_C0.1": 7.0,
+          "DT_leaf5": 8.0
         },
         "locked": {
-          "AQRPE_v2_rank": 1,
-          "AQRPE_v2_soft_top3": 2,
-          "ET_leaf5": 3,
-          "LR_std_C1": 4,
-          "AQRPE_v2_balanced": 5,
-          "AQRPE_v2_mcc": 6,
-          "LR_std_C0.1": 7,
-          "DT_leaf5": 8
+          "AQRPE_v2_rank": 1.0,
+          "AQRPE_v2_soft_top3": 2.0,
+          "ET_leaf5": 3.5,
+          "LR_std_C1": 3.5,
+          "AQRPE_v2_balanced": 5.5,
+          "AQRPE_v2_mcc": 5.5,
+          "LR_std_C0.1": 7.0,
+          "DT_leaf5": 8.0
         },
-        "models_with_changed_rank": 0,
-        "max_rank_change": 0,
+        "models_with_changed_rank": 2,
+        "max_rank_change": 0.5,
         "rank_changes_detail": {
           "AQRPE_v2_balanced": {
-            "reference_rank": 5,
-            "locked_rank": 5,
-            "change": 0
+            "reference_rank": 5.5,
+            "locked_rank": 5.5,
+            "change": 0.0
           },
           "AQRPE_v2_mcc": {
-            "reference_rank": 6,
-            "locked_rank": 6,
-            "change": 0
+            "reference_rank": 5.5,
+            "locked_rank": 5.5,
+            "change": 0.0
           },
           "AQRPE_v2_rank": {
-            "reference_rank": 1,
-            "locked_rank": 1,
-            "change": 0
+            "reference_rank": 1.0,
+            "locked_rank": 1.0,
+            "change": 0.0
           },
           "AQRPE_v2_soft_top3": {
-            "reference_rank": 2,
-            "locked_rank": 2,
-            "change": 0
+            "reference_rank": 2.0,
+            "locked_rank": 2.0,
+            "change": 0.0
           },
           "DT_leaf5": {
-            "reference_rank": 8,
-            "locked_rank": 8,
-            "change": 0
+            "reference_rank": 8.0,
+            "locked_rank": 8.0,
+            "change": 0.0
           },
           "ET_leaf5": {
-            "reference_rank": 3,
-            "locked_rank": 3,
-            "change": 0
+            "reference_rank": 3.0,
+            "locked_rank": 3.5,
+            "change": 0.5
           },
           "LR_std_C0.1": {
-            "reference_rank": 7,
-            "locked_rank": 7,
-            "change": 0
+            "reference_rank": 7.0,
+            "locked_rank": 7.0,
+            "change": 0.0
           },
           "LR_std_C1": {
-            "reference_rank": 4,
-            "locked_rank": 4,
-            "change": 0
+            "reference_rank": 4.0,
+            "locked_rank": 3.5,
+            "change": 0.5
           }
         }
       },
-      "spearman_correlation": 1.0,
+      "tie_aware_spearman_correlation": 0.9939576486092934,
       "max_absolute_mean_value_change": 0.01142992874109261
     },
     {
@@ -640,25 +777,37 @@
       "metric": "lift_at_10pct",
       "best_overall": {
         "reference": {
-          "model": "AQRPE_v2_rank",
+          "models": [
+            "AQRPE_v2_rank"
+          ],
           "value": 3.6361398271610863
         },
         "locked": {
-          "model": "AQRPE_v2_rank",
+          "models": [
+            "AQRPE_v2_rank"
+          ],
           "value": 3.607963952086615
         },
-        "identity_changed": false
+        "winner_set_changed": false,
+        "winner_sets_overlap": true,
+        "disjoint_winner_change": false
       },
       "best_baseline": {
         "reference": {
-          "model": "ET_leaf5",
+          "models": [
+            "ET_leaf5"
+          ],
           "value": 3.368218539146775
         },
         "locked": {
-          "model": "LR_std_C1",
+          "models": [
+            "LR_std_C1"
+          ],
           "value": 3.3361499487094823
         },
-        "identity_changed": true
+        "winner_set_changed": true,
+        "winner_sets_overlap": false,
+        "disjoint_winner_change": true
       },
       "soft_top3": {
         "reference_value": 3.5274335876229346,
@@ -669,71 +818,71 @@
       },
       "ranks": {
         "reference": {
-          "AQRPE_v2_rank": 1,
-          "AQRPE_v2_soft_top3": 2,
-          "ET_leaf5": 3,
-          "LR_std_C1": 4,
-          "AQRPE_v2_balanced": 5,
-          "AQRPE_v2_mcc": 6,
-          "LR_std_C0.1": 7,
-          "DT_leaf5": 8
+          "AQRPE_v2_rank": 1.0,
+          "AQRPE_v2_soft_top3": 2.0,
+          "ET_leaf5": 3.0,
+          "LR_std_C1": 4.0,
+          "AQRPE_v2_balanced": 5.5,
+          "AQRPE_v2_mcc": 5.5,
+          "LR_std_C0.1": 7.0,
+          "DT_leaf5": 8.0
         },
         "locked": {
-          "AQRPE_v2_rank": 1,
-          "AQRPE_v2_soft_top3": 2,
-          "LR_std_C1": 3,
-          "ET_leaf5": 4,
-          "AQRPE_v2_balanced": 5,
-          "AQRPE_v2_mcc": 6,
-          "LR_std_C0.1": 7,
-          "DT_leaf5": 8
+          "AQRPE_v2_rank": 1.0,
+          "AQRPE_v2_soft_top3": 2.0,
+          "LR_std_C1": 3.0,
+          "ET_leaf5": 4.0,
+          "AQRPE_v2_balanced": 5.5,
+          "AQRPE_v2_mcc": 5.5,
+          "LR_std_C0.1": 7.0,
+          "DT_leaf5": 8.0
         },
         "models_with_changed_rank": 2,
-        "max_rank_change": 1,
+        "max_rank_change": 1.0,
         "rank_changes_detail": {
           "AQRPE_v2_balanced": {
-            "reference_rank": 5,
-            "locked_rank": 5,
-            "change": 0
+            "reference_rank": 5.5,
+            "locked_rank": 5.5,
+            "change": 0.0
           },
           "AQRPE_v2_mcc": {
-            "reference_rank": 6,
-            "locked_rank": 6,
-            "change": 0
+            "reference_rank": 5.5,
+            "locked_rank": 5.5,
+            "change": 0.0
           },
           "AQRPE_v2_rank": {
-            "reference_rank": 1,
-            "locked_rank": 1,
-            "change": 0
+            "reference_rank": 1.0,
+            "locked_rank": 1.0,
+            "change": 0.0
           },
           "AQRPE_v2_soft_top3": {
-            "reference_rank": 2,
-            "locked_rank": 2,
-            "change": 0
+            "reference_rank": 2.0,
+            "locked_rank": 2.0,
+            "change": 0.0
           },
           "DT_leaf5": {
-            "reference_rank": 8,
-            "locked_rank": 8,
-            "change": 0
+            "reference_rank": 8.0,
+            "locked_rank": 8.0,
+            "change": 0.0
           },
           "ET_leaf5": {
-            "reference_rank": 3,
-            "locked_rank": 4,
-            "change": 1
+            "reference_rank": 3.0,
+            "locked_rank": 4.0,
+            "change": 1.0
           },
           "LR_std_C0.1": {
-            "reference_rank": 7,
-            "locked_rank": 7,
-            "change": 0
+            "reference_rank": 7.0,
+            "locked_rank": 7.0,
+            "change": 0.0
           },
           "LR_std_C1": {
-            "reference_rank": 4,
-            "locked_rank": 3,
-            "change": 1
+            "reference_rank": 4.0,
+            "locked_rank": 3.0,
+            "change": 1.0
           }
         }
       },
-      "spearman_correlation": 0.9761904761904763,
+      "tie_aware_spearman_correlation": 0.9759036144578312,
       "max_absolute_mean_value_change": 0.11153603962595415
     },
     {
@@ -741,25 +890,37 @@
       "metric": "brier",
       "best_overall": {
         "reference": {
-          "model": "DT_leaf5",
+          "models": [
+            "DT_leaf5"
+          ],
           "value": 0.1341909663986916
         },
         "locked": {
-          "model": "DT_leaf5",
+          "models": [
+            "DT_leaf5"
+          ],
           "value": 0.1333565419832479
         },
-        "identity_changed": false
+        "winner_set_changed": false,
+        "winner_sets_overlap": true,
+        "disjoint_winner_change": false
       },
       "best_baseline": {
         "reference": {
-          "model": "DT_leaf5",
+          "models": [
+            "DT_leaf5"
+          ],
           "value": 0.1341909663986916
         },
         "locked": {
-          "model": "DT_leaf5",
+          "models": [
+            "DT_leaf5"
+          ],
           "value": 0.1333565419832479
         },
-        "identity_changed": false
+        "winner_set_changed": false,
+        "winner_sets_overlap": true,
+        "disjoint_winner_change": false
       },
       "soft_top3": {
         "reference_value": 0.148333229302,
@@ -770,71 +931,71 @@
       },
       "ranks": {
         "reference": {
-          "DT_leaf5": 1,
-          "AQRPE_v2_soft_top3": 2,
-          "AQRPE_v2_balanced": 3,
-          "AQRPE_v2_mcc": 4,
-          "AQRPE_v2_rank": 5,
-          "ET_leaf5": 6,
-          "LR_std_C1": 7,
-          "LR_std_C0.1": 8
+          "DT_leaf5": 1.0,
+          "AQRPE_v2_soft_top3": 3.0,
+          "AQRPE_v2_balanced": 3.0,
+          "AQRPE_v2_mcc": 3.0,
+          "AQRPE_v2_rank": 5.5,
+          "ET_leaf5": 5.5,
+          "LR_std_C1": 7.0,
+          "LR_std_C0.1": 8.0
         },
         "locked": {
-          "DT_leaf5": 1,
-          "AQRPE_v2_soft_top3": 2,
-          "AQRPE_v2_balanced": 3,
-          "AQRPE_v2_mcc": 4,
-          "AQRPE_v2_rank": 5,
-          "ET_leaf5": 6,
-          "LR_std_C1": 7,
-          "LR_std_C0.1": 8
+          "DT_leaf5": 1.0,
+          "AQRPE_v2_soft_top3": 2.0,
+          "AQRPE_v2_balanced": 3.0,
+          "AQRPE_v2_mcc": 4.0,
+          "AQRPE_v2_rank": 5.5,
+          "ET_leaf5": 5.5,
+          "LR_std_C1": 7.0,
+          "LR_std_C0.1": 8.0
         },
-        "models_with_changed_rank": 0,
-        "max_rank_change": 0,
+        "models_with_changed_rank": 2,
+        "max_rank_change": 1.0,
         "rank_changes_detail": {
           "AQRPE_v2_balanced": {
-            "reference_rank": 3,
-            "locked_rank": 3,
-            "change": 0
+            "reference_rank": 3.0,
+            "locked_rank": 3.0,
+            "change": 0.0
           },
           "AQRPE_v2_mcc": {
-            "reference_rank": 4,
-            "locked_rank": 4,
-            "change": 0
+            "reference_rank": 3.0,
+            "locked_rank": 4.0,
+            "change": 1.0
           },
           "AQRPE_v2_rank": {
-            "reference_rank": 5,
-            "locked_rank": 5,
-            "change": 0
+            "reference_rank": 5.5,
+            "locked_rank": 5.5,
+            "change": 0.0
           },
           "AQRPE_v2_soft_top3": {
-            "reference_rank": 2,
-            "locked_rank": 2,
-            "change": 0
+            "reference_rank": 3.0,
+            "locked_rank": 2.0,
+            "change": 1.0
           },
           "DT_leaf5": {
-            "reference_rank": 1,
-            "locked_rank": 1,
-            "change": 0
+            "reference_rank": 1.0,
+            "locked_rank": 1.0,
+            "change": 0.0
           },
           "ET_leaf5": {
-            "reference_rank": 6,
-            "locked_rank": 6,
-            "change": 0
+            "reference_rank": 5.5,
+            "locked_rank": 5.5,
+            "change": 0.0
           },
           "LR_std_C0.1": {
-            "reference_rank": 8,
-            "locked_rank": 8,
-            "change": 0
+            "reference_rank": 8.0,
+            "locked_rank": 8.0,
+            "change": 0.0
           },
           "LR_std_C1": {
-            "reference_rank": 7,
-            "locked_rank": 7,
-            "change": 0
+            "reference_rank": 7.0,
+            "locked_rank": 7.0,
+            "change": 0.0
           }
         }
       },
-      "spearman_correlation": 1.0,
+      "tie_aware_spearman_correlation": 0.9756060828611427,
       "max_absolute_mean_value_change": 0.0014600704463400005
     },
     {
@@ -842,25 +1003,37 @@
       "metric": "mcc",
       "best_overall": {
         "reference": {
-          "model": "AQRPE_v2_soft_top3",
+          "models": [
+            "AQRPE_v2_soft_top3"
+          ],
           "value": 0.2934628441539924
         },
         "locked": {
-          "model": "AQRPE_v2_soft_top3",
+          "models": [
+            "AQRPE_v2_soft_top3"
+          ],
           "value": 0.2934384579461616
         },
-        "identity_changed": false
+        "winner_set_changed": false,
+        "winner_sets_overlap": true,
+        "disjoint_winner_change": false
       },
       "best_baseline": {
         "reference": {
-          "model": "LR_std_C0.1",
+          "models": [
+            "LR_std_C0.1"
+          ],
           "value": 0.2868704501388703
         },
         "locked": {
-          "model": "LR_std_C0.1",
+          "models": [
+            "LR_std_C0.1"
+          ],
           "value": 0.2868704501388703
         },
-        "identity_changed": false
+        "winner_set_changed": false,
+        "winner_sets_overlap": true,
+        "disjoint_winner_change": false
       },
       "soft_top3": {
         "reference_value": 0.2934628441539924,
@@ -871,71 +1044,71 @@
       },
       "ranks": {
         "reference": {
-          "AQRPE_v2_soft_top3": 1,
-          "LR_std_C0.1": 2,
-          "LR_std_C1": 3,
-          "AQRPE_v2_balanced": 4,
-          "ET_leaf5": 5,
-          "AQRPE_v2_mcc": 6,
-          "AQRPE_v2_rank": 7,
-          "DT_leaf5": 8
+          "AQRPE_v2_soft_top3": 1.0,
+          "LR_std_C0.1": 2.0,
+          "LR_std_C1": 3.0,
+          "AQRPE_v2_balanced": 4.5,
+          "ET_leaf5": 4.5,
+          "AQRPE_v2_mcc": 6.0,
+          "AQRPE_v2_rank": 7.0,
+          "DT_leaf5": 8.0
         },
         "locked": {
-          "AQRPE_v2_soft_top3": 1,
-          "LR_std_C0.1": 2,
-          "AQRPE_v2_balanced": 3,
-          "ET_leaf5": 4,
-          "LR_std_C1": 5,
-          "AQRPE_v2_rank": 6,
-          "AQRPE_v2_mcc": 7,
-          "DT_leaf5": 8
+          "AQRPE_v2_soft_top3": 1.0,
+          "LR_std_C0.1": 2.0,
+          "AQRPE_v2_balanced": 3.5,
+          "ET_leaf5": 3.5,
+          "LR_std_C1": 5.0,
+          "AQRPE_v2_rank": 6.0,
+          "AQRPE_v2_mcc": 7.0,
+          "DT_leaf5": 8.0
         },
         "models_with_changed_rank": 5,
-        "max_rank_change": 2,
+        "max_rank_change": 2.0,
         "rank_changes_detail": {
           "AQRPE_v2_balanced": {
-            "reference_rank": 4,
-            "locked_rank": 3,
-            "change": 1
+            "reference_rank": 4.5,
+            "locked_rank": 3.5,
+            "change": 1.0
           },
           "AQRPE_v2_mcc": {
-            "reference_rank": 6,
-            "locked_rank": 7,
-            "change": 1
+            "reference_rank": 6.0,
+            "locked_rank": 7.0,
+            "change": 1.0
           },
           "AQRPE_v2_rank": {
-            "reference_rank": 7,
-            "locked_rank": 6,
-            "change": 1
+            "reference_rank": 7.0,
+            "locked_rank": 6.0,
+            "change": 1.0
           },
           "AQRPE_v2_soft_top3": {
-            "reference_rank": 1,
-            "locked_rank": 1,
-            "change": 0
+            "reference_rank": 1.0,
+            "locked_rank": 1.0,
+            "change": 0.0
           },
           "DT_leaf5": {
-            "reference_rank": 8,
-            "locked_rank": 8,
-            "change": 0
+            "reference_rank": 8.0,
+            "locked_rank": 8.0,
+            "change": 0.0
           },
           "ET_leaf5": {
-            "reference_rank": 5,
-            "locked_rank": 4,
-            "change": 1
+            "reference_rank": 4.5,
+            "locked_rank": 3.5,
+            "change": 1.0
           },
           "LR_std_C0.1": {
-            "reference_rank": 2,
-            "locked_rank": 2,
-            "change": 0
+            "reference_rank": 2.0,
+            "locked_rank": 2.0,
+            "change": 0.0
           },
           "LR_std_C1": {
-            "reference_rank": 3,
-            "locked_rank": 5,
-            "change": 2
+            "reference_rank": 3.0,
+            "locked_rank": 5.0,
+            "change": 2.0
           }
         }
       },
-      "spearman_correlation": 0.9047619047619048,
+      "tie_aware_spearman_correlation": 0.9036144578313252,
       "max_absolute_mean_value_change": 0.005379372624433387
     },
     {
@@ -943,25 +1116,37 @@
       "metric": "avg_precision",
       "best_overall": {
         "reference": {
-          "model": "AQRPE_v2_soft_top3",
+          "models": [
+            "AQRPE_v2_soft_top3"
+          ],
           "value": 0.3592725146718135
         },
         "locked": {
-          "model": "AQRPE_v2_soft_top3",
+          "models": [
+            "AQRPE_v2_soft_top3"
+          ],
           "value": 0.3588443134794544
         },
-        "identity_changed": false
+        "winner_set_changed": false,
+        "winner_sets_overlap": true,
+        "disjoint_winner_change": false
       },
       "best_baseline": {
         "reference": {
-          "model": "LR_std_C1",
+          "models": [
+            "LR_std_C1"
+          ],
           "value": 0.3563386203024939
         },
         "locked": {
-          "model": "LR_std_C1",
+          "models": [
+            "LR_std_C1"
+          ],
           "value": 0.3563119586913052
         },
-        "identity_changed": false
+        "winner_set_changed": false,
+        "winner_sets_overlap": true,
+        "disjoint_winner_change": false
       },
       "soft_top3": {
         "reference_value": 0.3592725146718135,
@@ -972,71 +1157,71 @@
       },
       "ranks": {
         "reference": {
-          "AQRPE_v2_soft_top3": 1,
-          "LR_std_C1": 2,
-          "LR_std_C0.1": 3,
-          "AQRPE_v2_balanced": 4,
-          "AQRPE_v2_mcc": 5,
-          "AQRPE_v2_rank": 6,
-          "ET_leaf5": 7,
-          "DT_leaf5": 8
+          "AQRPE_v2_soft_top3": 1.0,
+          "LR_std_C1": 2.0,
+          "LR_std_C0.1": 3.0,
+          "AQRPE_v2_balanced": 5.5,
+          "AQRPE_v2_mcc": 5.5,
+          "AQRPE_v2_rank": 5.5,
+          "ET_leaf5": 5.5,
+          "DT_leaf5": 8.0
         },
         "locked": {
-          "AQRPE_v2_soft_top3": 1,
-          "LR_std_C1": 2,
-          "LR_std_C0.1": 3,
-          "AQRPE_v2_balanced": 4,
-          "AQRPE_v2_mcc": 5,
-          "AQRPE_v2_rank": 6,
-          "ET_leaf5": 7,
-          "DT_leaf5": 8
+          "AQRPE_v2_soft_top3": 1.0,
+          "LR_std_C1": 2.0,
+          "LR_std_C0.1": 3.0,
+          "AQRPE_v2_balanced": 5.5,
+          "AQRPE_v2_mcc": 5.5,
+          "AQRPE_v2_rank": 5.5,
+          "ET_leaf5": 5.5,
+          "DT_leaf5": 8.0
         },
         "models_with_changed_rank": 0,
-        "max_rank_change": 0,
+        "max_rank_change": 0.0,
         "rank_changes_detail": {
           "AQRPE_v2_balanced": {
-            "reference_rank": 4,
-            "locked_rank": 4,
-            "change": 0
+            "reference_rank": 5.5,
+            "locked_rank": 5.5,
+            "change": 0.0
           },
           "AQRPE_v2_mcc": {
-            "reference_rank": 5,
-            "locked_rank": 5,
-            "change": 0
+            "reference_rank": 5.5,
+            "locked_rank": 5.5,
+            "change": 0.0
           },
           "AQRPE_v2_rank": {
-            "reference_rank": 6,
-            "locked_rank": 6,
-            "change": 0
+            "reference_rank": 5.5,
+            "locked_rank": 5.5,
+            "change": 0.0
           },
           "AQRPE_v2_soft_top3": {
-            "reference_rank": 1,
-            "locked_rank": 1,
-            "change": 0
+            "reference_rank": 1.0,
+            "locked_rank": 1.0,
+            "change": 0.0
           },
           "DT_leaf5": {
-            "reference_rank": 8,
-            "locked_rank": 8,
-            "change": 0
+            "reference_rank": 8.0,
+            "locked_rank": 8.0,
+            "change": 0.0
           },
           "ET_leaf5": {
-            "reference_rank": 7,
-            "locked_rank": 7,
-            "change": 0
+            "reference_rank": 5.5,
+            "locked_rank": 5.5,
+            "change": 0.0
           },
           "LR_std_C0.1": {
-            "reference_rank": 3,
-            "locked_rank": 3,
-            "change": 0
+            "reference_rank": 3.0,
+            "locked_rank": 3.0,
+            "change": 0.0
           },
           "LR_std_C1": {
-            "reference_rank": 2,
-            "locked_rank": 2,
-            "change": 0
+            "reference_rank": 2.0,
+            "locked_rank": 2.0,
+            "change": 0.0
           }
         }
       },
-      "spearman_correlation": 1.0,
+      "tie_aware_spearman_correlation": 1.0,
       "max_absolute_mean_value_change": 0.0007616174988758773
     },
     {
@@ -1044,25 +1229,37 @@
       "metric": "f1",
       "best_overall": {
         "reference": {
-          "model": "AQRPE_v2_soft_top3",
+          "models": [
+            "AQRPE_v2_soft_top3"
+          ],
           "value": 0.3933349849342235
         },
         "locked": {
-          "model": "AQRPE_v2_soft_top3",
+          "models": [
+            "AQRPE_v2_soft_top3"
+          ],
           "value": 0.3928055921034173
         },
-        "identity_changed": false
+        "winner_set_changed": false,
+        "winner_sets_overlap": true,
+        "disjoint_winner_change": false
       },
       "best_baseline": {
         "reference": {
-          "model": "LR_std_C0.1",
+          "models": [
+            "LR_std_C0.1"
+          ],
           "value": 0.3873206086873824
         },
         "locked": {
-          "model": "LR_std_C0.1",
+          "models": [
+            "LR_std_C0.1"
+          ],
           "value": 0.3873206086873824
         },
-        "identity_changed": false
+        "winner_set_changed": false,
+        "winner_sets_overlap": true,
+        "disjoint_winner_change": false
       },
       "soft_top3": {
         "reference_value": 0.3933349849342235,
@@ -1073,71 +1270,71 @@
       },
       "ranks": {
         "reference": {
-          "AQRPE_v2_soft_top3": 1,
-          "LR_std_C0.1": 2,
-          "LR_std_C1": 3,
-          "AQRPE_v2_balanced": 4,
-          "ET_leaf5": 5,
-          "AQRPE_v2_rank": 6,
-          "AQRPE_v2_mcc": 7,
-          "DT_leaf5": 8
+          "AQRPE_v2_soft_top3": 1.0,
+          "LR_std_C0.1": 2.0,
+          "LR_std_C1": 3.0,
+          "AQRPE_v2_balanced": 4.5,
+          "ET_leaf5": 4.5,
+          "AQRPE_v2_rank": 6.0,
+          "AQRPE_v2_mcc": 7.0,
+          "DT_leaf5": 8.0
         },
         "locked": {
-          "AQRPE_v2_soft_top3": 1,
-          "LR_std_C0.1": 2,
-          "LR_std_C1": 3,
-          "AQRPE_v2_rank": 4,
-          "AQRPE_v2_balanced": 5,
-          "ET_leaf5": 6,
-          "AQRPE_v2_mcc": 7,
-          "DT_leaf5": 8
+          "AQRPE_v2_soft_top3": 1.0,
+          "LR_std_C0.1": 2.0,
+          "LR_std_C1": 3.0,
+          "AQRPE_v2_rank": 4.0,
+          "AQRPE_v2_balanced": 5.0,
+          "ET_leaf5": 6.0,
+          "AQRPE_v2_mcc": 7.0,
+          "DT_leaf5": 8.0
         },
         "models_with_changed_rank": 3,
-        "max_rank_change": 2,
+        "max_rank_change": 2.0,
         "rank_changes_detail": {
           "AQRPE_v2_balanced": {
-            "reference_rank": 4,
-            "locked_rank": 5,
-            "change": 1
+            "reference_rank": 4.5,
+            "locked_rank": 5.0,
+            "change": 0.5
           },
           "AQRPE_v2_mcc": {
-            "reference_rank": 7,
-            "locked_rank": 7,
-            "change": 0
+            "reference_rank": 7.0,
+            "locked_rank": 7.0,
+            "change": 0.0
           },
           "AQRPE_v2_rank": {
-            "reference_rank": 6,
-            "locked_rank": 4,
-            "change": 2
+            "reference_rank": 6.0,
+            "locked_rank": 4.0,
+            "change": 2.0
           },
           "AQRPE_v2_soft_top3": {
-            "reference_rank": 1,
-            "locked_rank": 1,
-            "change": 0
+            "reference_rank": 1.0,
+            "locked_rank": 1.0,
+            "change": 0.0
           },
           "DT_leaf5": {
-            "reference_rank": 8,
-            "locked_rank": 8,
-            "change": 0
+            "reference_rank": 8.0,
+            "locked_rank": 8.0,
+            "change": 0.0
           },
           "ET_leaf5": {
-            "reference_rank": 5,
-            "locked_rank": 6,
-            "change": 1
+            "reference_rank": 4.5,
+            "locked_rank": 6.0,
+            "change": 1.5
           },
           "LR_std_C0.1": {
-            "reference_rank": 2,
-            "locked_rank": 2,
-            "change": 0
+            "reference_rank": 2.0,
+            "locked_rank": 2.0,
+            "change": 0.0
           },
           "LR_std_C1": {
-            "reference_rank": 3,
-            "locked_rank": 3,
-            "change": 0
+            "reference_rank": 3.0,
+            "locked_rank": 3.0,
+            "change": 0.0
           }
         }
       },
-      "spearman_correlation": 0.9285714285714287,
+      "tie_aware_spearman_correlation": 0.9221722216732094,
       "max_absolute_mean_value_change": 0.010820498455082095
     },
     {
@@ -1145,25 +1342,37 @@
       "metric": "balanced_accuracy",
       "best_overall": {
         "reference": {
-          "model": "AQRPE_v2_soft_top3",
+          "models": [
+            "AQRPE_v2_soft_top3"
+          ],
           "value": 0.6859149204073638
         },
         "locked": {
-          "model": "AQRPE_v2_soft_top3",
+          "models": [
+            "AQRPE_v2_soft_top3"
+          ],
           "value": 0.6856643623812311
         },
-        "identity_changed": false
+        "winner_set_changed": false,
+        "winner_sets_overlap": true,
+        "disjoint_winner_change": false
       },
       "best_baseline": {
         "reference": {
-          "model": "LR_std_C1",
+          "models": [
+            "LR_std_C1"
+          ],
           "value": 0.6748976634908462
         },
         "locked": {
-          "model": "LR_std_C1",
+          "models": [
+            "LR_std_C1"
+          ],
           "value": 0.6748976634908462
         },
-        "identity_changed": false
+        "winner_set_changed": false,
+        "winner_sets_overlap": true,
+        "disjoint_winner_change": false
       },
       "soft_top3": {
         "reference_value": 0.6859149204073638,
@@ -1174,71 +1383,71 @@
       },
       "ranks": {
         "reference": {
-          "AQRPE_v2_soft_top3": 1,
-          "LR_std_C1": 2,
-          "LR_std_C0.1": 3,
-          "AQRPE_v2_balanced": 4,
-          "ET_leaf5": 5,
-          "AQRPE_v2_rank": 6,
-          "AQRPE_v2_mcc": 7,
-          "DT_leaf5": 8
+          "AQRPE_v2_soft_top3": 1.0,
+          "LR_std_C1": 2.0,
+          "LR_std_C0.1": 3.0,
+          "AQRPE_v2_balanced": 5.0,
+          "ET_leaf5": 5.0,
+          "AQRPE_v2_rank": 5.0,
+          "AQRPE_v2_mcc": 7.0,
+          "DT_leaf5": 8.0
         },
         "locked": {
-          "AQRPE_v2_soft_top3": 1,
-          "LR_std_C1": 2,
-          "LR_std_C0.1": 3,
-          "AQRPE_v2_balanced": 4,
-          "ET_leaf5": 5,
-          "AQRPE_v2_rank": 6,
-          "AQRPE_v2_mcc": 7,
-          "DT_leaf5": 8
+          "AQRPE_v2_soft_top3": 1.0,
+          "LR_std_C1": 2.0,
+          "LR_std_C0.1": 3.0,
+          "AQRPE_v2_balanced": 4.0,
+          "ET_leaf5": 5.5,
+          "AQRPE_v2_rank": 5.5,
+          "AQRPE_v2_mcc": 7.0,
+          "DT_leaf5": 8.0
         },
-        "models_with_changed_rank": 0,
-        "max_rank_change": 0,
+        "models_with_changed_rank": 3,
+        "max_rank_change": 1.0,
         "rank_changes_detail": {
           "AQRPE_v2_balanced": {
-            "reference_rank": 4,
-            "locked_rank": 4,
-            "change": 0
+            "reference_rank": 5.0,
+            "locked_rank": 4.0,
+            "change": 1.0
           },
           "AQRPE_v2_mcc": {
-            "reference_rank": 7,
-            "locked_rank": 7,
-            "change": 0
+            "reference_rank": 7.0,
+            "locked_rank": 7.0,
+            "change": 0.0
           },
           "AQRPE_v2_rank": {
-            "reference_rank": 6,
-            "locked_rank": 6,
-            "change": 0
+            "reference_rank": 5.0,
+            "locked_rank": 5.5,
+            "change": 0.5
           },
           "AQRPE_v2_soft_top3": {
-            "reference_rank": 1,
-            "locked_rank": 1,
-            "change": 0
+            "reference_rank": 1.0,
+            "locked_rank": 1.0,
+            "change": 0.0
           },
           "DT_leaf5": {
-            "reference_rank": 8,
-            "locked_rank": 8,
-            "change": 0
+            "reference_rank": 8.0,
+            "locked_rank": 8.0,
+            "change": 0.0
           },
           "ET_leaf5": {
-            "reference_rank": 5,
-            "locked_rank": 5,
-            "change": 0
+            "reference_rank": 5.0,
+            "locked_rank": 5.5,
+            "change": 0.5
           },
           "LR_std_C0.1": {
-            "reference_rank": 3,
-            "locked_rank": 3,
-            "change": 0
+            "reference_rank": 3.0,
+            "locked_rank": 3.0,
+            "change": 0.0
           },
           "LR_std_C1": {
-            "reference_rank": 2,
-            "locked_rank": 2,
-            "change": 0
+            "reference_rank": 2.0,
+            "locked_rank": 2.0,
+            "change": 0.0
           }
         }
       },
-      "spearman_correlation": 1.0,
+      "tie_aware_spearman_correlation": 0.981761387347632,
       "max_absolute_mean_value_change": 0.005131618769380952
     },
     {
@@ -1246,25 +1455,43 @@
       "metric": "precision_at_10pct",
       "best_overall": {
         "reference": {
-          "model": "AQRPE_v2_balanced",
+          "models": [
+            "AQRPE_v2_balanced",
+            "AQRPE_v2_mcc",
+            "AQRPE_v2_rank",
+            "ET_leaf5"
+          ],
           "value": 0.4142982720985436
         },
         "locked": {
-          "model": "AQRPE_v2_balanced",
+          "models": [
+            "AQRPE_v2_balanced",
+            "AQRPE_v2_mcc",
+            "AQRPE_v2_rank",
+            "ET_leaf5"
+          ],
           "value": 0.4137644016693996
         },
-        "identity_changed": false
+        "winner_set_changed": false,
+        "winner_sets_overlap": true,
+        "disjoint_winner_change": false
       },
       "best_baseline": {
         "reference": {
-          "model": "ET_leaf5",
+          "models": [
+            "ET_leaf5"
+          ],
           "value": 0.4142982720985436
         },
         "locked": {
-          "model": "ET_leaf5",
+          "models": [
+            "ET_leaf5"
+          ],
           "value": 0.4137644016693996
         },
-        "identity_changed": false
+        "winner_set_changed": false,
+        "winner_sets_overlap": true,
+        "disjoint_winner_change": false
       },
       "soft_top3": {
         "reference_value": 0.4000869820790289,
@@ -1275,71 +1502,71 @@
       },
       "ranks": {
         "reference": {
-          "AQRPE_v2_balanced": 1,
-          "AQRPE_v2_mcc": 2,
-          "AQRPE_v2_rank": 3,
-          "ET_leaf5": 4,
-          "LR_std_C0.1": 5,
-          "AQRPE_v2_soft_top3": 6,
-          "LR_std_C1": 7,
-          "DT_leaf5": 8
+          "AQRPE_v2_balanced": 2.5,
+          "AQRPE_v2_mcc": 2.5,
+          "AQRPE_v2_rank": 2.5,
+          "ET_leaf5": 2.5,
+          "LR_std_C0.1": 5.0,
+          "AQRPE_v2_soft_top3": 6.5,
+          "LR_std_C1": 6.5,
+          "DT_leaf5": 8.0
         },
         "locked": {
-          "AQRPE_v2_balanced": 1,
-          "AQRPE_v2_mcc": 2,
-          "AQRPE_v2_rank": 3,
-          "ET_leaf5": 4,
-          "LR_std_C0.1": 5,
-          "AQRPE_v2_soft_top3": 6,
-          "LR_std_C1": 7,
-          "DT_leaf5": 8
+          "AQRPE_v2_balanced": 2.5,
+          "AQRPE_v2_mcc": 2.5,
+          "AQRPE_v2_rank": 2.5,
+          "ET_leaf5": 2.5,
+          "LR_std_C0.1": 5.0,
+          "AQRPE_v2_soft_top3": 6.5,
+          "LR_std_C1": 6.5,
+          "DT_leaf5": 8.0
         },
         "models_with_changed_rank": 0,
-        "max_rank_change": 0,
+        "max_rank_change": 0.0,
         "rank_changes_detail": {
           "AQRPE_v2_balanced": {
-            "reference_rank": 1,
-            "locked_rank": 1,
-            "change": 0
+            "reference_rank": 2.5,
+            "locked_rank": 2.5,
+            "change": 0.0
           },
           "AQRPE_v2_mcc": {
-            "reference_rank": 2,
-            "locked_rank": 2,
-            "change": 0
+            "reference_rank": 2.5,
+            "locked_rank": 2.5,
+            "change": 0.0
           },
           "AQRPE_v2_rank": {
-            "reference_rank": 3,
-            "locked_rank": 3,
-            "change": 0
+            "reference_rank": 2.5,
+            "locked_rank": 2.5,
+            "change": 0.0
           },
           "AQRPE_v2_soft_top3": {
-            "reference_rank": 6,
-            "locked_rank": 6,
-            "change": 0
+            "reference_rank": 6.5,
+            "locked_rank": 6.5,
+            "change": 0.0
           },
           "DT_leaf5": {
-            "reference_rank": 8,
-            "locked_rank": 8,
-            "change": 0
+            "reference_rank": 8.0,
+            "locked_rank": 8.0,
+            "change": 0.0
           },
           "ET_leaf5": {
-            "reference_rank": 4,
-            "locked_rank": 4,
-            "change": 0
+            "reference_rank": 2.5,
+            "locked_rank": 2.5,
+            "change": 0.0
           },
           "LR_std_C0.1": {
-            "reference_rank": 5,
-            "locked_rank": 5,
-            "change": 0
+            "reference_rank": 5.0,
+            "locked_rank": 5.0,
+            "change": 0.0
           },
           "LR_std_C1": {
-            "reference_rank": 7,
-            "locked_rank": 7,
-            "change": 0
+            "reference_rank": 6.5,
+            "locked_rank": 6.5,
+            "change": 0.0
           }
         }
       },
-      "spearman_correlation": 1.0,
+      "tie_aware_spearman_correlation": 1.0,
       "max_absolute_mean_value_change": 0.0033801538248485197
     },
     {
@@ -1347,25 +1574,43 @@
       "metric": "recall_at_10pct",
       "best_overall": {
         "reference": {
-          "model": "AQRPE_v2_balanced",
+          "models": [
+            "AQRPE_v2_balanced",
+            "AQRPE_v2_mcc",
+            "AQRPE_v2_rank",
+            "ET_leaf5"
+          ],
           "value": 0.3043154711359849
         },
         "locked": {
-          "model": "AQRPE_v2_balanced",
+          "models": [
+            "AQRPE_v2_balanced",
+            "AQRPE_v2_mcc",
+            "AQRPE_v2_rank",
+            "ET_leaf5"
+          ],
           "value": 0.3060494023075826
         },
-        "identity_changed": false
+        "winner_set_changed": false,
+        "winner_sets_overlap": true,
+        "disjoint_winner_change": false
       },
       "best_baseline": {
         "reference": {
-          "model": "ET_leaf5",
+          "models": [
+            "ET_leaf5"
+          ],
           "value": 0.3043154711359849
         },
         "locked": {
-          "model": "ET_leaf5",
+          "models": [
+            "ET_leaf5"
+          ],
           "value": 0.3060494023075826
         },
-        "identity_changed": false
+        "winner_set_changed": false,
+        "winner_sets_overlap": true,
+        "disjoint_winner_change": false
       },
       "soft_top3": {
         "reference_value": 0.2839874282409348,
@@ -1376,71 +1621,71 @@
       },
       "ranks": {
         "reference": {
-          "AQRPE_v2_balanced": 1,
-          "AQRPE_v2_mcc": 2,
-          "AQRPE_v2_rank": 3,
-          "ET_leaf5": 4,
-          "AQRPE_v2_soft_top3": 5,
-          "LR_std_C0.1": 6,
-          "LR_std_C1": 7,
-          "DT_leaf5": 8
+          "AQRPE_v2_balanced": 2.5,
+          "AQRPE_v2_mcc": 2.5,
+          "AQRPE_v2_rank": 2.5,
+          "ET_leaf5": 2.5,
+          "AQRPE_v2_soft_top3": 5.0,
+          "LR_std_C0.1": 6.0,
+          "LR_std_C1": 7.0,
+          "DT_leaf5": 8.0
         },
         "locked": {
-          "AQRPE_v2_balanced": 1,
-          "AQRPE_v2_mcc": 2,
-          "AQRPE_v2_rank": 3,
-          "ET_leaf5": 4,
-          "AQRPE_v2_soft_top3": 5,
-          "LR_std_C0.1": 6,
-          "LR_std_C1": 7,
-          "DT_leaf5": 8
+          "AQRPE_v2_balanced": 2.5,
+          "AQRPE_v2_mcc": 2.5,
+          "AQRPE_v2_rank": 2.5,
+          "ET_leaf5": 2.5,
+          "AQRPE_v2_soft_top3": 5.0,
+          "LR_std_C0.1": 6.0,
+          "LR_std_C1": 7.0,
+          "DT_leaf5": 8.0
         },
         "models_with_changed_rank": 0,
-        "max_rank_change": 0,
+        "max_rank_change": 0.0,
         "rank_changes_detail": {
           "AQRPE_v2_balanced": {
-            "reference_rank": 1,
-            "locked_rank": 1,
-            "change": 0
+            "reference_rank": 2.5,
+            "locked_rank": 2.5,
+            "change": 0.0
           },
           "AQRPE_v2_mcc": {
-            "reference_rank": 2,
-            "locked_rank": 2,
-            "change": 0
+            "reference_rank": 2.5,
+            "locked_rank": 2.5,
+            "change": 0.0
           },
           "AQRPE_v2_rank": {
-            "reference_rank": 3,
-            "locked_rank": 3,
-            "change": 0
+            "reference_rank": 2.5,
+            "locked_rank": 2.5,
+            "change": 0.0
           },
           "AQRPE_v2_soft_top3": {
-            "reference_rank": 5,
-            "locked_rank": 5,
-            "change": 0
+            "reference_rank": 5.0,
+            "locked_rank": 5.0,
+            "change": 0.0
           },
           "DT_leaf5": {
-            "reference_rank": 8,
-            "locked_rank": 8,
-            "change": 0
+            "reference_rank": 8.0,
+            "locked_rank": 8.0,
+            "change": 0.0
           },
           "ET_leaf5": {
-            "reference_rank": 4,
-            "locked_rank": 4,
-            "change": 0
+            "reference_rank": 2.5,
+            "locked_rank": 2.5,
+            "change": 0.0
           },
           "LR_std_C0.1": {
-            "reference_rank": 6,
-            "locked_rank": 6,
-            "change": 0
+            "reference_rank": 6.0,
+            "locked_rank": 6.0,
+            "change": 0.0
           },
           "LR_std_C1": {
-            "reference_rank": 7,
-            "locked_rank": 7,
-            "change": 0
+            "reference_rank": 7.0,
+            "locked_rank": 7.0,
+            "change": 0.0
           }
         }
       },
-      "spearman_correlation": 1.0,
+      "tie_aware_spearman_correlation": 1.0,
       "max_absolute_mean_value_change": 0.003994257080263991
     },
     {
@@ -1448,25 +1693,43 @@
       "metric": "lift_at_10pct",
       "best_overall": {
         "reference": {
-          "model": "AQRPE_v2_balanced",
+          "models": [
+            "AQRPE_v2_balanced",
+            "AQRPE_v2_mcc",
+            "AQRPE_v2_rank",
+            "ET_leaf5"
+          ],
           "value": 3.0287011833166115
         },
         "locked": {
-          "model": "AQRPE_v2_balanced",
+          "models": [
+            "AQRPE_v2_balanced",
+            "AQRPE_v2_mcc",
+            "AQRPE_v2_rank",
+            "ET_leaf5"
+          ],
           "value": 3.0461563327138244
         },
-        "identity_changed": false
+        "winner_set_changed": false,
+        "winner_sets_overlap": true,
+        "disjoint_winner_change": false
       },
       "best_baseline": {
         "reference": {
-          "model": "ET_leaf5",
+          "models": [
+            "ET_leaf5"
+          ],
           "value": 3.0287011833166115
         },
         "locked": {
-          "model": "ET_leaf5",
+          "models": [
+            "ET_leaf5"
+          ],
           "value": 3.0461563327138244
         },
-        "identity_changed": false
+        "winner_set_changed": false,
+        "winner_sets_overlap": true,
+        "disjoint_winner_change": false
       },
       "soft_top3": {
         "reference_value": 2.82583897152621,
@@ -1477,71 +1740,71 @@
       },
       "ranks": {
         "reference": {
-          "AQRPE_v2_balanced": 1,
-          "AQRPE_v2_mcc": 2,
-          "AQRPE_v2_rank": 3,
-          "ET_leaf5": 4,
-          "AQRPE_v2_soft_top3": 5,
-          "LR_std_C0.1": 6,
-          "LR_std_C1": 7,
-          "DT_leaf5": 8
+          "AQRPE_v2_balanced": 2.5,
+          "AQRPE_v2_mcc": 2.5,
+          "AQRPE_v2_rank": 2.5,
+          "ET_leaf5": 2.5,
+          "AQRPE_v2_soft_top3": 5.0,
+          "LR_std_C0.1": 6.0,
+          "LR_std_C1": 7.0,
+          "DT_leaf5": 8.0
         },
         "locked": {
-          "AQRPE_v2_balanced": 1,
-          "AQRPE_v2_mcc": 2,
-          "AQRPE_v2_rank": 3,
-          "ET_leaf5": 4,
-          "AQRPE_v2_soft_top3": 5,
-          "LR_std_C0.1": 6,
-          "LR_std_C1": 7,
-          "DT_leaf5": 8
+          "AQRPE_v2_balanced": 2.5,
+          "AQRPE_v2_mcc": 2.5,
+          "AQRPE_v2_rank": 2.5,
+          "ET_leaf5": 2.5,
+          "AQRPE_v2_soft_top3": 5.0,
+          "LR_std_C0.1": 6.0,
+          "LR_std_C1": 7.0,
+          "DT_leaf5": 8.0
         },
         "models_with_changed_rank": 0,
-        "max_rank_change": 0,
+        "max_rank_change": 0.0,
         "rank_changes_detail": {
           "AQRPE_v2_balanced": {
-            "reference_rank": 1,
-            "locked_rank": 1,
-            "change": 0
+            "reference_rank": 2.5,
+            "locked_rank": 2.5,
+            "change": 0.0
           },
           "AQRPE_v2_mcc": {
-            "reference_rank": 2,
-            "locked_rank": 2,
-            "change": 0
+            "reference_rank": 2.5,
+            "locked_rank": 2.5,
+            "change": 0.0
           },
           "AQRPE_v2_rank": {
-            "reference_rank": 3,
-            "locked_rank": 3,
-            "change": 0
+            "reference_rank": 2.5,
+            "locked_rank": 2.5,
+            "change": 0.0
           },
           "AQRPE_v2_soft_top3": {
-            "reference_rank": 5,
-            "locked_rank": 5,
-            "change": 0
+            "reference_rank": 5.0,
+            "locked_rank": 5.0,
+            "change": 0.0
           },
           "DT_leaf5": {
-            "reference_rank": 8,
-            "locked_rank": 8,
-            "change": 0
+            "reference_rank": 8.0,
+            "locked_rank": 8.0,
+            "change": 0.0
           },
           "ET_leaf5": {
-            "reference_rank": 4,
-            "locked_rank": 4,
-            "change": 0
+            "reference_rank": 2.5,
+            "locked_rank": 2.5,
+            "change": 0.0
           },
           "LR_std_C0.1": {
-            "reference_rank": 6,
-            "locked_rank": 6,
-            "change": 0
+            "reference_rank": 6.0,
+            "locked_rank": 6.0,
+            "change": 0.0
           },
           "LR_std_C1": {
-            "reference_rank": 7,
-            "locked_rank": 7,
-            "change": 0
+            "reference_rank": 7.0,
+            "locked_rank": 7.0,
+            "change": 0.0
           }
         }
       },
-      "spearman_correlation": 1.0,
+      "tie_aware_spearman_correlation": 1.0,
       "max_absolute_mean_value_change": 0.03974562194787001
     },
     {
@@ -1549,25 +1812,42 @@
       "metric": "brier",
       "best_overall": {
         "reference": {
-          "model": "AQRPE_v2_balanced",
+          "models": [
+            "AQRPE_v2_balanced",
+            "AQRPE_v2_mcc",
+            "AQRPE_v2_rank",
+            "ET_leaf5"
+          ],
           "value": 0.162477957762774
         },
         "locked": {
-          "model": "AQRPE_v2_mcc",
+          "models": [
+            "AQRPE_v2_mcc",
+            "AQRPE_v2_rank",
+            "ET_leaf5"
+          ],
           "value": 0.1619722184132785
         },
-        "identity_changed": true
+        "winner_set_changed": true,
+        "winner_sets_overlap": true,
+        "disjoint_winner_change": false
       },
       "best_baseline": {
         "reference": {
-          "model": "ET_leaf5",
+          "models": [
+            "ET_leaf5"
+          ],
           "value": 0.162477957762774
         },
         "locked": {
-          "model": "ET_leaf5",
+          "models": [
+            "ET_leaf5"
+          ],
           "value": 0.1619722184132785
         },
-        "identity_changed": false
+        "winner_set_changed": false,
+        "winner_sets_overlap": true,
+        "disjoint_winner_change": false
       },
       "soft_top3": {
         "reference_value": 0.1811506536311555,
@@ -1578,71 +1858,71 @@
       },
       "ranks": {
         "reference": {
-          "AQRPE_v2_balanced": 1,
-          "AQRPE_v2_mcc": 2,
-          "AQRPE_v2_rank": 3,
-          "ET_leaf5": 4,
-          "DT_leaf5": 5,
-          "AQRPE_v2_soft_top3": 6,
-          "LR_std_C0.1": 7,
-          "LR_std_C1": 8
+          "AQRPE_v2_balanced": 2.5,
+          "AQRPE_v2_mcc": 2.5,
+          "AQRPE_v2_rank": 2.5,
+          "ET_leaf5": 2.5,
+          "DT_leaf5": 5.0,
+          "AQRPE_v2_soft_top3": 6.0,
+          "LR_std_C0.1": 7.0,
+          "LR_std_C1": 8.0
         },
         "locked": {
-          "AQRPE_v2_mcc": 1,
-          "AQRPE_v2_rank": 2,
-          "ET_leaf5": 3,
-          "AQRPE_v2_balanced": 4,
-          "DT_leaf5": 5,
-          "AQRPE_v2_soft_top3": 6,
-          "LR_std_C0.1": 7,
-          "LR_std_C1": 8
+          "AQRPE_v2_mcc": 2.0,
+          "AQRPE_v2_rank": 2.0,
+          "ET_leaf5": 2.0,
+          "AQRPE_v2_balanced": 4.0,
+          "DT_leaf5": 5.0,
+          "AQRPE_v2_soft_top3": 6.0,
+          "LR_std_C0.1": 7.0,
+          "LR_std_C1": 8.0
         },
         "models_with_changed_rank": 4,
-        "max_rank_change": 3,
+        "max_rank_change": 1.5,
         "rank_changes_detail": {
           "AQRPE_v2_balanced": {
-            "reference_rank": 1,
-            "locked_rank": 4,
-            "change": 3
+            "reference_rank": 2.5,
+            "locked_rank": 4.0,
+            "change": 1.5
           },
           "AQRPE_v2_mcc": {
-            "reference_rank": 2,
-            "locked_rank": 1,
-            "change": 1
+            "reference_rank": 2.5,
+            "locked_rank": 2.0,
+            "change": 0.5
           },
           "AQRPE_v2_rank": {
-            "reference_rank": 3,
-            "locked_rank": 2,
-            "change": 1
+            "reference_rank": 2.5,
+            "locked_rank": 2.0,
+            "change": 0.5
           },
           "AQRPE_v2_soft_top3": {
-            "reference_rank": 6,
-            "locked_rank": 6,
-            "change": 0
+            "reference_rank": 6.0,
+            "locked_rank": 6.0,
+            "change": 0.0
           },
           "DT_leaf5": {
-            "reference_rank": 5,
-            "locked_rank": 5,
-            "change": 0
+            "reference_rank": 5.0,
+            "locked_rank": 5.0,
+            "change": 0.0
           },
           "ET_leaf5": {
-            "reference_rank": 4,
-            "locked_rank": 3,
-            "change": 1
+            "reference_rank": 2.5,
+            "locked_rank": 2.0,
+            "change": 0.5
           },
           "LR_std_C0.1": {
-            "reference_rank": 7,
-            "locked_rank": 7,
-            "change": 0
+            "reference_rank": 7.0,
+            "locked_rank": 7.0,
+            "change": 0.0
           },
           "LR_std_C1": {
-            "reference_rank": 8,
-            "locked_rank": 8,
-            "change": 0
+            "reference_rank": 8.0,
+            "locked_rank": 8.0,
+            "change": 0.0
           }
         }
       },
-      "spearman_correlation": 0.8571428571428572,
+      "tie_aware_spearman_correlation": 0.9617692030835674,
       "max_absolute_mean_value_change": 0.0010714503300265077
     }
   ]
