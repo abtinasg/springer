@@ -79,6 +79,15 @@ MEMBERSHIP_TO_EXCLUDED = {
 TOLERANCE = 1e-12
 
 
+def compute_sha256(file_path):
+    """Compute SHA-256 hash of a file."""
+    sha256_hash = hashlib.sha256()
+    with open(file_path, "rb") as f:
+        for chunk in iter(lambda: f.read(4096), b""):
+            sha256_hash.update(chunk)
+    return sha256_hash.hexdigest()
+
+
 def load_and_verify_inputs():
     """Load and verify all input files."""
     print("Loading and verifying inputs...")
@@ -143,8 +152,35 @@ def load_and_verify_inputs():
     repeated_df = pd.read_csv(REPEATED_RESULTS_PATH)
     validation_df = pd.read_csv(VALIDATION_LOG_PATH)
     
+    # Direct SHA verification of input files
+    expected_repeated_sha = manifest["canonical_reproduction_outputs"]["repeated_all_results.csv"]["sha256"]
+    actual_repeated_sha = compute_sha256(REPEATED_RESULTS_PATH)
+    repeated_results_sha256_verified = (expected_repeated_sha == actual_repeated_sha)
+    
+    expected_validation_sha = manifest["canonical_reproduction_outputs"]["validation_log.csv"]["sha256"]
+    actual_validation_sha = compute_sha256(VALIDATION_LOG_PATH)
+    validation_log_sha256_verified = (expected_validation_sha == actual_validation_sha)
+    
+    expected_eval_script_sha = manifest["environment_and_code_files"]["run_repeated_evaluation.py"]["sha256"]
+    actual_eval_script_sha = compute_sha256(BASE_DIR / "scripts" / "run_repeated_evaluation.py")
+    evaluation_script_sha256_verified = (expected_eval_script_sha == actual_eval_script_sha)
+    
+    if not repeated_results_sha256_verified:
+        raise ValueError(f"Repeated results SHA-256 mismatch: expected {expected_repeated_sha}, got {actual_repeated_sha}")
+    if not validation_log_sha256_verified:
+        raise ValueError(f"Validation log SHA-256 mismatch: expected {expected_validation_sha}, got {actual_validation_sha}")
+    if not evaluation_script_sha256_verified:
+        raise ValueError(f"Evaluation script SHA-256 mismatch: expected {expected_eval_script_sha}, got {actual_eval_script_sha}")
+    
+    canonical_verification = {
+        "manifest_validation_status": manifest.get("manifest_validation_status"),
+        "repeated_results_sha256_verified": repeated_results_sha256_verified,
+        "validation_log_sha256_verified": validation_log_sha256_verified,
+        "evaluation_script_sha256_verified": evaluation_script_sha256_verified,
+    }
+    
     print("Inputs verified.")
-    return events_df, repeated_df, validation_df
+    return events_df, repeated_df, validation_df, canonical_verification
 
 
 def verify_event_schema(events_df):
@@ -862,49 +898,396 @@ def compute_summary(group_stability_df):
     return summary_df
 
 
-def save_all_outputs(order_counts_df, membership_counts_df, group_stability_df, summary_df, event_provenance_results):
+def validate_final_outputs(order_counts_df, membership_counts_df, group_stability_df, summary_df, event_provenance_results, canonical_verification):
+    """Validate all outputs and return validation checks and evidence."""
+    print("Validating final outputs...")
+    
+    validation_checks = {}
+    validation_evidence = {}
+    
+    # 1. Canonical verification passed
+    canonical_verification_passed = (
+        canonical_verification["manifest_validation_status"] == "all_checks_passed"
+        and canonical_verification["repeated_results_sha256_verified"]
+        and canonical_verification["validation_log_sha256_verified"]
+        and canonical_verification["evaluation_script_sha256_verified"]
+    )
+    validation_checks["canonical_verification_passed"] = canonical_verification_passed
+    
+    # 2. Event provenance passed
+    event_provenance_passed = (
+        event_provenance_results["events_checked"] == 50
+        and all(
+            event_provenance_results[key] == 0
+            for key in [
+                "canonical_event_mismatches",
+                "validation_ranking_mismatches",
+                "score_mismatches",
+                "cutoff_gap_mismatches",
+            ]
+        )
+    )
+    validation_checks["event_provenance_passed"] = event_provenance_passed
+    
+    # 3. Modal order sorting passed
+    modal_order_groups_checked = 0
+    modal_order_sorting_passed = True
+    for _, row in group_stability_df.iterrows():
+        modal_order_groups_checked += 1
+        modal_orders = row["modal_orders"].split("|OR|")
+        
+        # Check all modal orders are in ALL_SELECTED_ORDERS
+        for order in modal_orders:
+            if order not in ALL_SELECTED_ORDERS:
+                modal_order_sorting_passed = False
+                break
+        
+        # Check sorting
+        expected_sorted = sorted(modal_orders, key=ALL_SELECTED_ORDERS.index)
+        if modal_orders != expected_sorted:
+            modal_order_sorting_passed = False
+        
+        # Check count matches order_counts_df
+        experiment = row["experiment"]
+        project = row["target_project"]
+        modal_order_count = row["modal_order_count"]
+        
+        for order in modal_orders:
+            order_count = order_counts_df[
+                (order_counts_df["experiment"] == experiment) &
+                (order_counts_df["target_project"] == project) &
+                (order_counts_df["selected_order"] == order)
+            ]["count"].iloc[0]
+            if order_count != modal_order_count:
+                modal_order_sorting_passed = False
+                break
+        
+        # Check no other order has higher count
+        group_order_counts = order_counts_df[
+            (order_counts_df["experiment"] == experiment) &
+            (order_counts_df["target_project"] == project)
+        ]
+        for _, oc_row in group_order_counts.iterrows():
+            if oc_row["selected_order"] not in modal_orders and oc_row["count"] >= modal_order_count:
+                modal_order_sorting_passed = False
+                break
+        
+        if not modal_order_sorting_passed:
+            break
+    
+    validation_checks["modal_order_sorting_passed"] = modal_order_sorting_passed
+    validation_evidence["modal_order_groups_checked"] = modal_order_groups_checked
+    
+    # 4. Membership mapping passed
+    membership_mapping_passed = True
+    for _, row in membership_counts_df.iterrows():
+        membership_set = row["membership_set"]
+        excluded_candidate = row["excluded_candidate"]
+        
+        members = membership_set.split("|")
+        
+        if len(members) != 3:
+            membership_mapping_passed = False
+            break
+        if len(set(members)) != 3:
+            membership_mapping_passed = False
+            break
+        if set(members) | {excluded_candidate} != set(CANDIDATE_ORDER):
+            membership_mapping_passed = False
+            break
+        if set(members) & {excluded_candidate}:
+            membership_mapping_passed = False
+            break
+        if MEMBERSHIP_TO_EXCLUDED[membership_set] != excluded_candidate:
+            membership_mapping_passed = False
+            break
+    
+    # Check membership_counts_df structure
+    if len(membership_counts_df) != 40:
+        membership_mapping_passed = False
+    if len(membership_counts_df.columns) != 7:
+        membership_mapping_passed = False
+    if membership_counts_df.isnull().sum().sum() > 0:
+        membership_mapping_passed = False
+    
+    key_cols = ["experiment", "target_project", "membership_set"]
+    if membership_counts_df.duplicated(subset=key_cols).sum() > 0:
+        membership_mapping_passed = False
+    
+    validation_checks["membership_mapping_passed"] = membership_mapping_passed
+    
+    # 5. Modal excluded mapping passed
+    modal_membership_groups_checked = 0
+    modal_excluded_mapping_passed = True
+    for _, row in group_stability_df.iterrows():
+        modal_membership_groups_checked += 1
+        modal_sets = row["modal_membership_sets"].split("|OR|")
+        actual_excluded = row["modal_excluded_candidates"].split("|OR|")
+        
+        expected_excluded = [
+            MEMBERSHIP_TO_EXCLUDED[membership_set]
+            for membership_set in modal_sets
+        ]
+        expected_excluded = sorted(expected_excluded, key=CANDIDATE_ORDER.index)
+        
+        if actual_excluded != expected_excluded:
+            modal_excluded_mapping_passed = False
+            break
+        
+        # Check count matches membership_counts_df
+        experiment = row["experiment"]
+        project = row["target_project"]
+        modal_membership_count = row["modal_membership_count"]
+        
+        for ms in modal_sets:
+            membership_count = membership_counts_df[
+                (membership_counts_df["experiment"] == experiment) &
+                (membership_counts_df["target_project"] == project) &
+                (membership_counts_df["membership_set"] == ms)
+            ]["count"].iloc[0]
+            if membership_count != modal_membership_count:
+                modal_excluded_mapping_passed = False
+                break
+        
+        # Check no other membership set has higher count
+        group_membership_counts = membership_counts_df[
+            (membership_counts_df["experiment"] == experiment) &
+            (membership_counts_df["target_project"] == project)
+        ]
+        for _, mc_row in group_membership_counts.iterrows():
+            if mc_row["membership_set"] not in modal_sets and mc_row["count"] >= modal_membership_count:
+                modal_excluded_mapping_passed = False
+                break
+        
+        if not modal_excluded_mapping_passed:
+            break
+    
+    validation_checks["modal_excluded_mapping_passed"] = modal_excluded_mapping_passed
+    validation_evidence["modal_membership_groups_checked"] = modal_membership_groups_checked
+    
+    # 6. Pairwise count formula passed
+    pairwise_formula_groups_checked = 0
+    pairwise_count_formula_passed = True
+    for _, row in group_stability_df.iterrows():
+        pairwise_formula_groups_checked += 1
+        experiment = row["experiment"]
+        project = row["target_project"]
+        
+        # Check order agreement formula
+        group_order_counts = order_counts_df[
+            (order_counts_df["experiment"] == experiment) &
+            (order_counts_df["target_project"] == project)
+        ]["count"].values
+        expected_order_agreement = sum(c * (c - 1) / 2 for c in group_order_counts) / 10
+        if abs(row["exact_order_pairwise_agreement"] - expected_order_agreement) > TOLERANCE:
+            pairwise_count_formula_passed = False
+            break
+        
+        # Check membership agreement formula
+        group_membership_counts = membership_counts_df[
+            (membership_counts_df["experiment"] == experiment) &
+            (membership_counts_df["target_project"] == project)
+        ]["count"].values
+        expected_membership_agreement = sum(c * (c - 1) / 2 for c in group_membership_counts) / 10
+        if abs(row["exact_membership_pairwise_agreement"] - expected_membership_agreement) > TOLERANCE:
+            pairwise_count_formula_passed = False
+            break
+    
+    validation_checks["pairwise_count_formula_passed"] = pairwise_count_formula_passed
+    validation_evidence["pairwise_formula_groups_checked"] = pairwise_formula_groups_checked
+    
+    # 7. Jaccard identity passed
+    jaccard_identity_groups_checked = 0
+    jaccard_identity_passed = True
+    for _, row in group_stability_df.iterrows():
+        jaccard_identity_groups_checked += 1
+        expected_jaccard = 0.5 + 0.5 * row["exact_membership_pairwise_agreement"]
+        if abs(row["mean_pairwise_jaccard"] - expected_jaccard) > TOLERANCE:
+            jaccard_identity_passed = False
+            break
+    
+    validation_checks["jaccard_identity_passed"] = jaccard_identity_passed
+    validation_evidence["jaccard_identity_groups_checked"] = jaccard_identity_groups_checked
+    
+    # 8. Unanimous bidirectional checks passed
+    unanimous_groups_checked = 0
+    unanimous_bidirectional_checks_passed = True
+    for _, row in group_stability_df.iterrows():
+        unanimous_groups_checked += 1
+        
+        # Check unanimous order
+        expected_unanimous_order = (
+            row["distinct_orders"] == 1
+            and row["modal_order_count"] == 5
+            and abs(row["exact_order_pairwise_agreement"] - 1.0) <= TOLERANCE
+        )
+        if row["unanimous_order"] != expected_unanimous_order:
+            unanimous_bidirectional_checks_passed = False
+            break
+        
+        # Check unanimous membership
+        expected_unanimous_membership = (
+            row["distinct_membership_sets"] == 1
+            and row["modal_membership_count"] == 5
+            and abs(row["exact_membership_pairwise_agreement"] - 1.0) <= TOLERANCE
+            and abs(row["mean_pairwise_jaccard"] - 1.0) <= TOLERANCE
+        )
+        if row["unanimous_membership"] != expected_unanimous_membership:
+            unanimous_bidirectional_checks_passed = False
+            break
+        
+        # Check modal tie flags
+        num_modal_orders = len(row["modal_orders"].split("|OR|"))
+        if row["order_modal_tie"] != (num_modal_orders > 1):
+            unanimous_bidirectional_checks_passed = False
+            break
+        
+        num_modal_membership_sets = len(row["modal_membership_sets"].split("|OR|"))
+        if row["membership_modal_tie"] != (num_modal_membership_sets > 1):
+            unanimous_bidirectional_checks_passed = False
+            break
+    
+    validation_checks["unanimous_bidirectional_checks_passed"] = unanimous_bidirectional_checks_passed
+    validation_evidence["unanimous_groups_checked"] = unanimous_groups_checked
+    
+    # 9. Group validation passed
+    group_validation_passed = True
+    if len(group_stability_df) != 10:
+        group_validation_passed = False
+    if len(group_stability_df.columns) != 25:
+        group_validation_passed = False
+    if group_stability_df.isnull().sum().sum() > 0:
+        group_validation_passed = False
+    if group_stability_df.duplicated(subset=["experiment", "target_project"]).sum() > 0:
+        group_validation_passed = False
+    
+    validation_checks["group_validation_passed"] = group_validation_passed
+    
+    # 10. Summary validation passed
+    summary_validation_passed = True
+    if len(summary_df) != 3:
+        summary_validation_passed = False
+    if summary_df.isnull().sum().sum() > 0:
+        summary_validation_passed = False
+    
+    # Reconstruct summary from group_stability_df and compare
+    overall_row = summary_df[summary_df["scope"] == "overall"].iloc[0]
+    if overall_row["group_count"] != 10:
+        summary_validation_passed = False
+    
+    for experiment in EXPECTED_EXPERIMENTS:
+        setting_row = summary_df[
+            (summary_df["scope"] == "by_setting") &
+            (summary_df["experiment"] == experiment)
+        ].iloc[0]
+        if setting_row["group_count"] != 5:
+            summary_validation_passed = False
+    
+    # Check summary metrics match group_stability_df
+    expected_unanimous_order_count = int(group_stability_df["unanimous_order"].sum())
+    if overall_row["unanimous_order_group_count"] != expected_unanimous_order_count:
+        summary_validation_passed = False
+    
+    expected_unanimous_membership_count = int(group_stability_df["unanimous_membership"].sum())
+    if overall_row["unanimous_membership_group_count"] != expected_unanimous_membership_count:
+        summary_validation_passed = False
+    
+    expected_mean_exact_order = group_stability_df["exact_order_pairwise_agreement"].mean()
+    if abs(overall_row["mean_exact_order_pairwise_agreement"] - expected_mean_exact_order) > TOLERANCE:
+        summary_validation_passed = False
+    
+    expected_mean_jaccard = group_stability_df["mean_pairwise_jaccard"].mean()
+    if abs(overall_row["mean_pairwise_jaccard"] - expected_mean_jaccard) > TOLERANCE:
+        summary_validation_passed = False
+    
+    validation_checks["summary_validation_passed"] = summary_validation_passed
+    
+    # Add evidence
+    validation_evidence["events_checked"] = event_provenance_results["events_checked"]
+    validation_evidence["order_count_rows"] = len(order_counts_df)
+    validation_evidence["membership_count_rows"] = len(membership_counts_df)
+    validation_evidence["group_rows"] = len(group_stability_df)
+    validation_evidence["summary_rows"] = len(summary_df)
+    
+    print("Final validation complete.")
+    return validation_checks, validation_evidence
+
+
+def save_all_outputs(order_counts_df, membership_counts_df, group_stability_df, summary_df, event_provenance_results, validation_checks, validation_evidence):
     """Save all output files after validation passes."""
     print("Saving all outputs...")
     
     # Ensure output directory exists
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     
-    # Save CSV files using temporary files for atomic writes
-    import tempfile
-    import shutil
+    # Build all outputs in memory
+    order_csv_text = order_counts_df.to_csv(index=False)
+    membership_csv_text = membership_counts_df.to_csv(index=False)
+    group_csv_text = group_stability_df.to_csv(index=False)
+    summary_csv_text = summary_df.to_csv(index=False)
     
-    # Save order counts
-    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.csv') as tmp:
-        order_counts_df.to_csv(tmp.name, index=False)
-        tmp_path = Path(tmp.name)
-    tmp_path.replace(OUTPUT_ORDER_COUNTS)
+    # Build reports in memory
+    report_dict = build_report_dict(event_provenance_results, group_stability_df, summary_df, validation_checks, validation_evidence)
+    json_text = json.dumps(report_dict, indent=2, ensure_ascii=False) + "\n"
     
-    # Save membership counts
-    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.csv') as tmp:
-        membership_counts_df.to_csv(tmp.name, index=False)
-        tmp_path = Path(tmp.name)
-    tmp_path.replace(OUTPUT_MEMBERSHIP_COUNTS)
+    markdown_text = build_markdown_report(event_provenance_results, group_stability_df, summary_df, validation_checks, validation_evidence)
     
-    # Save group stability
-    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.csv') as tmp:
-        group_stability_df.to_csv(tmp.name, index=False)
-        tmp_path = Path(tmp.name)
-    tmp_path.replace(OUTPUT_GROUP_STABILITY)
+    # Save using same-directory temp files for atomic writes
+    temp_files = []
     
-    # Save summary
-    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.csv') as tmp:
-        summary_df.to_csv(tmp.name, index=False)
-        tmp_path = Path(tmp.name)
-    tmp_path.replace(OUTPUT_SUMMARY)
-    
-    # Save reports
-    save_reports(event_provenance_results, group_stability_df, summary_df)
+    try:
+        # Save order counts
+        tmp_order = OUTPUT_ORDER_COUNTS.with_name(OUTPUT_ORDER_COUNTS.name + ".tmp")
+        tmp_order.write_text(order_csv_text)
+        temp_files.append(tmp_order)
+        
+        # Save membership counts
+        tmp_membership = OUTPUT_MEMBERSHIP_COUNTS.with_name(OUTPUT_MEMBERSHIP_COUNTS.name + ".tmp")
+        tmp_membership.write_text(membership_csv_text)
+        temp_files.append(tmp_membership)
+        
+        # Save group stability
+        tmp_group = OUTPUT_GROUP_STABILITY.with_name(OUTPUT_GROUP_STABILITY.name + ".tmp")
+        tmp_group.write_text(group_csv_text)
+        temp_files.append(tmp_group)
+        
+        # Save summary
+        tmp_summary = OUTPUT_SUMMARY.with_name(OUTPUT_SUMMARY.name + ".tmp")
+        tmp_summary.write_text(summary_csv_text)
+        temp_files.append(tmp_summary)
+        
+        # Save JSON
+        tmp_json = OUTPUT_JSON.with_name(OUTPUT_JSON.name + ".tmp")
+        tmp_json.write_text(json_text)
+        temp_files.append(tmp_json)
+        
+        # Save Markdown
+        tmp_md = OUTPUT_MD.with_name(OUTPUT_MD.name + ".tmp")
+        tmp_md.write_text(markdown_text)
+        temp_files.append(tmp_md)
+        
+        # Atomic replacement
+        tmp_order.replace(OUTPUT_ORDER_COUNTS)
+        tmp_membership.replace(OUTPUT_MEMBERSHIP_COUNTS)
+        tmp_group.replace(OUTPUT_GROUP_STABILITY)
+        tmp_summary.replace(OUTPUT_SUMMARY)
+        tmp_json.replace(OUTPUT_JSON)
+        tmp_md.replace(OUTPUT_MD)
+        
+        # Clear temp files list after successful replacement
+        temp_files = []
+        
+    finally:
+        # Clean up any remaining temp files
+        for tmp_path in temp_files:
+            if tmp_path.exists():
+                tmp_path.unlink()
     
     print("All outputs saved.")
 
 
-def save_reports(event_provenance_results, group_stability_df, summary_df):
-    """Save JSON and Markdown reports."""
+def build_report_dict(event_provenance_results, group_stability_df, summary_df, validation_checks, validation_evidence):
+    """Build the report dictionary for JSON output."""
     
     # Identify special groups
     unanimous_order_groups = group_stability_df[group_stability_df["unanimous_order"]][["experiment", "target_project"]].to_dict(orient="records")
@@ -930,8 +1313,7 @@ def save_reports(event_provenance_results, group_stability_df, summary_df):
         group_stability_df["mean_pairwise_kendall_similarity"] == min_kendall_similarity
     ][["experiment", "target_project"]].to_dict(orient="records")
     
-    # Build JSON report
-    report = {
+    return {
         "canonical_verification": {
             "manifest_validation_status": "all_checks_passed",
             "repeated_results_sha256_verified": True,
@@ -962,154 +1344,171 @@ def save_reports(event_provenance_results, group_stability_df, summary_df):
             "minimum_membership_agreement_groups": minimum_membership_agreement_groups,
             "minimum_kendall_similarity_groups": minimum_kendall_similarity_groups,
         },
-        "validation_checks": {
-            "canonical_verification_passed": True,
-            "event_provenance_passed": all(
-                event_provenance_results[key] == 0
-                for key in [
-                    "canonical_event_mismatches",
-                    "validation_ranking_mismatches",
-                    "score_mismatches",
-                    "cutoff_gap_mismatches",
-                ]
-            ) and event_provenance_results["events_checked"] == 50,
-            "modal_order_sorting_passed": True,
-            "membership_mapping_passed": True,
-            "modal_excluded_mapping_passed": True,
-            "pairwise_count_formula_passed": True,
-            "jaccard_identity_passed": True,
-            "unanimous_bidirectional_checks_passed": True,
-            "group_validation_passed": True,
-            "summary_validation_passed": True
-        },
+        "validation_checks": validation_checks,
+        "validation_evidence": validation_evidence,
     }
+
+
+def build_markdown_report(event_provenance_results, group_stability_df, summary_df, validation_checks, validation_evidence):
+    """Build the Markdown report as a string."""
     
-    with open(OUTPUT_JSON, "w") as f:
-        json.dump(report, f, indent=2)
+    # Identify special groups
+    unanimous_order_groups = group_stability_df[group_stability_df["unanimous_order"]][["experiment", "target_project"]].to_dict(orient="records")
+    unanimous_membership_but_nonunanimous_order_groups = group_stability_df[
+        (group_stability_df["unanimous_membership"]) & (~group_stability_df["unanimous_order"])
+    ][["experiment", "target_project"]].to_dict(orient="records")
+    order_modal_tie_groups = group_stability_df[group_stability_df["order_modal_tie"]][["experiment", "target_project"]].to_dict(orient="records")
+    membership_modal_tie_groups = group_stability_df[group_stability_df["membership_modal_tie"]][["experiment", "target_project"]].to_dict(orient="records")
     
-    # Build Markdown report
-    with open(OUTPUT_MD, "w") as f:
-        f.write("# Part 2 Section 3D: Soft-Top-3 Seed Stability Analysis\n\n")
-        
-        f.write("## Canonical Verification\n\n")
-        f.write("- Manifest validation status: all_checks_passed\n")
-        f.write("- Repeated results SHA-256 verified: True\n")
-        f.write("- Validation log SHA-256 verified: True\n")
-        f.write("- Evaluation script SHA-256 verified: True\n\n")
-        
-        f.write("## Event Provenance Validation\n\n")
-        f.write(f"- **Events checked:** {event_provenance_results['events_checked']}\n")
-        f.write(f"- **Canonical event mismatches:** {event_provenance_results['canonical_event_mismatches']}\n")
-        f.write(f"- **Validation ranking mismatches:** {event_provenance_results['validation_ranking_mismatches']}\n")
-        f.write(f"- **Score mismatches:** {event_provenance_results['score_mismatches']}\n")
-        f.write(f"- **Cutoff gap mismatches:** {event_provenance_results['cutoff_gap_mismatches']}\n\n")
-        
-        f.write("## Stability Definitions\n\n")
-        f.write("- **Exact order pairwise agreement:** Proportion of seed pairs with identical selected order\n")
-        f.write("- **Exact membership pairwise agreement:** Proportion of seed pairs with identical membership set\n")
-        f.write("- **Mean pairwise Jaccard:** Mean Jaccard similarity between membership sets across seed pairs\n")
-        f.write("- **Mean full-rank position agreement:** Mean proportion of candidates in same position across seed pairs\n")
-        f.write("- **Mean pairwise Kendall tau:** Mean Kendall tau correlation between full rankings across seed pairs\n")
-        f.write("- **Mean pairwise Kendall similarity:** Mean normalized Kendall similarity (tau+1)/2 across seed pairs\n\n")
-        
-        f.write("## Order Stability by Project and Setting\n\n")
-        f.write("| Experiment | Project | Distinct Orders | Modal Order(s) | Modal Count | Modal Prop | Unanimous |\n")
-        f.write("|------------|---------|-----------------|----------------|-------------|------------|-----------|\n")
-        for _, row in group_stability_df.iterrows():
-            f.write(f"| {row['experiment']} | {row['target_project']} | {row['distinct_orders']} | {row['modal_orders']} | {row['modal_order_count']} | {row['modal_order_proportion']:.3f} | {row['unanimous_order']} |\n")
-        f.write("\n")
-        
-        f.write("## Membership Stability by Project and Setting\n\n")
-        f.write("| Experiment | Project | Distinct Sets | Modal Set(s) | Modal Count | Modal Prop | Modal Excluded Candidate(s) | Unanimous |\n")
-        f.write("|------------|---------|---------------|--------------|-------------|------------|---------------------------|-----------|\n")
-        for _, row in group_stability_df.iterrows():
-            f.write(f"| {row['experiment']} | {row['target_project']} | {row['distinct_membership_sets']} | {row['modal_membership_sets']} | {row['modal_membership_count']} | {row['modal_membership_proportion']:.3f} | {row['modal_excluded_candidates']} | {row['unanimous_membership']} |\n")
-        f.write("\n")
-        
-        f.write("## Pairwise Order and Membership Agreement\n\n")
-        f.write("| Experiment | Project | Exact Order | Exact Membership | Jaccard | Position Agreement | Kendall Tau | Kendall Similarity |\n")
-        f.write("|------------|---------|-------------|------------------|---------|-------------------|-------------|-------------------|\n")
-        for _, row in group_stability_df.iterrows():
-            f.write(f"| {row['experiment']} | {row['target_project']} | {row['exact_order_pairwise_agreement']:.3f} | {row['exact_membership_pairwise_agreement']:.3f} | {row['mean_pairwise_jaccard']:.3f} | {row['mean_full_rank_position_agreement']:.3f} | {row['mean_pairwise_kendall_tau']:.3f} | {row['mean_pairwise_kendall_similarity']:.3f} |\n")
-        f.write("\n")
-        
-        f.write("## Overall Summary\n\n")
-        overall = summary_df[summary_df["scope"] == "overall"].iloc[0]
-        f.write(f"- **Groups:** {overall['group_count']}\n")
-        f.write(f"- **Unanimous order groups:** {overall['unanimous_order_group_count']} ({overall['unanimous_order_group_proportion']:.3f})\n")
-        f.write(f"- **Unanimous membership groups:** {overall['unanimous_membership_group_count']} ({overall['unanimous_membership_group_proportion']:.3f})\n")
-        f.write(f"- **Mean distinct orders:** {overall['mean_distinct_orders']:.3f}\n")
-        f.write(f"- **Mean distinct membership sets:** {overall['mean_distinct_membership_sets']:.3f}\n")
-        f.write(f"- **Mean exact order agreement:** {overall['mean_exact_order_pairwise_agreement']:.3f}\n")
-        f.write(f"- **Mean exact membership agreement:** {overall['mean_exact_membership_pairwise_agreement']:.3f}\n")
-        f.write(f"- **Mean pairwise Jaccard:** {overall['mean_pairwise_jaccard']:.3f}\n")
-        f.write(f"- **Mean full-rank position agreement:** {overall['mean_full_rank_position_agreement']:.3f}\n")
-        f.write(f"- **Mean Kendall tau:** {overall['mean_pairwise_kendall_tau']:.3f}\n")
-        f.write(f"- **Mean Kendall similarity:** {overall['mean_pairwise_kendall_similarity']:.3f}\n")
-        f.write(f"- **Minimum cutoff score gap:** {overall['minimum_group_cutoff_score_gap']:.6f}\n\n")
-        
-        f.write("## Within-Project Summary\n\n")
-        wp = summary_df[(summary_df["scope"] == "by_setting") & (summary_df["experiment"] == "within_project")].iloc[0]
-        f.write(f"- **Groups:** {wp['group_count']}\n")
-        f.write(f"- **Unanimous order groups:** {wp['unanimous_order_group_count']} ({wp['unanimous_order_group_proportion']:.3f})\n")
-        f.write(f"- **Unanimous membership groups:** {wp['unanimous_membership_group_count']} ({wp['unanimous_membership_group_proportion']:.3f})\n")
-        f.write(f"- **Mean exact order agreement:** {wp['mean_exact_order_pairwise_agreement']:.3f}\n")
-        f.write(f"- **Mean exact membership agreement:** {wp['mean_exact_membership_pairwise_agreement']:.3f}\n")
-        f.write(f"- **Mean pairwise Jaccard:** {wp['mean_pairwise_jaccard']:.3f}\n")
-        f.write(f"- **Mean Kendall similarity:** {wp['mean_pairwise_kendall_similarity']:.3f}\n\n")
-        
-        f.write("## Cross-Project Summary\n\n")
-        cp = summary_df[(summary_df["scope"] == "by_setting") & (summary_df["experiment"] == "cross_project")].iloc[0]
-        f.write(f"- **Groups:** {cp['group_count']}\n")
-        f.write(f"- **Unanimous order groups:** {cp['unanimous_order_group_count']} ({cp['unanimous_order_group_proportion']:.3f})\n")
-        f.write(f"- **Unanimous membership groups:** {cp['unanimous_membership_group_count']} ({cp['unanimous_membership_group_proportion']:.3f})\n")
-        f.write(f"- **Mean exact order agreement:** {cp['mean_exact_order_pairwise_agreement']:.3f}\n")
-        f.write(f"- **Mean exact membership agreement:** {cp['mean_exact_membership_pairwise_agreement']:.3f}\n")
-        f.write(f"- **Mean pairwise Jaccard:** {cp['mean_pairwise_jaccard']:.3f}\n")
-        f.write(f"- **Mean Kendall similarity:** {cp['mean_pairwise_kendall_similarity']:.3f}\n\n")
-        
-        f.write("## Special Stability Groups\n\n")
-        f.write(f"### Unanimous Order Groups ({len(unanimous_order_groups)})\n\n")
-        for group in unanimous_order_groups:
-            f.write(f"- {group['experiment']}/{group['target_project']}\n")
-        f.write("\n")
-        
-        f.write(f"### Unanimous Membership but Nonunanimous Order Groups ({len(unanimous_membership_but_nonunanimous_order_groups)})\n\n")
-        for group in unanimous_membership_but_nonunanimous_order_groups:
-            f.write(f"- {group['experiment']}/{group['target_project']}\n")
-        f.write("\n")
-        
-        f.write(f"### Order Modal Tie Groups ({len(order_modal_tie_groups)})\n\n")
-        for group in order_modal_tie_groups:
-            f.write(f"- {group['experiment']}/{group['target_project']}\n")
-        f.write("\n")
-        
-        f.write(f"### Membership Modal Tie Groups ({len(membership_modal_tie_groups)})\n\n")
-        for group in membership_modal_tie_groups:
-            f.write(f"- {group['experiment']}/{group['target_project']}\n")
-        f.write("\n")
-        
-        f.write(f"### Minimum Order Agreement Groups (agreement={min_order_agreement:.3f})\n\n")
-        for group in minimum_order_agreement_groups:
-            f.write(f"- {group['experiment']}/{group['target_project']}\n")
-        f.write("\n")
-        
-        f.write(f"### Minimum Membership Agreement Groups (agreement={min_membership_agreement:.3f})\n\n")
-        for group in minimum_membership_agreement_groups:
-            f.write(f"- {group['experiment']}/{group['target_project']}\n")
-        f.write("\n")
-        
-        f.write(f"### Minimum Kendall Similarity Groups (similarity={min_kendall_similarity:.3f})\n\n")
-        for group in minimum_kendall_similarity_groups:
-            f.write(f"- {group['experiment']}/{group['target_project']}\n")
-        f.write("\n")
-        
-        f.write("## Interpretation Limits\n\n")
-        f.write("These metrics describe categorical membership and ordering agreement of Soft-top-3 selections across five seeds.\n\n")
-        f.write("They are descriptive, not inferential, and do not establish predictive-performance stability, statistical significance, or superiority.\n\n")
-        f.write("Membership stability and ordering stability are distinct: identical candidate membership does not necessarily imply identical candidate ordering.\n")
+    # Groups with minimum agreement
+    min_order_agreement = group_stability_df["exact_order_pairwise_agreement"].min()
+    minimum_order_agreement_groups = group_stability_df[
+        group_stability_df["exact_order_pairwise_agreement"] == min_order_agreement
+    ][["experiment", "target_project"]].to_dict(orient="records")
     
-    print("Reports saved.")
+    min_membership_agreement = group_stability_df["exact_membership_pairwise_agreement"].min()
+    minimum_membership_agreement_groups = group_stability_df[
+        group_stability_df["exact_membership_pairwise_agreement"] == min_membership_agreement
+    ][["experiment", "target_project"]].to_dict(orient="records")
+    
+    min_kendall_similarity = group_stability_df["mean_pairwise_kendall_similarity"].min()
+    minimum_kendall_similarity_groups = group_stability_df[
+        group_stability_df["mean_pairwise_kendall_similarity"] == min_kendall_similarity
+    ][["experiment", "target_project"]].to_dict(orient="records")
+    
+    lines = []
+    lines.append("# Part 2 Section 3D: Soft-Top-3 Seed Stability Analysis\n\n")
+    
+    lines.append("## Canonical Verification\n\n")
+    lines.append("- Manifest validation status: all_checks_passed\n")
+    lines.append("- Repeated results SHA-256 verified: True\n")
+    lines.append("- Validation log SHA-256 verified: True\n")
+    lines.append("- Evaluation script SHA-256 verified: True\n\n")
+    
+    lines.append("## Event Provenance Validation\n\n")
+    lines.append(f"- **Events checked:** {event_provenance_results['events_checked']}\n")
+    lines.append(f"- **Canonical event mismatches:** {event_provenance_results['canonical_event_mismatches']}\n")
+    lines.append(f"- **Validation ranking mismatches:** {event_provenance_results['validation_ranking_mismatches']}\n")
+    lines.append(f"- **Score mismatches:** {event_provenance_results['score_mismatches']}\n")
+    lines.append(f"- **Cutoff gap mismatches:** {event_provenance_results['cutoff_gap_mismatches']}\n\n")
+    
+    lines.append("## Stability Definitions\n\n")
+    lines.append("- **Exact order pairwise agreement:** Proportion of seed pairs with identical selected order\n")
+    lines.append("- **Exact membership pairwise agreement:** Proportion of seed pairs with identical membership set\n")
+    lines.append("- **Mean pairwise Jaccard:** Mean Jaccard similarity between membership sets across seed pairs\n")
+    lines.append("- **Mean full-rank position agreement:** Mean proportion of candidates in same position across seed pairs\n")
+    lines.append("- **Mean pairwise Kendall tau:** Mean Kendall tau correlation between full rankings across seed pairs\n")
+    lines.append("- **Mean pairwise Kendall similarity:** Mean normalized Kendall similarity (tau+1)/2 across seed pairs\n\n")
+    
+    lines.append("## Order Stability by Project and Setting\n\n")
+    lines.append("| Experiment | Project | Distinct Orders | Modal Order(s) | Modal Count | Modal Prop | Unanimous |\n")
+    lines.append("|------------|---------|-----------------|----------------|-------------|------------|-----------|\n")
+    for _, row in group_stability_df.iterrows():
+        lines.append(f"| {row['experiment']} | {row['target_project']} | {row['distinct_orders']} | {row['modal_orders']} | {row['modal_order_count']} | {row['modal_order_proportion']:.3f} | {row['unanimous_order']} |\n")
+    lines.append("\n")
+    
+    lines.append("## Membership Stability by Project and Setting\n\n")
+    lines.append("| Experiment | Project | Distinct Sets | Modal Set(s) | Modal Count | Modal Prop | Modal Excluded Candidate(s) | Unanimous |\n")
+    lines.append("|------------|---------|---------------|--------------|-------------|------------|---------------------------|-----------|\n")
+    for _, row in group_stability_df.iterrows():
+        lines.append(f"| {row['experiment']} | {row['target_project']} | {row['distinct_membership_sets']} | {row['modal_membership_sets']} | {row['modal_membership_count']} | {row['modal_membership_proportion']:.3f} | {row['modal_excluded_candidates']} | {row['unanimous_membership']} |\n")
+    lines.append("\n")
+    
+    lines.append("## Pairwise Order and Membership Agreement\n\n")
+    lines.append("| Experiment | Project | Exact Order | Exact Membership | Jaccard | Position Agreement | Kendall Tau | Kendall Similarity |\n")
+    lines.append("|------------|---------|-------------|------------------|---------|-------------------|-------------|-------------------|\n")
+    for _, row in group_stability_df.iterrows():
+        lines.append(f"| {row['experiment']} | {row['target_project']} | {row['exact_order_pairwise_agreement']:.3f} | {row['exact_membership_pairwise_agreement']:.3f} | {row['mean_pairwise_jaccard']:.3f} | {row['mean_full_rank_position_agreement']:.3f} | {row['mean_pairwise_kendall_tau']:.3f} | {row['mean_pairwise_kendall_similarity']:.3f} |\n")
+    lines.append("\n")
+    
+    lines.append("## Overall Summary\n\n")
+    overall = summary_df[summary_df["scope"] == "overall"].iloc[0]
+    lines.append(f"- **Groups:** {overall['group_count']}\n")
+    lines.append(f"- **Unanimous order groups:** {overall['unanimous_order_group_count']} ({overall['unanimous_order_group_proportion']:.3f})\n")
+    lines.append(f"- **Unanimous membership groups:** {overall['unanimous_membership_group_count']} ({overall['unanimous_membership_group_proportion']:.3f})\n")
+    lines.append(f"- **Mean distinct orders:** {overall['mean_distinct_orders']:.3f}\n")
+    lines.append(f"- **Mean distinct membership sets:** {overall['mean_distinct_membership_sets']:.3f}\n")
+    lines.append(f"- **Mean exact order agreement:** {overall['mean_exact_order_pairwise_agreement']:.3f}\n")
+    lines.append(f"- **Mean exact membership agreement:** {overall['mean_exact_membership_pairwise_agreement']:.3f}\n")
+    lines.append(f"- **Mean pairwise Jaccard:** {overall['mean_pairwise_jaccard']:.3f}\n")
+    lines.append(f"- **Mean full-rank position agreement:** {overall['mean_full_rank_position_agreement']:.3f}\n")
+    lines.append(f"- **Mean Kendall tau:** {overall['mean_pairwise_kendall_tau']:.3f}\n")
+    lines.append(f"- **Mean Kendall similarity:** {overall['mean_pairwise_kendall_similarity']:.3f}\n")
+    lines.append(f"- **Minimum cutoff score gap:** {overall['minimum_group_cutoff_score_gap']:.6f}\n\n")
+    
+    lines.append("## Within-Project Summary\n\n")
+    wp = summary_df[(summary_df["scope"] == "by_setting") & (summary_df["experiment"] == "within_project")].iloc[0]
+    lines.append(f"- **Groups:** {wp['group_count']}\n")
+    lines.append(f"- **Unanimous order groups:** {wp['unanimous_order_group_count']} ({wp['unanimous_order_group_proportion']:.3f})\n")
+    lines.append(f"- **Unanimous membership groups:** {wp['unanimous_membership_group_count']} ({wp['unanimous_membership_group_proportion']:.3f})\n")
+    lines.append(f"- **Mean exact order agreement:** {wp['mean_exact_order_pairwise_agreement']:.3f}\n")
+    lines.append(f"- **Mean exact membership agreement:** {wp['mean_exact_membership_pairwise_agreement']:.3f}\n")
+    lines.append(f"- **Mean pairwise Jaccard:** {wp['mean_pairwise_jaccard']:.3f}\n")
+    lines.append(f"- **Mean Kendall similarity:** {wp['mean_pairwise_kendall_similarity']:.3f}\n\n")
+    
+    lines.append("## Cross-Project Summary\n\n")
+    cp = summary_df[(summary_df["scope"] == "by_setting") & (summary_df["experiment"] == "cross_project")].iloc[0]
+    lines.append(f"- **Groups:** {cp['group_count']}\n")
+    lines.append(f"- **Unanimous order groups:** {cp['unanimous_order_group_count']} ({cp['unanimous_order_group_proportion']:.3f})\n")
+    lines.append(f"- **Unanimous membership groups:** {cp['unanimous_membership_group_count']} ({cp['unanimous_membership_group_proportion']:.3f})\n")
+    lines.append(f"- **Mean exact order agreement:** {cp['mean_exact_order_pairwise_agreement']:.3f}\n")
+    lines.append(f"- **Mean exact membership agreement:** {cp['mean_exact_membership_pairwise_agreement']:.3f}\n")
+    lines.append(f"- **Mean pairwise Jaccard:** {cp['mean_pairwise_jaccard']:.3f}\n")
+    lines.append(f"- **Mean Kendall similarity:** {cp['mean_pairwise_kendall_similarity']:.3f}\n\n")
+    
+    lines.append("## Special Stability Groups\n\n")
+    lines.append(f"### Unanimous Order Groups ({len(unanimous_order_groups)})\n\n")
+    for group in unanimous_order_groups:
+        lines.append(f"- {group['experiment']}/{group['target_project']}\n")
+    lines.append("\n")
+    
+    lines.append(f"### Unanimous Membership but Nonunanimous Order Groups ({len(unanimous_membership_but_nonunanimous_order_groups)})\n\n")
+    for group in unanimous_membership_but_nonunanimous_order_groups:
+        lines.append(f"- {group['experiment']}/{group['target_project']}\n")
+    lines.append("\n")
+    
+    lines.append(f"### Order Modal Tie Groups ({len(order_modal_tie_groups)})\n\n")
+    for group in order_modal_tie_groups:
+        lines.append(f"- {group['experiment']}/{group['target_project']}\n")
+    lines.append("\n")
+    
+    lines.append(f"### Membership Modal Tie Groups ({len(membership_modal_tie_groups)})\n\n")
+    for group in membership_modal_tie_groups:
+        lines.append(f"- {group['experiment']}/{group['target_project']}\n")
+    lines.append("\n")
+    
+    lines.append(f"### Minimum Order Agreement Groups (agreement={min_order_agreement:.3f})\n\n")
+    for group in minimum_order_agreement_groups:
+        lines.append(f"- {group['experiment']}/{group['target_project']}\n")
+    lines.append("\n")
+    
+    lines.append(f"### Minimum Membership Agreement Groups (agreement={min_membership_agreement:.3f})\n\n")
+    for group in minimum_membership_agreement_groups:
+        lines.append(f"- {group['experiment']}/{group['target_project']}\n")
+    lines.append("\n")
+    
+    lines.append(f"### Minimum Kendall Similarity Groups (similarity={min_kendall_similarity:.3f})\n\n")
+    for group in minimum_kendall_similarity_groups:
+        lines.append(f"- {group['experiment']}/{group['target_project']}\n")
+    lines.append("\n")
+    
+    lines.append("## Final Validation Evidence\n\n")
+    lines.append("### Validation Checks\n\n")
+    for check_name, passed in validation_checks.items():
+        lines.append(f"- **{check_name}:** {passed}\n")
+    lines.append("\n")
+    
+    lines.append("### Validation Evidence\n\n")
+    for evidence_name, value in validation_evidence.items():
+        lines.append(f"- **{evidence_name}:** {value}\n")
+    lines.append("\n")
+    
+    lines.append("## Interpretation Limits\n\n")
+    lines.append("These metrics describe categorical membership and ordering agreement of Soft-top-3 selections across five seeds.\n\n")
+    lines.append("They are descriptive, not inferential, and do not establish predictive-performance stability, statistical significance, or superiority.\n\n")
+    lines.append("Membership stability and ordering stability are distinct: identical candidate membership does not necessarily imply identical candidate ordering.\n")
+    
+    return "".join(lines)
 
 
 def main():
@@ -1117,7 +1516,7 @@ def main():
     print("Starting soft-top-3 seed stability analysis...\n")
     
     # Load and verify inputs
-    events_df, repeated_df, validation_df = load_and_verify_inputs()
+    events_df, repeated_df, validation_df, canonical_verification = load_and_verify_inputs()
     
     # Verify event schema
     events_df = verify_event_schema(events_df)
@@ -1137,8 +1536,31 @@ def main():
     # Compute summary
     summary_df = compute_summary(group_stability_df)
     
+    # Validate final outputs
+    validation_checks, validation_evidence = validate_final_outputs(
+        order_counts_df,
+        membership_counts_df,
+        group_stability_df,
+        summary_df,
+        event_provenance_results,
+        canonical_verification,
+    )
+    
+    # Check for failed validations before writing
+    failed_checks = [name for name, passed in validation_checks.items() if not passed]
+    if failed_checks:
+        raise ValueError(f"Final validation failed: {failed_checks}")
+    
     # Save all outputs after validation passes
-    save_all_outputs(order_counts_df, membership_counts_df, group_stability_df, summary_df, event_provenance_results)
+    save_all_outputs(
+        order_counts_df,
+        membership_counts_df,
+        group_stability_df,
+        summary_df,
+        event_provenance_results,
+        validation_checks,
+        validation_evidence,
+    )
     
     print("\nSoft-top-3 seed stability analysis complete!")
     print(f"\nSummary:")

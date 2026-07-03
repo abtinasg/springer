@@ -139,6 +139,34 @@
 
 - within_project/CM1
 
+## Final Validation Evidence
+
+### Validation Checks
+
+- **canonical_verification_passed:** True
+- **event_provenance_passed:** True
+- **modal_order_sorting_passed:** True
+- **membership_mapping_passed:** True
+- **modal_excluded_mapping_passed:** True
+- **pairwise_count_formula_passed:** True
+- **jaccard_identity_passed:** True
+- **unanimous_bidirectional_checks_passed:** True
+- **group_validation_passed:** True
+- **summary_validation_passed:** True
+
+### Validation Evidence
+
+- **modal_order_groups_checked:** 10
+- **modal_membership_groups_checked:** 10
+- **pairwise_formula_groups_checked:** 10
+- **jaccard_identity_groups_checked:** 10
+- **unanimous_groups_checked:** 10
+- **events_checked:** 50
+- **order_count_rows:** 240
+- **membership_count_rows:** 40
+- **group_rows:** 10
+- **summary_rows:** 3
+
 ## Interpretation Limits
 
 These metrics describe categorical membership and ordering agreement of Soft-top-3 selections across five seeds.
