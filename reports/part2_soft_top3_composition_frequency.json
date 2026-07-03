@@ -24,8 +24,8 @@
     "invalid_thresholds": 0,
     "invalid_selection_scores": 0,
     "exact_score_tie_runs": 0,
-    "near_score_tie_runs_within_1e12": 0,
-    "cutoff_near_tie_runs_within_1e12": 0
+    "near_score_tie_runs_within_1e-12": 0,
+    "cutoff_near_tie_runs_within_1e-12": 0
   },
   "candidate_frequency": [
     {

@@ -211,8 +211,8 @@ def validate_selection_integrity(soft_top3_df, validation_df, repeated_df):
         "invalid_thresholds": 0,
         "invalid_selection_scores": 0,
         "exact_score_tie_runs": 0,
-        "near_score_tie_runs_within_1e12": 0,
-        "cutoff_near_tie_runs_within_1e12": 0,
+        "near_score_tie_runs_within_1e-12": 0,
+        "cutoff_near_tie_runs_within_1e-12": 0,
     }
     
     for _, row in soft_top3_df.iterrows():
@@ -328,12 +328,12 @@ def validate_selection_integrity(soft_top3_df, validation_df, repeated_df):
                 near_tie_found = True
                 break
         if near_tie_found:
-            results["near_score_tie_runs_within_1e12"] += 1
+            results["near_score_tie_runs_within_1e-12"] += 1
         
         # Check cutoff near tie (position 3 vs position 4)
         cutoff_gap = val_scores[sorted_candidates[2]] - val_scores[sorted_candidates[3]]
         if abs(cutoff_gap) <= TOLERANCE:
-            results["cutoff_near_tie_runs_within_1e12"] += 1
+            results["cutoff_near_tie_runs_within_1e-12"] += 1
     
     # Check that all critical mismatches are zero
     if results["order_mismatches"] > 0:
@@ -873,8 +873,8 @@ def save_reports(provenance, integrity_results, candidate_freq, position_freq, o
         
         f.write("## Tie and Cutoff Diagnostics\n\n")
         f.write(f"- **Exact score-tie runs:** {integrity_results['exact_score_tie_runs']}\n")
-        f.write(f"- **Near score-tie runs (within 1e-12):** {integrity_results['near_score_tie_runs_within_1e12']}\n")
-        f.write(f"- **Cutoff near-tie runs (within 1e-12):** {integrity_results['cutoff_near_tie_runs_within_1e12']}\n\n")
+        f.write(f"- **Near score-tie runs (within 1e-12):** {integrity_results['near_score_tie_runs_within_1e-12']}\n")
+        f.write(f"- **Cutoff near-tie runs (within 1e-12):** {integrity_results['cutoff_near_tie_runs_within_1e-12']}\n\n")
         
         f.write("## Candidate Membership and Exclusion Frequency\n\n")
         f.write("### Overall\n\n")
@@ -1015,8 +1015,8 @@ def main():
     print(f"  Selection-integrity mismatches: 0")
     print(f"  Balanced top-1 consistency mismatches: {integrity_results['balanced_top1_consistency_mismatches']}")
     print(f"  Exact score-tie runs: {integrity_results['exact_score_tie_runs']}")
-    print(f"  Near score-tie runs: {integrity_results['near_score_tie_runs_within_1e12']}")
-    print(f"  Cutoff near-tie runs: {integrity_results['cutoff_near_tie_runs_within_1e12']}")
+    print(f"  Near score-tie runs: {integrity_results['near_score_tie_runs_within_1e-12']}")
+    print(f"  Cutoff near-tie runs: {integrity_results['cutoff_near_tie_runs_within_1e-12']}")
     print(f"  Event rows: {len(events_df)}")
     print(f"  Candidate-frequency rows: {len(candidate_freq)}")
     print(f"  Position-frequency rows: {len(position_freq)}")
