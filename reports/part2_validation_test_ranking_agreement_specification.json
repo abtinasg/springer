@@ -1,0 +1,172 @@
+{
+  "stage": "Part 2 Section 4A: Specify validation-test ranking agreement methodology",
+  "base_commit": "1600bc2f3c6e7af70415042133170139ce173550",
+  "scope": "Specification and audit design only. No ranking computation, analytical CSVs, numeric results, charts, or scientific conclusions generated.",
+  "canonical_inputs": {
+    "validation_log": "results/part1_full_reproduction/validation_log.csv",
+    "repeated_results": "results/part1_full_reproduction/repeated_all_results.csv",
+    "manifest": "reports/part1_canonical_manifest.json"
+  },
+  "analysis_unit": {
+    "definition": "experiment × target_project × seed × mode",
+    "expected_dimensions": {
+      "experiments": 2,
+      "projects": 5,
+      "seeds": 5,
+      "modes": 3
+    },
+    "expected_total_units": 150,
+    "candidates_per_unit": 4
+  },
+  "expected_cardinalities": {
+    "validation_log_rows": 600,
+    "baseline_repeated_result_rows": 200,
+    "joined_candidate_rows": 600
+  },
+  "candidate_domain": [
+    "LR_std_C0.1",
+    "LR_std_C1",
+    "DT_leaf5",
+    "ET_leaf5"
+  ],
+  "mode_mapping": {
+    "balanced": "AQRPE_v2_balanced",
+    "rank": "AQRPE_v2_rank",
+    "mcc": "AQRPE_v2_mcc"
+  },
+  "metrics": [
+    "avg_precision",
+    "roc_auc",
+    "mcc",
+    "f1",
+    "balanced_accuracy",
+    "precision",
+    "recall",
+    "brier",
+    "precision_at_10pct",
+    "recall_at_10pct",
+    "lift_at_10pct",
+    "precision_at_20pct",
+    "recall_at_20pct",
+    "lift_at_20pct"
+  ],
+  "metric_directions": {
+    "brier": "lower_is_better",
+    "default": "higher_is_better"
+  },
+  "join_specification": {
+    "validation_key": [
+      "experiment",
+      "target_project",
+      "seed",
+      "mode",
+      "candidate"
+    ],
+    "baseline_test_key": [
+      "experiment",
+      "target_project",
+      "seed",
+      "model"
+    ],
+    "join_condition": "validation_log.candidate == repeated_all_results.model",
+    "join_type": "controlled many-to-one from validation to baseline test row",
+    "baseline_filter": "only four baseline models included in join",
+    "expected_candidate_coverage": "exactly four candidates per analysis unit"
+  },
+  "tie_policy": {
+    "exact_tie": "values are exactly equal",
+    "tolerance_aware_tie": "absolute difference <= 1e-12",
+    "winner_set_handling": "preserve all tied candidates in winner set",
+    "deterministic_display": "constant candidate ordering allowed for display only, not for winner set determination"
+  },
+  "agreement_measures": {
+    "strict_top1_exact_agreement": {
+      "definition": "true only when both validation and test winner sets are single-member and contain the same candidate"
+    },
+    "winner_set_exact_agreement": {
+      "definition": "validation winner set exactly equals test winner set"
+    },
+    "tie_aware_winner_set_overlap": {
+      "definition": "Jaccard similarity between validation winner set and test winner set"
+    },
+    "winner_set_any_overlap": {
+      "definition": "intersection of two winner sets is non-empty"
+    },
+    "spearman_correlation": {
+      "definition": "correlation on ranks of four candidates, with average ranks for ties"
+    },
+    "kendall_correlation": {
+      "definition": "Kendall tau-b to support ties"
+    },
+    "selected_candidate_test_rank": {
+      "definition": "rank of mode-selected candidate in test ranking for the same metric, average rank if tied"
+    }
+  },
+  "undefined_correlation_policy": {
+    "condition": "correlation undefined due to constant ranking",
+    "handling": "record NA, record reason for undefined, do not fabricate zero value"
+  },
+  "planned_event_schema": {
+    "expected_rows": 2100,
+    "row_formula": "150 units × 14 metrics",
+    "required_columns": [
+      "experiment",
+      "target_project",
+      "seed",
+      "mode",
+      "metric",
+      "metric_direction",
+      "validation_winner_set_exact",
+      "validation_winner_set_tolerance",
+      "test_winner_set_exact",
+      "test_winner_set_tolerance",
+      "strict_top1_exact_agreement",
+      "winner_set_exact_agreement",
+      "winner_set_jaccard",
+      "winner_set_any_overlap",
+      "spearman_rho",
+      "spearman_defined",
+      "kendall_tau_b",
+      "kendall_defined",
+      "mode_selected_candidate",
+      "selected_candidate_test_rank",
+      "selected_candidate_in_test_winner_set"
+    ]
+  },
+  "planned_summary_scopes": [
+    "overall",
+    "by experiment",
+    "by mode",
+    "by metric",
+    "by target_project"
+  ],
+  "precomputation_audit_checks": [
+    "canonical_manifest_status",
+    "direct_SHA_verification",
+    "exact_input_schemas",
+    "exact_input_row_counts",
+    "null_checks",
+    "duplicate_key_checks",
+    "expected_experiment_project_seed_mode_candidate_domains",
+    "exact_four_candidate_coverage_per_unit",
+    "one_to_one_baseline_test_key_coverage",
+    "600_row_joined_candidate_coverage",
+    "metric_presence_and_numeric_type",
+    "metric_direction_mapping_completeness",
+    "selected_candidate_provenance_agreement",
+    "tie_policy_consistency",
+    "no_test_information_used_for_candidate_selection"
+  ],
+  "interpretation_limits": {
+    "seed_assumption": "seeds are not treated as independent observations for inference",
+    "excluded_inferences": [
+      "p-value",
+      "iid_seed_based_confidence_interval",
+      "significance_claim",
+      "superiority_claim",
+      "causal_claim"
+    ],
+    "test_data_usage": "test data will only be used for post-selection evaluation"
+  },
+  "computation_performed": false
+}
