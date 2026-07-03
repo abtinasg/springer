@@ -1,7 +1,7 @@
 # Part 1 Section 4G: Smoke Test in Isolated Environment Report
 
 ## Execution Environment
-- **Python path**: /Users/aliehpourdast/Desktop/springer/springer/.venv/bin/python
+- **Python path**: .venv/bin/python
 - **Python version**: 3.13.5
 - **pip check**: No broken requirements found.
 
