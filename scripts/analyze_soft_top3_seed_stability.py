@@ -1328,10 +1328,16 @@ def validate_final_outputs(order_counts_df, membership_counts_df, group_stabilit
     group_domain_rows_checked = 0
     group_kendall_rows_checked = 0
     group_cutoff_rows_checked = 0
+    group_seed_count_rows_checked = 0
     group_domain_passed = True
     
     for _, row in group_stability_df.iterrows():
         group_domain_rows_checked += 1
+        group_seed_count_rows_checked += 1
+        
+        # Explicit n_seeds check
+        if row["n_seeds"] != 5:
+            group_domain_passed = False
         
         # Domain checks
         if not (1 <= row["distinct_orders"] <= 5):
@@ -1373,13 +1379,16 @@ def validate_final_outputs(order_counts_df, membership_counts_df, group_stabilit
         if row["minimum_cutoff_score_gap"] > row["mean_cutoff_score_gap"]:
             group_domain_passed = False
     
-    validation_evidence["group_structure_rows_checked"] = 10
+    group_structure_rows_checked = len(group_stability_df)
+    validation_evidence["group_structure_rows_checked"] = group_structure_rows_checked
+    validation_evidence["group_seed_count_rows_checked"] = group_seed_count_rows_checked
     validation_evidence["group_domain_rows_checked"] = group_domain_rows_checked
     validation_evidence["group_kendall_rows_checked"] = group_kendall_rows_checked
     validation_evidence["group_cutoff_rows_checked"] = group_cutoff_rows_checked
     
     group_validation_passed = (
         group_structure_passed
+        and group_structure_rows_checked == 10
         and group_domain_passed
         and modal_order_sorting_passed
         and membership_mapping_passed
@@ -1436,7 +1445,7 @@ def validate_final_outputs(order_counts_df, membership_counts_df, group_stabilit
     expected_summary_rows = reconstruct_expected_summary(group_stability_df)
     
     # Compare all 3 rows and 20 non-key fields
-    summary_fields_checked_per_row = 0
+    summary_field_counts_by_row = []
     summary_total_field_comparisons = 0
     summary_reconstruction_passed = True
     
@@ -1454,7 +1463,7 @@ def validate_final_outputs(order_counts_df, membership_counts_df, group_stabilit
         
         # Check all non-key fields
         non_key_fields = [k for k in expected_row.keys() if k not in ["scope", "experiment"]]
-        summary_fields_checked_per_row = len(non_key_fields)
+        summary_field_counts_by_row.append(len(non_key_fields))
         
         for field in non_key_fields:
             summary_total_field_comparisons += 1
@@ -1468,12 +1477,41 @@ def validate_final_outputs(order_counts_df, membership_counts_df, group_stabilit
                 if abs(actual_val - expected_val) > TOLERANCE:
                     summary_reconstruction_passed = False
     
-    validation_evidence["summary_rows_reconstructed"] = 3
+    # Validate summary field counts
+    summary_fields_consistent = (
+        len(summary_field_counts_by_row) == 3
+        and all(count == 20 for count in summary_field_counts_by_row)
+    )
+    if not summary_fields_consistent:
+        summary_reconstruction_passed = False
+    
+    summary_rows_reconstructed = len(expected_summary_rows)
+    summary_fields_checked_per_row = (
+        summary_field_counts_by_row[0]
+        if summary_fields_consistent
+        else None
+    )
+    
+    validation_evidence["summary_rows_reconstructed"] = summary_rows_reconstructed
     validation_evidence["summary_fields_checked_per_row"] = summary_fields_checked_per_row
     validation_evidence["summary_total_field_comparisons"] = summary_total_field_comparisons
     
-    summary_validation_passed = summary_schema_passed and summary_reconstruction_passed
+    summary_validation_passed = (
+        summary_schema_passed
+        and summary_reconstruction_passed
+        and summary_rows_reconstructed == 3
+    )
     validation_checks["summary_validation_passed"] = summary_validation_passed
+    
+    # 13. Validation evidence integrity passed
+    validation_evidence_integrity_passed = (
+        validation_evidence["group_structure_rows_checked"] == len(group_stability_df) == 10
+        and validation_evidence["group_seed_count_rows_checked"] == len(group_stability_df) == 10
+        and validation_evidence["summary_rows_reconstructed"] == len(expected_summary_rows) == 3
+        and validation_evidence["summary_fields_checked_per_row"] == 20
+        and validation_evidence["summary_total_field_comparisons"] == 60
+    )
+    validation_checks["validation_evidence_integrity_passed"] = validation_evidence_integrity_passed
     
     # Add evidence
     validation_evidence["events_checked"] = event_provenance_results["events_checked"]

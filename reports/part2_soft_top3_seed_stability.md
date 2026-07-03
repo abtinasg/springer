@@ -155,6 +155,7 @@
 - **membership_count_structure_passed:** True
 - **group_validation_passed:** True
 - **summary_validation_passed:** True
+- **validation_evidence_integrity_passed:** True
 
 ### Validation Evidence
 
@@ -166,6 +167,7 @@
 - **order_count_groups_checked:** 10
 - **membership_count_groups_checked:** 10
 - **group_structure_rows_checked:** 10
+- **group_seed_count_rows_checked:** 10
 - **group_domain_rows_checked:** 10
 - **group_kendall_rows_checked:** 10
 - **group_cutoff_rows_checked:** 10
