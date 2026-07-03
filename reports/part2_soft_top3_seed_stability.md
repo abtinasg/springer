@@ -151,6 +151,8 @@
 - **pairwise_count_formula_passed:** True
 - **jaccard_identity_passed:** True
 - **unanimous_bidirectional_checks_passed:** True
+- **order_count_structure_passed:** True
+- **membership_count_structure_passed:** True
 - **group_validation_passed:** True
 - **summary_validation_passed:** True
 
@@ -161,6 +163,15 @@
 - **pairwise_formula_groups_checked:** 10
 - **jaccard_identity_groups_checked:** 10
 - **unanimous_groups_checked:** 10
+- **order_count_groups_checked:** 10
+- **membership_count_groups_checked:** 10
+- **group_structure_rows_checked:** 10
+- **group_domain_rows_checked:** 10
+- **group_kendall_rows_checked:** 10
+- **group_cutoff_rows_checked:** 10
+- **summary_rows_reconstructed:** 3
+- **summary_fields_checked_per_row:** 20
+- **summary_total_field_comparisons:** 60
 - **events_checked:** 50
 - **order_count_rows:** 240
 - **membership_count_rows:** 40
