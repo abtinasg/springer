@@ -277,8 +277,16 @@ def save_selection_events(top1_df):
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     
     # Select and order columns
-    cols = ["selector_model", "experiment", "target_project", "seed", "mode", 
-            "selected_candidate", "threshold", "selection_score"]
+    cols = [
+        "experiment",
+        "target_project",
+        "seed",
+        "selector_model",
+        "mode",
+        "selected_candidate",
+        "threshold",
+        "selection_score",
+    ]
     events_df = top1_df[cols].copy()
     
     # Sort
