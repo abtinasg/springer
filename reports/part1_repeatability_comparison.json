@@ -735,14 +735,14 @@
     "sheet_names_match": true,
     "sheet_order_match": true,
     "sheet_details": {
-      "All_Results": {
+      "Dataset_Profile": {
         "exists_in_both": true,
-        "first_rows": 401,
-        "second_rows": 401,
-        "first_cols": 22,
-        "second_cols": 22,
+        "first_rows": 6,
+        "second_rows": 6,
+        "first_cols": 5,
+        "second_cols": 5,
         "column_names_match": true,
-        "max_diff": 1.1102230246251565e-16,
+        "max_diff": 0.0,
         "text_differences": [],
         "null_mismatches": 0
       },
@@ -757,14 +757,14 @@
         "text_differences": [],
         "null_mismatches": 0
       },
-      "Dataset_Profile": {
+      "All_Results": {
         "exists_in_both": true,
-        "first_rows": 6,
-        "second_rows": 6,
-        "first_cols": 5,
-        "second_cols": 5,
+        "first_rows": 401,
+        "second_rows": 401,
+        "first_cols": 22,
+        "second_cols": 22,
         "column_names_match": true,
-        "max_diff": 0.0,
+        "max_diff": 1.1102230246251565e-16,
         "text_differences": [],
         "null_mismatches": 0
       },
@@ -784,5 +784,5 @@
     "text_differences": [],
     "null_mismatch_count": 0
   },
-  "overall_status": "exact_match"
+  "overall_status": "numerically_equivalent"
 }

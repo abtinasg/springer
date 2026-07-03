@@ -2,7 +2,7 @@
 
 ## Overall Status
 
-**exact_match**
+**numerically_equivalent**
 
 ## Maximum Numerical Difference
 

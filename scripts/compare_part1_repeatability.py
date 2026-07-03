@@ -342,6 +342,12 @@ def compare_excel_files(first_path: Path, second_path: Path) -> Dict[str, Any]:
         for row in second_ws.iter_rows(values_only=True):
             second_data.append(row)
         
+        # Compare headers (first row)
+        if first_data and second_data:
+            first_headers = first_data[0] if first_data else []
+            second_headers = second_data[0] if second_data else []
+            sheet_result["column_names_match"] = first_headers == second_headers
+        
         # Compare cell by cell
         max_rows = max(len(first_data), len(second_data))
         max_cols = max(len(first_data[0]) if first_data else 0, len(second_data[0]) if second_data else 0)
@@ -417,30 +423,44 @@ def main():
     results["repeated_results_workbook.xlsx"] = excel_result
     
     # Determine overall status
-    has_text_diffs = any(
-        r.get("text_columns_match") == False or 
-        r.get("fields_match") == False or
-        len(r.get("text_differences", [])) > 0 or
-        len(r.get("differences", [])) > 0 or
+    has_non_numeric_diffs = any(
+        not r.get("exists_in_both", True) or
+        r.get("column_names_match", True) == False or
+        r.get("column_order_match", True) == False or
+        r.get("key_duplicates", {}).get("first", False) or
+        r.get("key_duplicates", {}).get("second", False) or
         len(r.get("missing_keys", [])) > 0 or
         len(r.get("extra_keys", [])) > 0 or
+        r.get("text_columns_match", True) == False or
+        len(r.get("text_differences", [])) > 0 or
+        r.get("fields_match", True) == False or
+        len(r.get("differences", [])) > 0 or
         r.get("null_mismatch_count", 0) > 0 or
         not r.get("sheet_names_match", True) or
-        not r.get("sheet_order_match", True)
+        not r.get("sheet_order_match", True) or
+        any(
+            not sheet.get("exists_in_both", True) or
+            sheet.get("first_rows", 0) != sheet.get("second_rows", 0) or
+            sheet.get("first_cols", 0) != sheet.get("second_cols", 0) or
+            sheet.get("column_names_match", True) == False or
+            len(sheet.get("text_differences", [])) > 0 or
+            sheet.get("null_mismatches", 0) > 0
+            for sheet in r.get("sheet_details", {}).values()
+        )
         for r in results.values()
     )
     
     has_numerical_diffs = any(r.get("max_absolute_diff", 0.0) > 0 for r in results.values())
     max_diff = max(r.get("max_absolute_diff", 0.0) for r in results.values())
     
-    if has_text_diffs:
+    if has_non_numeric_diffs:
         overall_status = "materially_different"
-    elif has_numerical_diffs and max_diff > 1e-9:
-        overall_status = "materially_different"
-    elif has_numerical_diffs and max_diff > 1e-12:
+    elif not has_numerical_diffs:
+        overall_status = "exact_match"
+    elif max_diff <= 1e-12:
         overall_status = "numerically_equivalent"
     else:
-        overall_status = "exact_match"
+        overall_status = "materially_different"
     
     results["overall_status"] = overall_status
     
