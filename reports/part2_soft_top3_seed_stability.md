@@ -35,24 +35,24 @@
 | cross_project | PC1 | 2 | ET_leaf5|LR_std_C0.1|LR_std_C1 | 3 | 0.600 | False |
 | within_project | CM1 | 4 | ET_leaf5|LR_std_C0.1|LR_std_C1 | 2 | 0.400 | False |
 | within_project | JM1 | 2 | ET_leaf5|LR_std_C1|LR_std_C0.1 | 3 | 0.600 | False |
-| within_project | KC1 | 5 | ET_leaf5|LR_std_C0.1|DT_leaf5|OR|DT_leaf5|ET_leaf5|LR_std_C1|OR|ET_leaf5|LR_std_C1|LR_std_C0.1|OR|ET_leaf5|LR_std_C1|DT_leaf5|OR|LR_std_C1|ET_leaf5|LR_std_C0.1 | 1 | 0.200 | False |
+| within_project | KC1 | 5 | LR_std_C1|ET_leaf5|LR_std_C0.1|OR|DT_leaf5|ET_leaf5|LR_std_C1|OR|ET_leaf5|LR_std_C0.1|DT_leaf5|OR|ET_leaf5|LR_std_C1|LR_std_C0.1|OR|ET_leaf5|LR_std_C1|DT_leaf5 | 1 | 0.200 | False |
 | within_project | KC2 | 4 | ET_leaf5|LR_std_C1|LR_std_C0.1 | 2 | 0.400 | False |
 | within_project | PC1 | 3 | DT_leaf5|ET_leaf5|LR_std_C1|OR|ET_leaf5|LR_std_C0.1|DT_leaf5 | 2 | 0.400 | False |
 
 ## Membership Stability by Project and Setting
 
-| Experiment | Project | Distinct Sets | Modal Set(s) | Modal Count | Modal Prop | Unanimous |
-|------------|---------|---------------|--------------|-------------|------------|-----------|
-| cross_project | CM1 | 1 | LR_std_C0.1|LR_std_C1|ET_leaf5 | 5 | 1.000 | True |
-| cross_project | JM1 | 1 | LR_std_C0.1|LR_std_C1|ET_leaf5 | 5 | 1.000 | True |
-| cross_project | KC1 | 1 | LR_std_C0.1|LR_std_C1|ET_leaf5 | 5 | 1.000 | True |
-| cross_project | KC2 | 1 | LR_std_C0.1|LR_std_C1|ET_leaf5 | 5 | 1.000 | True |
-| cross_project | PC1 | 1 | LR_std_C0.1|LR_std_C1|ET_leaf5 | 5 | 1.000 | True |
-| within_project | CM1 | 2 | LR_std_C0.1|LR_std_C1|ET_leaf5 | 4 | 0.800 | False |
-| within_project | JM1 | 1 | LR_std_C0.1|LR_std_C1|ET_leaf5 | 5 | 1.000 | True |
-| within_project | KC1 | 3 | LR_std_C0.1|LR_std_C1|ET_leaf5|OR|LR_std_C1|DT_leaf5|ET_leaf5 | 2 | 0.400 | False |
-| within_project | KC2 | 2 | LR_std_C0.1|LR_std_C1|ET_leaf5 | 4 | 0.800 | False |
-| within_project | PC1 | 2 | LR_std_C1|DT_leaf5|ET_leaf5 | 3 | 0.600 | False |
+| Experiment | Project | Distinct Sets | Modal Set(s) | Modal Count | Modal Prop | Modal Excluded Candidate(s) | Unanimous |
+|------------|---------|---------------|--------------|-------------|------------|---------------------------|-----------|
+| cross_project | CM1 | 1 | LR_std_C0.1|LR_std_C1|ET_leaf5 | 5 | 1.000 | DT_leaf5 | True |
+| cross_project | JM1 | 1 | LR_std_C0.1|LR_std_C1|ET_leaf5 | 5 | 1.000 | DT_leaf5 | True |
+| cross_project | KC1 | 1 | LR_std_C0.1|LR_std_C1|ET_leaf5 | 5 | 1.000 | DT_leaf5 | True |
+| cross_project | KC2 | 1 | LR_std_C0.1|LR_std_C1|ET_leaf5 | 5 | 1.000 | DT_leaf5 | True |
+| cross_project | PC1 | 1 | LR_std_C0.1|LR_std_C1|ET_leaf5 | 5 | 1.000 | DT_leaf5 | True |
+| within_project | CM1 | 2 | LR_std_C0.1|LR_std_C1|ET_leaf5 | 4 | 0.800 | DT_leaf5 | False |
+| within_project | JM1 | 1 | LR_std_C0.1|LR_std_C1|ET_leaf5 | 5 | 1.000 | DT_leaf5 | True |
+| within_project | KC1 | 3 | LR_std_C1|DT_leaf5|ET_leaf5|OR|LR_std_C0.1|LR_std_C1|ET_leaf5 | 2 | 0.400 | LR_std_C0.1|OR|DT_leaf5 | False |
+| within_project | KC2 | 2 | LR_std_C0.1|LR_std_C1|ET_leaf5 | 4 | 0.800 | DT_leaf5 | False |
+| within_project | PC1 | 2 | LR_std_C1|DT_leaf5|ET_leaf5 | 3 | 0.600 | LR_std_C0.1 | False |
 
 ## Pairwise Order and Membership Agreement
 

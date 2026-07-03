@@ -43,6 +43,38 @@ EXPECTED_SEEDS = [7, 13, 29, 42, 101]
 SOFT_TOP3_MODEL = "AQRPE_v2_soft_top3"
 EXPECTED_SELECTION_MODE = "soft_top3_balanced_objective"
 
+# Reference orderings
+ALL_SELECTED_ORDERS = [
+    "|".join(order)
+    for order in permutations(CANDIDATE_ORDER, 3)
+]
+
+MEMBERSHIP_OPTIONS = []
+
+for excluded_candidate in CANDIDATE_ORDER:
+    members = [
+        candidate
+        for candidate in CANDIDATE_ORDER
+        if candidate != excluded_candidate
+    ]
+
+    membership_set = "|".join(members)
+
+    MEMBERSHIP_OPTIONS.append({
+        "membership_set": membership_set,
+        "excluded_candidate": excluded_candidate,
+    })
+
+MEMBERSHIP_ORDER = [
+    item["membership_set"]
+    for item in MEMBERSHIP_OPTIONS
+]
+
+MEMBERSHIP_TO_EXCLUDED = {
+    item["membership_set"]: item["excluded_candidate"]
+    for item in MEMBERSHIP_OPTIONS
+}
+
 # Tolerance for floating point comparisons
 TOLERANCE = 1e-12
 
@@ -379,11 +411,6 @@ def compute_order_counts(events_df):
     # Sort
     order_counts_df = order_counts_df.sort_values(["experiment", "target_project", "selected_order"])
     
-    # Ensure output directory exists
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-    
-    order_counts_df.to_csv(OUTPUT_ORDER_COUNTS, index=False)
-    
     print("Order counts computed.")
     return order_counts_df
 
@@ -445,7 +472,23 @@ def compute_membership_counts(events_df):
     # Sort
     membership_counts_df = membership_counts_df.sort_values(["experiment", "target_project", "membership_set"])
     
-    membership_counts_df.to_csv(OUTPUT_MEMBERSHIP_COUNTS, index=False)
+    # Validate membership mapping
+    for _, row in membership_counts_df.iterrows():
+        membership_set = row["membership_set"]
+        excluded_candidate = row["excluded_candidate"]
+        
+        members = membership_set.split("|")
+        
+        if set(members) | {excluded_candidate} != set(CANDIDATE_ORDER):
+            raise ValueError(f"Membership set + excluded != all candidates for {membership_set}/{excluded_candidate}")
+        if set(members) & {excluded_candidate}:
+            raise ValueError(f"Membership set intersects with excluded for {membership_set}/{excluded_candidate}")
+        if len(members) != 3:
+            raise ValueError(f"Membership set has wrong size: {len(members)}")
+        if len(set(members)) != 3:
+            raise ValueError(f"Membership set has duplicates: {members}")
+        if MEMBERSHIP_TO_EXCLUDED[membership_set] != excluded_candidate:
+            raise ValueError(f"Membership mapping mismatch for {membership_set}/{excluded_candidate}")
     
     print("Membership counts computed.")
     return membership_counts_df
@@ -568,7 +611,7 @@ def compute_group_stability(events_df):
                 order_counts[order] = order_counts.get(order, 0) + 1
             max_order_count = max(order_counts.values())
             modal_orders = [order for order, count in order_counts.items() if count == max_order_count]
-            modal_orders_sorted = sorted(modal_orders, key=lambda x: all_ordering_strs.index(x) if 'all_ordering_strs' in globals() else 0)
+            modal_orders_sorted = sorted(modal_orders, key=ALL_SELECTED_ORDERS.index)
             
             # Distinct membership sets
             membership_sets = []
@@ -583,14 +626,32 @@ def compute_group_stability(events_df):
                 membership_counts[ms] = membership_counts.get(ms, 0) + 1
             max_membership_count = max(membership_counts.values())
             modal_membership_sets = [ms for ms, count in membership_counts.items() if count == max_membership_count]
-            modal_membership_sets_sorted = sorted(modal_membership_sets)
-            modal_excluded_candidates = sorted([ms.split("|")[0] for ms in modal_membership_sets_sorted])  # First candidate is excluded in canonical order
+            modal_membership_sets_sorted = sorted(modal_membership_sets, key=MEMBERSHIP_ORDER.index)
+            modal_excluded_candidates = [
+                MEMBERSHIP_TO_EXCLUDED[membership_set]
+                for membership_set in modal_membership_sets_sorted
+            ]
+            modal_excluded_candidates = sorted(
+                modal_excluded_candidates,
+                key=CANDIDATE_ORDER.index,
+            )
             
             # Cutoff score gaps
             cutoff_gaps = group_events["cutoff_score_gap"].values
             
             # Compute pairwise metrics
             pairwise_metrics = compute_pairwise_metrics(group_events)
+            
+            # Validate pairwise count formulas
+            observed_order_counts_list = list(order_counts.values())
+            expected_exact_order_agreement = sum(c * (c - 1) / 2 for c in observed_order_counts_list) / 10
+            if abs(pairwise_metrics["exact_order_pairwise_agreement"] - expected_exact_order_agreement) > TOLERANCE:
+                raise ValueError(f"Exact order agreement formula violation for {experiment}/{project}")
+            
+            observed_membership_counts_list = list(membership_counts.values())
+            expected_exact_membership_agreement = sum(c * (c - 1) / 2 for c in observed_membership_counts_list) / 10
+            if abs(pairwise_metrics["exact_membership_pairwise_agreement"] - expected_exact_membership_agreement) > TOLERANCE:
+                raise ValueError(f"Exact membership agreement formula violation for {experiment}/{project}")
             
             # Build group row
             group_rows.append({
@@ -615,10 +676,6 @@ def compute_group_stability(events_df):
                 "median_cutoff_score_gap": float(np.median(cutoff_gaps)),
                 "mean_cutoff_score_gap": float(cutoff_gaps.mean()),
             })
-    
-    # Generate all orderings for sorting
-    global all_ordering_strs
-    all_ordering_strs = ["|".join(ordering) for ordering in permutations(BASELINE_MODELS, 3)]
     
     group_stability_df = pd.DataFrame(group_rows)
     
@@ -676,11 +733,52 @@ def compute_group_stability(events_df):
         expected_kendall_similarity = (row["mean_pairwise_kendall_tau"] + 1) / 2
         if abs(row["mean_pairwise_kendall_similarity"] - expected_kendall_similarity) > TOLERANCE:
             raise ValueError(f"Kendall similarity formula violation")
+        
+        # Check modal membership set and excluded candidate mapping
+        modal_membership_sets_list = row["modal_membership_sets"].split("|OR|")
+        modal_excluded_candidates_list = row["modal_excluded_candidates"].split("|OR|")
+        
+        if len(modal_membership_sets_list) != len(modal_excluded_candidates_list):
+            raise ValueError(f"Modal membership sets and excluded candidates count mismatch for {row['experiment']}/{row['target_project']}")
+        
+        for ms, exc in zip(modal_membership_sets_list, modal_excluded_candidates_list):
+            if MEMBERSHIP_TO_EXCLUDED[ms] != exc:
+                raise ValueError(f"Modal membership mapping mismatch for {ms}/{exc} in {row['experiment']}/{row['target_project']}")
+        
+        # Check Jaccard identity
+        expected_jaccard = 0.5 + 0.5 * row["exact_membership_pairwise_agreement"]
+        if abs(row["mean_pairwise_jaccard"] - expected_jaccard) > TOLERANCE:
+            raise ValueError(f"Jaccard identity violation for {row['experiment']}/{row['target_project']}")
+        
+        # Check bidirectional unanimous conditions
+        expected_unanimous_order = (
+            row["distinct_orders"] == 1
+            and row["modal_order_count"] == 5
+            and abs(row["exact_order_pairwise_agreement"] - 1.0) <= TOLERANCE
+        )
+        if row["unanimous_order"] != expected_unanimous_order:
+            raise ValueError(f"Unanimous order bidirectional check failed for {row['experiment']}/{row['target_project']}")
+        
+        expected_unanimous_membership = (
+            row["distinct_membership_sets"] == 1
+            and row["modal_membership_count"] == 5
+            and abs(row["exact_membership_pairwise_agreement"] - 1.0) <= TOLERANCE
+            and abs(row["mean_pairwise_jaccard"] - 1.0) <= TOLERANCE
+        )
+        if row["unanimous_membership"] != expected_unanimous_membership:
+            raise ValueError(f"Unanimous membership bidirectional check failed for {row['experiment']}/{row['target_project']}")
+        
+        # Check modal tie flags
+        num_modal_orders = len(row["modal_orders"].split("|OR|"))
+        if row["order_modal_tie"] != (num_modal_orders > 1):
+            raise ValueError(f"Order modal tie flag mismatch for {row['experiment']}/{row['target_project']}")
+        
+        num_modal_membership_sets = len(row["modal_membership_sets"].split("|OR|"))
+        if row["membership_modal_tie"] != (num_modal_membership_sets > 1):
+            raise ValueError(f"Membership modal tie flag mismatch for {row['experiment']}/{row['target_project']}")
     
     # Sort
     group_stability_df = group_stability_df.sort_values(["experiment", "target_project"])
-    
-    group_stability_df.to_csv(OUTPUT_GROUP_STABILITY, index=False)
     
     print("Group stability computed.")
     return group_stability_df
@@ -760,15 +858,53 @@ def compute_summary(group_stability_df):
     # Sort
     summary_df = summary_df.sort_values(["scope", "experiment"])
     
-    summary_df.to_csv(OUTPUT_SUMMARY, index=False)
-    
     print("Summary computed.")
     return summary_df
 
 
+def save_all_outputs(order_counts_df, membership_counts_df, group_stability_df, summary_df, event_provenance_results):
+    """Save all output files after validation passes."""
+    print("Saving all outputs...")
+    
+    # Ensure output directory exists
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    
+    # Save CSV files using temporary files for atomic writes
+    import tempfile
+    import shutil
+    
+    # Save order counts
+    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.csv') as tmp:
+        order_counts_df.to_csv(tmp.name, index=False)
+        tmp_path = Path(tmp.name)
+    tmp_path.replace(OUTPUT_ORDER_COUNTS)
+    
+    # Save membership counts
+    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.csv') as tmp:
+        membership_counts_df.to_csv(tmp.name, index=False)
+        tmp_path = Path(tmp.name)
+    tmp_path.replace(OUTPUT_MEMBERSHIP_COUNTS)
+    
+    # Save group stability
+    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.csv') as tmp:
+        group_stability_df.to_csv(tmp.name, index=False)
+        tmp_path = Path(tmp.name)
+    tmp_path.replace(OUTPUT_GROUP_STABILITY)
+    
+    # Save summary
+    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.csv') as tmp:
+        summary_df.to_csv(tmp.name, index=False)
+        tmp_path = Path(tmp.name)
+    tmp_path.replace(OUTPUT_SUMMARY)
+    
+    # Save reports
+    save_reports(event_provenance_results, group_stability_df, summary_df)
+    
+    print("All outputs saved.")
+
+
 def save_reports(event_provenance_results, group_stability_df, summary_df):
     """Save JSON and Markdown reports."""
-    print("Saving reports...")
     
     # Identify special groups
     unanimous_order_groups = group_stability_df[group_stability_df["unanimous_order"]][["experiment", "target_project"]].to_dict(orient="records")
@@ -828,9 +964,23 @@ def save_reports(event_provenance_results, group_stability_df, summary_df):
         },
         "validation_checks": {
             "canonical_verification_passed": True,
-            "event_provenance_passed": all(v == 0 for v in event_provenance_results.values() if isinstance(v, int) and v != event_provenance_results["events_checked"]),
+            "event_provenance_passed": all(
+                event_provenance_results[key] == 0
+                for key in [
+                    "canonical_event_mismatches",
+                    "validation_ranking_mismatches",
+                    "score_mismatches",
+                    "cutoff_gap_mismatches",
+                ]
+            ) and event_provenance_results["events_checked"] == 50,
+            "modal_order_sorting_passed": True,
+            "membership_mapping_passed": True,
+            "modal_excluded_mapping_passed": True,
+            "pairwise_count_formula_passed": True,
+            "jaccard_identity_passed": True,
+            "unanimous_bidirectional_checks_passed": True,
             "group_validation_passed": True,
-            "summary_validation_passed": True,
+            "summary_validation_passed": True
         },
     }
     
@@ -870,10 +1020,10 @@ def save_reports(event_provenance_results, group_stability_df, summary_df):
         f.write("\n")
         
         f.write("## Membership Stability by Project and Setting\n\n")
-        f.write("| Experiment | Project | Distinct Sets | Modal Set(s) | Modal Count | Modal Prop | Unanimous |\n")
-        f.write("|------------|---------|---------------|--------------|-------------|------------|-----------|\n")
+        f.write("| Experiment | Project | Distinct Sets | Modal Set(s) | Modal Count | Modal Prop | Modal Excluded Candidate(s) | Unanimous |\n")
+        f.write("|------------|---------|---------------|--------------|-------------|------------|---------------------------|-----------|\n")
         for _, row in group_stability_df.iterrows():
-            f.write(f"| {row['experiment']} | {row['target_project']} | {row['distinct_membership_sets']} | {row['modal_membership_sets']} | {row['modal_membership_count']} | {row['modal_membership_proportion']:.3f} | {row['unanimous_membership']} |\n")
+            f.write(f"| {row['experiment']} | {row['target_project']} | {row['distinct_membership_sets']} | {row['modal_membership_sets']} | {row['modal_membership_count']} | {row['modal_membership_proportion']:.3f} | {row['modal_excluded_candidates']} | {row['unanimous_membership']} |\n")
         f.write("\n")
         
         f.write("## Pairwise Order and Membership Agreement\n\n")
@@ -987,8 +1137,8 @@ def main():
     # Compute summary
     summary_df = compute_summary(group_stability_df)
     
-    # Save reports
-    save_reports(event_provenance_results, group_stability_df, summary_df)
+    # Save all outputs after validation passes
+    save_all_outputs(order_counts_df, membership_counts_df, group_stability_df, summary_df, event_provenance_results)
     
     print("\nSoft-top-3 seed stability analysis complete!")
     print(f"\nSummary:")
