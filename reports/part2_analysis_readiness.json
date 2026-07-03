@@ -110,24 +110,27 @@
   "join_coverage": {
     "balanced": {
       "validation_rows": 200,
+      "baseline_rows": 200,
       "matched_rows": 200,
       "unmatched_validation_rows": 0,
-      "unmatched_repeated_rows": 0,
-      "duplicate_matches": 0
+      "duplicate_validation_keys": 0,
+      "duplicate_baseline_keys": 0
     },
     "rank": {
       "validation_rows": 200,
+      "baseline_rows": 200,
       "matched_rows": 200,
       "unmatched_validation_rows": 0,
-      "unmatched_repeated_rows": 0,
-      "duplicate_matches": 0
+      "duplicate_validation_keys": 0,
+      "duplicate_baseline_keys": 0
     },
     "mcc": {
       "validation_rows": 200,
+      "baseline_rows": 200,
       "matched_rows": 200,
       "unmatched_validation_rows": 0,
-      "unmatched_repeated_rows": 0,
-      "duplicate_matches": 0
+      "duplicate_validation_keys": 0,
+      "duplicate_baseline_keys": 0
     }
   },
   "selected_candidate_integrity": {
@@ -156,7 +159,7 @@
     },
     "soft_top_3": {
       "has_field": true,
-      "valid": false,
+      "valid": true,
       "total_rows": 50,
       "invalid_length_count": 0,
       "duplicate_count": 0,
@@ -216,13 +219,27 @@
       ]
     }
   },
+  "metric_verification": {
+    "validation_metrics_present": 14,
+    "test_metrics_present": 14
+  },
+  "soft_all_4_check": {
+    "existing_soft_all4_output": false,
+    "sample_level_candidate_probabilities_available": false,
+    "reconstructable_without_model_rerun": false,
+    "evidence": [
+      "No AQRPE_v2_soft_all4 model found in repeated_all_results.csv",
+      "No probability columns found in data files",
+      "Evaluation script contains probability-related code"
+    ]
+  },
   "analysis_readiness": {
     "candidate_selection_frequency_and_stability": {
       "status": "ready_from_existing_outputs",
-      "reason": "All required fields are present in repeated_all_results.csv: selected_candidate, experiment, target_project, seed, model",
+      "reason": "All top-1 models have valid selected_candidate fields and soft-top-3 is valid.",
       "available_fields": {
-        "top_1_selected_candidate": "selected_candidate column exists for top-1 models",
-        "soft_top_3_membership": "selected_candidate column exists for soft-top-3 (pipe-separated)",
+        "top_1_selected_candidate": "selected_candidate column exists and valid for top-1 models",
+        "soft_top_3_membership": "selected_candidate column exists and valid for soft-top-3 (pipe-separated)",
         "soft_top_3_order": "selected_candidate column preserves order for soft-top-3",
         "experiment": "experiment column exists",
         "target_project": "target_project column exists",
@@ -231,18 +248,18 @@
     },
     "validation_test_ranking_agreement": {
       "status": "ready_from_existing_outputs",
-      "reason": "Validation metrics are in validation_log.csv and test metrics are in repeated_all_results.csv. Join keys are available.",
+      "reason": "All 14 validation metrics and 14 test metrics are present. Join coverage is complete for all modes.",
       "available_fields": {
-        "validation_metrics": "10 metric columns found in validation_log.csv",
-        "test_metrics": "10 metric columns found in repeated_all_results.csv",
+        "validation_metrics": "14/14 validation metrics present",
+        "test_metrics": "14/14 test metrics present",
         "join_keys": "experiment, target_project, seed, candidate\u2194model"
       }
     },
     "post_hoc_regret": {
       "status": "ready_from_existing_outputs",
-      "reason": "Selected top-1 candidate is in repeated_all_results.csv. Test performance of all four baselines is available.",
+      "reason": "All four baselines are present in all 50 runs and top-1 selections are valid.",
       "available_fields": {
-        "selected_top_1_candidate": "selected_candidate column exists for top-1 models",
+        "selected_top_1_candidate": "selected_candidate column exists and valid for top-1 models",
         "test_performance_all_candidates": "All four baseline models have test metrics in repeated_all_results.csv"
       }
     },
@@ -253,69 +270,85 @@
       },
       "adaptive_top_1": {
         "status": "ready_from_existing_outputs",
-        "reason": "Top-1 AQRPE models (balanced, rank, mcc) have selected_candidate field in repeated_all_results.csv"
+        "reason": "Top-1 AQRPE models have valid selected_candidate fields"
       },
       "soft_top_3": {
         "status": "ready_from_existing_outputs",
-        "reason": "AQRPE_v2_soft_top3 has selected_candidate field with pipe-separated candidates in repeated_all_results.csv"
+        "reason": "AQRPE_v2_soft_top3 has valid selected_candidate field"
       },
       "soft_all_4": {
         "status": "requires_new_computation",
-        "reason": "Sample-level probabilities for all four candidates are not stored in canonical outputs. Would require re-running models with probability output."
+        "reason": [
+          "No AQRPE_v2_soft_all4 model found in repeated_all_results.csv",
+          "No probability columns found in data files",
+          "Evaluation script contains probability-related code"
+        ],
+        "details": {
+          "existing_soft_all4_output": false,
+          "sample_level_candidate_probabilities_available": false,
+          "reconstructable_without_model_rerun": false,
+          "evidence": [
+            "No AQRPE_v2_soft_all4 model found in repeated_all_results.csv",
+            "No probability columns found in data files",
+            "Evaluation script contains probability-related code"
+          ]
+        }
       }
     }
   },
   "column_inventory": {
     "selection_fields": [
+      "selection_mode",
       "selected_candidate",
+      "mode",
+      "val_selection_score",
       "selection_score"
     ],
     "validation_metric_fields": [
-      "val_avg_precision",
-      "val_mcc",
-      "val_f1",
-      "val_balanced_accuracy",
-      "val_precision",
-      "val_recall",
-      "val_brier",
-      "val_precision_at_10pct",
-      "val_recall_at_10pct",
       "val_lift_at_10pct",
+      "val_roc_auc",
+      "val_lift_at_20pct",
       "val_precision_at_20pct",
       "val_recall_at_20pct",
-      "val_lift_at_20pct"
+      "val_f1",
+      "val_brier",
+      "val_precision",
+      "val_recall",
+      "val_avg_precision",
+      "val_mcc",
+      "val_recall_at_10pct",
+      "val_balanced_accuracy",
+      "val_precision_at_10pct"
     ],
     "test_metric_fields": [
-      "avg_precision",
-      "mcc",
       "f1",
-      "balanced_accuracy",
+      "recall_at_10pct",
       "precision",
       "recall",
-      "brier",
-      "precision_at_10pct",
-      "recall_at_10pct",
-      "lift_at_10pct",
+      "avg_precision",
       "precision_at_20pct",
+      "mcc",
+      "brier",
+      "balanced_accuracy",
+      "lift_at_10pct",
       "recall_at_20pct",
-      "lift_at_20pct"
+      "lift_at_20pct",
+      "roc_auc",
+      "precision_at_10pct"
     ],
     "threshold_fields": [
-      "threshold",
-      "val_threshold"
+      "val_threshold",
+      "threshold"
     ],
     "candidate_identifiers": [
+      "selected_candidate",
+      "model",
       "candidate"
     ],
     "run_identifiers": [
-      "experiment",
-      "target_project",
       "seed",
-      "model",
       "experiment",
-      "target_project",
-      "seed",
-      "mode"
+      "target_project"
     ],
     "stored_artifacts": {
       "sample_level_true_labels": false,
@@ -324,5 +357,14 @@
       "test_sample_indices": false,
       "trained_model_objects": false
     }
+  },
+  "final_validation": {
+    "top_1_models_valid": "3/3",
+    "soft_top_3_valid": true,
+    "exact_repeated_result_runs": "50/50",
+    "exact_validation_log_runs": "50/50",
+    "join_modes_passed": "3/3",
+    "validation_metrics_present": "14/14",
+    "test_metrics_present": "14/14"
   }
 }

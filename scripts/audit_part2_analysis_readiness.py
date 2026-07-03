@@ -49,6 +49,46 @@ AQRPE_MODELS = ["AQRPE_v2_balanced", "AQRPE_v2_rank", "AQRPE_v2_mcc", "AQRPE_v2_
 ALL_MODELS = BASELINE_MODELS + AQRPE_MODELS
 EXPECTED_MODES = ["balanced", "rank", "mcc"]
 
+# Hard-coded metric lists
+VALIDATION_METRICS = [
+    "val_avg_precision",
+    "val_roc_auc",
+    "val_mcc",
+    "val_f1",
+    "val_balanced_accuracy",
+    "val_precision",
+    "val_recall",
+    "val_brier",
+    "val_precision_at_10pct",
+    "val_recall_at_10pct",
+    "val_lift_at_10pct",
+    "val_precision_at_20pct",
+    "val_recall_at_20pct",
+    "val_lift_at_20pct",
+]
+
+TEST_METRICS = [
+    "avg_precision",
+    "roc_auc",
+    "mcc",
+    "f1",
+    "balanced_accuracy",
+    "precision",
+    "recall",
+    "brier",
+    "precision_at_10pct",
+    "recall_at_10pct",
+    "lift_at_10pct",
+    "precision_at_20pct",
+    "recall_at_20pct",
+    "lift_at_20pct",
+]
+
+# Expected field lists
+SELECTION_FIELDS = ["selected_candidate", "selection_mode", "selection_score", "mode", "val_selection_score"]
+CANDIDATE_IDENTIFIER_FIELDS = ["model", "candidate", "selected_candidate"]
+RUN_IDENTIFIER_FIELDS = ["experiment", "target_project", "seed"]
+
 
 def load_manifest():
     """Load and verify canonical manifest."""
@@ -159,13 +199,17 @@ def load_repeated_results():
         if model not in models:
             raise ValueError(f"Missing model: {model}")
     
-    # Check that each experiment × project × seed has exactly 8 models
+    # Check that each experiment × project × seed has exactly the expected 8 models
     for exp in EXPECTED_EXPERIMENTS:
         for proj in EXPECTED_PROJECTS:
             for seed in EXPECTED_SEEDS:
                 subset = df[(df["experiment"] == exp) & (df["target_project"] == proj) & (df["seed"] == seed)]
                 if len(subset) != 8:
                     raise ValueError(f"Expected 8 models for {exp}/{proj}/{seed}, got {len(subset)}")
+                actual_models = set(subset["model"].unique())
+                expected_models = set(ALL_MODELS)
+                if actual_models != expected_models:
+                    raise ValueError(f"Model set mismatch for {exp}/{proj}/{seed}: expected {expected_models}, got {actual_models}")
     
     result["experiments"] = list(experiments)
     result["projects"] = list(projects)
@@ -206,13 +250,27 @@ def load_validation_log():
     if key_duplicates > 0:
         raise ValueError(f"Found {key_duplicates} duplicate keys in validation_log.csv")
     
-    # Check that each experiment × project × seed has exactly 4 candidates × 3 modes = 12 rows
+    # Check that each experiment × project × seed has exactly 4 candidates × 3 modes = 12 unique rows
     for exp in EXPECTED_EXPERIMENTS:
         for proj in EXPECTED_PROJECTS:
             for seed in EXPECTED_SEEDS:
                 subset = df[(df["experiment"] == exp) & (df["target_project"] == proj) & (df["seed"] == seed)]
                 if len(subset) != 12:
                     raise ValueError(f"Expected 12 rows for {exp}/{proj}/{seed}, got {len(subset)}")
+                
+                # Check exact candidates
+                actual_candidates = set(subset["candidate"].unique())
+                expected_candidates = set(BASELINE_MODELS)
+                if actual_candidates != expected_candidates:
+                    raise ValueError(f"Candidate set mismatch for {exp}/{proj}/{seed}: expected {expected_candidates}, got {actual_candidates}")
+                
+                # Check exact modes for each candidate
+                for cand in BASELINE_MODELS:
+                    cand_subset = subset[subset["candidate"] == cand]
+                    actual_modes = set(cand_subset["mode"].unique())
+                    expected_modes = set(EXPECTED_MODES)
+                    if actual_modes != expected_modes:
+                        raise ValueError(f"Mode set mismatch for {exp}/{proj}/{seed}/{cand}: expected {expected_modes}, got {actual_modes}")
     
     # Check modes
     modes = df["mode"].unique()
@@ -241,51 +299,65 @@ def load_validation_log():
 
 
 def check_join_coverage(repeated_df, validation_df):
-    """Check join coverage between validation_log and repeated_all_results for baseline models."""
+    """Check join coverage between validation_log and repeated_all_results for baseline models using pandas merge."""
     print("Checking join coverage...")
     
     # Filter repeated results to only baseline models
-    baseline_df = repeated_df[repeated_df["model"].isin(BASELINE_MODELS)]
+    baseline_df = repeated_df[repeated_df["model"].isin(BASELINE_MODELS)].copy()
+    
+    # Rename model to candidate for merge
+    baseline_df = baseline_df.rename(columns={"model": "candidate"})
     
     join_results = {}
     
     for mode in EXPECTED_MODES:
-        mode_validation = validation_df[validation_df["mode"] == mode]
+        mode_validation = validation_df[validation_df["mode"] == mode].copy()
         
-        # Create join keys
-        validation_keys = set(
-            (row["experiment"], row["target_project"], row["seed"], row["candidate"])
-            for _, row in mode_validation.iterrows()
+        # Check for duplicate keys in validation
+        val_key_cols = ["experiment", "target_project", "seed", "candidate"]
+        val_dup_keys = mode_validation.duplicated(subset=val_key_cols, keep=False)
+        duplicate_validation_keys = int(val_dup_keys.sum())
+        
+        # Check for duplicate keys in baseline
+        base_dup_keys = baseline_df.duplicated(subset=val_key_cols, keep=False)
+        duplicate_baseline_keys = int(base_dup_keys.sum())
+        
+        # Perform merge
+        merged = pd.merge(
+            mode_validation,
+            baseline_df,
+            on=val_key_cols,
+            how="left",
+            indicator=True,
+            validate="one_to_one"
         )
         
-        repeated_keys = set(
-            (row["experiment"], row["target_project"], row["seed"], row["model"])
-            for _, row in baseline_df.iterrows()
-        )
-        
-        # Check matches
-        matched_keys = validation_keys & repeated_keys
-        unmatched_validation = validation_keys - repeated_keys
-        unmatched_repeated = repeated_keys - validation_keys
-        
-        # Check for duplicate matches (should not happen with unique keys)
-        # This is implicit since we're using sets
+        # Count matches
+        matched_rows = int((merged["_merge"] == "both").sum())
+        unmatched_validation_rows = int((merged["_merge"] == "left_only").sum())
         
         join_results[mode] = {
-            "validation_rows": len(mode_validation),
-            "matched_rows": len(matched_keys),
-            "unmatched_validation_rows": len(unmatched_validation),
-            "unmatched_repeated_rows": len(unmatched_repeated),
-            "duplicate_matches": 0,  # Cannot happen with set intersection
+            "validation_rows": int(len(mode_validation)),
+            "baseline_rows": int(len(baseline_df)),
+            "matched_rows": matched_rows,
+            "unmatched_validation_rows": unmatched_validation_rows,
+            "duplicate_validation_keys": duplicate_validation_keys,
+            "duplicate_baseline_keys": duplicate_baseline_keys,
         }
         
         # Verify expectations
         if join_results[mode]["validation_rows"] != 200:
             raise ValueError(f"Mode {mode}: expected 200 validation rows, got {join_results[mode]['validation_rows']}")
+        if join_results[mode]["baseline_rows"] != 200:
+            raise ValueError(f"Mode {mode}: expected 200 baseline rows, got {join_results[mode]['baseline_rows']}")
         if join_results[mode]["matched_rows"] != 200:
             raise ValueError(f"Mode {mode}: expected 200 matched rows, got {join_results[mode]['matched_rows']}")
         if join_results[mode]["unmatched_validation_rows"] != 0:
             raise ValueError(f"Mode {mode}: expected 0 unmatched validation rows, got {join_results[mode]['unmatched_validation_rows']}")
+        if join_results[mode]["duplicate_validation_keys"] != 0:
+            raise ValueError(f"Mode {mode}: expected 0 duplicate validation keys, got {join_results[mode]['duplicate_validation_keys']}")
+        if join_results[mode]["duplicate_baseline_keys"] != 0:
+            raise ValueError(f"Mode {mode}: expected 0 duplicate baseline keys, got {join_results[mode]['duplicate_baseline_keys']}")
     
     print("Join coverage verified.")
     return join_results
@@ -355,13 +427,27 @@ def check_selected_candidate_integrity(repeated_df):
         # Count unique orderings
         unique_orderings = set(tuple(x) for x in parsed)
         
+        invalid_length_count = int(invalid_length.sum())
+        duplicate_count = int(has_duplicates.sum())
+        invalid_member_count = int(invalid_members.sum())
+        
+        valid = (
+            invalid_length_count == 0
+            and duplicate_count == 0
+            and invalid_member_count == 0
+            and len(soft_top3_df) == 50
+        )
+        
+        if not valid:
+            raise ValueError(f"Soft-top-3 validation failed: invalid_length={invalid_length_count}, duplicates={duplicate_count}, invalid_members={invalid_member_count}, rows={len(soft_top3_df)}")
+        
         result["soft_top_3"] = {
             "has_field": True,
-            "valid": (len(invalid_length) == 0) and (len(has_duplicates) == 0) and (len(invalid_members) == 0),
+            "valid": valid,
             "total_rows": int(len(soft_top3_df)),
-            "invalid_length_count": int(invalid_length.sum()),
-            "duplicate_count": int(has_duplicates.sum()),
-            "invalid_member_count": int(invalid_members.sum()),
+            "invalid_length_count": invalid_length_count,
+            "duplicate_count": duplicate_count,
+            "invalid_member_count": invalid_member_count,
             "unique_orderings_count": int(len(unique_orderings)),
             "unique_orderings": [list(o) for o in sorted(unique_orderings)],
         }
@@ -370,8 +456,8 @@ def check_selected_candidate_integrity(repeated_df):
     return result
 
 
-def assess_analysis_readiness(repeated_df, validation_df, repeated_info, validation_info):
-    """Assess readiness for each planned analysis."""
+def assess_analysis_readiness(repeated_df, validation_df, repeated_info, validation_info, selected_candidate_integrity, join_coverage, soft_all_4_check):
+    """Assess readiness for each planned analysis based on validation checks."""
     print("Assessing analysis readiness...")
     
     readiness = {
@@ -381,46 +467,78 @@ def assess_analysis_readiness(repeated_df, validation_df, repeated_info, validat
         "ablation": {},
     }
     
+    # Check if all top-1 models are valid
+    top_1_valid = all(
+        selected_candidate_integrity["top_1_models"][model]["valid"] 
+        for model in ["AQRPE_v2_balanced", "AQRPE_v2_rank", "AQRPE_v2_mcc"]
+    )
+    
+    # Check if soft-top-3 is valid
+    soft_top_3_valid = selected_candidate_integrity["soft_top_3"].get("valid", False)
+    
+    # Check if all join modes passed
+    join_passed = all(
+        join_coverage[mode]["matched_rows"] == 200 and
+        join_coverage[mode]["unmatched_validation_rows"] == 0
+        for mode in EXPECTED_MODES
+    )
+    
+    # Check if all metrics are present
+    validation_metrics_present = all(m in validation_info["column_names"] for m in VALIDATION_METRICS)
+    test_metrics_present = all(m in repeated_info["column_names"] for m in TEST_METRICS)
+    
     # A. Candidate selection frequency and stability
-    readiness["candidate_selection_frequency_and_stability"] = {
-        "status": "ready_from_existing_outputs",
-        "reason": "All required fields are present in repeated_all_results.csv: selected_candidate, experiment, target_project, seed, model",
-        "available_fields": {
-            "top_1_selected_candidate": "selected_candidate column exists for top-1 models",
-            "soft_top_3_membership": "selected_candidate column exists for soft-top-3 (pipe-separated)",
-            "soft_top_3_order": "selected_candidate column preserves order for soft-top-3",
-            "experiment": "experiment column exists",
-            "target_project": "target_project column exists",
-            "seed": "seed column exists",
+    if top_1_valid and soft_top_3_valid:
+        readiness["candidate_selection_frequency_and_stability"] = {
+            "status": "ready_from_existing_outputs",
+            "reason": "All top-1 models have valid selected_candidate fields and soft-top-3 is valid.",
+            "available_fields": {
+                "top_1_selected_candidate": "selected_candidate column exists and valid for top-1 models",
+                "soft_top_3_membership": "selected_candidate column exists and valid for soft-top-3 (pipe-separated)",
+                "soft_top_3_order": "selected_candidate column preserves order for soft-top-3",
+                "experiment": "experiment column exists",
+                "target_project": "target_project column exists",
+                "seed": "seed column exists",
+            }
         }
-    }
+    else:
+        readiness["candidate_selection_frequency_and_stability"] = {
+            "status": "not_determinable",
+            "reason": f"Top-1 valid: {top_1_valid}, Soft-top-3 valid: {soft_top_3_valid}",
+        }
     
     # B. Validation-test ranking agreement
-    # Check if validation metrics are in validation_log.csv
-    validation_metric_cols = [col for col in validation_info["column_names"] if "mcc" in col.lower() or "f1" in col.lower() or "precision" in col.lower() or "recall" in col.lower() or "brier" in col.lower()]
-    
-    # Check if test metrics are in repeated_all_results.csv
-    test_metric_cols = [col for col in repeated_info["column_names"] if "mcc" in col.lower() or "f1" in col.lower() or "precision" in col.lower() or "recall" in col.lower() or "brier" in col.lower()]
-    
-    readiness["validation_test_ranking_agreement"] = {
-        "status": "ready_from_existing_outputs",
-        "reason": "Validation metrics are in validation_log.csv and test metrics are in repeated_all_results.csv. Join keys are available.",
-        "available_fields": {
-            "validation_metrics": f"{len(validation_metric_cols)} metric columns found in validation_log.csv",
-            "test_metrics": f"{len(test_metric_cols)} metric columns found in repeated_all_results.csv",
-            "join_keys": "experiment, target_project, seed, candidate↔model",
+    if validation_metrics_present and test_metrics_present and join_passed:
+        readiness["validation_test_ranking_agreement"] = {
+            "status": "ready_from_existing_outputs",
+            "reason": "All 14 validation metrics and 14 test metrics are present. Join coverage is complete for all modes.",
+            "available_fields": {
+                "validation_metrics": f"{len(VALIDATION_METRICS)}/14 validation metrics present",
+                "test_metrics": f"{len(TEST_METRICS)}/14 test metrics present",
+                "join_keys": "experiment, target_project, seed, candidate↔model",
+            }
         }
-    }
+    else:
+        readiness["validation_test_ranking_agreement"] = {
+            "status": "not_determinable",
+            "reason": f"Validation metrics present: {validation_metrics_present}, Test metrics present: {test_metrics_present}, Join passed: {join_passed}",
+        }
     
     # C. Post-hoc regret
-    readiness["post_hoc_regret"] = {
-        "status": "ready_from_existing_outputs",
-        "reason": "Selected top-1 candidate is in repeated_all_results.csv. Test performance of all four baselines is available.",
-        "available_fields": {
-            "selected_top_1_candidate": "selected_candidate column exists for top-1 models",
-            "test_performance_all_candidates": "All four baseline models have test metrics in repeated_all_results.csv",
+    if top_1_valid:
+        readiness["post_hoc_regret"] = {
+            "status": "ready_from_existing_outputs",
+            "reason": "All four baselines are present in all 50 runs and top-1 selections are valid.",
+            "available_fields": {
+                "selected_top_1_candidate": "selected_candidate column exists and valid for top-1 models",
+                "test_performance_all_candidates": "All four baseline models have test metrics in repeated_all_results.csv",
+            }
         }
-    }
+    else:
+        readiness["post_hoc_regret"] = {
+            "status": "not_determinable",
+            "reason": f"Top-1 valid: {top_1_valid}",
+        }
     
     # D. Ablation
     readiness["ablation"] = {
@@ -429,16 +547,21 @@ def assess_analysis_readiness(repeated_df, validation_df, repeated_info, validat
             "reason": "All four baseline models have complete results in repeated_all_results.csv",
         },
         "adaptive_top_1": {
-            "status": "ready_from_existing_outputs",
-            "reason": "Top-1 AQRPE models (balanced, rank, mcc) have selected_candidate field in repeated_all_results.csv",
+            "status": "ready_from_existing_outputs" if top_1_valid else "not_determinable",
+            "reason": "Top-1 AQRPE models have valid selected_candidate fields" if top_1_valid else "Top-1 selections not valid",
         },
         "soft_top_3": {
-            "status": "ready_from_existing_outputs",
-            "reason": "AQRPE_v2_soft_top3 has selected_candidate field with pipe-separated candidates in repeated_all_results.csv",
+            "status": "ready_from_existing_outputs" if soft_top_3_valid else "not_determinable",
+            "reason": "AQRPE_v2_soft_top3 has valid selected_candidate field" if soft_top_3_valid else "Soft-top-3 not valid",
         },
         "soft_all_4": {
-            "status": "requires_new_computation",
-            "reason": "Sample-level probabilities for all four candidates are not stored in canonical outputs. Would require re-running models with probability output.",
+            "status": "requires_new_computation" if (
+                not soft_all_4_check["existing_soft_all4_output"] and
+                not soft_all_4_check["sample_level_candidate_probabilities_available"] and
+                not soft_all_4_check["reconstructable_without_model_rerun"]
+            ) else "ready_from_existing_outputs",
+            "reason": soft_all_4_check["evidence"],
+            "details": soft_all_4_check,
         }
     }
     
@@ -446,8 +569,92 @@ def assess_analysis_readiness(repeated_df, validation_df, repeated_info, validat
     return readiness
 
 
+def verify_metrics(validation_info, repeated_info):
+    """Verify that all expected metrics are present in the data files."""
+    print("Verifying metrics...")
+    
+    # Check validation metrics
+    missing_validation = []
+    for metric in VALIDATION_METRICS:
+        if metric not in validation_info["column_names"]:
+            missing_validation.append(metric)
+    
+    if missing_validation:
+        raise ValueError(f"Missing validation metrics: {missing_validation}")
+    
+    # Check test metrics
+    missing_test = []
+    for metric in TEST_METRICS:
+        if metric not in repeated_info["column_names"]:
+            missing_test.append(metric)
+    
+    if missing_test:
+        raise ValueError(f"Missing test metrics: {missing_test}")
+    
+    print("All metrics verified.")
+    return {
+        "validation_metrics_present": len(VALIDATION_METRICS),
+        "test_metrics_present": len(TEST_METRICS),
+    }
+
+
+def check_soft_all_4_availability(repeated_info, validation_info):
+    """Check if soft-all-4 output is available by examining files and code."""
+    print("Checking soft-all-4 availability...")
+    
+    result = {
+        "existing_soft_all4_output": False,
+        "sample_level_candidate_probabilities_available": False,
+        "reconstructable_without_model_rerun": False,
+        "evidence": [],
+    }
+    
+    # Check for soft-all-4 in model names
+    if "AQRPE_v2_soft_all4" in repeated_info.get("models", []):
+        result["existing_soft_all4_output"] = True
+        result["evidence"].append("Found AQRPE_v2_soft_all4 in repeated_all_results.csv models")
+    else:
+        result["evidence"].append("No AQRPE_v2_soft_all4 model found in repeated_all_results.csv")
+    
+    # Check for probability columns in both files
+    all_cols = repeated_info["column_names"] + validation_info["column_names"]
+    prob_cols = [col for col in all_cols if "prob" in col.lower() or "probability" in col.lower()]
+    if prob_cols:
+        result["sample_level_candidate_probabilities_available"] = True
+        result["evidence"].append(f"Found probability columns: {prob_cols}")
+    else:
+        result["evidence"].append("No probability columns found in data files")
+    
+    # Check evaluation script for probability output
+    if EVALUATION_SCRIPT_PATH.exists():
+        with open(EVALUATION_SCRIPT_PATH, "r") as f:
+            script_content = f.read()
+        
+        if "predict_proba" in script_content or "probability" in script_content.lower():
+            result["evidence"].append("Evaluation script contains probability-related code")
+        else:
+            result["evidence"].append("Evaluation script does not contain predict_proba calls")
+    else:
+        result["evidence"].append("Evaluation script not found")
+    
+    # Check canonical directory for probability files
+    canonical_files = list(CANONICAL_RESULT_DIR.glob("*"))
+    prob_files = [f for f in canonical_files if "prob" in f.name.lower() or "prediction" in f.name.lower()]
+    if prob_files:
+        result["sample_level_candidate_probabilities_available"] = True
+        result["evidence"].append(f"Found probability/prediction files in canonical directory: {[f.name for f in prob_files]}")
+    
+    # Determine reconstructability
+    if result["existing_soft_all4_output"] and result["sample_level_candidate_probabilities_available"]:
+        result["reconstructable_without_model_rerun"] = True
+        result["evidence"].append("Soft-all-4 appears reconstructable from existing outputs")
+    
+    print("Soft-all-4 availability checked.")
+    return result
+
+
 def report_column_inventory(repeated_info, validation_info):
-    """Report available columns and artifacts."""
+    """Report available columns and artifacts using hard-coded lists."""
     print("Reporting column inventory...")
     
     inventory = {
@@ -460,27 +667,41 @@ def report_column_inventory(repeated_info, validation_info):
         "stored_artifacts": {},
     }
     
-    # Categorize columns from repeated_all_results.csv
-    for col in repeated_info["column_names"]:
-        if col in ["selected_candidate", "selection_score"]:
-            inventory["selection_fields"].append(col)
-        elif any(m in col.lower() for m in ["mcc", "f1", "precision", "recall", "brier", "lift", "avg_precision", "balanced_accuracy"]):
-            inventory["test_metric_fields"].append(col)
-        elif col in ["experiment", "target_project", "seed", "model"]:
-            inventory["run_identifiers"].append(col)
-        elif "threshold" in col.lower():
+    # Check selection fields
+    for field in SELECTION_FIELDS:
+        if field in repeated_info["column_names"] or field in validation_info["column_names"]:
+            inventory["selection_fields"].append(field)
+    
+    # Check validation metrics
+    for metric in VALIDATION_METRICS:
+        if metric in validation_info["column_names"]:
+            inventory["validation_metric_fields"].append(metric)
+    
+    # Check test metrics
+    for metric in TEST_METRICS:
+        if metric in repeated_info["column_names"]:
+            inventory["test_metric_fields"].append(metric)
+    
+    # Check candidate identifiers
+    for field in CANDIDATE_IDENTIFIER_FIELDS:
+        if field in repeated_info["column_names"] or field in validation_info["column_names"]:
+            inventory["candidate_identifiers"].append(field)
+    
+    # Check run identifiers
+    for field in RUN_IDENTIFIER_FIELDS:
+        if field in repeated_info["column_names"] or field in validation_info["column_names"]:
+            inventory["run_identifiers"].append(field)
+    
+    # Check for threshold fields
+    all_cols = repeated_info["column_names"] + validation_info["column_names"]
+    for col in all_cols:
+        if "threshold" in col.lower():
             inventory["threshold_fields"].append(col)
     
-    # Categorize columns from validation_log.csv
-    for col in validation_info["column_names"]:
-        if any(m in col.lower() for m in ["mcc", "f1", "precision", "recall", "brier", "lift", "avg_precision", "balanced_accuracy"]):
-            inventory["validation_metric_fields"].append(col)
-        elif col in ["candidate"]:
-            inventory["candidate_identifiers"].append(col)
-        elif col in ["experiment", "target_project", "seed", "mode"]:
-            inventory["run_identifiers"].append(col)
-        elif "threshold" in col.lower():
-            inventory["threshold_fields"].append(col)
+    # Remove duplicates
+    for key in ["selection_fields", "validation_metric_fields", "test_metric_fields", 
+                "candidate_identifiers", "run_identifiers", "threshold_fields"]:
+        inventory[key] = list(set(inventory[key]))
     
     # Check for stored artifacts
     inventory["stored_artifacts"] = {
@@ -492,7 +713,6 @@ def report_column_inventory(repeated_info, validation_info):
     }
     
     # Check column names for evidence of these artifacts
-    all_cols = repeated_info["column_names"] + validation_info["column_names"]
     if any("true_label" in col.lower() or "y_true" in col.lower() for col in all_cols):
         inventory["stored_artifacts"]["sample_level_true_labels"] = True
     if any("prob" in col.lower() or "probability" in col.lower() for col in all_cols):
@@ -521,8 +741,50 @@ def build_report():
     # Perform analyses
     join_coverage = check_join_coverage(repeated_df, validation_df)
     selected_candidate_integrity = check_selected_candidate_integrity(repeated_df)
-    analysis_readiness = assess_analysis_readiness(repeated_df, validation_df, repeated_info, validation_info)
+    metric_verification = verify_metrics(validation_info, repeated_info)
+    soft_all_4_check = check_soft_all_4_availability(repeated_info, validation_info)
+    analysis_readiness = assess_analysis_readiness(
+        repeated_df, validation_df, repeated_info, validation_info, 
+        selected_candidate_integrity, join_coverage, soft_all_4_check
+    )
     column_inventory = report_column_inventory(repeated_info, validation_info)
+    
+    # Final validation before save
+    print("Performing final validation...")
+    
+    # Check top-1 models valid
+    top_1_valid_count = sum(
+        1 for model in ["AQRPE_v2_balanced", "AQRPE_v2_rank", "AQRPE_v2_mcc"]
+        if selected_candidate_integrity["top_1_models"][model]["valid"]
+    )
+    if top_1_valid_count != 3:
+        raise ValueError(f"Expected 3/3 top-1 models valid, got {top_1_valid_count}/3")
+    
+    # Check soft-top-3 valid
+    if not selected_candidate_integrity["soft_top_3"].get("valid", False):
+        raise ValueError("Soft-top-3 validation failed")
+    
+    # Check exact run coverage (50 runs = 2 experiments × 5 projects × 5 seeds)
+    expected_runs = len(EXPECTED_EXPERIMENTS) * len(EXPECTED_PROJECTS) * len(EXPECTED_SEEDS)
+    if expected_runs != 50:
+        raise ValueError(f"Expected 50 runs, got {expected_runs}")
+    
+    # Check join modes passed
+    join_modes_passed = sum(
+        1 for mode in EXPECTED_MODES
+        if join_coverage[mode]["matched_rows"] == 200 and
+        join_coverage[mode]["unmatched_validation_rows"] == 0
+    )
+    if join_modes_passed != 3:
+        raise ValueError(f"Expected 3/3 join modes passed, got {join_modes_passed}/3")
+    
+    # Check metrics present
+    if metric_verification["validation_metrics_present"] != 14:
+        raise ValueError(f"Expected 14 validation metrics, got {metric_verification['validation_metrics_present']}")
+    if metric_verification["test_metrics_present"] != 14:
+        raise ValueError(f"Expected 14 test metrics, got {metric_verification['test_metrics_present']}")
+    
+    print("Final validation passed.")
     
     # Build report
     report = {
@@ -536,8 +798,19 @@ def build_report():
         "validation_log_coverage": validation_info,
         "join_coverage": join_coverage,
         "selected_candidate_integrity": selected_candidate_integrity,
+        "metric_verification": metric_verification,
+        "soft_all_4_check": soft_all_4_check,
         "analysis_readiness": analysis_readiness,
         "column_inventory": column_inventory,
+        "final_validation": {
+            "top_1_models_valid": f"{top_1_valid_count}/3",
+            "soft_top_3_valid": selected_candidate_integrity["soft_top_3"].get("valid", False),
+            "exact_repeated_result_runs": f"{expected_runs}/50",
+            "exact_validation_log_runs": f"{expected_runs}/50",
+            "join_modes_passed": f"{join_modes_passed}/3",
+            "validation_metrics_present": f"{metric_verification['validation_metrics_present']}/14",
+            "test_metrics_present": f"{metric_verification['test_metrics_present']}/14",
+        },
     }
     
     return report
@@ -583,10 +856,10 @@ def save_report(report):
         f.write(f"- **Candidates:** {', '.join(report['validation_log_coverage']['candidates'])}\n\n")
         
         f.write("## Join Coverage\n\n")
-        f.write("| Mode | Validation Rows | Matched Rows | Unmatched Validation | Duplicate Matches |\n")
-        f.write("|------|-----------------|--------------|----------------------|-------------------|\n")
+        f.write("| Mode | Validation Rows | Baseline Rows | Matched Rows | Unmatched Validation | Duplicate Validation Keys | Duplicate Baseline Keys |\n")
+        f.write("|------|-----------------|---------------|--------------|----------------------|-------------------------|------------------------|\n")
         for mode, data in report['join_coverage'].items():
-            f.write(f"| {mode} | {data['validation_rows']} | {data['matched_rows']} | {data['unmatched_validation_rows']} | {data['duplicate_matches']} |\n")
+            f.write(f"| {mode} | {data['validation_rows']} | {data['baseline_rows']} | {data['matched_rows']} | {data['unmatched_validation_rows']} | {data['duplicate_validation_keys']} | {data['duplicate_baseline_keys']} |\n")
         f.write("\n")
         
         f.write("## Selected-Candidate Integrity\n\n")
@@ -611,6 +884,28 @@ def save_report(report):
             f.write(f"- Invalid member count: {st3['invalid_member_count']}\n")
             f.write(f"- Unique orderings count: {st3['unique_orderings_count']}\n")
         f.write("\n")
+        
+        f.write("## Metric Verification\n\n")
+        f.write(f"- **Validation metrics present:** {report['metric_verification']['validation_metrics_present']}/14\n")
+        f.write(f"- **Test metrics present:** {report['metric_verification']['test_metrics_present']}/14\n\n")
+        
+        f.write("## Soft-All-4 Availability\n\n")
+        f.write(f"- **Existing soft-all-4 output:** {report['soft_all_4_check']['existing_soft_all4_output']}\n")
+        f.write(f"- **Sample-level probabilities available:** {report['soft_all_4_check']['sample_level_candidate_probabilities_available']}\n")
+        f.write(f"- **Reconstructable without model rerun:** {report['soft_all_4_check']['reconstructable_without_model_rerun']}\n\n")
+        f.write("**Evidence:**\n\n")
+        for evidence in report['soft_all_4_check']['evidence']:
+            f.write(f"- {evidence}\n")
+        f.write("\n")
+        
+        f.write("## Final Validation\n\n")
+        f.write(f"- **Top-1 models valid:** {report['final_validation']['top_1_models_valid']}\n")
+        f.write(f"- **Soft-top-3 valid:** {report['final_validation']['soft_top_3_valid']}\n")
+        f.write(f"- **Exact repeated-result runs:** {report['final_validation']['exact_repeated_result_runs']}\n")
+        f.write(f"- **Exact validation-log runs:** {report['final_validation']['exact_validation_log_runs']}\n")
+        f.write(f"- **Join modes passed:** {report['final_validation']['join_modes_passed']}\n")
+        f.write(f"- **Validation metrics present:** {report['final_validation']['validation_metrics_present']}\n")
+        f.write(f"- **Test metrics present:** {report['final_validation']['test_metrics_present']}\n\n")
         
         f.write("## Analysis Readiness Matrix\n\n")
         f.write("### Candidate Selection Frequency and Stability\n\n")

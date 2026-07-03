@@ -28,11 +28,11 @@
 
 ## Join Coverage
 
-| Mode | Validation Rows | Matched Rows | Unmatched Validation | Duplicate Matches |
-|------|-----------------|--------------|----------------------|-------------------|
-| balanced | 200 | 200 | 0 | 0 |
-| rank | 200 | 200 | 0 | 0 |
-| mcc | 200 | 200 | 0 | 0 |
+| Mode | Validation Rows | Baseline Rows | Matched Rows | Unmatched Validation | Duplicate Validation Keys | Duplicate Baseline Keys |
+|------|-----------------|---------------|--------------|----------------------|-------------------------|------------------------|
+| balanced | 200 | 200 | 200 | 0 | 0 | 0 |
+| rank | 200 | 200 | 200 | 0 | 0 | 0 |
+| mcc | 200 | 200 | 200 | 0 | 0 | 0 |
 
 ## Selected-Candidate Integrity
 
@@ -59,29 +59,56 @@
 ### Soft-Top-3
 
 - Has field: True
-- Valid: False
+- Valid: True
 - Total rows: 50
 - Invalid length count: 0
 - Duplicate count: 0
 - Invalid member count: 0
 - Unique orderings count: 10
 
+## Metric Verification
+
+- **Validation metrics present:** 14/14
+- **Test metrics present:** 14/14
+
+## Soft-All-4 Availability
+
+- **Existing soft-all-4 output:** False
+- **Sample-level probabilities available:** False
+- **Reconstructable without model rerun:** False
+
+**Evidence:**
+
+- No AQRPE_v2_soft_all4 model found in repeated_all_results.csv
+- No probability columns found in data files
+- Evaluation script contains probability-related code
+
+## Final Validation
+
+- **Top-1 models valid:** 3/3
+- **Soft-top-3 valid:** True
+- **Exact repeated-result runs:** 50/50
+- **Exact validation-log runs:** 50/50
+- **Join modes passed:** 3/3
+- **Validation metrics present:** 14/14
+- **Test metrics present:** 14/14
+
 ## Analysis Readiness Matrix
 
 ### Candidate Selection Frequency and Stability
 
 **Status:** ready_from_existing_outputs
-**Reason:** All required fields are present in repeated_all_results.csv: selected_candidate, experiment, target_project, seed, model
+**Reason:** All top-1 models have valid selected_candidate fields and soft-top-3 is valid.
 
 ### Validation-Test Ranking Agreement
 
 **Status:** ready_from_existing_outputs
-**Reason:** Validation metrics are in validation_log.csv and test metrics are in repeated_all_results.csv. Join keys are available.
+**Reason:** All 14 validation metrics and 14 test metrics are present. Join coverage is complete for all modes.
 
 ### Post-Hoc Regret
 
 **Status:** ready_from_existing_outputs
-**Reason:** Selected top-1 candidate is in repeated_all_results.csv. Test performance of all four baselines is available.
+**Reason:** All four baselines are present in all 50 runs and top-1 selections are valid.
 
 ### Ablation
 
@@ -91,15 +118,15 @@
 
 **adaptive_top_1:**
 - Status: ready_from_existing_outputs
-- Reason: Top-1 AQRPE models (balanced, rank, mcc) have selected_candidate field in repeated_all_results.csv
+- Reason: Top-1 AQRPE models have valid selected_candidate fields
 
 **soft_top_3:**
 - Status: ready_from_existing_outputs
-- Reason: AQRPE_v2_soft_top3 has selected_candidate field with pipe-separated candidates in repeated_all_results.csv
+- Reason: AQRPE_v2_soft_top3 has valid selected_candidate field
 
 **soft_all_4:**
 - Status: requires_new_computation
-- Reason: Sample-level probabilities for all four candidates are not stored in canonical outputs. Would require re-running models with probability output.
+- Reason: ['No AQRPE_v2_soft_all4 model found in repeated_all_results.csv', 'No probability columns found in data files', 'Evaluation script contains probability-related code']
 
 ## Missing Artifacts
 
