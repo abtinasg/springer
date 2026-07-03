@@ -266,12 +266,12 @@ def main():
     
     if has_text_diffs:
         overall_status = "materially_different"
-    elif has_numerical_diffs and max_diff > 1e-9:
-        overall_status = "materially_different"
-    elif has_numerical_diffs and max_diff > 1e-12:
+    elif not has_numerical_diffs:
+        overall_status = "exact_match"
+    elif max_diff <= 1e-12:
         overall_status = "numerically_equivalent"
     else:
-        overall_status = "exact_match"
+        overall_status = "materially_different"
     
     results["overall_status"] = overall_status
     
