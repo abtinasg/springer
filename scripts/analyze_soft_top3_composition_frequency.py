@@ -99,12 +99,15 @@ def load_and_verify_inputs():
         if actual_sha[name] != expected:
             raise ValueError(f"SHA-256 mismatch for {name}")
     
-    # Verify evaluation script SHA-256 if present in manifest
-    if "run_repeated_evaluation.py" in manifest.get("canonical_reproduction_outputs", {}):
-        expected_script_sha = manifest["canonical_reproduction_outputs"]["run_repeated_evaluation.py"]["sha256"]
-        actual_script_sha = compute_sha256(EVALUATION_SCRIPT_PATH)
-        if actual_script_sha != expected_script_sha:
-            raise ValueError("SHA-256 mismatch for run_repeated_evaluation.py")
+    # Verify evaluation script SHA-256 from environment_and_code_files
+    if "run_repeated_evaluation.py" not in manifest.get("environment_and_code_files", {}):
+        raise ValueError("run_repeated_evaluation.py not found in manifest environment_and_code_files")
+    if not manifest["environment_and_code_files"]["run_repeated_evaluation.py"].get("exists"):
+        raise ValueError("run_repeated_evaluation.py does not exist according to manifest")
+    expected_script_sha = manifest["environment_and_code_files"]["run_repeated_evaluation.py"]["sha256"]
+    actual_script_sha = compute_sha256(EVALUATION_SCRIPT_PATH)
+    if actual_script_sha != expected_script_sha:
+        raise ValueError(f"SHA-256 mismatch for run_repeated_evaluation.py: expected {expected_script_sha}, got {actual_script_sha}")
     
     # Load data files
     repeated_df = pd.read_csv(REPEATED_RESULTS_PATH)
@@ -119,16 +122,36 @@ def load_and_verify_inputs():
 
 
 def verify_algorithm_provenance(evaluation_script):
-    """Verify soft-top-3 algorithm provenance from evaluation script."""
+    """Verify soft-top-3 algorithm provenance from evaluation script with exact code patterns."""
     print("Verifying algorithm provenance...")
     
-    provenance = {
-        "uses_balanced_objective": "balanced" in evaluation_script.lower() or "objective_balanced" in evaluation_script,
-        "selects_top_3": "top3" in evaluation_script.lower() or "top_3" in evaluation_script,
-        "uses_pipe_separator": "|" in evaluation_script,
-        "uses_ensemble_threshold": "ensemble" in evaluation_script.lower() and "threshold" in evaluation_script.lower(),
-        "averages_probabilities": "average" in evaluation_script.lower() and "prob" in evaluation_script.lower(),
+    # Normalize whitespace for pattern matching
+    normalized_script = " ".join(evaluation_script.split())
+    
+    # Check for exact code patterns
+    patterns = {
+        "balanced_objective_sort": 'top3 = sorted(fitted, key=lambda k: fitted[k]["objective_balanced"], reverse=True)[:3]',
+        "validation_mean": 'val_stack = np.mean([fitted[k]["validation_scores"] for k in top3], axis=0)',
+        "balanced_threshold_retuning": 't_stack, obj_stack = select_threshold(y_val, val_stack, "balanced")',
+        "test_mean": 'test_stack = np.mean([model_scores(fitted[k]["model"], X_test) for k in top3], axis=0)',
+        "pipe_order_storage": '"selected_candidate": "|".join(top3)',
+        "selection_mode": '"selection_mode": "soft_top3_balanced_objective"',
     }
+    
+    provenance = {
+        "balanced_objective_sort_verified": patterns["balanced_objective_sort"] in normalized_script,
+        "top_three_slice_verified": patterns["balanced_objective_sort"] in normalized_script and "[:3]" in normalized_script,
+        "validation_mean_verified": patterns["validation_mean"] in normalized_script,
+        "balanced_threshold_retuning_verified": patterns["balanced_threshold_retuning"] in normalized_script,
+        "test_mean_verified": patterns["test_mean"] in normalized_script,
+        "pipe_order_storage_verified": patterns["pipe_order_storage"] in normalized_script,
+        "selection_mode_verified": patterns["selection_mode"] in normalized_script,
+    }
+    
+    # Check all are true
+    if not all(provenance.values()):
+        missing = [k for k, v in provenance.items() if not v]
+        raise ValueError(f"Algorithm provenance verification failed for: {missing}")
     
     print("Algorithm provenance verified.")
     return provenance
@@ -263,8 +286,15 @@ def validate_selection_integrity(soft_top3_df, validation_df, repeated_df):
         if selected_members != expected_top3:
             results["order_mismatches"] += 1
         
-        # Check excluded candidate
-        if expected_excluded not in BASELINE_MODELS or expected_excluded in selected_members:
+        # Check excluded candidate - build from actual complement
+        actual_excluded_set = set(BASELINE_MODELS) - set(selected_members)
+        if len(actual_excluded_set) != 1:
+            results["excluded_candidate_mismatches"] += 1
+            continue
+        actual_excluded = actual_excluded_set.pop()
+        
+        # Check actual excluded matches expected rank-4
+        if actual_excluded != expected_excluded:
             results["excluded_candidate_mismatches"] += 1
         
         # Check consistency with balanced top-1
@@ -280,19 +310,27 @@ def validate_selection_integrity(soft_top3_df, validation_df, repeated_df):
             if balanced_selected != expected_top3[0]:
                 results["balanced_top1_consistency_mismatches"] += 1
         
-        # Check for exact score ties
+        # Check for exact score ties (actual equality, not rounded)
+        from itertools import combinations
         score_values = [val_scores[c] for c in BASELINE_MODELS]
-        unique_scores = len(set(round(s, 12) for s in score_values))
-        if unique_scores < 4:
+        exact_tie_found = False
+        for score_a, score_b in combinations(score_values, 2):
+            if score_a == score_b:
+                exact_tie_found = True
+                break
+        if exact_tie_found:
             results["exact_score_tie_runs"] += 1
         
-        # Check for near score ties
-        for i in range(len(score_values) - 1):
-            if abs(score_values[i] - score_values[i + 1]) <= TOLERANCE:
-                results["near_score_tie_runs_within_1e12"] += 1
+        # Check for near score ties (all 6 pairs)
+        near_tie_found = False
+        for score_a, score_b in combinations(score_values, 2):
+            if abs(score_a - score_b) <= TOLERANCE:
+                near_tie_found = True
                 break
+        if near_tie_found:
+            results["near_score_tie_runs_within_1e12"] += 1
         
-        # Check cutoff near tie
+        # Check cutoff near tie (position 3 vs position 4)
         cutoff_gap = val_scores[sorted_candidates[2]] - val_scores[sorted_candidates[3]]
         if abs(cutoff_gap) <= TOLERANCE:
             results["cutoff_near_tie_runs_within_1e12"] += 1
@@ -350,13 +388,17 @@ def save_selection_events(soft_top3_df, validation_df):
         for _, val_row in val_subset.iterrows():
             val_scores[val_row["candidate"]] = val_row["val_selection_score"]
         
-        # Sort candidates
+        # Build actual excluded from complement
+        actual_excluded_set = set(BASELINE_MODELS) - set(selected_members)
+        actual_excluded = actual_excluded_set.pop()
+        
+        # Sort candidates for cutoff calculation
         sorted_candidates = sorted(
             BASELINE_MODELS,
             key=lambda c: (-val_scores[c], CANDIDATE_ORDER.index(c))
         )
         
-        # Build event row
+        # Build event row with scores mapped to actual selected/excluded candidates
         event_rows.append({
             "experiment": experiment,
             "target_project": target_project,
@@ -365,14 +407,14 @@ def save_selection_events(soft_top3_df, validation_df):
             "position_1_candidate": selected_members[0],
             "position_2_candidate": selected_members[1],
             "position_3_candidate": selected_members[2],
-            "excluded_candidate": sorted_candidates[3],
+            "excluded_candidate": actual_excluded,
             "selection_mode": selection_mode,
             "threshold": threshold,
             "selection_score": selection_score,
-            "balanced_score_position_1": val_scores[sorted_candidates[0]],
-            "balanced_score_position_2": val_scores[sorted_candidates[1]],
-            "balanced_score_position_3": val_scores[sorted_candidates[2]],
-            "balanced_score_excluded": val_scores[sorted_candidates[3]],
+            "balanced_score_position_1": val_scores[selected_members[0]],
+            "balanced_score_position_2": val_scores[selected_members[1]],
+            "balanced_score_position_3": val_scores[selected_members[2]],
+            "balanced_score_excluded": val_scores[actual_excluded],
             "cutoff_score_gap": val_scores[sorted_candidates[2]] - val_scores[sorted_candidates[3]],
         })
     
@@ -476,10 +518,49 @@ def compute_candidate_frequency(events_df):
     if len(freq_df) != 52:
         raise ValueError(f"Expected 52 candidate-frequency rows, got {len(freq_df)}")
     
-    # Verify sums
+    # Check for nulls
+    if freq_df.isnull().sum().sum() > 0:
+        raise ValueError("Found null values in candidate frequency")
+    
+    # Check for duplicate keys
+    key_cols = ["scope", "experiment", "target_project", "candidate"]
+    duplicates = freq_df.duplicated(subset=key_cols)
+    if duplicates.sum() > 0:
+        raise ValueError(f"Found {duplicates.sum()} duplicate keys in candidate frequency")
+    
+    # Verify sums for each group
+    for scope in ["overall", "by_setting", "by_project"]:
+        if scope == "overall":
+            groups = [("all", "all")]
+        elif scope == "by_setting":
+            groups = [(exp, "all") for exp in EXPECTED_EXPERIMENTS]
+        else:  # by_project
+            groups = [(exp, proj) for exp in EXPECTED_EXPERIMENTS for proj in EXPECTED_PROJECTS]
+        
+        for experiment, project in groups:
+            subset = freq_df[(freq_df["scope"] == scope) & (freq_df["experiment"] == experiment) & (freq_df["target_project"] == project)]
+            membership_sum = subset["membership_count"].sum()
+            exclusion_sum = subset["exclusion_count"].sum()
+            denominator = subset["denominator"].iloc[0]
+            
+            expected_membership_sum = 3 * denominator
+            expected_exclusion_sum = denominator
+            
+            if membership_sum != expected_membership_sum:
+                raise ValueError(f"Expected membership sum {expected_membership_sum} for {scope}/{experiment}/{project}, got {membership_sum}")
+            if exclusion_sum != expected_exclusion_sum:
+                raise ValueError(f"Expected exclusion sum {expected_exclusion_sum} for {scope}/{experiment}/{project}, got {exclusion_sum}")
+    
+    # Verify per-candidate sums and proportions
     for _, row in freq_df.iterrows():
         if row["membership_count"] + row["exclusion_count"] != row["denominator"]:
             raise ValueError(f"Membership + exclusion != denominator for {row['scope']}/{row['experiment']}/{row['target_project']}/{row['candidate']}")
+        expected_membership_prop = row["membership_count"] / row["denominator"]
+        expected_exclusion_prop = row["exclusion_count"] / row["denominator"]
+        if abs(row["membership_proportion"] - expected_membership_prop) > TOLERANCE:
+            raise ValueError(f"Membership proportion mismatch for {row['scope']}/{row['experiment']}/{row['target_project']}/{row['candidate']}")
+        if abs(row["exclusion_proportion"] - expected_exclusion_prop) > TOLERANCE:
+            raise ValueError(f"Exclusion proportion mismatch for {row['scope']}/{row['experiment']}/{row['target_project']}/{row['candidate']}")
     
     # Sort
     freq_df = freq_df.sort_values(["scope", "experiment", "target_project", "candidate"])
@@ -728,7 +809,9 @@ def save_reports(provenance, integrity_results, candidate_freq, position_freq, o
     report = {
         "canonical_verification": {
             "manifest_validation_status": "all_checks_passed",
-            "sha256_verified": True,
+            "repeated_results_sha256_verified": True,
+            "validation_log_sha256_verified": True,
+            "evaluation_script_sha256_verified": True,
         },
         "algorithm_provenance": provenance,
         "selection_integrity": integrity_results,
@@ -737,7 +820,22 @@ def save_reports(provenance, integrity_results, candidate_freq, position_freq, o
         "ordering_frequency": ordering_freq.to_dict(orient="records"),
         "descriptive_summary": summary,
         "validation_checks": {
-            "all_critical_mismatches_zero": True,
+            "canonical_sha_checks_passed": True,
+            "algorithm_provenance_checks_passed": all(provenance.values()),
+            "selection_integrity_checks_passed": all(
+                integrity_results[k] == 0 for k in [
+                    "order_mismatches",
+                    "membership_mismatches",
+                    "excluded_candidate_mismatches",
+                    "balanced_top1_consistency_mismatches",
+                    "selection_mode_mismatches",
+                    "invalid_thresholds",
+                    "invalid_selection_scores",
+                ]
+            ),
+            "candidate_frequency_checks_passed": True,
+            "position_frequency_checks_passed": True,
+            "ordering_frequency_checks_passed": True,
         },
     }
     
@@ -750,14 +848,18 @@ def save_reports(provenance, integrity_results, candidate_freq, position_freq, o
         
         f.write("## Canonical Verification\n\n")
         f.write("- Manifest validation status: all_checks_passed\n")
-        f.write("- SHA-256 verified: True\n\n")
+        f.write("- Repeated results SHA-256 verified: True\n")
+        f.write("- Validation log SHA-256 verified: True\n")
+        f.write("- Evaluation script SHA-256 verified: True\n\n")
         
         f.write("## Soft-Top-3 Algorithm Provenance\n\n")
-        f.write(f"- Uses balanced objective: {provenance['uses_balanced_objective']}\n")
-        f.write(f"- Selects top-3 candidates: {provenance['selects_top_3']}\n")
-        f.write(f"- Uses pipe separator: {provenance['uses_pipe_separator']}\n")
-        f.write(f"- Uses ensemble threshold: {provenance['uses_ensemble_threshold']}\n")
-        f.write(f"- Averages probabilities: {provenance['averages_probabilities']}\n\n")
+        f.write(f"- Balanced objective sort verified: {provenance['balanced_objective_sort_verified']}\n")
+        f.write(f"- Top-three slice verified: {provenance['top_three_slice_verified']}\n")
+        f.write(f"- Validation mean verified: {provenance['validation_mean_verified']}\n")
+        f.write(f"- Balanced threshold retuning verified: {provenance['balanced_threshold_retuning_verified']}\n")
+        f.write(f"- Test mean verified: {provenance['test_mean_verified']}\n")
+        f.write(f"- Pipe order storage verified: {provenance['pipe_order_storage_verified']}\n")
+        f.write(f"- Selection mode verified: {provenance['selection_mode_verified']}\n\n")
         
         f.write("## Selection-Integrity Validation\n\n")
         f.write(f"- **Runs checked:** {integrity_results['runs_checked']}\n")
@@ -869,6 +971,43 @@ def main():
     
     # Save reports
     save_reports(provenance, integrity_results, candidate_freq, position_freq, ordering_freq, summary)
+    
+    # Final validation checks
+    print("\nPerforming final validation checks...")
+    
+    # Verify output row counts
+    if len(events_df) != 50:
+        raise ValueError(f"Expected 50 event rows, got {len(events_df)}")
+    if len(events_df.columns) != 16:
+        raise ValueError(f"Expected 16 event columns, got {len(events_df.columns)}")
+    if len(candidate_freq) != 52:
+        raise ValueError(f"Expected 52 candidate-frequency rows, got {len(candidate_freq)}")
+    if len(position_freq) != 36:
+        raise ValueError(f"Expected 36 position-frequency rows, got {len(position_freq)}")
+    if len(ordering_freq) != 72:
+        raise ValueError(f"Expected 72 ordering-frequency rows, got {len(ordering_freq)}")
+    
+    # Verify selection-integrity mismatches are zero
+    if integrity_results["order_mismatches"] != 0:
+        raise ValueError(f"Order mismatches: {integrity_results['order_mismatches']}")
+    if integrity_results["membership_mismatches"] != 0:
+        raise ValueError(f"Membership mismatches: {integrity_results['membership_mismatches']}")
+    if integrity_results["excluded_candidate_mismatches"] != 0:
+        raise ValueError(f"Excluded candidate mismatches: {integrity_results['excluded_candidate_mismatches']}")
+    if integrity_results["balanced_top1_consistency_mismatches"] != 0:
+        raise ValueError(f"Balanced top-1 consistency mismatches: {integrity_results['balanced_top1_consistency_mismatches']}")
+    if integrity_results["selection_mode_mismatches"] != 0:
+        raise ValueError(f"Selection mode mismatches: {integrity_results['selection_mode_mismatches']}")
+    if integrity_results["invalid_thresholds"] != 0:
+        raise ValueError(f"Invalid thresholds: {integrity_results['invalid_thresholds']}")
+    if integrity_results["invalid_selection_scores"] != 0:
+        raise ValueError(f"Invalid selection scores: {integrity_results['invalid_selection_scores']}")
+    
+    # Verify algorithm provenance checks
+    if not all(provenance.values()):
+        raise ValueError("Algorithm provenance checks failed")
+    
+    print("Final validation checks passed.")
     
     print("\nSoft-top-3 composition frequency analysis complete!")
     print(f"\nSummary:")

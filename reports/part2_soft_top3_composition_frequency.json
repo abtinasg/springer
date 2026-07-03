@@ -1,14 +1,18 @@
 {
   "canonical_verification": {
     "manifest_validation_status": "all_checks_passed",
-    "sha256_verified": true
+    "repeated_results_sha256_verified": true,
+    "validation_log_sha256_verified": true,
+    "evaluation_script_sha256_verified": true
   },
   "algorithm_provenance": {
-    "uses_balanced_objective": true,
-    "selects_top_3": true,
-    "uses_pipe_separator": true,
-    "uses_ensemble_threshold": true,
-    "averages_probabilities": true
+    "balanced_objective_sort_verified": true,
+    "top_three_slice_verified": true,
+    "validation_mean_verified": true,
+    "balanced_threshold_retuning_verified": true,
+    "test_mean_verified": true,
+    "pipe_order_storage_verified": true,
+    "selection_mode_verified": true
   },
   "selection_integrity": {
     "runs_checked": 50,
@@ -1569,6 +1573,11 @@
     }
   },
   "validation_checks": {
-    "all_critical_mismatches_zero": true
+    "canonical_sha_checks_passed": true,
+    "algorithm_provenance_checks_passed": true,
+    "selection_integrity_checks_passed": true,
+    "candidate_frequency_checks_passed": true,
+    "position_frequency_checks_passed": true,
+    "ordering_frequency_checks_passed": true
   }
 }

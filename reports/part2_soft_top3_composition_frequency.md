@@ -3,15 +3,19 @@
 ## Canonical Verification
 
 - Manifest validation status: all_checks_passed
-- SHA-256 verified: True
+- Repeated results SHA-256 verified: True
+- Validation log SHA-256 verified: True
+- Evaluation script SHA-256 verified: True
 
 ## Soft-Top-3 Algorithm Provenance
 
-- Uses balanced objective: True
-- Selects top-3 candidates: True
-- Uses pipe separator: True
-- Uses ensemble threshold: True
-- Averages probabilities: True
+- Balanced objective sort verified: True
+- Top-three slice verified: True
+- Validation mean verified: True
+- Balanced threshold retuning verified: True
+- Test mean verified: True
+- Pipe order storage verified: True
+- Selection mode verified: True
 
 ## Selection-Integrity Validation
 
