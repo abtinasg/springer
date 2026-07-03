@@ -1,0 +1,328 @@
+{
+  "canonical_verification": {
+    "manifest_validation_status": "all_checks_passed",
+    "canonical_result_source": "results/part1_full_reproduction",
+    "sha256_verified": true,
+    "sha256_values": {
+      "repeated_all_results.csv": "76b430031a944708af661bee1a1355619d1e0e6f49b932d462cea421aeb01160",
+      "validation_log.csv": "d18dbb6b7a71f356203aa34fe41ab7d531daa1f8499fc06d06ab643b088f0272",
+      "decision_metadata.json": "bd446ccbb5571bfeaa27a52a7d42316ea924b7787c9153f6418d0db6812fdb6b"
+    }
+  },
+  "canonical_result_coverage": {
+    "row_count": 400,
+    "column_count": 22,
+    "column_names": [
+      "experiment",
+      "target_project",
+      "seed",
+      "model",
+      "selected_candidate",
+      "selection_mode",
+      "threshold",
+      "selection_score",
+      "avg_precision",
+      "roc_auc",
+      "mcc",
+      "f1",
+      "balanced_accuracy",
+      "precision",
+      "recall",
+      "brier",
+      "precision_at_10pct",
+      "recall_at_10pct",
+      "lift_at_10pct",
+      "precision_at_20pct",
+      "recall_at_20pct",
+      "lift_at_20pct"
+    ],
+    "null_count": 0,
+    "experiments": [
+      "within_project",
+      "cross_project"
+    ],
+    "projects": [
+      "CM1",
+      "JM1",
+      "KC1",
+      "KC2",
+      "PC1"
+    ],
+    "seeds": [
+      7,
+      13,
+      29,
+      42,
+      101
+    ],
+    "models": [
+      "LR_std_C0.1",
+      "LR_std_C1",
+      "DT_leaf5",
+      "ET_leaf5",
+      "AQRPE_v2_balanced",
+      "AQRPE_v2_rank",
+      "AQRPE_v2_mcc",
+      "AQRPE_v2_soft_top3"
+    ],
+    "key_duplicates": 0
+  },
+  "validation_log_coverage": {
+    "row_count": 600,
+    "column_count": 21,
+    "column_names": [
+      "experiment",
+      "target_project",
+      "seed",
+      "candidate",
+      "mode",
+      "val_threshold",
+      "val_selection_score",
+      "val_avg_precision",
+      "val_roc_auc",
+      "val_mcc",
+      "val_f1",
+      "val_balanced_accuracy",
+      "val_precision",
+      "val_recall",
+      "val_brier",
+      "val_precision_at_10pct",
+      "val_recall_at_10pct",
+      "val_lift_at_10pct",
+      "val_precision_at_20pct",
+      "val_recall_at_20pct",
+      "val_lift_at_20pct"
+    ],
+    "null_count": 0,
+    "modes": [
+      "balanced",
+      "rank",
+      "mcc"
+    ],
+    "candidates": [
+      "LR_std_C0.1",
+      "LR_std_C1",
+      "DT_leaf5",
+      "ET_leaf5"
+    ],
+    "key_duplicates": 0
+  },
+  "join_coverage": {
+    "balanced": {
+      "validation_rows": 200,
+      "matched_rows": 200,
+      "unmatched_validation_rows": 0,
+      "unmatched_repeated_rows": 0,
+      "duplicate_matches": 0
+    },
+    "rank": {
+      "validation_rows": 200,
+      "matched_rows": 200,
+      "unmatched_validation_rows": 0,
+      "unmatched_repeated_rows": 0,
+      "duplicate_matches": 0
+    },
+    "mcc": {
+      "validation_rows": 200,
+      "matched_rows": 200,
+      "unmatched_validation_rows": 0,
+      "unmatched_repeated_rows": 0,
+      "duplicate_matches": 0
+    }
+  },
+  "selected_candidate_integrity": {
+    "top_1_models": {
+      "AQRPE_v2_balanced": {
+        "has_field": true,
+        "valid": true,
+        "total_rows": 50,
+        "invalid_count": 0,
+        "invalid_values": []
+      },
+      "AQRPE_v2_rank": {
+        "has_field": true,
+        "valid": true,
+        "total_rows": 50,
+        "invalid_count": 0,
+        "invalid_values": []
+      },
+      "AQRPE_v2_mcc": {
+        "has_field": true,
+        "valid": true,
+        "total_rows": 50,
+        "invalid_count": 0,
+        "invalid_values": []
+      }
+    },
+    "soft_top_3": {
+      "has_field": true,
+      "valid": false,
+      "total_rows": 50,
+      "invalid_length_count": 0,
+      "duplicate_count": 0,
+      "invalid_member_count": 0,
+      "unique_orderings_count": 10,
+      "unique_orderings": [
+        [
+          "DT_leaf5",
+          "ET_leaf5",
+          "LR_std_C0.1"
+        ],
+        [
+          "DT_leaf5",
+          "ET_leaf5",
+          "LR_std_C1"
+        ],
+        [
+          "DT_leaf5",
+          "LR_std_C1",
+          "LR_std_C0.1"
+        ],
+        [
+          "ET_leaf5",
+          "LR_std_C0.1",
+          "DT_leaf5"
+        ],
+        [
+          "ET_leaf5",
+          "LR_std_C0.1",
+          "LR_std_C1"
+        ],
+        [
+          "ET_leaf5",
+          "LR_std_C1",
+          "DT_leaf5"
+        ],
+        [
+          "ET_leaf5",
+          "LR_std_C1",
+          "LR_std_C0.1"
+        ],
+        [
+          "LR_std_C0.1",
+          "LR_std_C1",
+          "ET_leaf5"
+        ],
+        [
+          "LR_std_C1",
+          "ET_leaf5",
+          "LR_std_C0.1"
+        ],
+        [
+          "LR_std_C1",
+          "LR_std_C0.1",
+          "ET_leaf5"
+        ]
+      ]
+    }
+  },
+  "analysis_readiness": {
+    "candidate_selection_frequency_and_stability": {
+      "status": "ready_from_existing_outputs",
+      "reason": "All required fields are present in repeated_all_results.csv: selected_candidate, experiment, target_project, seed, model",
+      "available_fields": {
+        "top_1_selected_candidate": "selected_candidate column exists for top-1 models",
+        "soft_top_3_membership": "selected_candidate column exists for soft-top-3 (pipe-separated)",
+        "soft_top_3_order": "selected_candidate column preserves order for soft-top-3",
+        "experiment": "experiment column exists",
+        "target_project": "target_project column exists",
+        "seed": "seed column exists"
+      }
+    },
+    "validation_test_ranking_agreement": {
+      "status": "ready_from_existing_outputs",
+      "reason": "Validation metrics are in validation_log.csv and test metrics are in repeated_all_results.csv. Join keys are available.",
+      "available_fields": {
+        "validation_metrics": "10 metric columns found in validation_log.csv",
+        "test_metrics": "10 metric columns found in repeated_all_results.csv",
+        "join_keys": "experiment, target_project, seed, candidate\u2194model"
+      }
+    },
+    "post_hoc_regret": {
+      "status": "ready_from_existing_outputs",
+      "reason": "Selected top-1 candidate is in repeated_all_results.csv. Test performance of all four baselines is available.",
+      "available_fields": {
+        "selected_top_1_candidate": "selected_candidate column exists for top-1 models",
+        "test_performance_all_candidates": "All four baseline models have test metrics in repeated_all_results.csv"
+      }
+    },
+    "ablation": {
+      "fixed_individual_baselines": {
+        "status": "ready_from_existing_outputs",
+        "reason": "All four baseline models have complete results in repeated_all_results.csv"
+      },
+      "adaptive_top_1": {
+        "status": "ready_from_existing_outputs",
+        "reason": "Top-1 AQRPE models (balanced, rank, mcc) have selected_candidate field in repeated_all_results.csv"
+      },
+      "soft_top_3": {
+        "status": "ready_from_existing_outputs",
+        "reason": "AQRPE_v2_soft_top3 has selected_candidate field with pipe-separated candidates in repeated_all_results.csv"
+      },
+      "soft_all_4": {
+        "status": "requires_new_computation",
+        "reason": "Sample-level probabilities for all four candidates are not stored in canonical outputs. Would require re-running models with probability output."
+      }
+    }
+  },
+  "column_inventory": {
+    "selection_fields": [
+      "selected_candidate",
+      "selection_score"
+    ],
+    "validation_metric_fields": [
+      "val_avg_precision",
+      "val_mcc",
+      "val_f1",
+      "val_balanced_accuracy",
+      "val_precision",
+      "val_recall",
+      "val_brier",
+      "val_precision_at_10pct",
+      "val_recall_at_10pct",
+      "val_lift_at_10pct",
+      "val_precision_at_20pct",
+      "val_recall_at_20pct",
+      "val_lift_at_20pct"
+    ],
+    "test_metric_fields": [
+      "avg_precision",
+      "mcc",
+      "f1",
+      "balanced_accuracy",
+      "precision",
+      "recall",
+      "brier",
+      "precision_at_10pct",
+      "recall_at_10pct",
+      "lift_at_10pct",
+      "precision_at_20pct",
+      "recall_at_20pct",
+      "lift_at_20pct"
+    ],
+    "threshold_fields": [
+      "threshold",
+      "val_threshold"
+    ],
+    "candidate_identifiers": [
+      "candidate"
+    ],
+    "run_identifiers": [
+      "experiment",
+      "target_project",
+      "seed",
+      "model",
+      "experiment",
+      "target_project",
+      "seed",
+      "mode"
+    ],
+    "stored_artifacts": {
+      "sample_level_true_labels": false,
+      "sample_level_predicted_probabilities": false,
+      "validation_sample_indices": false,
+      "test_sample_indices": false,
+      "trained_model_objects": false
+    }
+  }
+}
