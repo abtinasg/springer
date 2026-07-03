@@ -45,7 +45,8 @@
     "max_absolute_diff": 0.0,
     "mean_absolute_diff": 0.0,
     "diff_gt_1e12": 0,
-    "diff_gt_1e9": 0
+    "diff_gt_1e9": 0,
+    "null_mismatch_count": 0
   },
   "repeated_all_results.csv": {
     "file": "repeated_all_results.csv",
@@ -67,30 +68,60 @@
       {
         "column": "selected_candidate",
         "index": 64,
+        "key_values": {
+          "experiment": "cross_project",
+          "target_project": "JM1",
+          "seed": 42,
+          "model": "AQRPE_v2_balanced"
+        },
         "ref_value": "ET_leaf5",
         "new_value": "LR_std_C0.1"
       },
       {
         "column": "selected_candidate",
         "index": 67,
+        "key_values": {
+          "experiment": "cross_project",
+          "target_project": "JM1",
+          "seed": 42,
+          "model": "AQRPE_v2_soft_top3"
+        },
         "ref_value": "ET_leaf5|LR_std_C0.1|LR_std_C1",
         "new_value": "LR_std_C0.1|LR_std_C1|ET_leaf5"
       },
       {
         "column": "selected_candidate",
         "index": 243,
+        "key_values": {
+          "experiment": "within_project",
+          "target_project": "JM1",
+          "seed": 7,
+          "model": "AQRPE_v2_soft_top3"
+        },
         "ref_value": "ET_leaf5|LR_std_C1|LR_std_C0.1",
         "new_value": "ET_leaf5|LR_std_C0.1|LR_std_C1"
       },
       {
         "column": "selected_candidate",
         "index": 281,
+        "key_values": {
+          "experiment": "within_project",
+          "target_project": "KC1",
+          "seed": 7,
+          "model": "AQRPE_v2_mcc"
+        },
         "ref_value": "ET_leaf5",
         "new_value": "LR_std_C0.1"
       },
       {
         "column": "selected_candidate",
         "index": 307,
+        "key_values": {
+          "experiment": "within_project",
+          "target_project": "KC1",
+          "seed": 42,
+          "model": "AQRPE_v2_soft_top3"
+        },
         "ref_value": "ET_leaf5|LR_std_C1|LR_std_C0.1",
         "new_value": "ET_leaf5|LR_std_C1|DT_leaf5"
       }
@@ -196,7 +227,8 @@
     "max_absolute_diff": 0.9999999999999996,
     "mean_absolute_diff": 0.011310775988737145,
     "diff_gt_1e12": 2959,
-    "diff_gt_1e9": 2917
+    "diff_gt_1e9": 2917,
+    "null_mismatch_count": 0
   },
   "validation_log.csv": {
     "file": "validation_log.csv",
@@ -316,7 +348,8 @@
     "max_absolute_diff": 1.2333333333333334,
     "mean_absolute_diff": 0.007763884333884534,
     "diff_gt_1e12": 2824,
-    "diff_gt_1e9": 2738
+    "diff_gt_1e9": 2738,
+    "null_mismatch_count": 0
   },
   "repeated_summary_mean_std.csv": {
     "file": "repeated_summary_mean_std.csv",
@@ -640,7 +673,8 @@
     "max_absolute_diff": 3.0,
     "mean_absolute_diff": 0.0369953889011671,
     "diff_gt_1e12": 369,
-    "diff_gt_1e9": 365
+    "diff_gt_1e9": 365,
+    "null_mismatch_count": 0
   },
   "decision_metadata.json": {
     "file": "decision_metadata.json",

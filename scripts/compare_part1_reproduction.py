@@ -26,6 +26,7 @@ def compare_files(ref_path: Path, new_path: Path, key_columns: List[str]) -> Dic
         "mean_absolute_diff": 0.0,
         "diff_gt_1e12": 0,
         "diff_gt_1e9": 0,
+        "null_mismatch_count": 0,
     }
     
     # Check file existence
@@ -94,15 +95,35 @@ def compare_files(ref_path: Path, new_path: Path, key_columns: List[str]) -> Dic
             ref_col = merged[f"{col}_ref"]
             new_col = merged[f"{col}_new"]
             
+            # Check for null mismatches
+            ref_null = ref_col.isna()
+            new_null = new_col.isna()
+            null_mismatch = (ref_null != new_null)
+            result["null_mismatch_count"] += null_mismatch.sum()
+            
+            if null_mismatch.any():
+                result["text_columns_match"] = False
+                for idx in merged[null_mismatch].index:
+                    key_values = {k: merged.loc[idx, k] for k in key_columns} if key_columns else {}
+                    result["text_differences"].append({
+                        "column": col,
+                        "index": idx,
+                        "key_values": key_values,
+                        "ref_value": "NaN" if ref_null.loc[idx] else str(ref_col.loc[idx]),
+                        "new_value": "NaN" if new_null.loc[idx] else str(new_col.loc[idx])
+                    })
+            
             # Compare non-null values
             mask = ref_col.notna() & new_col.notna()
             if not (ref_col[mask] == new_col[mask]).all():
                 result["text_columns_match"] = False
                 diff_mask = mask & (ref_col != new_col)
                 for idx in merged[diff_mask].index:
+                    key_values = {k: merged.loc[idx, k] for k in key_columns} if key_columns else {}
                     result["text_differences"].append({
                         "column": col,
                         "index": idx,
+                        "key_values": key_values,
                         "ref_value": str(ref_col.loc[idx]),
                         "new_value": str(new_col.loc[idx])
                     })
@@ -116,7 +137,25 @@ def compare_files(ref_path: Path, new_path: Path, key_columns: List[str]) -> Dic
             ref_col = merged[f"{col}_ref"]
             new_col = merged[f"{col}_new"]
             
-            # Handle NaN
+            # Check for null mismatches
+            ref_null = ref_col.isna()
+            new_null = new_col.isna()
+            null_mismatch = (ref_null != new_null)
+            result["null_mismatch_count"] += null_mismatch.sum()
+            
+            if null_mismatch.any():
+                result["text_columns_match"] = False
+                for idx in merged[null_mismatch].index:
+                    key_values = {k: merged.loc[idx, k] for k in key_columns} if key_columns else {}
+                    result["text_differences"].append({
+                        "column": col,
+                        "index": idx,
+                        "key_values": key_values,
+                        "ref_value": "NaN" if ref_null.loc[idx] else str(ref_col.loc[idx]),
+                        "new_value": "NaN" if new_null.loc[idx] else str(new_col.loc[idx])
+                    })
+            
+            # Handle NaN - compare only where both are non-null
             mask = ref_col.notna() & new_col.notna()
             if mask.sum() > 0:
                 diff = np.abs(ref_col[mask] - new_col[mask])
@@ -186,7 +225,7 @@ def compare_json_files(ref_path: Path, new_path: Path) -> Dict[str, Any]:
     return result
 
 def main():
-    base_dir = Path("/Users/aliehpourdast/Desktop/springer/springer")
+    base_dir = Path(__file__).resolve().parents[1]
     ref_dir = base_dir / "results"
     new_dir = base_dir / "results/part1_full_reproduction"
     
@@ -217,17 +256,19 @@ def main():
         len(r.get("text_differences", [])) > 0 or
         len(r.get("differences", [])) > 0 or
         len(r.get("missing_keys", [])) > 0 or
-        len(r.get("extra_keys", [])) > 0
+        len(r.get("extra_keys", [])) > 0 or
+        r.get("null_mismatch_count", 0) > 0
         for r in results.values()
     )
     
+    has_numerical_diffs = any(r.get("max_absolute_diff", 0.0) > 0 for r in results.values())
     max_diff = max(r.get("max_absolute_diff", 0.0) for r in results.values())
     
     if has_text_diffs:
         overall_status = "materially_different"
-    elif max_diff > 1e-9:
+    elif has_numerical_diffs and max_diff > 1e-9:
         overall_status = "materially_different"
-    elif max_diff > 1e-12:
+    elif has_numerical_diffs and max_diff > 1e-12:
         overall_status = "numerically_equivalent"
     else:
         overall_status = "exact_match"
