@@ -1,7 +1,7 @@
 # Part 2 Section 4A: Validation-Test Ranking Agreement Methodology Specification
 
 **Stage:** Specification and audit design only  
-**Base Commit:** 26f638598f77cbae56c3ea4fb92c58736f56ca2a  
+**Base Commit:** b2c1118b832674bf881176bcc5d81cd009a832d2  
 **Scope:** This stage defines the methodology only. No ranking computation, analytical CSVs, numeric results, charts, or scientific conclusions are generated.
 
 ---
@@ -140,6 +140,33 @@ Each of the 14 metrics is explicitly mapped:
 - **recall_at_20pct:** Higher is better
 - **lift_at_20pct:** Higher is better
 
+### Metric Column Mapping
+
+Each metric has explicit validation and test column mappings:
+
+| Metric | Validation Column | Test Column |
+|--------|-------------------|-------------|
+| avg_precision | val_avg_precision | avg_precision |
+| roc_auc | val_roc_auc | roc_auc |
+| mcc | val_mcc | mcc |
+| f1 | val_f1 | f1 |
+| balanced_accuracy | val_balanced_accuracy | balanced_accuracy |
+| precision | val_precision | precision |
+| recall | val_recall | recall |
+| brier | val_brier | brier |
+| precision_at_10pct | val_precision_at_10pct | precision_at_10pct |
+| recall_at_10pct | val_recall_at_10pct | recall_at_10pct |
+| lift_at_10pct | val_lift_at_10pct | lift_at_10pct |
+| precision_at_20pct | val_precision_at_20pct | precision_at_20pct |
+| recall_at_20pct | val_recall_at_20pct | recall_at_20pct |
+| lift_at_20pct | val_lift_at_20pct | lift_at_20pct |
+
+**Audit requirements:**
+- `set(metric_column_mapping.keys()) == set(metrics)`
+- All validation_column values must exist in validation_log
+- All test_column values must exist in baseline test table
+- No metric discovery via positional matching or automatic `val_` prefix removal
+
 ---
 
 ## Tie Policy
@@ -181,28 +208,74 @@ candidate_value - best_value <= 1e-12
 
 ## Rank Policy
 
-### Rank Direction
+### Canonical Candidate Order
 
-- **Rank 1** always represents best performance
-- **Brier score:** Ascending rank (lower value = better rank)
-- **All other metrics:** Descending rank (higher value = better rank)
+The canonical candidate order is:
+```
+LR_std_C0.1
+LR_std_C1
+DT_leaf5
+ET_leaf5
+```
 
-### Tie Handling
+This order is used **only** for alignment and serialization. It must not be used for tie-breaking.
 
-Ties are managed with average ranks.
+### Utility Construction
 
-### Correlation Computation
+For each metric, a utility value is computed:
 
-- **Spearman:** Computed on two rank vectors of four candidates
-- **Kendall:** Uses tau-b to support ties
+- **Higher-is-better metrics:** `utility = metric_value`
+- **Lower-is-better metrics (Brier):** `utility = -metric_value`
 
-### Correlation Tie Policy
+### Exact Rank Algorithm
 
-- Main correlations are based on tolerance-aware ranks
-- Tolerance groups are built by comparison to ordered performance levels
-- No deterministic candidate order should break real ties
+1. Compute utility for each candidate based on metric direction
+2. Sort candidates by utility in descending order
+3. Group candidates with exactly equal utility values
+4. Assign rank to each group as the average ordinal positions of its members
+5. Rank 1 always represents best performance (highest utility)
 
-If tolerance-aware full ranking implementation in 4B requires a distinct algorithm, that algorithm will be specified in the stage 4B specification.
+### Tolerance-Aware Rank Algorithm
+
+1. Compute utility for each candidate based on metric direction
+2. Sort candidates by utility in descending order
+3. Start with the best ungrouped candidate as anchor
+4. `anchor_utility` is the fixed reference value for the current group
+5. Subsequent candidates join the same group only if: `anchor_utility - candidate_utility <= 1e-12`
+6. Comparison to the last group member is **forbidden**
+7. Pairwise chaining is **forbidden**
+8. When the first candidate is outside anchor tolerance, close the group
+9. Next candidate becomes anchor for new group
+10. Assign rank to each group as the average ordinal positions of its members
+11. Candidate order must not be used to extend tie groups
+
+### Synthetic Audit Example
+
+**Utility values:**
+- 1.0
+- 1.0 - 0.75e-12
+- 1.0 - 1.50e-12
+
+**Expected result:**
+- First and second candidates in one tolerance group
+- Third candidate in next group
+
+**Non-chaining rule:** Even if the distance between the second and third candidates is less than or equal to tolerance, chaining must not group all three together.
+
+### Candidate Vector Alignment
+
+The validation rank vector and test rank vector are aligned with the fixed order:
+```
+["LR_std_C0.1", "LR_std_C1", "DT_leaf5", "ET_leaf5"]
+```
+
+This alignment is for coordinate alignment only, not tie-breaking.
+
+**Spearman:** Computed on two tolerance-aware average-rank vectors with fixed alignment order.
+
+**Kendall:** Kendall tau-b computed on the same two tolerance-aware rank vectors with fixed alignment order.
+
+No missing or extra candidates are allowed in rank vectors.
 
 ---
 
@@ -249,17 +322,30 @@ Kendall tau-b to support ties.
 ### Selected Candidate Test Rank
 Rank of the mode-selected candidate in the test ranking for the same metric. Average rank is recorded if tied.
 
+**Basis:** `test_tolerance_aware_average_rank`
+
+**Tolerance group handling:** If the candidate is in a multi-member tolerance group, the average rank of that group is recorded.
+
 ### Undefined Correlation Policy
 
-If correlation is undefined due to constant ranking:
-- Record NA
-- Record reason for undefined
-- Do not fabricate a zero value
+Correlation is undefined when the validation rank vector or test rank vector has zero variance (all four candidates have the same rank in one of the vectors).
 
-**Rules:**
-- If defined: reason must be null
-- If undefined: correlation value must be null and reason must be non-null
-- Zero must not be substituted for undefined
+**Allowed reasons:**
+- `validation_rank_vector_constant`
+- `test_rank_vector_constant`
+- `both_rank_vectors_constant`
+
+**If defined:**
+- `defined = true`
+- `value = finite number`
+- `undefined_reason = null`
+
+**If undefined:**
+- `defined = false`
+- `value = null`
+- `undefined_reason = one of the allowed_reasons values`
+
+Zero must not be substituted for undefined.
 
 ---
 
@@ -345,6 +431,51 @@ The following will **not** be proposed or computed:
 
 ---
 
+## Selected Candidate Provenance
+
+### Source
+
+The scalar selected candidate is sourced from the AQRPE row corresponding to the mode in `repeated_all_results.csv`.
+
+### Mode Mapping
+
+| Validation Mode | AQRPE Model |
+|----------------|--------------|
+| balanced | AQRPE_v2_balanced |
+| rank | AQRPE_v2_rank |
+| mcc | AQRPE_v2_mcc |
+
+### AQRPE Unique Key
+
+The unique key for an AQRPE row is:
+```
+experiment × target_project × seed × model
+```
+
+**Expected uniqueness:** Exactly one AQRPE row must exist for each analysis unit and mapped model.
+
+### Mode Selected Candidate Source
+
+The `mode_selected_candidate` is taken from the `selected_candidate` column of the AQRPE row.
+
+### Validation Verification
+
+The selected candidate is verified against `validation_log.csv`:
+
+1. **Candidate domain check:** `selected_candidate` must be in the candidate domain
+2. **Validation row existence:** Exactly one validation row must exist for the same `experiment`, `target_project`, `seed`, `mode`, and `selected_candidate`
+3. **Selection score match:** `abs(repeated_AQRPE.selection_score - validation_row.val_selection_score) <= 1e-12`
+4. **Objective direction:** `val_selection_score` is treated as a higher-is-better objective for all three modes
+5. **Winner set membership:** Selected candidate must be a member of the tolerance-aware maximum set for `val_selection_score` of the same mode
+6. **Multi-member winner set handling:** If the objective winner set has multiple members, the scalar selected candidate must be one of them
+7. **Tie-break exclusion:** The tie-break scalar from the canonical AQRPE row must not be used for winner sets of the 14 metrics
+
+### Test Leakage Prohibition
+
+No test metric is used to extract or validate candidate selection.
+
+---
+
 ## Pre-Computation Audit Design
 
 Before computation in stage 4B, the following checks will be performed:
@@ -362,9 +493,19 @@ Before computation in stage 4B, the following checks will be performed:
 11. Metric presence and numeric type validation
 12. Metric-direction mapping completeness validation
 13. Metric-direction key set validation (set(metric_directions.keys()) == set(metrics))
-14. Selected-candidate provenance agreement validation
-15. Tie-policy consistency validation
-16. No test information used for candidate selection validation
+14. Metric column mapping key set validation (set(metric_column_mapping.keys()) == set(metrics))
+15. Validation metric column presence validation
+16. Test metric column presence validation
+17. Candidate vector alignment validation
+18. Tolerance rank anchor algorithm validation
+19. Tolerance rank non-chaining synthetic test
+20. Selected candidate unique AQRPE row validation
+21. Selected candidate selection score match validation
+22. Selected candidate objective winner membership validation
+23. Selected candidate no test leakage validation
+24. Selected-candidate provenance agreement validation
+25. Tie-policy consistency validation
+26. No test information used for candidate selection validation
 
 ---
 

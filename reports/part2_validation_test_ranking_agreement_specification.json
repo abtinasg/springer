@@ -1,6 +1,6 @@
 {
   "stage": "Part 2 Section 4A: Specify validation-test ranking agreement methodology",
-  "base_commit": "26f638598f77cbae56c3ea4fb92c58736f56ca2a",
+  "base_commit": "b2c1118b832674bf881176bcc5d81cd009a832d2",
   "scope": "Specification and audit design only. No ranking computation, analytical CSVs, numeric results, charts, or scientific conclusions generated.",
   "canonical_inputs": {
     "validation_log": "results/part1_full_reproduction/validation_log.csv",
@@ -66,6 +66,64 @@
     "recall_at_20pct": "higher_is_better",
     "lift_at_20pct": "higher_is_better"
   },
+  "metric_column_mapping": {
+    "avg_precision": {
+      "validation_column": "val_avg_precision",
+      "test_column": "avg_precision"
+    },
+    "roc_auc": {
+      "validation_column": "val_roc_auc",
+      "test_column": "roc_auc"
+    },
+    "mcc": {
+      "validation_column": "val_mcc",
+      "test_column": "mcc"
+    },
+    "f1": {
+      "validation_column": "val_f1",
+      "test_column": "f1"
+    },
+    "balanced_accuracy": {
+      "validation_column": "val_balanced_accuracy",
+      "test_column": "balanced_accuracy"
+    },
+    "precision": {
+      "validation_column": "val_precision",
+      "test_column": "precision"
+    },
+    "recall": {
+      "validation_column": "val_recall",
+      "test_column": "recall"
+    },
+    "brier": {
+      "validation_column": "val_brier",
+      "test_column": "brier"
+    },
+    "precision_at_10pct": {
+      "validation_column": "val_precision_at_10pct",
+      "test_column": "precision_at_10pct"
+    },
+    "recall_at_10pct": {
+      "validation_column": "val_recall_at_10pct",
+      "test_column": "recall_at_10pct"
+    },
+    "lift_at_10pct": {
+      "validation_column": "val_lift_at_10pct",
+      "test_column": "lift_at_10pct"
+    },
+    "precision_at_20pct": {
+      "validation_column": "val_precision_at_20pct",
+      "test_column": "precision_at_20pct"
+    },
+    "recall_at_20pct": {
+      "validation_column": "val_recall_at_20pct",
+      "test_column": "recall_at_20pct"
+    },
+    "lift_at_20pct": {
+      "validation_column": "val_lift_at_20pct",
+      "test_column": "lift_at_20pct"
+    }
+  },
   "join_specification": {
     "join_keys": [
       {
@@ -108,7 +166,59 @@
     "kendall_computation": "Kendall tau-b to support ties",
     "correlation_tie_policy": "main correlations are based on tolerance-aware ranks",
     "tolerance_group_construction": "tolerance groups are built by comparison to ordered performance levels",
-    "deterministic_order_forbidden": "no deterministic candidate order should break real ties"
+    "deterministic_order_forbidden": "no deterministic candidate order should break real ties",
+    "canonical_candidate_order": [
+      "LR_std_C0.1",
+      "LR_std_C1",
+      "DT_leaf5",
+      "ET_leaf5"
+    ],
+    "canonical_order_purpose": "alignment and serialization only, not for tie-breaking",
+    "utility_construction": {
+      "higher_is_better": "utility = metric_value",
+      "lower_is_better": "utility = -metric_value"
+    },
+    "exact_rank_algorithm": {
+      "step_1": "compute utility for each candidate based on metric direction",
+      "step_2": "sort candidates by utility in descending order",
+      "step_3": "group candidates with exactly equal utility values",
+      "step_4": "assign rank to each group as average ordinal positions of its members",
+      "rank_1_best": "rank 1 always represents best performance (highest utility)"
+    },
+    "tolerance_aware_rank_algorithm": {
+      "step_1": "compute utility for each candidate based on metric direction",
+      "step_2": "sort candidates by utility in descending order",
+      "step_3": "start with the best ungrouped candidate as anchor",
+      "step_4": "anchor_utility is the fixed reference value for the current group",
+      "step_5": "subsequent candidates join the same group only if: anchor_utility - candidate_utility <= 1e-12",
+      "step_6": "comparison to the last group member is forbidden",
+      "step_7": "pairwise chaining is forbidden",
+      "step_8": "when the first candidate is outside anchor tolerance, close the group",
+      "step_9": "next candidate becomes anchor for new group",
+      "step_10": "assign rank to each group as average ordinal positions of its members",
+      "candidate_order_forbidden": "candidate order must not be used to extend tie groups"
+    },
+    "synthetic_audit_example": {
+      "utility_values": [
+        1.0,
+        "1.0 - 0.75e-12",
+        "1.0 - 1.50e-12"
+      ],
+      "expected_result": "first and second candidates in one tolerance group, third candidate in next group",
+      "non_chaining_rule": "even if distance between second and third candidates is less than or equal to tolerance, chaining must not group all three together"
+    },
+    "candidate_vector_alignment": {
+      "alignment_order": [
+        "LR_std_C0.1",
+        "LR_std_C1",
+        "DT_leaf5",
+        "ET_leaf5"
+      ],
+      "alignment_purpose": "coordinate alignment for correlation computation, not tie-breaking",
+      "spearman_basis": "computed on two tolerance-aware average-rank vectors with fixed alignment order",
+      "kendall_basis": "Kendall tau-b computed on the same two tolerance-aware rank vectors with fixed alignment order",
+      "missing_or_extra_candidates_forbidden": "no missing or extra candidates allowed in rank vectors"
+    }
   },
   "agreement_measures": {
     "strict_top1_agreement_exact": {
@@ -148,14 +258,28 @@
       "definition": "Kendall tau-b to support ties"
     },
     "selected_candidate_test_rank": {
-      "definition": "rank of mode-selected candidate in test ranking for the same metric, average rank if tied"
+      "definition": "rank of mode-selected candidate in test ranking for the same metric, average rank if tied",
+      "basis": "test_tolerance_aware_average_rank",
+      "tolerance_group_handling": "if candidate is in multi-member tolerance group, average rank of that group is recorded"
     }
   },
   "undefined_correlation_policy": {
-    "condition": "correlation undefined due to constant ranking",
-    "handling": "record NA, record reason for undefined, do not fabricate zero value",
-    "defined_rule": "if defined, reason must be null",
-    "undefined_rule": "if undefined, correlation value must be null and reason must be non-null",
+    "condition": "correlation undefined when validation rank vector or test rank vector has zero variance (all four candidates have the same rank in one of the vectors)",
+    "allowed_reasons": [
+      "validation_rank_vector_constant",
+      "test_rank_vector_constant",
+      "both_rank_vectors_constant"
+    ],
+    "defined_handling": {
+      "defined": true,
+      "value": "finite number",
+      "undefined_reason": null
+    },
+    "undefined_handling": {
+      "defined": false,
+      "value": null,
+      "undefined_reason": "one of the allowed_reasons values"
+    },
     "zero_substitution_forbidden": true
   },
   "planned_event_schema": {
@@ -213,6 +337,16 @@
     "metric_presence_and_numeric_type",
     "metric_direction_mapping_completeness",
     "metric_direction_key_set_validation",
+    "metric_column_mapping_key_set_validation",
+    "validation_metric_column_presence",
+    "test_metric_column_presence",
+    "candidate_vector_alignment_validation",
+    "tolerance_rank_anchor_algorithm_validation",
+    "tolerance_rank_non_chaining_synthetic_test",
+    "selected_candidate_unique_AQRPE_row_validation",
+    "selected_candidate_selection_score_match",
+    "selected_candidate_objective_winner_membership",
+    "selected_candidate_no_test_leakage",
     "selected_candidate_provenance_agreement",
     "tie_policy_consistency",
     "no_test_information_used_for_candidate_selection"
@@ -228,6 +362,32 @@
       "causal_claim"
     ],
     "test_data_usage": "test data will only be used for post-selection evaluation"
+  },
+  "selected_candidate_provenance": {
+    "source": "AQRPE row corresponding to mode in repeated_all_results.csv",
+    "mode_mapping": {
+      "balanced": "AQRPE_v2_balanced",
+      "rank": "AQRPE_v2_rank",
+      "mcc": "AQRPE_v2_mcc"
+    },
+    "aqrpe_unique_key": {
+      "experiment": "experiment",
+      "target_project": "target_project",
+      "seed": "seed",
+      "model": "model"
+    },
+    "expected_uniqueness": "exactly one AQRPE row must exist for each analysis unit and mapped model",
+    "mode_selected_candidate_source": "selected_candidate column from AQRPE row",
+    "validation_verification": {
+      "candidate_domain_check": "selected_candidate must be in candidate domain",
+      "validation_row_existence": "exactly one validation row must exist for the same experiment, target_project, seed, mode, and selected_candidate",
+      "selection_score_match": "abs(repeated_AQRPE.selection_score - validation_row.val_selection_score) <= 1e-12",
+      "objective_direction": "val_selection_score is treated as higher-is-better objective for all three modes",
+      "winner_set_membership": "selected candidate must be member of tolerance-aware maximum set for val_selection_score of the same mode",
+      "multi_member_winner_set_handling": "if objective winner set has multiple members, scalar selected candidate must be one of them",
+      "tie_break_exclusion": "tie-break scalar from canonical AQRPE row must not be used for winner sets of 14 metrics"
+    },
+    "test_leakage_prohibition": "no test metric is used to extract or validate candidate selection"
   },
   "computation_performed": false
 }
