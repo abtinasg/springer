@@ -265,6 +265,219 @@ def validate_reports():
     print("All validation checks passed.")
 
 
+def validate_manifest_inventory(manifest):
+    """Validate the complete manifest inventory with strict checks."""
+    print("Validating manifest inventory...")
+    
+    # Validate environment and code files
+    print("  Checking environment and code files...")
+    for name, info in manifest["environment_and_code_files"].items():
+        if not info["exists"]:
+            raise ValueError(f"Environment/code file missing: {name}")
+        if not info["sha256"]:
+            raise ValueError(f"Environment/code file has no SHA-256: {name}")
+        if not info["size"] or info["size"] <= 0:
+            raise ValueError(f"Environment/code file has invalid size: {name}")
+    
+    # Validate raw datasets
+    print("  Checking raw datasets...")
+    expected_datasets = {
+        "cm1.csv": {"rows": 498, "cols": 22},
+        "jm1.csv": {"rows": 13204, "cols": 22},
+        "kc1.csv": {"rows": 2109, "cols": 22},
+        "kc2.csv": {"rows": 522, "cols": 22},
+        "pc1.csv": {"rows": 1109, "cols": 22},
+    }
+    
+    for name, info in manifest["raw_datasets"].items():
+        if not info["exists"]:
+            raise ValueError(f"Raw dataset missing: {name}")
+        if not info["sha256"]:
+            raise ValueError(f"Raw dataset has no SHA-256: {name}")
+        if not info["size"] or info["size"] <= 0:
+            raise ValueError(f"Raw dataset has invalid size: {name}")
+        if info["null_count"] != 0:
+            raise ValueError(f"Raw dataset has null values: {name} (null_count={info['null_count']})")
+        
+        if name in expected_datasets:
+            expected = expected_datasets[name]
+            if info["row_count"] != expected["rows"]:
+                raise ValueError(f"Raw dataset row count mismatch: {name} (expected {expected['rows']}, got {info['row_count']})")
+            if info["column_count"] != expected["cols"]:
+                raise ValueError(f"Raw dataset column count mismatch: {name} (expected {expected['cols']}, got {info['column_count']})")
+    
+    # Validate canonical outputs
+    print("  Checking canonical reproduction outputs...")
+    
+    # dataset_profile.csv
+    dp_info = manifest["canonical_reproduction_outputs"]["dataset_profile.csv"]
+    if not dp_info["exists"]:
+        raise ValueError("dataset_profile.csv missing")
+    if not dp_info["sha256"]:
+        raise ValueError("dataset_profile.csv has no SHA-256")
+    if not dp_info["size"] or dp_info["size"] <= 0:
+        raise ValueError("dataset_profile.csv has invalid size")
+    if dp_info["row_count"] != 5:
+        raise ValueError(f"dataset_profile.csv row count mismatch (expected 5, got {dp_info['row_count']})")
+    if dp_info["column_count"] != 5:
+        raise ValueError(f"dataset_profile.csv column count mismatch (expected 5, got {dp_info['column_count']})")
+    if dp_info["duplicate_full_rows"] != 0:
+        raise ValueError(f"dataset_profile.csv has duplicate rows (count={dp_info['duplicate_full_rows']})")
+    if dp_info["total_null_count"] != 0:
+        raise ValueError(f"dataset_profile.csv has null values (count={dp_info['total_null_count']})")
+    
+    # repeated_all_results.csv
+    rar_info = manifest["canonical_reproduction_outputs"]["repeated_all_results.csv"]
+    if not rar_info["exists"]:
+        raise ValueError("repeated_all_results.csv missing")
+    if not rar_info["sha256"]:
+        raise ValueError("repeated_all_results.csv has no SHA-256")
+    if not rar_info["size"] or rar_info["size"] <= 0:
+        raise ValueError("repeated_all_results.csv has invalid size")
+    if rar_info["row_count"] != 400:
+        raise ValueError(f"repeated_all_results.csv row count mismatch (expected 400, got {rar_info['row_count']})")
+    if rar_info["column_count"] != 22:
+        raise ValueError(f"repeated_all_results.csv column count mismatch (expected 22, got {rar_info['column_count']})")
+    if rar_info["duplicate_full_rows"] != 0:
+        raise ValueError(f"repeated_all_results.csv has duplicate rows (count={rar_info['duplicate_full_rows']})")
+    if rar_info["total_null_count"] != 0:
+        raise ValueError(f"repeated_all_results.csv has null values (count={rar_info['total_null_count']})")
+    
+    # repeated_summary_mean_std.csv
+    rsms_info = manifest["canonical_reproduction_outputs"]["repeated_summary_mean_std.csv"]
+    if not rsms_info["exists"]:
+        raise ValueError("repeated_summary_mean_std.csv missing")
+    if not rsms_info["sha256"]:
+        raise ValueError("repeated_summary_mean_std.csv has no SHA-256")
+    if not rsms_info["size"] or rsms_info["size"] <= 0:
+        raise ValueError("repeated_summary_mean_std.csv has invalid size")
+    if rsms_info["row_count"] != 16:
+        raise ValueError(f"repeated_summary_mean_std.csv row count mismatch (expected 16, got {rsms_info['row_count']})")
+    if rsms_info["column_count"] != 52:
+        raise ValueError(f"repeated_summary_mean_std.csv column count mismatch (expected 52, got {rsms_info['column_count']})")
+    if rsms_info["duplicate_full_rows"] != 0:
+        raise ValueError(f"repeated_summary_mean_std.csv has duplicate rows (count={rsms_info['duplicate_full_rows']})")
+    if rsms_info["total_null_count"] != 0:
+        raise ValueError(f"repeated_summary_mean_std.csv has null values (count={rsms_info['total_null_count']})")
+    
+    # validation_log.csv
+    vl_info = manifest["canonical_reproduction_outputs"]["validation_log.csv"]
+    if not vl_info["exists"]:
+        raise ValueError("validation_log.csv missing")
+    if not vl_info["sha256"]:
+        raise ValueError("validation_log.csv has no SHA-256")
+    if not vl_info["size"] or vl_info["size"] <= 0:
+        raise ValueError("validation_log.csv has invalid size")
+    if vl_info["row_count"] != 600:
+        raise ValueError(f"validation_log.csv row count mismatch (expected 600, got {vl_info['row_count']})")
+    if vl_info["column_count"] != 21:
+        raise ValueError(f"validation_log.csv column count mismatch (expected 21, got {vl_info['column_count']})")
+    if vl_info["duplicate_full_rows"] != 0:
+        raise ValueError(f"validation_log.csv has duplicate rows (count={vl_info['duplicate_full_rows']})")
+    if vl_info["total_null_count"] != 0:
+        raise ValueError(f"validation_log.csv has null values (count={vl_info['total_null_count']})")
+    
+    # decision_metadata.json
+    dm_info = manifest["canonical_reproduction_outputs"]["decision_metadata.json"]
+    if not dm_info["exists"]:
+        raise ValueError("decision_metadata.json missing")
+    if not dm_info["sha256"]:
+        raise ValueError("decision_metadata.json has no SHA-256")
+    if not dm_info["size"] or dm_info["size"] <= 0:
+        raise ValueError("decision_metadata.json has invalid size")
+    if dm_info["stage"] != "Stage-43 clean supplementary reproduction script":
+        raise ValueError(f"decision_metadata.json stage mismatch (expected 'Stage-43 clean supplementary reproduction script', got '{dm_info['stage']}')")
+    if dm_info["seeds"] != [7, 13, 29, 42, 101]:
+        raise ValueError(f"decision_metadata.json seeds mismatch (expected [7, 13, 29, 42, 101], got {dm_info['seeds']})")
+    if dm_info["rows"] != 400:
+        raise ValueError(f"decision_metadata.json rows mismatch (expected 400, got {dm_info['rows']})")
+    
+    # repeated_results_workbook.xlsx
+    wb_info = manifest["canonical_reproduction_outputs"]["repeated_results_workbook.xlsx"]
+    if not wb_info["exists"]:
+        raise ValueError("repeated_results_workbook.xlsx missing")
+    if not wb_info["sha256"]:
+        raise ValueError("repeated_results_workbook.xlsx has no SHA-256")
+    if not wb_info["size"] or wb_info["size"] <= 0:
+        raise ValueError("repeated_results_workbook.xlsx has invalid size")
+    
+    expected_sheets = ["Dataset_Profile", "All_Results", "Summary_Mean_SD", "Validation_Log"]
+    if wb_info["sheet_names"] != expected_sheets:
+        raise ValueError(f"repeated_results_workbook.xlsx sheet names mismatch (expected {expected_sheets}, got {wb_info['sheet_names']})")
+    
+    expected_sheet_dims = {
+        "Dataset_Profile": {"rows": 6, "cols": 5},
+        "All_Results": {"rows": 401, "cols": 22},
+        "Summary_Mean_SD": {"rows": 17, "cols": 52},
+        "Validation_Log": {"rows": 601, "cols": 21},
+    }
+    
+    for sheet_name, dims in expected_sheet_dims.items():
+        if sheet_name not in wb_info["sheets"]:
+            raise ValueError(f"repeated_results_workbook.xlsx missing sheet: {sheet_name}")
+        sheet_info = wb_info["sheets"][sheet_name]
+        if sheet_info["row_count"] != dims["rows"]:
+            raise ValueError(f"repeated_results_workbook.xlsx sheet {sheet_name} row count mismatch (expected {dims['rows']}, got {sheet_info['row_count']})")
+        if sheet_info["column_count"] != dims["cols"]:
+            raise ValueError(f"repeated_results_workbook.xlsx sheet {sheet_name} column count mismatch (expected {dims['cols']}, got {sheet_info['column_count']})")
+    
+    # Validate canonical tables
+    print("  Checking canonical manuscript tables...")
+    
+    # table_within_project_mean_sd.csv
+    wp_info = manifest["canonical_manuscript_tables"]["table_within_project_mean_sd.csv"]
+    if not wp_info["exists"]:
+        raise ValueError("table_within_project_mean_sd.csv missing")
+    if not wp_info["sha256"]:
+        raise ValueError("table_within_project_mean_sd.csv has no SHA-256")
+    if not wp_info["size"] or wp_info["size"] <= 0:
+        raise ValueError("table_within_project_mean_sd.csv has invalid size")
+    if wp_info["row_count"] != 8:
+        raise ValueError(f"table_within_project_mean_sd.csv row count mismatch (expected 8, got {wp_info['row_count']})")
+    if wp_info["column_count"] != 7:
+        raise ValueError(f"table_within_project_mean_sd.csv column count mismatch (expected 7, got {wp_info['column_count']})")
+    if wp_info["duplicate_key_count"] != 0:
+        raise ValueError(f"table_within_project_mean_sd.csv has duplicate keys (count={wp_info['duplicate_key_count']})")
+    if wp_info["total_null_count"] != 0:
+        raise ValueError(f"table_within_project_mean_sd.csv has null values (count={wp_info['total_null_count']})")
+    
+    # table_cross_project_mean_sd.csv
+    cp_info = manifest["canonical_manuscript_tables"]["table_cross_project_mean_sd.csv"]
+    if not cp_info["exists"]:
+        raise ValueError("table_cross_project_mean_sd.csv missing")
+    if not cp_info["sha256"]:
+        raise ValueError("table_cross_project_mean_sd.csv has no SHA-256")
+    if not cp_info["size"] or cp_info["size"] <= 0:
+        raise ValueError("table_cross_project_mean_sd.csv has invalid size")
+    if cp_info["row_count"] != 8:
+        raise ValueError(f"table_cross_project_mean_sd.csv row count mismatch (expected 8, got {cp_info['row_count']})")
+    if cp_info["column_count"] != 7:
+        raise ValueError(f"table_cross_project_mean_sd.csv column count mismatch (expected 7, got {cp_info['column_count']})")
+    if cp_info["duplicate_key_count"] != 0:
+        raise ValueError(f"table_cross_project_mean_sd.csv has duplicate keys (count={cp_info['duplicate_key_count']})")
+    if cp_info["total_null_count"] != 0:
+        raise ValueError(f"table_cross_project_mean_sd.csv has null values (count={cp_info['total_null_count']})")
+    
+    # table_soft_top3_delta_vs_best_baseline.csv
+    st3_info = manifest["canonical_manuscript_tables"]["table_soft_top3_delta_vs_best_baseline.csv"]
+    if not st3_info["exists"]:
+        raise ValueError("table_soft_top3_delta_vs_best_baseline.csv missing")
+    if not st3_info["sha256"]:
+        raise ValueError("table_soft_top3_delta_vs_best_baseline.csv has no SHA-256")
+    if not st3_info["size"] or st3_info["size"] <= 0:
+        raise ValueError("table_soft_top3_delta_vs_best_baseline.csv has invalid size")
+    if st3_info["row_count"] != 16:
+        raise ValueError(f"table_soft_top3_delta_vs_best_baseline.csv row count mismatch (expected 16, got {st3_info['row_count']})")
+    if st3_info["column_count"] != 8:
+        raise ValueError(f"table_soft_top3_delta_vs_best_baseline.csv column count mismatch (expected 8, got {st3_info['column_count']})")
+    if st3_info["duplicate_key_count"] != 0:
+        raise ValueError(f"table_soft_top3_delta_vs_best_baseline.csv has duplicate keys (count={st3_info['duplicate_key_count']})")
+    if st3_info["total_null_count"] != 0:
+        raise ValueError(f"table_soft_top3_delta_vs_best_baseline.csv has null values (count={st3_info['total_null_count']})")
+    
+    print("All manifest inventory validation checks passed.")
+
+
 def build_manifest():
     """Build the canonical manifest."""
     print("Building canonical manifest...")
@@ -332,20 +545,24 @@ def build_manifest():
 
 
 def save_manifest(manifest):
-    """Save manifest to JSON and Markdown files."""
+    """Save manifest to JSON and Markdown files using atomic writes."""
     print("Saving manifest...")
     
     # Ensure output directory exists
     OUTPUT_JSON.parent.mkdir(parents=True, exist_ok=True)
     OUTPUT_MD.parent.mkdir(parents=True, exist_ok=True)
     
-    # Save JSON
-    with open(OUTPUT_JSON, "w") as f:
+    # Create temporary files
+    temp_json = OUTPUT_JSON.with_suffix('.json.tmp')
+    temp_md = OUTPUT_MD.with_suffix('.md.tmp')
+    
+    # Save JSON to temp file
+    with open(temp_json, "w") as f:
         json.dump(manifest, f, indent=2)
     
-    # Save Markdown
-    with open(OUTPUT_MD, "w") as f:
-        f.write("# Part 1 Section 6E: Canonical Reproduction Manifest\n\n")
+    # Save Markdown to temp file
+    with open(temp_md, "w") as f:
+        f.write("# Part 1 Section 6F: Canonical Reproduction Manifest\n\n")
         f.write("## Canonical Policy\n\n")
         f.write(f"**Canonical result source:** `{manifest['canonical_policy']['canonical_result_source']}`\n\n")
         f.write(f"**Canonical table source:** `{manifest['canonical_policy']['canonical_table_source']}`\n\n")
@@ -357,6 +574,7 @@ def save_manifest(manifest):
         f.write("\n")
         
         f.write("## Validation Checks\n\n")
+        f.write(f"Manifest inventory validation status: {manifest.get('manifest_validation_status', 'not_checked')}\n\n")
         f.write("The following validation checks were performed before freezing the canonical set:\n\n")
         f.write(f"- part1_reproduction_comparison overall_status: `{manifest['validation_checks']['part1_reproduction_comparison_overall_status']}`\n")
         f.write(f"- part1_repeatability_comparison overall_status: `{manifest['validation_checks']['part1_repeatability_comparison_overall_status']}`\n")
@@ -369,36 +587,45 @@ def save_manifest(manifest):
         f.write("| File | Exists | SHA-256 | Size |\n")
         f.write("|------|--------|---------|------|\n")
         for name, info in manifest["environment_and_code_files"].items():
-            f.write(f"| {name} | {info['exists']} | {info['sha256'][:16] if info['sha256'] else 'N/A'}... | {info['size'] if info['size'] else 'N/A'} |\n")
+            sha_display = f"{info['sha256'][:16]}..." if info['sha256'] is not None else 'N/A'
+            size_display = info['size'] if info['size'] is not None else 'N/A'
+            f.write(f"| {name} | {info['exists']} | {sha_display} | {size_display} |\n")
         f.write("\n")
         
         f.write("## Raw Datasets\n\n")
         f.write("| Dataset | Exists | Rows | Columns | Null Count |\n")
         f.write("|---------|--------|-------|---------|------------|\n")
         for name, info in manifest["raw_datasets"].items():
-            f.write(f"| {name} | {info['exists']} | {info['row_count'] if info['row_count'] else 'N/A'} | {info['column_count'] if info['column_count'] else 'N/A'} | {info['null_count'] if info['null_count'] else 'N/A'} |\n")
+            rows_display = info['row_count'] if info['row_count'] is not None else 'N/A'
+            cols_display = info['column_count'] if info['column_count'] is not None else 'N/A'
+            nulls_display = info['null_count'] if info['null_count'] is not None else 'N/A'
+            f.write(f"| {name} | {info['exists']} | {rows_display} | {cols_display} | {nulls_display} |\n")
         f.write("\n")
         
         f.write("## Canonical Reproduction Outputs\n\n")
         f.write("| File | Exists | SHA-256 | Size | Rows | Columns | Duplicates | Nulls |\n")
         f.write("|------|--------|---------|------|------|---------|------------|-------|\n")
         for name, info in manifest["canonical_reproduction_outputs"].items():
-            rows = info.get('row_count', 'N/A')
-            cols = info.get('column_count', 'N/A')
-            dups = info.get('duplicate_full_rows', 'N/A')
-            nulls = info.get('total_null_count', 'N/A')
-            f.write(f"| {name} | {info['exists']} | {info['sha256'][:16] if info['sha256'] else 'N/A'}... | {info['size'] if info['size'] else 'N/A'} | {rows} | {cols} | {dups} | {nulls} |\n")
+            sha_display = f"{info['sha256'][:16]}..." if info['sha256'] is not None else 'N/A'
+            size_display = info['size'] if info['size'] is not None else 'N/A'
+            rows_display = info.get('row_count') if info.get('row_count') is not None else 'N/A'
+            cols_display = info.get('column_count') if info.get('column_count') is not None else 'N/A'
+            dups_display = info.get('duplicate_full_rows') if info.get('duplicate_full_rows') is not None else 'N/A'
+            nulls_display = info.get('total_null_count') if info.get('total_null_count') is not None else 'N/A'
+            f.write(f"| {name} | {info['exists']} | {sha_display} | {size_display} | {rows_display} | {cols_display} | {dups_display} | {nulls_display} |\n")
         f.write("\n")
         
         f.write("## Canonical Manuscript Tables\n\n")
         f.write("| Table | Exists | SHA-256 | Size | Rows | Columns | Key Duplicates | Nulls |\n")
         f.write("|-------|--------|---------|------|------|---------|-----------------|-------|\n")
         for name, info in manifest["canonical_manuscript_tables"].items():
-            rows = info.get('row_count', 'N/A')
-            cols = info.get('column_count', 'N/A')
-            key_dups = info.get('duplicate_key_count', 'N/A')
-            nulls = info.get('total_null_count', 'N/A')
-            f.write(f"| {name} | {info['exists']} | {info['sha256'][:16] if info['sha256'] else 'N/A'}... | {info['size'] if info['size'] else 'N/A'} | {rows} | {cols} | {key_dups} | {nulls} |\n")
+            sha_display = f"{info['sha256'][:16]}..." if info['sha256'] is not None else 'N/A'
+            size_display = info['size'] if info['size'] is not None else 'N/A'
+            rows_display = info.get('row_count') if info.get('row_count') is not None else 'N/A'
+            cols_display = info.get('column_count') if info.get('column_count') is not None else 'N/A'
+            key_dups_display = info.get('duplicate_key_count') if info.get('duplicate_key_count') is not None else 'N/A'
+            nulls_display = info.get('total_null_count') if info.get('total_null_count') is not None else 'N/A'
+            f.write(f"| {name} | {info['exists']} | {sha_display} | {size_display} | {rows_display} | {cols_display} | {key_dups_display} | {nulls_display} |\n")
         f.write("\n")
         
         f.write("## Legacy-Reference Status\n\n")
@@ -411,11 +638,24 @@ def save_manifest(manifest):
         f.write("The canonical results represent the output of a specific computational pipeline under controlled conditions.\n")
         f.write("Any scientific claims about model performance should be supported by appropriate statistical analysis\n")
         f.write("and validation on independent datasets.\n\n")
+    
+    # Atomic replace
+    temp_json.replace(OUTPUT_JSON)
+    temp_md.replace(OUTPUT_MD)
+    
+    print("Manifest saved atomically.")
 
 
 def main():
     """Main entry point."""
     manifest = build_manifest()
+    
+    # Validate manifest inventory before saving
+    validate_manifest_inventory(manifest)
+    
+    # Add validation status to manifest
+    manifest["manifest_validation_status"] = "all_checks_passed"
+    
     save_manifest(manifest)
     
     print("\nManifest build complete!")
@@ -426,6 +666,7 @@ def main():
     print(f"  Number of canonical outputs verified: {len(manifest['canonical_reproduction_outputs'])}")
     print(f"  Number of canonical tables verified: {len(manifest['canonical_manuscript_tables'])}")
     print(f"  Legacy reference status: {manifest['canonical_policy']['legacy_reference_status']}")
+    print(f"  Manifest validation status: {manifest['manifest_validation_status']}")
 
 
 if __name__ == "__main__":

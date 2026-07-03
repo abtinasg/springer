@@ -456,5 +456,6 @@
       "total_null_count": 0,
       "duplicate_key_count": 0
     }
-  }
+  },
+  "manifest_validation_status": "all_checks_passed"
 }

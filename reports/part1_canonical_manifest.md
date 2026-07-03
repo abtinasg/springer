@@ -1,4 +1,4 @@
-# Part 1 Section 6E: Canonical Reproduction Manifest
+# Part 1 Section 6F: Canonical Reproduction Manifest
 
 ## Canonical Policy
 
@@ -19,6 +19,8 @@
 - Soft-top-3 qualitative outcomes versus the best baseline are unchanged across all 16 setting-metric combinations.
 
 ## Validation Checks
+
+Manifest inventory validation status: all_checks_passed
 
 The following validation checks were performed before freezing the canonical set:
 
@@ -41,11 +43,11 @@ The following validation checks were performed before freezing the canonical set
 
 | Dataset | Exists | Rows | Columns | Null Count |
 |---------|--------|-------|---------|------------|
-| cm1.csv | True | 498 | 22 | N/A |
-| jm1.csv | True | 13204 | 22 | N/A |
-| kc1.csv | True | 2109 | 22 | N/A |
-| kc2.csv | True | 522 | 22 | N/A |
-| pc1.csv | True | 1109 | 22 | N/A |
+| cm1.csv | True | 498 | 22 | 0 |
+| jm1.csv | True | 13204 | 22 | 0 |
+| kc1.csv | True | 2109 | 22 | 0 |
+| kc2.csv | True | 522 | 22 | 0 |
+| pc1.csv | True | 1109 | 22 | 0 |
 
 ## Canonical Reproduction Outputs
 
