@@ -1,7 +1,7 @@
 # Scientific Analysis Contract for Major Revision
 
-**Contract Version:** Part-3A.6-v1
-**Starting Commit:** 98245aaddab6431e28b222c37f8bf35b2ee2b8b4
+**Contract Version:** Part-3A.7-v1
+**Starting Commit:** cf2320791a74e55e58a0097fa5a6963de7cc67c2
 **Repository:** abtinasg/springer
 **Branch:** major-revision-analysis-v2
 
@@ -1184,19 +1184,45 @@ Candidate ranking by rank objective, after candidate or ensemble selection, thre
 
 **Cases:**
 
-- wrong_contract_title: True
-- wrong_contract_version: True
-- wrong_starting_commit: True
-- wrong_repository: True
-- wrong_branch: True
-- part3a_contract_frozen_false: True
-- model_rerun_performed_true: True
-- canonical_outputs_modified_true: True
-- manuscript_modified_true: True
-- wrong_next_authorized_stage: True
-- altered_constraint: True
-- additional_stage_gate_field: True
-- missing_stage_gate_field: True
+- wrong_contract_title:
+  validator_name: validate_final_provenance_and_stage_gate
+  passed = True
+- wrong_contract_version:
+  validator_name: validate_final_provenance_and_stage_gate
+  passed = True
+- wrong_starting_commit:
+  validator_name: validate_final_provenance_and_stage_gate
+  passed = True
+- wrong_repository:
+  validator_name: validate_final_provenance_and_stage_gate
+  passed = True
+- wrong_branch:
+  validator_name: validate_final_provenance_and_stage_gate
+  passed = True
+- part3a_contract_frozen_false:
+  validator_name: validate_final_provenance_and_stage_gate
+  passed = True
+- model_rerun_performed_true:
+  validator_name: validate_final_provenance_and_stage_gate
+  passed = True
+- canonical_outputs_modified_true:
+  validator_name: validate_final_provenance_and_stage_gate
+  passed = True
+- manuscript_modified_true:
+  validator_name: validate_final_provenance_and_stage_gate
+  passed = True
+- wrong_next_authorized_stage:
+  validator_name: validate_final_provenance_and_stage_gate
+  passed = True
+- altered_constraint:
+  validator_name: validate_final_provenance_and_stage_gate
+  passed = True
+- additional_stage_gate_field:
+  validator_name: validate_final_provenance_and_stage_gate
+  passed = True
+- missing_stage_gate_field:
+  validator_name: validate_final_provenance_and_stage_gate
+  passed = True
 
 ### Reviewer Response Tests
 
@@ -1212,20 +1238,48 @@ Candidate ranking by rank objective, after candidate or ensemble selection, thre
 
 **Cases:**
 
-- blank_reviewer1_computational: True
-- whitespace_reviewer1_computational: True
-- empty_reviewer1_manuscript: True
-- blank_reviewer2_manuscript: True
-- empty_list_computational: True
-- list_with_empty_string: True
-- list_with_whitespace_string: True
-- list_with_integer: True
-- integer_response: True
-- dictionary_response: True
-- missing_response_key: True
-- additional_response_key: True
-- blank_reviewer3_scientific: True
-- empty_list_reviewer3_computational: True
+- blank_reviewer1_computational:
+  validator_name: validate_reviewer_traceability
+  passed = True
+- whitespace_reviewer1_computational:
+  validator_name: validate_reviewer_traceability
+  passed = True
+- empty_reviewer1_manuscript:
+  validator_name: validate_reviewer_traceability
+  passed = True
+- blank_reviewer2_manuscript:
+  validator_name: validate_reviewer_traceability
+  passed = True
+- empty_list_computational:
+  validator_name: validate_reviewer_traceability
+  passed = True
+- list_with_empty_string:
+  validator_name: validate_reviewer_traceability
+  passed = True
+- list_with_whitespace_string:
+  validator_name: validate_reviewer_traceability
+  passed = True
+- list_with_integer:
+  validator_name: validate_reviewer_traceability
+  passed = True
+- integer_response:
+  validator_name: validate_reviewer_traceability
+  passed = True
+- dictionary_response:
+  validator_name: validate_reviewer_traceability
+  passed = True
+- missing_response_key:
+  validator_name: validate_reviewer_traceability
+  passed = True
+- additional_response_key:
+  validator_name: validate_reviewer_traceability
+  passed = True
+- blank_reviewer3_scientific:
+  validator_name: validate_reviewer_traceability
+  passed = True
+- empty_list_reviewer3_computational:
+  validator_name: validate_reviewer_traceability
+  passed = True
 
 ### Prohibited Claims Tests
 
@@ -1241,10 +1295,18 @@ Candidate ranking by rank objective, after candidate or ensemble selection, thre
 
 **Cases:**
 
-- typo_an_to_a: True
-- reordered_list: True
-- missing_claim: True
-- additional_claim: True
+- typo_an_to_a:
+  validator_name: validate_prohibited_claims
+  passed = True
+- reordered_list:
+  validator_name: validate_prohibited_claims
+  passed = True
+- missing_claim:
+  validator_name: validate_prohibited_claims
+  passed = True
+- additional_claim:
+  validator_name: validate_prohibited_claims
+  passed = True
 
 ## Serialization Validation
 

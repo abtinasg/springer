@@ -38,8 +38,8 @@ def build_contract() -> Dict[str, Any]:
     
     contract = {
         "contract_title": "Scientific Analysis Contract for Major Revision",
-        "contract_version": "Part-3A.6-v1",
-        "starting_commit": "98245aaddab6431e28b222c37f8bf35b2ee2b8b4",
+        "contract_version": "Part-3A.7-v1",
+        "starting_commit": "cf2320791a74e55e58a0097fa5a6963de7cc67c2",
         "repository": "abtinasg/springer",
         "branch": "major-revision-analysis-v2",
         
@@ -1123,9 +1123,9 @@ def validate_final_provenance_and_stage_gate(final_state: Dict[str, Any]) -> boo
     # Top-level metadata validation
     if final_state["contract_title"] != "Scientific Analysis Contract for Major Revision":
         return False
-    if final_state["contract_version"] != "Part-3A.6-v1":
+    if final_state["contract_version"] != "Part-3A.7-v1":
         return False
-    if final_state["starting_commit"] != "98245aaddab6431e28b222c37f8bf35b2ee2b8b4":
+    if final_state["starting_commit"] != "cf2320791a74e55e58a0097fa5a6963de7cc67c2":
         return False
     if final_state["repository"] != "abtinasg/springer":
         return False
@@ -1154,6 +1154,19 @@ def validate_final_provenance_and_stage_gate(final_state: Dict[str, Any]) -> boo
     return True
 
 
+def execute_negative_case(validator, mutated_state, case_name, mutation):
+    """Shared helper for executing negative test cases and binding evidence to the actual validator callable."""
+    validator_result = validator(mutated_state)
+    validator_returned_false = validator_result is False
+    return {
+        "case_name": case_name,
+        "mutation": mutation,
+        "validator_name": validator.__name__,
+        "validator_returned_false": validator_returned_false,
+        "passed": validator_returned_false,
+    }
+
+
 def run_provenance_negative_tests(final_state: Dict[str, Any]) -> Dict[str, Any]:
     """Run deterministic negative tests for provenance and stage-gate validation."""
     tests_expected = 13
@@ -1162,80 +1175,67 @@ def run_provenance_negative_tests(final_state: Dict[str, Any]) -> Dict[str, Any]
     # Test 1: wrong contract_title
     mutated = copy.deepcopy(final_state)
     mutated["contract_title"] = "Wrong Title"
-    result = not validate_final_provenance_and_stage_gate(mutated)
-    cases.append({"case_name": "wrong_contract_title", "mutation": "contract_title changed", "validator_name": "validate_final_provenance_and_stage_gate", "validator_returned_false": result, "passed": result})
+    cases.append(execute_negative_case(validate_final_provenance_and_stage_gate, mutated, "wrong_contract_title", "contract_title changed"))
     
     # Test 2: wrong contract_version
     mutated = copy.deepcopy(final_state)
-    mutated["contract_version"] = "Part-3A.5-v1"
-    result = not validate_final_provenance_and_stage_gate(mutated)
-    cases.append({"case_name": "wrong_contract_version", "mutation": "contract_version changed", "validator_name": "validate_final_provenance_and_stage_gate", "validator_returned_false": result, "passed": result})
+    mutated["contract_version"] = "Part-3A.6-v1"
+    cases.append(execute_negative_case(validate_final_provenance_and_stage_gate, mutated, "wrong_contract_version", "contract_version changed"))
     
     # Test 3: wrong starting_commit
     mutated = copy.deepcopy(final_state)
-    mutated["starting_commit"] = "7d7403f968aca2bcbc94bc35efd4f258421301c5"
-    result = not validate_final_provenance_and_stage_gate(mutated)
-    cases.append({"case_name": "wrong_starting_commit", "mutation": "starting_commit changed", "validator_name": "validate_final_provenance_and_stage_gate", "validator_returned_false": result, "passed": result})
+    mutated["starting_commit"] = "98245aaddab6431e28b222c37f8bf35b2ee2b8b4"
+    cases.append(execute_negative_case(validate_final_provenance_and_stage_gate, mutated, "wrong_starting_commit", "starting_commit changed"))
     
     # Test 4: wrong repository
     mutated = copy.deepcopy(final_state)
     mutated["repository"] = "wrong/repo"
-    result = not validate_final_provenance_and_stage_gate(mutated)
-    cases.append({"case_name": "wrong_repository", "mutation": "repository changed", "validator_name": "validate_final_provenance_and_stage_gate", "validator_returned_false": result, "passed": result})
+    cases.append(execute_negative_case(validate_final_provenance_and_stage_gate, mutated, "wrong_repository", "repository changed"))
     
     # Test 5: wrong branch
     mutated = copy.deepcopy(final_state)
     mutated["branch"] = "wrong-branch"
-    result = not validate_final_provenance_and_stage_gate(mutated)
-    cases.append({"case_name": "wrong_branch", "mutation": "branch changed", "validator_name": "validate_final_provenance_and_stage_gate", "validator_returned_false": result, "passed": result})
+    cases.append(execute_negative_case(validate_final_provenance_and_stage_gate, mutated, "wrong_branch", "branch changed"))
     
     # Test 6: part3a_contract_frozen = false
     mutated = copy.deepcopy(final_state)
     mutated["stage_gate"]["part3a_contract_frozen"] = False
-    result = not validate_final_provenance_and_stage_gate(mutated)
-    cases.append({"case_name": "part3a_contract_frozen_false", "mutation": "part3a_contract_frozen set to False", "validator_name": "validate_final_provenance_and_stage_gate", "validator_returned_false": result, "passed": result})
+    cases.append(execute_negative_case(validate_final_provenance_and_stage_gate, mutated, "part3a_contract_frozen_false", "part3a_contract_frozen set to False"))
     
     # Test 7: model_rerun_performed = true
     mutated = copy.deepcopy(final_state)
     mutated["stage_gate"]["model_rerun_performed"] = True
-    result = not validate_final_provenance_and_stage_gate(mutated)
-    cases.append({"case_name": "model_rerun_performed_true", "mutation": "model_rerun_performed set to True", "validator_name": "validate_final_provenance_and_stage_gate", "validator_returned_false": result, "passed": result})
+    cases.append(execute_negative_case(validate_final_provenance_and_stage_gate, mutated, "model_rerun_performed_true", "model_rerun_performed set to True"))
     
     # Test 8: canonical_outputs_modified = true
     mutated = copy.deepcopy(final_state)
     mutated["stage_gate"]["canonical_outputs_modified"] = True
-    result = not validate_final_provenance_and_stage_gate(mutated)
-    cases.append({"case_name": "canonical_outputs_modified_true", "mutation": "canonical_outputs_modified set to True", "validator_name": "validate_final_provenance_and_stage_gate", "validator_returned_false": result, "passed": result})
+    cases.append(execute_negative_case(validate_final_provenance_and_stage_gate, mutated, "canonical_outputs_modified_true", "canonical_outputs_modified set to True"))
     
     # Test 9: manuscript_modified = true
     mutated = copy.deepcopy(final_state)
     mutated["stage_gate"]["manuscript_modified"] = True
-    result = not validate_final_provenance_and_stage_gate(mutated)
-    cases.append({"case_name": "manuscript_modified_true", "mutation": "manuscript_modified set to True", "validator_name": "validate_final_provenance_and_stage_gate", "validator_returned_false": result, "passed": result})
+    cases.append(execute_negative_case(validate_final_provenance_and_stage_gate, mutated, "manuscript_modified_true", "manuscript_modified set to True"))
     
     # Test 10: wrong next_authorized_stage
     mutated = copy.deepcopy(final_state)
     mutated["stage_gate"]["next_authorized_stage"] = "Part 3C"
-    result = not validate_final_provenance_and_stage_gate(mutated)
-    cases.append({"case_name": "wrong_next_authorized_stage", "mutation": "next_authorized_stage changed", "validator_name": "validate_final_provenance_and_stage_gate", "validator_returned_false": result, "passed": result})
+    cases.append(execute_negative_case(validate_final_provenance_and_stage_gate, mutated, "wrong_next_authorized_stage", "next_authorized_stage changed"))
     
     # Test 11: altered Part 3B constraint
     mutated = copy.deepcopy(final_state)
     mutated["stage_gate"]["part3b_constraint"] = "Altered constraint"
-    result = not validate_final_provenance_and_stage_gate(mutated)
-    cases.append({"case_name": "altered_constraint", "mutation": "part3b_constraint altered", "validator_name": "validate_final_provenance_and_stage_gate", "validator_returned_false": result, "passed": result})
+    cases.append(execute_negative_case(validate_final_provenance_and_stage_gate, mutated, "altered_constraint", "part3b_constraint altered"))
     
     # Test 12: additional stage-gate field
     mutated = copy.deepcopy(final_state)
     mutated["stage_gate"]["extra_field"] = "extra"
-    result = not validate_final_provenance_and_stage_gate(mutated)
-    cases.append({"case_name": "additional_stage_gate_field", "mutation": "extra field added to stage_gate", "validator_name": "validate_final_provenance_and_stage_gate", "validator_returned_false": result, "passed": result})
+    cases.append(execute_negative_case(validate_final_provenance_and_stage_gate, mutated, "additional_stage_gate_field", "extra field added to stage_gate"))
     
     # Test 13: missing stage-gate field
     mutated = copy.deepcopy(final_state)
     del mutated["stage_gate"]["part3b_constraint"]
-    result = not validate_final_provenance_and_stage_gate(mutated)
-    cases.append({"case_name": "missing_stage_gate_field", "mutation": "part3b_constraint removed from stage_gate", "validator_name": "validate_final_provenance_and_stage_gate", "validator_returned_false": result, "passed": result})
+    cases.append(execute_negative_case(validate_final_provenance_and_stage_gate, mutated, "missing_stage_gate_field", "part3b_constraint removed from stage_gate"))
     
     tests_executed = len(cases)
     tests_passed = sum(1 for case in cases if case["passed"])
@@ -1243,22 +1243,33 @@ def run_provenance_negative_tests(final_state: Dict[str, Any]) -> Dict[str, Any]
     
     # Enforce exact count validation
     REQUIRED_COUNT = 13
-    all_negative_tests_passed = (
+    EXPECTED_VALIDATOR_NAME = "validate_final_provenance_and_stage_gate"
+    
+    all_cases_called_production_validator = (
+        len(cases) == REQUIRED_COUNT
+        and all(case["validator_name"] == EXPECTED_VALIDATOR_NAME for case in cases)
+    )
+    
+    production_validator_used = (
+        all_cases_called_production_validator
+        and all(case["validator_returned_false"] is True for case in cases)
+    )
+    
+    count_contract_passed = (
         tests_expected == REQUIRED_COUNT
         and tests_executed == REQUIRED_COUNT
         and tests_passed == REQUIRED_COUNT
         and tests_failed == 0
         and len(cases) == REQUIRED_COUNT
-        and all(case["validator_returned_false"] is True for case in cases)
-        and all(case["passed"] is True for case in cases)
     )
     
-    # Compute integration mutation evidence
-    production_validator_used = True
-    all_cases_called_production_validator = all(
-        case.get("validator_name") == "validate_final_provenance_and_stage_gate" for case in cases
+    all_negative_tests_passed = (
+        count_contract_passed
+        and production_validator_used
+        and all_cases_called_production_validator
+        and all(case["passed"] is True for case in cases)
+        and all(case["validator_returned_false"] is True for case in cases)
     )
-    count_contract_passed = all_negative_tests_passed
     
     return {
         "tests_expected": tests_expected,
@@ -1281,86 +1292,72 @@ def run_reviewer_response_negative_tests(final_state: Dict[str, Any]) -> Dict[st
     # Test 1: blank Reviewer 1 computational_response
     mutated = copy.deepcopy(final_state)
     mutated["reviewer_traceability_matrix"]["reviewer_1_comment_1"]["computational_response"] = ""
-    result = not validate_reviewer_traceability(mutated)
-    cases.append({"case_name": "blank_reviewer1_computational", "mutation": "blank string", "validator_name": "validate_reviewer_traceability", "validator_returned_false": result, "passed": result})
+    cases.append(execute_negative_case(validate_reviewer_traceability, mutated, "blank_reviewer1_computational", "blank string"))
     
     # Test 2: whitespace-only Reviewer 1 computational_response
     mutated = copy.deepcopy(final_state)
     mutated["reviewer_traceability_matrix"]["reviewer_1_comment_1"]["computational_response"] = "   "
-    result = not validate_reviewer_traceability(mutated)
-    cases.append({"case_name": "whitespace_reviewer1_computational", "mutation": "whitespace-only string", "validator_name": "validate_reviewer_traceability", "validator_returned_false": result, "passed": result})
+    cases.append(execute_negative_case(validate_reviewer_traceability, mutated, "whitespace_reviewer1_computational", "whitespace-only string"))
     
     # Test 3: empty Reviewer 1 manuscript_response
     mutated = copy.deepcopy(final_state)
     mutated["reviewer_traceability_matrix"]["reviewer_1_comment_1"]["manuscript_response"] = ""
-    result = not validate_reviewer_traceability(mutated)
-    cases.append({"case_name": "empty_reviewer1_manuscript", "mutation": "empty string", "validator_name": "validate_reviewer_traceability", "validator_returned_false": result, "passed": result})
+    cases.append(execute_negative_case(validate_reviewer_traceability, mutated, "empty_reviewer1_manuscript", "empty string"))
     
     # Test 4: blank Reviewer 2 manuscript_response
     mutated = copy.deepcopy(final_state)
     mutated["reviewer_traceability_matrix"]["reviewer_2_comment_1"]["manuscript_response"] = ""
-    result = not validate_reviewer_traceability(mutated)
-    cases.append({"case_name": "blank_reviewer2_manuscript", "mutation": "blank string", "validator_name": "validate_reviewer_traceability", "validator_returned_false": result, "passed": result})
+    cases.append(execute_negative_case(validate_reviewer_traceability, mutated, "blank_reviewer2_manuscript", "blank string"))
     
     # Test 5: empty-list computational_response
     mutated = copy.deepcopy(final_state)
     mutated["reviewer_traceability_matrix"]["reviewer_2_comment_3"]["computational_response"] = []
-    result = not validate_reviewer_traceability(mutated)
-    cases.append({"case_name": "empty_list_computational", "mutation": "empty list", "validator_name": "validate_reviewer_traceability", "validator_returned_false": result, "passed": result})
+    cases.append(execute_negative_case(validate_reviewer_traceability, mutated, "empty_list_computational", "empty list"))
     
     # Test 6: list containing an empty string
     mutated = copy.deepcopy(final_state)
     mutated["reviewer_traceability_matrix"]["reviewer_2_comment_3"]["computational_response"] = ["valid", ""]
-    result = not validate_reviewer_traceability(mutated)
-    cases.append({"case_name": "list_with_empty_string", "mutation": "list with empty string", "validator_name": "validate_reviewer_traceability", "validator_returned_false": result, "passed": result})
+    cases.append(execute_negative_case(validate_reviewer_traceability, mutated, "list_with_empty_string", "list with empty string"))
     
     # Test 7: list containing a whitespace-only string
     mutated = copy.deepcopy(final_state)
     mutated["reviewer_traceability_matrix"]["reviewer_2_comment_3"]["computational_response"] = ["valid", "   "]
-    result = not validate_reviewer_traceability(mutated)
-    cases.append({"case_name": "list_with_whitespace_string", "mutation": "list with whitespace-only string", "validator_name": "validate_reviewer_traceability", "validator_returned_false": result, "passed": result})
+    cases.append(execute_negative_case(validate_reviewer_traceability, mutated, "list_with_whitespace_string", "list with whitespace-only string"))
     
     # Test 8: list containing an integer
     mutated = copy.deepcopy(final_state)
     mutated["reviewer_traceability_matrix"]["reviewer_2_comment_3"]["computational_response"] = ["valid", 123]
-    result = not validate_reviewer_traceability(mutated)
-    cases.append({"case_name": "list_with_integer", "mutation": "list with integer", "validator_name": "validate_reviewer_traceability", "validator_returned_false": result, "passed": result})
+    cases.append(execute_negative_case(validate_reviewer_traceability, mutated, "list_with_integer", "list with integer"))
     
     # Test 9: integer response value
     mutated = copy.deepcopy(final_state)
     mutated["reviewer_traceability_matrix"]["reviewer_1_comment_1"]["computational_response"] = 123
-    result = not validate_reviewer_traceability(mutated)
-    cases.append({"case_name": "integer_response", "mutation": "integer value", "validator_name": "validate_reviewer_traceability", "validator_returned_false": result, "passed": result})
+    cases.append(execute_negative_case(validate_reviewer_traceability, mutated, "integer_response", "integer value"))
     
     # Test 10: dictionary response value
     mutated = copy.deepcopy(final_state)
     mutated["reviewer_traceability_matrix"]["reviewer_1_comment_1"]["computational_response"] = {"key": "value"}
-    result = not validate_reviewer_traceability(mutated)
-    cases.append({"case_name": "dictionary_response", "mutation": "dictionary value", "validator_name": "validate_reviewer_traceability", "validator_returned_false": result, "passed": result})
+    cases.append(execute_negative_case(validate_reviewer_traceability, mutated, "dictionary_response", "dictionary value"))
     
     # Test 11: missing required response key
     mutated = copy.deepcopy(final_state)
     del mutated["reviewer_traceability_matrix"]["reviewer_1_comment_1"]["manuscript_response"]
-    result = not validate_reviewer_traceability(mutated)
-    cases.append({"case_name": "missing_response_key", "mutation": "missing manuscript_response key", "validator_name": "validate_reviewer_traceability", "validator_returned_false": result, "passed": result})
+    cases.append(execute_negative_case(validate_reviewer_traceability, mutated, "missing_response_key", "missing manuscript_response key"))
     
     # Test 12: additional response key
     mutated = copy.deepcopy(final_state)
     mutated["reviewer_traceability_matrix"]["reviewer_1_comment_1"]["extra_key"] = "extra"
-    result = not validate_reviewer_traceability(mutated)
-    cases.append({"case_name": "additional_response_key", "mutation": "extra key added", "validator_name": "validate_reviewer_traceability", "validator_returned_false": result, "passed": result})
+    cases.append(execute_negative_case(validate_reviewer_traceability, mutated, "additional_response_key", "extra key added"))
     
     # Test 13: blank Reviewer 3 scientific_response
     mutated = copy.deepcopy(final_state)
     mutated["reviewer_traceability_matrix"]["reviewer_3_novelty_concern"]["scientific_response"] = ""
-    result = not validate_reviewer_traceability(mutated)
-    cases.append({"case_name": "blank_reviewer3_scientific", "mutation": "blank string", "validator_name": "validate_reviewer_traceability", "validator_returned_false": result, "passed": result})
+    cases.append(execute_negative_case(validate_reviewer_traceability, mutated, "blank_reviewer3_scientific", "blank string"))
     
     # Test 14: empty Reviewer 3 computational_response list
     mutated = copy.deepcopy(final_state)
     mutated["reviewer_traceability_matrix"]["reviewer_3_novelty_concern"]["computational_response"] = []
-    result = not validate_reviewer_traceability(mutated)
-    cases.append({"case_name": "empty_list_reviewer3_computational", "mutation": "empty list", "validator_name": "validate_reviewer_traceability", "validator_returned_false": result, "passed": result})
+    cases.append(execute_negative_case(validate_reviewer_traceability, mutated, "empty_list_reviewer3_computational", "empty list"))
     
     tests_executed = len(cases)
     tests_passed = sum(1 for case in cases if case["passed"])
@@ -1368,22 +1365,33 @@ def run_reviewer_response_negative_tests(final_state: Dict[str, Any]) -> Dict[st
     
     # Enforce exact count validation
     REQUIRED_COUNT = 14
-    all_negative_tests_passed = (
+    EXPECTED_VALIDATOR_NAME = "validate_reviewer_traceability"
+    
+    all_cases_called_production_validator = (
+        len(cases) == REQUIRED_COUNT
+        and all(case["validator_name"] == EXPECTED_VALIDATOR_NAME for case in cases)
+    )
+    
+    production_validator_used = (
+        all_cases_called_production_validator
+        and all(case["validator_returned_false"] is True for case in cases)
+    )
+    
+    count_contract_passed = (
         tests_expected == REQUIRED_COUNT
         and tests_executed == REQUIRED_COUNT
         and tests_passed == REQUIRED_COUNT
         and tests_failed == 0
         and len(cases) == REQUIRED_COUNT
-        and all(case["validator_returned_false"] is True for case in cases)
-        and all(case["passed"] is True for case in cases)
     )
     
-    # Compute integration mutation evidence
-    production_validator_used = True
-    all_cases_called_production_validator = all(
-        case.get("validator_name") == "validate_reviewer_traceability" for case in cases
+    all_negative_tests_passed = (
+        count_contract_passed
+        and production_validator_used
+        and all_cases_called_production_validator
+        and all(case["passed"] is True for case in cases)
+        and all(case["validator_returned_false"] is True for case in cases)
     )
-    count_contract_passed = all_negative_tests_passed
     
     return {
         "tests_expected": tests_expected,
@@ -1406,26 +1414,22 @@ def run_prohibited_claims_negative_tests(final_state: Dict[str, Any]) -> Dict[st
     # Test 1: an -> a algorithmic contribution
     mutated = copy.deepcopy(final_state)
     mutated["prohibited_claims"][4] = "Train/validation/test separation is itself a algorithmic contribution."
-    result = not validate_prohibited_claims(mutated)
-    cases.append({"case_name": "typo_an_to_a", "mutation": "an -> a algorithmic contribution", "validator_name": "validate_prohibited_claims", "validator_returned_false": result, "passed": result})
+    cases.append(execute_negative_case(validate_prohibited_claims, mutated, "typo_an_to_a", "an -> a algorithmic contribution"))
     
     # Test 2: reordered list
     mutated = copy.deepcopy(final_state)
     mutated["prohibited_claims"] = list(reversed(mutated["prohibited_claims"]))
-    result = not validate_prohibited_claims(mutated)
-    cases.append({"case_name": "reordered_list", "mutation": "list reversed", "validator_name": "validate_prohibited_claims", "validator_returned_false": result, "passed": result})
+    cases.append(execute_negative_case(validate_prohibited_claims, mutated, "reordered_list", "list reversed"))
     
     # Test 3: missing claim
     mutated = copy.deepcopy(final_state)
     mutated["prohibited_claims"] = mutated["prohibited_claims"][:11]
-    result = not validate_prohibited_claims(mutated)
-    cases.append({"case_name": "missing_claim", "mutation": "last claim removed", "validator_name": "validate_prohibited_claims", "validator_returned_false": result, "passed": result})
+    cases.append(execute_negative_case(validate_prohibited_claims, mutated, "missing_claim", "last claim removed"))
     
     # Test 4: additional claim
     mutated = copy.deepcopy(final_state)
     mutated["prohibited_claims"].append("Additional claim")
-    result = not validate_prohibited_claims(mutated)
-    cases.append({"case_name": "additional_claim", "mutation": "extra claim added", "validator_name": "validate_prohibited_claims", "validator_returned_false": result, "passed": result})
+    cases.append(execute_negative_case(validate_prohibited_claims, mutated, "additional_claim", "extra claim added"))
     
     tests_executed = len(cases)
     tests_passed = sum(1 for case in cases if case["passed"])
@@ -1433,22 +1437,33 @@ def run_prohibited_claims_negative_tests(final_state: Dict[str, Any]) -> Dict[st
     
     # Enforce exact count validation
     REQUIRED_COUNT = 4
-    all_negative_tests_passed = (
+    EXPECTED_VALIDATOR_NAME = "validate_prohibited_claims"
+    
+    all_cases_called_production_validator = (
+        len(cases) == REQUIRED_COUNT
+        and all(case["validator_name"] == EXPECTED_VALIDATOR_NAME for case in cases)
+    )
+    
+    production_validator_used = (
+        all_cases_called_production_validator
+        and all(case["validator_returned_false"] is True for case in cases)
+    )
+    
+    count_contract_passed = (
         tests_expected == REQUIRED_COUNT
         and tests_executed == REQUIRED_COUNT
         and tests_passed == REQUIRED_COUNT
         and tests_failed == 0
         and len(cases) == REQUIRED_COUNT
-        and all(case["validator_returned_false"] is True for case in cases)
-        and all(case["passed"] is True for case in cases)
     )
     
-    # Compute integration mutation evidence
-    production_validator_used = True
-    all_cases_called_production_validator = all(
-        case.get("validator_name") == "validate_prohibited_claims" for case in cases
+    all_negative_tests_passed = (
+        count_contract_passed
+        and production_validator_used
+        and all_cases_called_production_validator
+        and all(case["passed"] is True for case in cases)
+        and all(case["validator_returned_false"] is True for case in cases)
     )
-    count_contract_passed = all_negative_tests_passed
     
     return {
         "tests_expected": tests_expected,
@@ -1463,8 +1478,8 @@ def run_prohibited_claims_negative_tests(final_state: Dict[str, Any]) -> Dict[st
     }
 
 
-def validate_contract(contract: Dict[str, Any]) -> Dict[str, bool]:
-    """Validate the complete contract payload."""
+def validate_contract_core(contract: Dict[str, Any]) -> Dict[str, bool]:
+    """Validate the core semantic contract payload - returns exactly 28 core checks."""
     checks = {}
     
     # Exact Research Questions - validate complete exact structure and exact key sets
@@ -2157,48 +2172,9 @@ def validate_contract(contract: Dict[str, Any]) -> Dict[str, bool]:
     # Prohibited claims list present - use production validator
     checks["prohibited_claims_passed"] = validate_prohibited_claims(contract)
     
-    # Stage gate passed - use production validator (will be called again in main with final state)
-    # This is a preliminary check; final validation happens in main with prospective_final_state
-    stage_gate = contract["stage_gate"]
-    exact_stage_gate_keys = {"part3a_contract_frozen", "model_rerun_performed", "canonical_outputs_modified", "manuscript_modified", "next_authorized_stage", "part3b_constraint"}
-    exact_constraint = "Part 3B cannot alter the current 400 canonical result rows or current canonical manuscript tables unless a later explicitly approved migration stage is created."
-    checks["stage_gate_passed"] = (
-        set(stage_gate.keys()) == exact_stage_gate_keys and
-        stage_gate["next_authorized_stage"] == "Part 3B" and
-        stage_gate["model_rerun_performed"] == False and
-        stage_gate["canonical_outputs_modified"] == False and
-        stage_gate["manuscript_modified"] == False and
-        stage_gate["part3b_constraint"] == exact_constraint and
-        contract["contract_title"] == "Scientific Analysis Contract for Major Revision" and
-        contract["contract_version"] == "Part-3A.6-v1" and
-        contract["starting_commit"] == "98245aaddab6431e28b222c37f8bf35b2ee2b8b4" and
-        contract["repository"] == "abtinasg/springer" and
-        contract["branch"] == "major-revision-analysis-v2"
-    )
-    
-    # Combine all checks except all_checks_passed itself - exactly 32 required checks
-    required_checks = [
-        "exact_research_questions_passed", "analysis_domains_passed", "candidate_metadata_matches_current_pipeline",
-        "metric_taxonomy_passed", "metric_direction_passed", "metric_count_is_14",
-        "metric_threshold_dependency_passed", "metric_inspection_budget_dependency_passed",
-        "metric_primary_secondary_passed", "objective_policy_passed", "existing_soft_top3_policy_passed",
-        "baseline_policy_passed", "adaptive_policy_passed", "ensemble_policy_passed",
-        "tie_policy_passed", "oracle_policy_passed", "unit_of_analysis_policy_passed",
-        "statistical_reporting_policy_passed", "agreement_policy_passed", "balanced_weight_sensitivity_frozen",
-        "threshold_grid_sensitivity_frozen", "source_project_aware_protocol_frozen",
-        "sensitivity_policy_passed", "threats_mapping_passed", "reviewer_context_complete",
-        "reviewer_traceability_passed", "roadmap_passed", "prohibited_claims_passed", "stage_gate_passed",
-        "preservation_checks_passed", "deterministic_serialization_passed"
-    ]
-    
-    # Note: preservation_checks_passed and deterministic_serialization_passed will be set after serialization
-    # They are initialized to False here and updated later
-    checks["preservation_checks_passed"] = False
-    checks["deterministic_serialization_passed"] = False
-    
-    all_passed = all(checks[check] for check in required_checks if check in checks)
-    checks["all_checks_passed"] = all_passed
-    
+    # Return exactly 28 core semantic checks
+    # stage_gate_passed, preservation_checks_passed, deterministic_serialization_passed, all_checks_passed
+    # are added only in main after relevant evidence exists
     return checks
 
 
@@ -2958,7 +2934,9 @@ def render_markdown(contract: Dict[str, Any]) -> tuple:
         md_lines.append("**Cases:**")
         md_lines.append("")
         for case in prov['cases']:
-            md_lines.append(f"- {case['case_name']}: {case['passed']}")
+            md_lines.append(f"- {case['case_name']}:")
+            md_lines.append(f"  validator_name: {case['validator_name']}")
+            md_lines.append(f"  passed = {case['passed']}")
         md_lines.append("")
         
         md_lines.extend([
@@ -2979,7 +2957,9 @@ def render_markdown(contract: Dict[str, Any]) -> tuple:
         md_lines.append("**Cases:**")
         md_lines.append("")
         for case in rev['cases']:
-            md_lines.append(f"- {case['case_name']}: {case['passed']}")
+            md_lines.append(f"- {case['case_name']}:")
+            md_lines.append(f"  validator_name: {case['validator_name']}")
+            md_lines.append(f"  passed = {case['passed']}")
         md_lines.append("")
         
         md_lines.extend([
@@ -3000,7 +2980,9 @@ def render_markdown(contract: Dict[str, Any]) -> tuple:
         md_lines.append("**Cases:**")
         md_lines.append("")
         for case in claims['cases']:
-            md_lines.append(f"- {case['case_name']}: {case['passed']}")
+            md_lines.append(f"- {case['case_name']}:")
+            md_lines.append(f"  validator_name: {case['validator_name']}")
+            md_lines.append(f"  passed = {case['passed']}")
         md_lines.append("")
     
     md_lines.extend([
@@ -3134,7 +3116,7 @@ def main():
     repo_root = get_repository_root()
     
     print(f"Repository root: {repo_root}")
-    print(f"Starting commit: 98245aaddab6431e28b222c37f8bf35b2ee2b8b4")
+    print(f"Starting commit: cf2320791a74e55e58a0097fa5a6963de7cc67c2")
     print("")
     
     # A. Capture genuine before preservation snapshot
@@ -3153,59 +3135,31 @@ def main():
     print("Building preservation evidence...")
     preservation_evidence = compare_preservation_snapshots(before_snapshot, after_snapshot)
     
-    # E. Compute every semantic check except deterministic_serialization_passed and stage_gate_passed
+    # E. Compute the 28 core semantic checks
     print("Validating contract...")
-    validation_results = validate_contract(contract)
+    core_checks = validate_contract_core(contract)
     
-    # F. Build the scientific core with part3a_contract_frozen initially false
-    # G. Capture and compare preservation snapshots (already done)
-    # H. Compute preservation_checks_passed
-    validation_results["preservation_checks_passed"] = preservation_evidence["preservation_checks_passed"]
-    
-    # I. Run all deterministic negative tests
-    print("Running deterministic negative tests...")
-    
-    # Create a deep copy for negative testing (before setting part3a_contract_frozen)
+    # F. Run reviewer and prohibited-claim production negative tests
+    print("Running reviewer and prohibited-claim negative tests...")
     test_state = copy.deepcopy(contract)
     test_state["preservation_checks"] = preservation_evidence
-    test_state["validation_checks"] = validation_results
+    test_state["validation_checks"] = core_checks
     test_state["stage_gate"]["part3a_contract_frozen"] = True  # Set for testing
     
-    # Run negative tests
-    provenance_negative_tests = run_provenance_negative_tests(test_state)
     reviewer_negative_tests = run_reviewer_response_negative_tests(test_state)
     prohibited_claims_negative_tests = run_prohibited_claims_negative_tests(test_state)
     
-    # Build validator-negative-test evidence
-    validator_negative_test_evidence = {
-        "provenance_and_stage_gate": provenance_negative_tests,
-        "reviewer_responses": reviewer_negative_tests,
-        "prohibited_claims": prohibited_claims_negative_tests,
-        "total_tests_expected": provenance_negative_tests["tests_expected"] + reviewer_negative_tests["tests_expected"] + prohibited_claims_negative_tests["tests_expected"],
-        "total_tests_executed": provenance_negative_tests["tests_executed"] + reviewer_negative_tests["tests_executed"] + prohibited_claims_negative_tests["tests_executed"],
-        "total_tests_passed": provenance_negative_tests["tests_passed"] + reviewer_negative_tests["tests_passed"] + prohibited_claims_negative_tests["tests_passed"],
-        "total_tests_failed": provenance_negative_tests["tests_failed"] + reviewer_negative_tests["tests_failed"] + prohibited_claims_negative_tests["tests_failed"],
-        "all_negative_tests_passed": (
-            provenance_negative_tests["all_negative_tests_passed"] and
-            reviewer_negative_tests["all_negative_tests_passed"] and
-            prohibited_claims_negative_tests["all_negative_tests_passed"]
-        )
-    }
-    
-    # Enforce exact global count validation
-    REQUIRED_TOTAL = 31
-    global_count_contract_passed = (
-        validator_negative_test_evidence["total_tests_expected"] == REQUIRED_TOTAL
-        and validator_negative_test_evidence["total_tests_executed"] == REQUIRED_TOTAL
-        and validator_negative_test_evidence["total_tests_passed"] == REQUIRED_TOTAL
-        and validator_negative_test_evidence["total_tests_failed"] == 0
-        and provenance_negative_tests["all_negative_tests_passed"]
+    # G. Fold their group results into their core checks
+    core_checks["reviewer_traceability_passed"] = (
+        validate_reviewer_traceability(contract)
         and reviewer_negative_tests["all_negative_tests_passed"]
+    )
+    core_checks["prohibited_claims_passed"] = (
+        validate_prohibited_claims(contract)
         and prohibited_claims_negative_tests["all_negative_tests_passed"]
     )
-    validator_negative_test_evidence["global_count_contract_passed"] = global_count_contract_passed
     
-    # J. Determine pre_gate_passed = logical AND of every required semantic and preservation check except: stage_gate_passed, deterministic_serialization_passed, all_checks_passed
+    # H. Compute pre_gate_passed from all 28 core checks after folding and preservation
     pre_gate_checks = [
         "exact_research_questions_passed", "analysis_domains_passed", "candidate_metadata_matches_current_pipeline",
         "metric_taxonomy_passed", "metric_direction_passed", "metric_count_is_14",
@@ -3216,39 +3170,100 @@ def main():
         "statistical_reporting_policy_passed", "agreement_policy_passed", "balanced_weight_sensitivity_frozen",
         "threshold_grid_sensitivity_frozen", "source_project_aware_protocol_frozen",
         "sensitivity_policy_passed", "threats_mapping_passed", "reviewer_context_complete",
-        "reviewer_traceability_passed", "roadmap_passed", "prohibited_claims_passed", "preservation_checks_passed"
+        "reviewer_traceability_passed", "roadmap_passed", "prohibited_claims_passed"
     ]
-    pre_gate_passed = all(validation_results[check] for check in pre_gate_checks)
+    pre_gate_passed = all(core_checks[check] for check in pre_gate_checks) and preservation_evidence["preservation_checks_passed"]
     
-    # K. Create a deep copy of the core contract using copy.deepcopy
+    # I. Create prospective_final_state with copy.deepcopy
     prospective_final_state = copy.deepcopy(contract)
     prospective_final_state["preservation_checks"] = preservation_evidence
-    prospective_final_state["validation_checks"] = validation_results
+    prospective_final_state["validation_checks"] = core_checks
     
-    # L. Set prospective_final_state.stage_gate.part3a_contract_frozen = pre_gate_passed
+    # J. Set part3a_contract_frozen = pre_gate_passed
     prospective_final_state["stage_gate"]["part3a_contract_frozen"] = pre_gate_passed
     
-    # M. Compute stage_gate_passed using the single authoritative shared helper
-    validation_results["stage_gate_passed"] = validate_final_provenance_and_stage_gate(prospective_final_state)
+    # K. Run provenance/stage-gate negative tests using the production validator
+    print("Running provenance/stage-gate negative tests...")
+    provenance_negative_tests = run_provenance_negative_tests(prospective_final_state)
     
-    # N. Fold negative-test results into the three relevant checks
-    validation_results["stage_gate_passed"] = (
-        validation_results["stage_gate_passed"] and
-        provenance_negative_tests["all_negative_tests_passed"]
+    # L. Build the final global negative-test evidence and exact global count result
+    validator_negative_test_evidence = {
+        "provenance_and_stage_gate": provenance_negative_tests,
+        "reviewer_responses": reviewer_negative_tests,
+        "prohibited_claims": prohibited_claims_negative_tests,
+        "total_tests_expected": provenance_negative_tests["tests_expected"] + reviewer_negative_tests["tests_expected"] + prohibited_claims_negative_tests["tests_expected"],
+        "total_tests_executed": provenance_negative_tests["tests_executed"] + reviewer_negative_tests["tests_executed"] + prohibited_claims_negative_tests["tests_executed"],
+        "total_tests_passed": provenance_negative_tests["tests_passed"] + reviewer_negative_tests["tests_passed"] + prohibited_claims_negative_tests["tests_passed"],
+        "total_tests_failed": provenance_negative_tests["tests_failed"] + reviewer_negative_tests["tests_failed"] + prohibited_claims_negative_tests["tests_failed"]
+    }
+    
+    # Enforce exact global count validation
+    REQUIRED_TOTAL = 31
+    global_count_contract_passed = (
+        validator_negative_test_evidence["total_tests_expected"] == REQUIRED_TOTAL
+        and validator_negative_test_evidence["total_tests_executed"] == REQUIRED_TOTAL
+        and validator_negative_test_evidence["total_tests_passed"] == REQUIRED_TOTAL
+        and validator_negative_test_evidence["total_tests_failed"] == 0
     )
-    validation_results["reviewer_traceability_passed"] = (
-        validation_results["reviewer_traceability_passed"] and
-        reviewer_negative_tests["all_negative_tests_passed"]
-    )
-    validation_results["prohibited_claims_passed"] = (
-        validation_results["prohibited_claims_passed"] and
-        prohibited_claims_negative_tests["all_negative_tests_passed"]
+    validator_negative_test_evidence["global_count_contract_passed"] = global_count_contract_passed
+    
+    # Calculate final global result after global count contract
+    validator_negative_test_evidence["all_negative_tests_passed"] = (
+        global_count_contract_passed
+        and provenance_negative_tests["all_negative_tests_passed"]
+        and reviewer_negative_tests["all_negative_tests_passed"]
+        and prohibited_claims_negative_tests["all_negative_tests_passed"]
     )
     
-    # O. Add deterministic_serialization_passed = true prospectively
-    validation_results["deterministic_serialization_passed"] = True
+    # M. Compute the one and only stage_gate_passed using production validator and negative-test results
+    stage_gate_passed = (
+        validate_final_provenance_and_stage_gate(prospective_final_state)
+        and provenance_negative_tests["all_negative_tests_passed"]
+        and validator_negative_test_evidence["all_negative_tests_passed"]
+    )
+    core_checks["stage_gate_passed"] = stage_gate_passed
     
-    # N. Compute all_checks_passed as the logical AND of checks 1 through 31
+    # Fold global negative-test success into reviewer and prohibited claims
+    core_checks["reviewer_traceability_passed"] = (
+        core_checks["reviewer_traceability_passed"]
+        and validator_negative_test_evidence["all_negative_tests_passed"]
+    )
+    core_checks["prohibited_claims_passed"] = (
+        core_checks["prohibited_claims_passed"]
+        and validator_negative_test_evidence["all_negative_tests_passed"]
+    )
+    
+    # N. Add preservation_checks_passed, deterministic_serialization_passed, all_checks_passed
+    core_checks["preservation_checks_passed"] = preservation_evidence["preservation_checks_passed"]
+    
+    # O. Assert exact 30 checks before adding deterministic_serialization_passed and all_checks_passed
+    # (28 core + stage_gate_passed + preservation_checks_passed)
+    assert len(core_checks) == 30, f"Expected 30 checks at this point, got {len(core_checks)}"
+    assert "stage_gate_passed" in core_checks
+    assert "preservation_checks_passed" in core_checks
+    assert "all_checks_passed" not in core_checks
+    
+    # P. Serialize twice, write, reread, and verify bytes
+    # Note: prospective_final_state["validation_checks"] will be set after all_checks_passed is added
+    
+    print("Testing JSON double serialization...")
+    json_content_1, json_sha_1, json_content_2, json_sha_2, json_identical = serialize_json(prospective_final_state, repo_root)
+    
+    if not json_identical:
+        raise RuntimeError("JSON double serialization failed - not byte-identical")
+    
+    print("Testing Markdown double rendering...")
+    md_content_1, md_sha_1, md_content_2, md_sha_2, md_identical = render_markdown(prospective_final_state)
+    
+    if not md_identical:
+        raise RuntimeError("Markdown double rendering failed - not byte-identical")
+    
+    core_checks["deterministic_serialization_passed"] = json_identical and md_identical
+    
+    # Q. Do not mutate final_state afterward
+    final_state = prospective_final_state
+    
+    # Add all_checks_passed as logical AND of other 31 checks
     all_validation_checks = [
         "exact_research_questions_passed", "analysis_domains_passed", "candidate_metadata_matches_current_pipeline",
         "metric_taxonomy_passed", "metric_direction_passed", "metric_count_is_14",
@@ -3262,21 +3277,29 @@ def main():
         "reviewer_traceability_passed", "roadmap_passed", "prohibited_claims_passed", "stage_gate_passed",
         "preservation_checks_passed", "deterministic_serialization_passed"
     ]
-    validation_results["all_checks_passed"] = all(validation_results[check] for check in all_validation_checks)
+    core_checks["all_checks_passed"] = all(core_checks[check] for check in all_validation_checks)
     
-    # O. Assert the exact 32-key validation schema before serialization
-    exact_required_set = set(all_validation_checks + ["all_checks_passed"])
-    assert len(validation_results) == 32, f"Expected 32 validation keys, got {len(validation_results)}"
-    assert set(validation_results.keys()) == exact_required_set, f"Validation keys do not match required set"
-    assert validation_results["all_checks_passed"] == all(validation_results[check] for check in all_validation_checks), "all_checks_passed does not match logical AND of all checks"
+    # Final self-audit assertions
+    assert len(core_checks) == 32, f"Expected 32 final checks, got {len(core_checks)}"
+    assert all(core_checks.values()), "Not all final checks are true"
+    assert "stage_gate_passed" not in set(pre_gate_checks), "stage_gate_passed should not be in pre_gate_checks"
+    assert all(
+        case["validator_name"] for case in provenance_negative_tests["cases"]
+    ), "Every negative-test case must contain validator_name"
+    assert all(
+        group["production_validator_used"] == (
+            group["all_cases_called_production_validator"]
+            and all(case["validator_returned_false"] is True for case in group["cases"])
+        )
+        for group in [provenance_negative_tests, reviewer_negative_tests, prohibited_claims_negative_tests]
+    ), "production_validator_used must be computed from cases, not hard-coded"
+    assert all(group["count_contract_passed"] for group in [provenance_negative_tests, reviewer_negative_tests, prohibited_claims_negative_tests]), "Every group count contract must pass"
+    assert global_count_contract_passed, "Global count contract must pass"
+    assert validator_negative_test_evidence["all_negative_tests_passed"], "Global all_negative_tests_passed must be true"
     
-    # Update validation_checks in prospective_final_state with final values (BEFORE rendering)
-    prospective_final_state["validation_checks"] = validation_results
-    
-    # Add validator-negative-test evidence (before rendering)
+    # Add complete validation_checks and other fields to prospective_final_state before serialization
+    prospective_final_state["validation_checks"] = core_checks
     prospective_final_state["validator_negative_test_evidence"] = validator_negative_test_evidence
-    
-    # Add non-self-referential serialization evidence (before rendering)
     prospective_final_state["serialization_evidence"] = {
         "json_double_render_required": True,
         "markdown_double_render_required": True,
@@ -3285,7 +3308,7 @@ def main():
         "self_referential_hashes_embedded": False
     }
     
-    # P. Render the exact prospective final state twice
+    # P. Serialize twice, write, reread, and verify bytes
     print("Testing JSON double serialization...")
     json_content_1, json_sha_1, json_content_2, json_sha_2, json_identical = serialize_json(prospective_final_state, repo_root)
     
@@ -3298,8 +3321,10 @@ def main():
     if not md_identical:
         raise RuntimeError("Markdown double rendering failed - not byte-identical")
     
-    # Q. Abort before writing if either double rendering differs (already verified above)
-    # R. Treat the successfully double-rendered state as immutable final_state
+    core_checks["deterministic_serialization_passed"] = json_identical and md_identical
+    
+    # Q. Do not mutate final_state afterward
+    final_state = prospective_final_state
     
     # K. Write the exact already-compared strings
     reports_dir = repo_root / "reports"
@@ -3339,13 +3364,13 @@ def main():
     print(f"Markdown SHA-256: {md_sha_1}")
     print(f"JSON double-serialization identical: {json_identical}")
     print(f"Markdown double-rendering identical: {md_identical}")
-    print(f"All validation checks passed: {validation_results['all_checks_passed']}")
+    print(f"All validation checks passed: {core_checks['all_checks_passed']}")
     print(f"Files checked for preservation: {preservation_evidence['files_checked']}")
     print(f"Files changed: {preservation_evidence['files_changed']}")
     print(f"All preserved: {preservation_evidence['all_preserved']}")
     print("")
     print("=== Detailed Validation ===")
-    for check_name, check_result in validation_results.items():
+    for check_name, check_result in core_checks.items():
         print(f"  {check_name}: {check_result}")
 
 
