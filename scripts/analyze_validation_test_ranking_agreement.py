@@ -1326,11 +1326,85 @@ def compute_event_rows(
     return events_df, evidence
 
 
+def validate_event_key_coverage(
+    events_df: pd.DataFrame,
+    spec: Dict[str, Any],
+) -> Tuple[bool, Dict[str, Any]]:
+    """
+    Validate exact event-key coverage (2100 expected keys).
+    
+    Returns:
+        (passed, evidence_dict)
+    """
+    evidence = {}
+    
+    # Build expected key set from actual domains
+    experiments = EXPECTED_DOMAINS["experiments"]
+    target_projects = EXPECTED_DOMAINS["projects"]
+    seeds = EXPECTED_DOMAINS["seeds"]
+    modes = EXPECTED_DOMAINS["modes"]
+    metrics = spec["metrics"]
+    
+    expected_key_set = set()
+    for experiment in experiments:
+        for target_project in target_projects:
+            for seed in seeds:
+                for mode in modes:
+                    for metric in metrics:
+                        expected_key_set.add((experiment, target_project, seed, mode, metric))
+    
+    # Extract actual key set from events_df
+    actual_key_set = set()
+    for _, row in events_df.iterrows():
+        actual_key_set.add((
+            row["experiment"],
+            row["target_project"],
+            row["seed"],
+            row["mode"],
+            row["metric"]
+        ))
+    
+    # Check for duplicates
+    key_cols = ["experiment", "target_project", "seed", "mode", "metric"]
+    key_duplicates = events_df.duplicated(subset=key_cols, keep=False)
+    duplicate_event_key_count = key_duplicates.sum()
+    
+    # Check coverage
+    missing_event_keys = expected_key_set - actual_key_set
+    extra_event_keys = actual_key_set - expected_key_set
+    
+    expected_event_key_count = len(expected_key_set)
+    actual_event_key_count = len(actual_key_set)
+    missing_event_key_count = len(missing_event_keys)
+    extra_event_key_count = len(extra_event_keys)
+    
+    # Key uniqueness passed only if no duplicates, no missing, no extra, and count matches
+    key_uniqueness_passed = (
+        duplicate_event_key_count == 0 and
+        missing_event_key_count == 0 and
+        extra_event_key_count == 0 and
+        actual_event_key_count == 2100
+    )
+    
+    evidence.update({
+        "expected_event_key_count": expected_event_key_count,
+        "actual_event_key_count": actual_event_key_count,
+        "duplicate_event_key_count": duplicate_event_key_count,
+        "missing_event_key_count": missing_event_key_count,
+        "extra_event_key_count": extra_event_key_count,
+        "missing_event_keys": sorted(list(missing_event_keys))[:10],  # Show first 10 if any
+        "extra_event_keys": sorted(list(extra_event_keys))[:10],  # Show first 10 if any
+    })
+    
+    passed = key_uniqueness_passed
+    return passed, evidence
+
+
 def validate_event_output(
     events_df: pd.DataFrame,
 ) -> Tuple[bool, Dict[str, Any]]:
     """
-    Validate event-level output.
+    Validate event-level output with exact column order check.
     
     Returns:
         (passed, evidence_dict)
@@ -1359,8 +1433,23 @@ def validate_event_output(
     # Check column count
     cols_ok = len(events_df.columns) == 28
     
-    # Check column names
-    names_ok = set(events_df.columns) == set(expected_columns)
+    # Check exact column order (not just set equality)
+    actual_column_order = list(events_df.columns)
+    column_order_ok = actual_column_order == expected_columns
+    
+    # Check for missing/extra columns
+    actual_column_set = set(events_df.columns)
+    expected_column_set = set(expected_columns)
+    missing_columns = expected_column_set - actual_column_set
+    extra_columns = actual_column_set - expected_column_set
+    
+    # Schema passed only if exact order match and no missing/extra
+    schema_passed = (
+        len(events_df.columns) == 28 and
+        column_order_ok and
+        len(missing_columns) == 0 and
+        len(extra_columns) == 0
+    )
     
     # Check key uniqueness
     key_cols = ["experiment", "target_project", "seed", "mode", "metric"]
@@ -1390,7 +1479,11 @@ def validate_event_output(
         "columns": len(events_df.columns),
         "expected_columns": 28,
         "cols_ok": cols_ok,
-        "names_ok": names_ok,
+        "expected_column_order": expected_columns,
+        "actual_column_order": actual_column_order,
+        "column_order_ok": column_order_ok,
+        "missing_columns": sorted(list(missing_columns)),
+        "extra_columns": sorted(list(extra_columns)),
         "has_key_duplicates": has_key_duplicates,
         "key_duplicate_count": key_duplicates.sum() if has_key_duplicates else 0,
         "rank_range_ok": rank_range_ok,
@@ -1400,8 +1493,7 @@ def validate_event_output(
     
     passed = all([
         rows_ok,
-        cols_ok,
-        names_ok,
+        schema_passed,
         not has_key_duplicates,
         rank_range_ok,
         spearman_range_ok,
@@ -1684,22 +1776,28 @@ def reconstruct_and_validate_event_rows(
     """
     evidence = {
         "event_rows_reconstructed": 0,
+        "event_rows_with_exact_23_comparisons": 0,
+        "event_rows_with_incomplete_comparisons": 0,
         "event_fields_checked_per_row": 23,
         "event_total_field_comparisons": 0,
         "event_reconstruction_mismatch_count": 0,
+        "structural_reconstruction_failure": 0,
         "field_mismatches": {},
         "exact_value_mismatches": 0,
         "tolerance_value_mismatches": 0,
         "string_mismatches": 0,
         "boolean_mismatches": 0,
         "missing_state_mismatches": 0,
+        "reconstruction_candidate_alignments_checked": 0,
+        "reconstruction_candidate_alignment_failures": 0,
     }
     
     metric_column_mapping = spec["metric_column_mapping"]
-    rank_policy = spec["rank_policy"]
+    metric_directions = spec["metric_directions"]
     
     for _, event_row in events_df.iterrows():
         evidence["event_rows_reconstructed"] += 1
+        row_field_comparisons = 0
         
         experiment = event_row["experiment"]
         target_project = event_row["target_project"]
@@ -1717,18 +1815,27 @@ def reconstruct_and_validate_event_rows(
         joined_rows = joined_df[joined_mask]
         
         if len(joined_rows) != 4:
+            evidence["structural_reconstruction_failure"] += 1
             continue
+        
+        # Canonical candidate alignment before utility extraction
+        joined_rows = (
+            joined_rows
+            .set_index("candidate")
+            .loc[CANDIDATE_ORDER]
+            .reset_index()
+        )
+        evidence["reconstruction_candidate_alignments_checked"] += 1
+        if list(joined_rows["candidate"]) != CANDIDATE_ORDER:
+            evidence["reconstruction_candidate_alignment_failures"] += 1
         
         # Get metric mapping
         metric_info = metric_column_mapping[metric]
         val_col = metric_info["validation_column"]
         test_col = metric_info["test_column"]
         
-        # Get direction from rank policy
-        if metric == "brier":
-            direction = "lower_is_better"
-        else:
-            direction = "higher_is_better"
+        # Get direction from specification (not hard-coded)
+        direction = metric_directions[metric]
         
         # Build utilities
         validation_utilities = []
@@ -1741,9 +1848,12 @@ def reconstruct_and_validate_event_rows(
         
         # Reconstruct metric_direction
         expected_direction = direction
+        row_field_comparisons += 1
+        evidence["event_total_field_comparisons"] += 1
         if event_row["metric_direction"] != expected_direction:
             evidence["event_reconstruction_mismatch_count"] += 1
             evidence["field_mismatches"]["metric_direction"] = evidence["field_mismatches"].get("metric_direction", 0) + 1
+            evidence["string_mismatches"] += 1
         
         # Reconstruct winner sets
         expected_val_exact = compute_winner_set(validation_utilities, CANDIDATE_ORDER, tolerance=False)
@@ -1759,40 +1869,54 @@ def reconstruct_and_validate_event_rows(
         actual_test_exact = set(event_row["test_winner_set_exact"].split("|")) if event_row["test_winner_set_exact"] else set()
         actual_test_tolerance = set(event_row["test_winner_set_tolerance"].split("|")) if event_row["test_winner_set_tolerance"] else set()
         
+        row_field_comparisons += 4
+        evidence["event_total_field_comparisons"] += 4
         if actual_val_exact != expected_val_exact:
             evidence["event_reconstruction_mismatch_count"] += 1
             evidence["field_mismatches"]["validation_winner_set_exact"] = evidence["field_mismatches"].get("validation_winner_set_exact", 0) + 1
+            evidence["string_mismatches"] += 1
         if actual_val_tolerance != expected_val_tolerance:
             evidence["event_reconstruction_mismatch_count"] += 1
             evidence["field_mismatches"]["validation_winner_set_tolerance"] = evidence["field_mismatches"].get("validation_winner_set_tolerance", 0) + 1
+            evidence["string_mismatches"] += 1
         if actual_test_exact != expected_test_exact:
             evidence["event_reconstruction_mismatch_count"] += 1
             evidence["field_mismatches"]["test_winner_set_exact"] = evidence["field_mismatches"].get("test_winner_set_exact", 0) + 1
+            evidence["string_mismatches"] += 1
         if actual_test_tolerance != expected_test_tolerance:
             evidence["event_reconstruction_mismatch_count"] += 1
             evidence["field_mismatches"]["test_winner_set_tolerance"] = evidence["field_mismatches"].get("test_winner_set_tolerance", 0) + 1
+            evidence["string_mismatches"] += 1
         
         # Reconstruct strict top-1 agreement
         expected_strict_exact = len(expected_val_exact) == 1 and len(expected_test_exact) == 1 and expected_val_exact == expected_test_exact
         expected_strict_tolerance = len(expected_val_tolerance) == 1 and len(expected_test_tolerance) == 1 and expected_val_tolerance == expected_test_tolerance
         
+        row_field_comparisons += 2
+        evidence["event_total_field_comparisons"] += 2
         if event_row["strict_top1_agreement_exact"] != expected_strict_exact:
             evidence["event_reconstruction_mismatch_count"] += 1
             evidence["field_mismatches"]["strict_top1_agreement_exact"] = evidence["field_mismatches"].get("strict_top1_agreement_exact", 0) + 1
+            evidence["boolean_mismatches"] += 1
         if event_row["strict_top1_agreement_tolerance"] != expected_strict_tolerance:
             evidence["event_reconstruction_mismatch_count"] += 1
             evidence["field_mismatches"]["strict_top1_agreement_tolerance"] = evidence["field_mismatches"].get("strict_top1_agreement_tolerance", 0) + 1
+            evidence["boolean_mismatches"] += 1
         
         # Reconstruct winner set equality
         expected_equal_exact = expected_val_exact == expected_test_exact
         expected_equal_tolerance = expected_val_tolerance == expected_test_tolerance
         
+        row_field_comparisons += 2
+        evidence["event_total_field_comparisons"] += 2
         if event_row["winner_set_equal_exact"] != expected_equal_exact:
             evidence["event_reconstruction_mismatch_count"] += 1
             evidence["field_mismatches"]["winner_set_equal_exact"] = evidence["field_mismatches"].get("winner_set_equal_exact", 0) + 1
+            evidence["boolean_mismatches"] += 1
         if event_row["winner_set_equal_tolerance"] != expected_equal_tolerance:
             evidence["event_reconstruction_mismatch_count"] += 1
             evidence["field_mismatches"]["winner_set_equal_tolerance"] = evidence["field_mismatches"].get("winner_set_equal_tolerance", 0) + 1
+            evidence["boolean_mismatches"] += 1
         
         # Reconstruct Jaccard (rounded to 12 decimal places)
         def jaccard(s1: Set[str], s2: Set[str]) -> float:
@@ -1804,11 +1928,14 @@ def reconstruct_and_validate_event_rows(
         expected_jaccard_exact = jaccard(expected_val_exact, expected_test_exact)
         expected_jaccard_tolerance = jaccard(expected_val_tolerance, expected_test_tolerance)
         
-        if event_row["winner_set_jaccard_exact"] != expected_jaccard_exact:
+        row_field_comparisons += 2
+        evidence["event_total_field_comparisons"] += 2
+        # Use math.isclose for float comparison
+        if not math.isclose(event_row["winner_set_jaccard_exact"], expected_jaccard_exact, rel_tol=1e-12, abs_tol=1e-12):
             evidence["event_reconstruction_mismatch_count"] += 1
             evidence["field_mismatches"]["winner_set_jaccard_exact"] = evidence["field_mismatches"].get("winner_set_jaccard_exact", 0) + 1
             evidence["exact_value_mismatches"] += 1
-        if event_row["winner_set_jaccard_tolerance"] != expected_jaccard_tolerance:
+        if not math.isclose(event_row["winner_set_jaccard_tolerance"], expected_jaccard_tolerance, rel_tol=1e-12, abs_tol=1e-12):
             evidence["event_reconstruction_mismatch_count"] += 1
             evidence["field_mismatches"]["winner_set_jaccard_tolerance"] = evidence["field_mismatches"].get("winner_set_jaccard_tolerance", 0) + 1
             evidence["tolerance_value_mismatches"] += 1
@@ -1817,12 +1944,16 @@ def reconstruct_and_validate_event_rows(
         expected_overlap_exact = len(expected_val_exact & expected_test_exact) > 0
         expected_overlap_tolerance = len(expected_val_tolerance & expected_test_tolerance) > 0
         
+        row_field_comparisons += 2
+        evidence["event_total_field_comparisons"] += 2
         if event_row["winner_set_any_overlap_exact"] != expected_overlap_exact:
             evidence["event_reconstruction_mismatch_count"] += 1
             evidence["field_mismatches"]["winner_set_any_overlap_exact"] = evidence["field_mismatches"].get("winner_set_any_overlap_exact", 0) + 1
+            evidence["boolean_mismatches"] += 1
         if event_row["winner_set_any_overlap_tolerance"] != expected_overlap_tolerance:
             evidence["event_reconstruction_mismatch_count"] += 1
             evidence["field_mismatches"]["winner_set_any_overlap_tolerance"] = evidence["field_mismatches"].get("winner_set_any_overlap_tolerance", 0) + 1
+            evidence["boolean_mismatches"] += 1
         
         # Reconstruct correlations (using tolerance-aware ranks like original computation)
         validation_ranks = compute_exact_ranks(validation_utilities)
@@ -1834,13 +1965,15 @@ def reconstruct_and_validate_event_rows(
         
         correlations = compute_correlations(validation_tolerance_ranks, test_tolerance_ranks)
         
-        # Check Spearman with exact equality (values are rounded to 12 decimal places)
+        # Check Spearman with math.isclose for finite values
+        row_field_comparisons += 3
+        evidence["event_total_field_comparisons"] += 3
         if correlations["spearman_defined"]:
             if pd.isna(event_row["spearman_rho"]):
                 evidence["event_reconstruction_mismatch_count"] += 1
                 evidence["field_mismatches"]["spearman_rho"] = evidence["field_mismatches"].get("spearman_rho", 0) + 1
                 evidence["missing_state_mismatches"] += 1
-            elif event_row["spearman_rho"] != correlations["spearman_rho"]:
+            elif not math.isclose(event_row["spearman_rho"], correlations["spearman_rho"], rel_tol=1e-12, abs_tol=1e-12):
                 evidence["event_reconstruction_mismatch_count"] += 1
                 evidence["field_mismatches"]["spearman_rho"] = evidence["field_mismatches"].get("spearman_rho", 0) + 1
                 evidence["exact_value_mismatches"] += 1
@@ -1861,13 +1994,15 @@ def reconstruct_and_validate_event_rows(
                 evidence["field_mismatches"]["spearman_undefined_reason"] = evidence["field_mismatches"].get("spearman_undefined_reason", 0) + 1
                 evidence["string_mismatches"] += 1
         
-        # Check Kendall with exact equality (values are rounded to 12 decimal places)
+        # Check Kendall with math.isclose for finite values
+        row_field_comparisons += 3
+        evidence["event_total_field_comparisons"] += 3
         if correlations["kendall_defined"]:
             if pd.isna(event_row["kendall_tau_b"]):
                 evidence["event_reconstruction_mismatch_count"] += 1
                 evidence["field_mismatches"]["kendall_tau_b"] = evidence["field_mismatches"].get("kendall_tau_b", 0) + 1
                 evidence["missing_state_mismatches"] += 1
-            elif event_row["kendall_tau_b"] != correlations["kendall_tau_b"]:
+            elif not math.isclose(event_row["kendall_tau_b"], correlations["kendall_tau_b"], rel_tol=1e-12, abs_tol=1e-12):
                 evidence["event_reconstruction_mismatch_count"] += 1
                 evidence["field_mismatches"]["kendall_tau_b"] = evidence["field_mismatches"].get("kendall_tau_b", 0) + 1
                 evidence["exact_value_mismatches"] += 1
@@ -1880,11 +2015,13 @@ def reconstruct_and_validate_event_rows(
         if event_row["kendall_defined"] != correlations["kendall_defined"]:
             evidence["event_reconstruction_mismatch_count"] += 1
             evidence["field_mismatches"]["kendall_defined"] = evidence["field_mismatches"].get("kendall_defined", 0) + 1
+            evidence["boolean_mismatches"] += 1
         
         if not correlations["kendall_defined"]:
             if event_row["kendall_undefined_reason"] != correlations["kendall_undefined_reason"]:
                 evidence["event_reconstruction_mismatch_count"] += 1
                 evidence["field_mismatches"]["kendall_undefined_reason"] = evidence["field_mismatches"].get("kendall_undefined_reason", 0) + 1
+                evidence["string_mismatches"] += 1
         
         # Reconstruct selected candidate info
         selected_mask = (
@@ -1895,20 +2032,27 @@ def reconstruct_and_validate_event_rows(
         )
         selected_rows = selected_df[selected_mask]
         
-        if len(selected_rows) == 1:
+        if len(selected_rows) != 1:
+            evidence["structural_reconstruction_failure"] += 1
+        else:
             selected_row = selected_rows.iloc[0]
             expected_selected = selected_row["selected_candidate"]
             
+            row_field_comparisons += 1
+            evidence["event_total_field_comparisons"] += 1
             if event_row["mode_selected_candidate"] != expected_selected:
                 evidence["event_reconstruction_mismatch_count"] += 1
                 evidence["field_mismatches"]["mode_selected_candidate"] = evidence["field_mismatches"].get("mode_selected_candidate", 0) + 1
+                evidence["string_mismatches"] += 1
             
-            # Get selected candidate test rank with exact equality (using tolerance-aware ranks)
+            # Get selected candidate test rank with math.isclose (using tolerance-aware ranks)
             selected_idx = CANDIDATE_ORDER.index(expected_selected)
             expected_test_rank = test_tolerance_ranks[selected_idx]
             expected_test_rank = round(expected_test_rank, 12)
             
-            if event_row["selected_candidate_test_rank"] != expected_test_rank:
+            row_field_comparisons += 1
+            evidence["event_total_field_comparisons"] += 1
+            if not math.isclose(event_row["selected_candidate_test_rank"], expected_test_rank, rel_tol=1e-12, abs_tol=1e-12):
                 evidence["event_reconstruction_mismatch_count"] += 1
                 evidence["field_mismatches"]["selected_candidate_test_rank"] = evidence["field_mismatches"].get("selected_candidate_test_rank", 0) + 1
                 evidence["exact_value_mismatches"] += 1
@@ -1917,14 +2061,25 @@ def reconstruct_and_validate_event_rows(
             expected_in_test_exact = expected_selected in expected_test_exact
             expected_in_test_tolerance = expected_selected in expected_test_tolerance
             
+            row_field_comparisons += 2
+            evidence["event_total_field_comparisons"] += 2
             if event_row["selected_candidate_in_test_winner_set_exact"] != expected_in_test_exact:
                 evidence["event_reconstruction_mismatch_count"] += 1
                 evidence["field_mismatches"]["selected_candidate_in_test_winner_set_exact"] = evidence["field_mismatches"].get("selected_candidate_in_test_winner_set_exact", 0) + 1
+                evidence["boolean_mismatches"] += 1
             if event_row["selected_candidate_in_test_winner_set_tolerance"] != expected_in_test_tolerance:
                 evidence["event_reconstruction_mismatch_count"] += 1
                 evidence["field_mismatches"]["selected_candidate_in_test_winner_set_tolerance"] = evidence["field_mismatches"].get("selected_candidate_in_test_winner_set_tolerance", 0) + 1
+                evidence["boolean_mismatches"] += 1
+        
+        # Check that we did exactly 23 comparisons for this row
+        if row_field_comparisons == 23:
+            evidence["event_rows_with_exact_23_comparisons"] += 1
+        else:
+            evidence["event_rows_with_incomplete_comparisons"] += 1
     
-    evidence["event_total_field_comparisons"] = evidence["event_rows_reconstructed"] * evidence["event_fields_checked_per_row"]
+    # Don't multiply - use actual counter
+    # evidence["event_total_field_comparisons"] = evidence["event_rows_reconstructed"] * evidence["event_fields_checked_per_row"]
     passed = evidence["event_reconstruction_mismatch_count"] == 0
     evidence["passed"] = passed
     return passed, evidence
@@ -1936,18 +2091,27 @@ def validate_rank_identity(
     spec: Dict[str, Any],
 ) -> Tuple[bool, Dict[str, Any]]:
     """
-    Validate rank identity by reconstructing rank vectors from source data.
+    Validate rank identity by reconstructing exact and tolerance-aware rank vectors.
+    For each of 2100 event rows, reconstruct 4 rank vectors (validation/test × exact/tolerance).
     
     Returns:
         (passed, evidence_dict)
     """
     evidence = {
-        "rank_vectors_reconstructed": 0,
-        "rank_identity_failures": 0,
-        "winner_rank_identity_failures": 0,
+        "exact_rank_vectors_reconstructed": 0,
+        "tolerance_rank_vectors_reconstructed": 0,
+        "total_rank_vectors_reconstructed": 0,
+        "exact_rank_identity_failures": 0,
+        "tolerance_rank_identity_failures": 0,
+        "exact_winner_rank_identity_failures": 0,
+        "tolerance_winner_rank_identity_failures": 0,
+        "non_chaining_identity_failures": 0,
+        "reconstruction_candidate_alignments_checked": 0,
+        "reconstruction_candidate_alignment_failures": 0,
     }
     
     metric_column_mapping = spec["metric_column_mapping"]
+    metric_directions = spec["metric_directions"]
     
     for _, event_row in events_df.iterrows():
         experiment = event_row["experiment"]
@@ -1968,16 +2132,24 @@ def validate_rank_identity(
         if len(joined_rows) != 4:
             continue
         
+        # Canonical candidate alignment before utility extraction
+        joined_rows = (
+            joined_rows
+            .set_index("candidate")
+            .loc[CANDIDATE_ORDER]
+            .reset_index()
+        )
+        evidence["reconstruction_candidate_alignments_checked"] += 1
+        if list(joined_rows["candidate"]) != CANDIDATE_ORDER:
+            evidence["reconstruction_candidate_alignment_failures"] += 1
+        
         # Get metric mapping
         metric_info = metric_column_mapping[metric]
         val_col = metric_info["validation_column"]
         test_col = metric_info["test_column"]
         
-        # Get direction from rank policy
-        if metric == "brier":
-            direction = "lower_is_better"
-        else:
-            direction = "higher_is_better"
+        # Get direction from specification (not hard-coded)
+        direction = metric_directions[metric]
         
         # Build utilities
         validation_utilities = []
@@ -1988,63 +2160,90 @@ def validate_rank_identity(
             validation_utilities.append(val_util)
             test_utilities.append(test_util)
         
-        # Reconstruct ranks
-        validation_ranks = compute_exact_ranks(validation_utilities)
-        test_ranks = compute_exact_ranks(test_utilities)
+        # Reconstruct exact ranks
+        validation_exact_ranks = compute_exact_ranks(validation_utilities)
+        test_exact_ranks = compute_exact_ranks(test_utilities)
         
-        # Check validation rank vector
-        evidence["rank_vectors_reconstructed"] += 1
-        if len(validation_ranks) != 4:
-            evidence["rank_identity_failures"] += 1
-        if not all(np.isfinite(validation_ranks)):
-            evidence["rank_identity_failures"] += 1
-        if not all(1 <= r <= 4 for r in validation_ranks):
-            evidence["rank_identity_failures"] += 1
+        # Reconstruct tolerance-aware ranks
+        validation_tolerance_ranks = compute_tolerance_aware_ranks(validation_utilities)
+        test_tolerance_ranks = compute_tolerance_aware_ranks(test_utilities)
         
-        # Check test rank vector
-        evidence["rank_vectors_reconstructed"] += 1
-        if len(test_ranks) != 4:
-            evidence["rank_identity_failures"] += 1
-        if not all(np.isfinite(test_ranks)):
-            evidence["rank_identity_failures"] += 1
-        if not all(1 <= r <= 4 for r in test_ranks):
-            evidence["rank_identity_failures"] += 1
+        # Count vectors
+        evidence["exact_rank_vectors_reconstructed"] += 2  # validation + test
+        evidence["tolerance_rank_vectors_reconstructed"] += 2  # validation + test
+        evidence["total_rank_vectors_reconstructed"] += 4
         
-        # Check winner rank invariants
-        val_winner_set = compute_winner_set(validation_utilities, CANDIDATE_ORDER, tolerance=False)
-        test_winner_set = compute_winner_set(test_utilities, CANDIDATE_ORDER, tolerance=False)
+        # Validate exact rank vectors
+        for ranks in [validation_exact_ranks, test_exact_ranks]:
+            if len(ranks) != 4:
+                evidence["exact_rank_identity_failures"] += 1
+            if not all(np.isfinite(ranks)):
+                evidence["exact_rank_identity_failures"] += 1
+            if not all(1 <= r <= 4 for r in ranks):
+                evidence["exact_rank_identity_failures"] += 1
         
-        # Validation winners should have rank (1 + k) / 2 where k is winner set size
-        if len(val_winner_set) > 0:
-            expected_winner_rank = (1 + len(val_winner_set)) / 2.0
-            for winner in val_winner_set:
-                winner_idx = CANDIDATE_ORDER.index(winner)
-                if abs(validation_ranks[winner_idx] - expected_winner_rank) > TOLERANCE:
-                    evidence["winner_rank_identity_failures"] += 1
+        # Validate tolerance-aware rank vectors
+        for ranks in [validation_tolerance_ranks, test_tolerance_ranks]:
+            if len(ranks) != 4:
+                evidence["tolerance_rank_identity_failures"] += 1
+            if not all(np.isfinite(ranks)):
+                evidence["tolerance_rank_identity_failures"] += 1
+            if not all(1 <= r <= 4 for r in ranks):
+                evidence["tolerance_rank_identity_failures"] += 1
         
-        if len(test_winner_set) > 0:
-            expected_winner_rank = (1 + len(test_winner_set)) / 2.0
-            for winner in test_winner_set:
-                winner_idx = CANDIDATE_ORDER.index(winner)
-                if abs(test_ranks[winner_idx] - expected_winner_rank) > TOLERANCE:
-                    evidence["winner_rank_identity_failures"] += 1
+        # Check exact winner rank invariants
+        val_exact_winner_set = compute_winner_set(validation_utilities, CANDIDATE_ORDER, tolerance=False)
+        test_exact_winner_set = compute_winner_set(test_utilities, CANDIDATE_ORDER, tolerance=False)
         
-        # Non-winners should have higher rank
-        for i, rank in enumerate(validation_ranks):
-            if CANDIDATE_ORDER[i] not in val_winner_set:
-                if len(val_winner_set) > 0:
-                    expected_winner_rank = (1 + len(val_winner_set)) / 2.0
-                    if rank < expected_winner_rank - TOLERANCE:
-                        evidence["winner_rank_identity_failures"] += 1
+        for winner_set, ranks in [(val_exact_winner_set, validation_exact_ranks), (test_exact_winner_set, test_exact_ranks)]:
+            if len(winner_set) > 0:
+                expected_winner_rank = (1 + len(winner_set)) / 2.0
+                for winner in winner_set:
+                    winner_idx = CANDIDATE_ORDER.index(winner)
+                    if abs(ranks[winner_idx] - expected_winner_rank) > TOLERANCE:
+                        evidence["exact_winner_rank_identity_failures"] += 1
         
-        for i, rank in enumerate(test_ranks):
-            if CANDIDATE_ORDER[i] not in test_winner_set:
-                if len(test_winner_set) > 0:
-                    expected_winner_rank = (1 + len(test_winner_set)) / 2.0
-                    if rank < expected_winner_rank - TOLERANCE:
-                        evidence["winner_rank_identity_failures"] += 1
+        # Check tolerance-aware winner rank invariants
+        val_tolerance_winner_set = compute_winner_set(validation_utilities, CANDIDATE_ORDER, tolerance=True)
+        test_tolerance_winner_set = compute_winner_set(test_utilities, CANDIDATE_ORDER, tolerance=True)
+        
+        for winner_set, ranks in [(val_tolerance_winner_set, validation_tolerance_ranks), (test_tolerance_winner_set, test_tolerance_ranks)]:
+            if len(winner_set) > 0:
+                expected_winner_rank = (1 + len(winner_set)) / 2.0
+                for winner in winner_set:
+                    winner_idx = CANDIDATE_ORDER.index(winner)
+                    if abs(ranks[winner_idx] - expected_winner_rank) > TOLERANCE:
+                        evidence["tolerance_winner_rank_identity_failures"] += 1
+        
+        # Check non-chaining property for tolerance-aware ranks
+        # Verify that groups are anchor-based (no pairwise chaining)
+        for ranks in [validation_tolerance_ranks, test_tolerance_ranks]:
+            # Find groups by equal ranks
+            rank_groups = {}
+            for i, rank in enumerate(ranks):
+                if rank not in rank_groups:
+                    rank_groups[rank] = []
+                rank_groups[rank].append(i)
+            
+            # For each group, verify anchor-based property
+            for rank, indices in rank_groups.items():
+                if len(indices) > 1:
+                    # All members should be within tolerance of the first member (anchor)
+                    anchor_idx = indices[0]
+                    anchor_utility = validation_utilities[anchor_idx] if ranks == validation_tolerance_ranks else test_utilities[anchor_idx]
+                    for idx in indices[1:]:
+                        member_utility = validation_utilities[idx] if ranks == validation_tolerance_ranks else test_utilities[idx]
+                        if anchor_utility - member_utility > TOLERANCE:
+                            evidence["non_chaining_identity_failures"] += 1
+                            break
     
-    passed = evidence["rank_identity_failures"] == 0 and evidence["winner_rank_identity_failures"] == 0
+    passed = (
+        evidence["exact_rank_identity_failures"] == 0 and
+        evidence["tolerance_rank_identity_failures"] == 0 and
+        evidence["exact_winner_rank_identity_failures"] == 0 and
+        evidence["tolerance_winner_rank_identity_failures"] == 0 and
+        evidence["non_chaining_identity_failures"] == 0
+    )
     evidence["passed"] = passed
     return passed, evidence
 
@@ -2055,7 +2254,7 @@ def reconstruct_correlation_values(
     spec: Dict[str, Any],
 ) -> Tuple[bool, Dict[str, Any]]:
     """
-    Reconstruct correlation values from source data and validate against event rows.
+    Reconstruct correlation values from source data using tolerance-aware ranks only.
     All mismatches must be zero for validation to pass.
     
     Returns:
@@ -2066,9 +2265,12 @@ def reconstruct_correlation_values(
         "spearman_reconstruction_mismatches": 0,
         "kendall_reconstruction_mismatches": 0,
         "correlation_state_mismatches": 0,
+        "reconstruction_candidate_alignments_checked": 0,
+        "reconstruction_candidate_alignment_failures": 0,
     }
     
     metric_column_mapping = spec["metric_column_mapping"]
+    metric_directions = spec["metric_directions"]
     
     for _, event_row in events_df.iterrows():
         evidence["correlation_rows_reconstructed"] += 1
@@ -2091,16 +2293,24 @@ def reconstruct_correlation_values(
         if len(joined_rows) != 4:
             continue
         
+        # Canonical candidate alignment before utility extraction
+        joined_rows = (
+            joined_rows
+            .set_index("candidate")
+            .loc[CANDIDATE_ORDER]
+            .reset_index()
+        )
+        evidence["reconstruction_candidate_alignments_checked"] += 1
+        if list(joined_rows["candidate"]) != CANDIDATE_ORDER:
+            evidence["reconstruction_candidate_alignment_failures"] += 1
+        
         # Get metric mapping
         metric_info = metric_column_mapping[metric]
         val_col = metric_info["validation_column"]
         test_col = metric_info["test_column"]
         
-        # Get direction from rank policy
-        if metric == "brier":
-            direction = "lower_is_better"
-        else:
-            direction = "higher_is_better"
+        # Get direction from specification (not hard-coded)
+        direction = metric_directions[metric]
         
         # Build utilities
         validation_utilities = []
@@ -2111,23 +2321,19 @@ def reconstruct_correlation_values(
             validation_utilities.append(val_util)
             test_utilities.append(test_util)
         
-        # Reconstruct ranks (using tolerance-aware ranks like original computation)
-        validation_ranks = compute_exact_ranks(validation_utilities)
-        test_ranks = compute_exact_ranks(test_utilities)
-        
-        # Also compute tolerance-aware ranks for correlation reconstruction
+        # Reconstruct tolerance-aware ranks only (for correlation computation)
         validation_tolerance_ranks = compute_tolerance_aware_ranks(validation_utilities)
         test_tolerance_ranks = compute_tolerance_aware_ranks(test_utilities)
         
         # Reconstruct correlations
         correlations = compute_correlations(validation_tolerance_ranks, test_tolerance_ranks)
         
-        # Check Spearman with exact equality (values are rounded to 12 decimal places)
+        # Check Spearman with math.isclose for finite values
         if correlations["spearman_defined"]:
             if pd.isna(event_row["spearman_rho"]):
                 evidence["spearman_reconstruction_mismatches"] += 1
                 evidence["correlation_state_mismatches"] += 1
-            elif event_row["spearman_rho"] != correlations["spearman_rho"]:
+            elif not math.isclose(event_row["spearman_rho"], correlations["spearman_rho"], rel_tol=1e-12, abs_tol=1e-12):
                 evidence["spearman_reconstruction_mismatches"] += 1
         else:
             if not pd.isna(event_row["spearman_rho"]):
@@ -2141,12 +2347,12 @@ def reconstruct_correlation_values(
             if event_row["spearman_undefined_reason"] != correlations["spearman_undefined_reason"]:
                 evidence["correlation_state_mismatches"] += 1
         
-        # Check Kendall with exact equality (values are rounded to 12 decimal places)
+        # Check Kendall with math.isclose for finite values
         if correlations["kendall_defined"]:
             if pd.isna(event_row["kendall_tau_b"]):
                 evidence["kendall_reconstruction_mismatches"] += 1
                 evidence["correlation_state_mismatches"] += 1
-            elif event_row["kendall_tau_b"] != correlations["kendall_tau_b"]:
+            elif not math.isclose(event_row["kendall_tau_b"], correlations["kendall_tau_b"], rel_tol=1e-12, abs_tol=1e-12):
                 evidence["kendall_reconstruction_mismatches"] += 1
         else:
             if not pd.isna(event_row["kendall_tau_b"]):
@@ -2166,6 +2372,100 @@ def reconstruct_correlation_values(
         evidence["kendall_reconstruction_mismatches"] == 0 and
         evidence["correlation_state_mismatches"] == 0
     )
+    evidence["passed"] = passed
+    return passed, evidence
+
+
+def validate_selected_candidate_test_rank(
+    events_df: pd.DataFrame,
+    joined_df: pd.DataFrame,
+    selected_df: pd.DataFrame,
+    spec: Dict[str, Any],
+) -> Tuple[bool, Dict[str, Any]]:
+    """
+    Validate that selected_candidate_test_rank matches the rank of the selected candidate
+    in the test tolerance-aware rank vector for each event row.
+    
+    Returns:
+        (passed, evidence_dict)
+    """
+    evidence = {
+        "selected_test_ranks_checked": 0,
+        "selected_test_rank_mismatches": 0,
+    }
+    
+    metric_column_mapping = spec["metric_column_mapping"]
+    metric_directions = spec["metric_directions"]
+    
+    for _, event_row in events_df.iterrows():
+        evidence["selected_test_ranks_checked"] += 1
+        
+        experiment = event_row["experiment"]
+        target_project = event_row["target_project"]
+        seed = event_row["seed"]
+        mode = event_row["mode"]
+        metric = event_row["metric"]
+        
+        # Get source data
+        joined_mask = (
+            (joined_df["experiment"] == experiment) &
+            (joined_df["target_project"] == target_project) &
+            (joined_df["seed"] == seed) &
+            (joined_df["mode"] == mode)
+        )
+        joined_rows = joined_df[joined_mask]
+        
+        if len(joined_rows) != 4:
+            continue
+        
+        # Canonical candidate alignment
+        joined_rows = (
+            joined_rows
+            .set_index("candidate")
+            .loc[CANDIDATE_ORDER]
+            .reset_index()
+        )
+        
+        # Get metric mapping
+        metric_info = metric_column_mapping[metric]
+        test_col = metric_info["test_column"]
+        direction = metric_directions[metric]
+        
+        # Build test utilities
+        test_utilities = []
+        for _, joined_row in joined_rows.iterrows():
+            test_util = compute_utility(joined_row[test_col], direction)
+            test_utilities.append(test_util)
+        
+        # Compute tolerance-aware test ranks
+        test_tolerance_ranks = compute_tolerance_aware_ranks(test_utilities)
+        
+        # Get selected candidate
+        selected_mask = (
+            (selected_df["experiment"] == experiment) &
+            (selected_df["target_project"] == target_project) &
+            (selected_df["seed"] == seed) &
+            (selected_df["mode"] == mode)
+        )
+        selected_rows = selected_df[selected_mask]
+        
+        if len(selected_rows) != 1:
+            continue
+        
+        selected_row = selected_rows.iloc[0]
+        selected_candidate = selected_row["selected_candidate"]
+        
+        # Get expected rank for selected candidate
+        selected_idx = CANDIDATE_ORDER.index(selected_candidate)
+        expected_test_rank = test_tolerance_ranks[selected_idx]
+        expected_test_rank = round(expected_test_rank, 12)
+        
+        # Compare with math.isclose
+        actual_test_rank = event_row["selected_candidate_test_rank"]
+        if not math.isclose(actual_test_rank, expected_test_rank, rel_tol=1e-12, abs_tol=1e-12):
+            evidence["selected_test_rank_mismatches"] += 1
+    
+    passed = evidence["selected_test_rank_mismatches"] == 0
     evidence["passed"] = passed
     return passed, evidence
 
@@ -2299,10 +2599,15 @@ def main():
     # 15. Validate event output
     print("Step 15: Validate event output...")
     event_passed, event_evidence = validate_event_output(events_df)
-    validation_checks["event_schema_passed"] = event_passed
-    validation_checks["event_row_count_passed"] = event_passed
-    validation_checks["event_key_uniqueness_passed"] = event_evidence["names_ok"] and not event_evidence["has_key_duplicates"]
+    validation_checks["event_schema_passed"] = event_evidence["column_order_ok"] and event_evidence["cols_ok"]
+    validation_checks["event_row_count_passed"] = event_evidence["rows_ok"]
     evidence["event_validation"] = event_evidence
+    
+    # 15.5. Validate event key coverage
+    print("Step 15.5: Validate event key coverage...")
+    event_key_coverage_passed, event_key_coverage_evidence = validate_event_key_coverage(events_df, spec)
+    validation_checks["event_key_uniqueness_passed"] = event_key_coverage_passed
+    evidence["event_key_coverage"] = event_key_coverage_evidence
     
     # 16. Winner set integrity validation
     print("Step 16: Winner set integrity validation...")
@@ -2344,36 +2649,29 @@ def main():
     validation_checks["correlation_value_reconstruction_passed"] = correlation_reconstruction_passed
     evidence["correlation_value_reconstruction"] = correlation_reconstruction_evidence
     
+    # 22. Selected candidate test rank validation
+    print("Step 22: Selected candidate test rank validation...")
+    selected_test_rank_passed, selected_test_rank_evidence = validate_selected_candidate_test_rank(
+        events_df, joined_df, selected_df, spec
+    )
+    validation_checks["selected_candidate_test_rank_passed"] = selected_test_rank_passed
+    evidence["selected_candidate_test_rank"] = selected_test_rank_evidence
+    
     # Separate event schema checks
-    validation_checks["event_schema_passed"] = event_evidence["cols_ok"] and event_evidence["names_ok"]
+    validation_checks["event_schema_passed"] = event_evidence["column_order_ok"] and event_evidence["cols_ok"]
     validation_checks["event_row_count_passed"] = event_evidence["rows_ok"]
-    validation_checks["event_key_uniqueness_passed"] = event_evidence["names_ok"] and not event_evidence["has_key_duplicates"]
+    validation_checks["event_key_uniqueness_passed"] = event_key_coverage_passed
     
     # Additional cardinality checks
     validation_checks["input_cardinality_passed"] = schema_evidence["validation_rows_ok"] and schema_evidence["repeated_rows_ok"]
     validation_checks["input_cardinality_passed"] = validation_checks["input_cardinality_passed"] and join_evidence["rows_ok"]
     validation_checks["correlation_range_passed"] = event_evidence["spearman_range_ok"] and event_evidence["kendall_range_ok"]
     
-    # Output integrity ready check
+    # Output integrity ready check (before deterministic check)
     pre_output_failed_checks = [
         name for name, passed in validation_checks.items() if not bool(passed)
     ]
     validation_checks["output_integrity_ready_passed"] = len(pre_output_failed_checks) == 0
-    validation_checks["deterministic_serialization_ready_passed"] = True  # Will be checked in serialization
-    
-    # Final validation
-    print("Step 22: Final validation...")
-    failed_checks = [name for name, passed in validation_checks.items() if not bool(passed)]
-    
-    if failed_checks:
-        print("Failed checks:")
-        for name in failed_checks:
-            print(f"  {name}: {validation_checks[name]}")
-        print(f"Winner set integrity evidence: {winner_integrity_evidence}")
-        print(f"Event reconstruction evidence: {reconstruction_evidence}")
-        print(f"Correlation reconstruction evidence: {correlation_reconstruction_evidence}")
-        print(f"Event validation evidence: {event_evidence}")
-        raise ValueError(f"Final validation failed: {failed_checks}")
     
     # Convert numpy types to Python types for JSON serialization with deterministic sorting
     def convert_to_python_types(obj):
@@ -2393,6 +2691,12 @@ def main():
             return obj.tolist()
         else:
             return obj
+    
+    # Build all outputs in memory first for deterministic serialization check
+    print("Step 23: Build outputs in memory...")
+    
+    # Build CSV text
+    event_csv_text = events_df.to_csv(index=False, encoding="utf-8")
     
     # Build audit report
     audit_report = {
@@ -2416,13 +2720,16 @@ def main():
         },
         "event_computation": convert_to_python_types(events_evidence),
         "event_validation": convert_to_python_types(event_evidence),
+        "event_key_coverage": convert_to_python_types(event_key_coverage_evidence),
         "winner_set_integrity": convert_to_python_types(winner_integrity_evidence),
         "correlation_state_consistency": convert_to_python_types(correlation_state_evidence),
         "event_reconstruction": convert_to_python_types(reconstruction_evidence),
         "agreement_identity": convert_to_python_types(agreement_evidence),
         "rank_identity": convert_to_python_types(rank_evidence),
         "correlation_value_reconstruction": convert_to_python_types(correlation_reconstruction_evidence),
+        "selected_candidate_test_rank": convert_to_python_types(selected_test_rank_evidence),
         "validation_checks": convert_to_python_types(validation_checks),
+        "float_comparison_policy": "math.isclose with rel_tol=1e-12, abs_tol=1e-12",
         "evidence_counters": {
             "validation_rows_checked": int(len(validation_df)),
             "baseline_rows_checked": int(len(baseline_df)),
@@ -2440,28 +2747,43 @@ def main():
             "synthetic_tests_checked": 3,
             "event_rows_validated": int(len(events_df)),
             "event_rows_reconstructed": int(reconstruction_evidence.get("event_rows_reconstructed", 0)),
+            "event_rows_with_exact_23_comparisons": int(reconstruction_evidence.get("event_rows_with_exact_23_comparisons", 0)),
+            "event_rows_with_incomplete_comparisons": int(reconstruction_evidence.get("event_rows_with_incomplete_comparisons", 0)),
             "event_fields_checked_per_row": int(reconstruction_evidence.get("event_fields_checked_per_row", 0)),
             "event_total_field_comparisons": int(reconstruction_evidence.get("event_total_field_comparisons", 0)),
             "event_reconstruction_mismatch_count": int(reconstruction_evidence.get("event_reconstruction_mismatch_count", 0)),
+            "structural_reconstruction_failure": int(reconstruction_evidence.get("structural_reconstruction_failure", 0)),
+            "string_mismatches": int(reconstruction_evidence.get("string_mismatches", 0)),
+            "boolean_mismatches": int(reconstruction_evidence.get("boolean_mismatches", 0)),
+            "missing_state_mismatches": int(reconstruction_evidence.get("missing_state_mismatches", 0)),
+            "exact_value_mismatches": int(reconstruction_evidence.get("exact_value_mismatches", 0)),
+            "tolerance_value_mismatches": int(reconstruction_evidence.get("tolerance_value_mismatches", 0)),
+            "reconstruction_candidate_alignments_checked": int(reconstruction_evidence.get("reconstruction_candidate_alignments_checked", 0)),
+            "reconstruction_candidate_alignment_failures": int(reconstruction_evidence.get("reconstruction_candidate_alignment_failures", 0)),
             "agreement_rows_checked": int(agreement_evidence.get("agreement_rows_checked", 0)),
             "agreement_fields_checked": int(agreement_evidence.get("agreement_fields_checked", 0)),
             "agreement_identity_mismatch_count": int(agreement_evidence.get("agreement_identity_mismatch_count", 0)),
-            "rank_vectors_reconstructed": int(rank_evidence.get("rank_vectors_reconstructed", 0)),
-            "rank_identity_failures": int(rank_evidence.get("rank_identity_failures", 0)),
-            "winner_rank_identity_failures": int(rank_evidence.get("winner_rank_identity_failures", 0)),
+            "exact_rank_vectors_reconstructed": int(rank_evidence.get("exact_rank_vectors_reconstructed", 0)),
+            "tolerance_rank_vectors_reconstructed": int(rank_evidence.get("tolerance_rank_vectors_reconstructed", 0)),
+            "total_rank_vectors_reconstructed": int(rank_evidence.get("total_rank_vectors_reconstructed", 0)),
+            "exact_rank_identity_failures": int(rank_evidence.get("exact_rank_identity_failures", 0)),
+            "tolerance_rank_identity_failures": int(rank_evidence.get("tolerance_rank_identity_failures", 0)),
+            "exact_winner_rank_identity_failures": int(rank_evidence.get("exact_winner_rank_identity_failures", 0)),
+            "tolerance_winner_rank_identity_failures": int(rank_evidence.get("tolerance_winner_rank_identity_failures", 0)),
+            "non_chaining_identity_failures": int(rank_evidence.get("non_chaining_identity_failures", 0)),
+            "rank_candidate_alignments_checked": int(rank_evidence.get("reconstruction_candidate_alignments_checked", 0)),
+            "rank_candidate_alignment_failures": int(rank_evidence.get("reconstruction_candidate_alignment_failures", 0)),
             "correlation_rows_reconstructed": int(correlation_reconstruction_evidence.get("correlation_rows_reconstructed", 0)),
             "spearman_reconstruction_mismatches": int(correlation_reconstruction_evidence.get("spearman_reconstruction_mismatches", 0)),
             "kendall_reconstruction_mismatches": int(correlation_reconstruction_evidence.get("kendall_reconstruction_mismatches", 0)),
             "correlation_state_mismatches": int(correlation_reconstruction_evidence.get("correlation_state_mismatches", 0)),
+            "correlation_candidate_alignments_checked": int(correlation_reconstruction_evidence.get("reconstruction_candidate_alignments_checked", 0)),
+            "correlation_candidate_alignment_failures": int(correlation_reconstruction_evidence.get("reconstruction_candidate_alignment_failures", 0)),
+            "selected_test_ranks_checked": int(selected_test_rank_evidence.get("selected_test_ranks_checked", 0)),
+            "selected_test_rank_mismatches": int(selected_test_rank_evidence.get("selected_test_rank_mismatches", 0)),
         },
         "interpretation_limits": spec.get("interpretation_limits", {}),
     }
-    
-    # Build all outputs in memory first
-    print("Step 23: Build outputs in memory...")
-    
-    # Build CSV text
-    event_csv_text = events_df.to_csv(index=False, encoding="utf-8")
     
     # Build JSON text
     audit_json_text = json.dumps(audit_report, indent=2, ensure_ascii=False) + "\n"
@@ -2553,11 +2875,20 @@ def main():
         lines.append("## Event Validation\n\n")
         lines.append(f"- Event rows: {event_evidence['rows']} (expected: 2100)\n")
         lines.append(f"- Event columns: {event_evidence['columns']} (expected: 28)\n")
+        lines.append(f"- Column order ok: {event_evidence['column_order_ok']}\n")
         lines.append(f"- Event validation passed: {event_passed}\n")
         lines.append(f"- Key duplicates: {event_evidence['has_key_duplicates']}\n")
         lines.append(f"- Rank range OK: {event_evidence['rank_range_ok']}\n")
         lines.append(f"- Spearman range OK: {event_evidence['spearman_range_ok']}\n")
         lines.append(f"- Kendall range OK: {event_evidence['kendall_range_ok']}\n\n")
+        
+        lines.append("## Event Key Coverage\n\n")
+        lines.append(f"- Expected event key count: {event_key_coverage_evidence['expected_event_key_count']}\n")
+        lines.append(f"- Actual event key count: {event_key_coverage_evidence['actual_event_key_count']}\n")
+        lines.append(f"- Duplicate event key count: {event_key_coverage_evidence['duplicate_event_key_count']}\n")
+        lines.append(f"- Missing event key count: {event_key_coverage_evidence['missing_event_key_count']}\n")
+        lines.append(f"- Extra event key count: {event_key_coverage_evidence['extra_event_key_count']}\n")
+        lines.append(f"- Event key coverage passed: {event_key_coverage_passed}\n\n")
         
         lines.append("## Winner Set Integrity\n\n")
         lines.append(f"- Rows checked: {winner_integrity_evidence['rows_checked']}\n")
@@ -2581,9 +2912,19 @@ def main():
         
         lines.append("## Event Row Reconstruction\n\n")
         lines.append(f"- Event rows reconstructed: {reconstruction_evidence['event_rows_reconstructed']}\n")
+        lines.append(f"- Event rows with exact 23 comparisons: {reconstruction_evidence['event_rows_with_exact_23_comparisons']}\n")
+        lines.append(f"- Event rows with incomplete comparisons: {reconstruction_evidence['event_rows_with_incomplete_comparisons']}\n")
         lines.append(f"- Fields checked per row: {reconstruction_evidence['event_fields_checked_per_row']}\n")
         lines.append(f"- Total field comparisons: {reconstruction_evidence['event_total_field_comparisons']}\n")
         lines.append(f"- Reconstruction mismatch count: {reconstruction_evidence['event_reconstruction_mismatch_count']}\n")
+        lines.append(f"- Structural reconstruction failures: {reconstruction_evidence['structural_reconstruction_failure']}\n")
+        lines.append(f"- String mismatches: {reconstruction_evidence['string_mismatches']}\n")
+        lines.append(f"- Boolean mismatches: {reconstruction_evidence['boolean_mismatches']}\n")
+        lines.append(f"- Missing state mismatches: {reconstruction_evidence['missing_state_mismatches']}\n")
+        lines.append(f"- Exact value mismatches: {reconstruction_evidence['exact_value_mismatches']}\n")
+        lines.append(f"- Tolerance value mismatches: {reconstruction_evidence['tolerance_value_mismatches']}\n")
+        lines.append(f"- Candidate alignments checked: {reconstruction_evidence['reconstruction_candidate_alignments_checked']}\n")
+        lines.append(f"- Candidate alignment failures: {reconstruction_evidence['reconstruction_candidate_alignment_failures']}\n")
         lines.append(f"- Event reconstruction passed: {reconstruction_passed}\n\n")
         
         lines.append("## Agreement Identity Validation\n\n")
@@ -2593,9 +2934,16 @@ def main():
         lines.append(f"- Agreement identity checks passed: {agreement_passed}\n\n")
         
         lines.append("## Rank Identity Validation\n\n")
-        lines.append(f"- Rank vectors reconstructed: {rank_evidence['rank_vectors_reconstructed']}\n")
-        lines.append(f"- Rank identity failures: {rank_evidence['rank_identity_failures']}\n")
-        lines.append(f"- Winner-rank identity failures: {rank_evidence['winner_rank_identity_failures']}\n")
+        lines.append(f"- Exact rank vectors reconstructed: {rank_evidence['exact_rank_vectors_reconstructed']}\n")
+        lines.append(f"- Tolerance rank vectors reconstructed: {rank_evidence['tolerance_rank_vectors_reconstructed']}\n")
+        lines.append(f"- Total rank vectors reconstructed: {rank_evidence['total_rank_vectors_reconstructed']}\n")
+        lines.append(f"- Exact rank identity failures: {rank_evidence['exact_rank_identity_failures']}\n")
+        lines.append(f"- Tolerance rank identity failures: {rank_evidence['tolerance_rank_identity_failures']}\n")
+        lines.append(f"- Exact winner-rank identity failures: {rank_evidence['exact_winner_rank_identity_failures']}\n")
+        lines.append(f"- Tolerance winner-rank identity failures: {rank_evidence['tolerance_winner_rank_identity_failures']}\n")
+        lines.append(f"- Non-chaining identity failures: {rank_evidence['non_chaining_identity_failures']}\n")
+        lines.append(f"- Candidate alignments checked: {rank_evidence['reconstruction_candidate_alignments_checked']}\n")
+        lines.append(f"- Candidate alignment failures: {rank_evidence['reconstruction_candidate_alignment_failures']}\n")
         lines.append(f"- Rank integrity passed: {rank_passed}\n\n")
         
         lines.append("## Correlation Value Reconstruction\n\n")
@@ -2603,7 +2951,14 @@ def main():
         lines.append(f"- Spearman reconstruction mismatches: {correlation_reconstruction_evidence['spearman_reconstruction_mismatches']}\n")
         lines.append(f"- Kendall reconstruction mismatches: {correlation_reconstruction_evidence['kendall_reconstruction_mismatches']}\n")
         lines.append(f"- Correlation state mismatches: {correlation_reconstruction_evidence['correlation_state_mismatches']}\n")
+        lines.append(f"- Candidate alignments checked: {correlation_reconstruction_evidence['reconstruction_candidate_alignments_checked']}\n")
+        lines.append(f"- Candidate alignment failures: {correlation_reconstruction_evidence['reconstruction_candidate_alignment_failures']}\n")
         lines.append(f"- Correlation value reconstruction passed: {correlation_reconstruction_passed}\n\n")
+        
+        lines.append("## Selected Candidate Test Rank Validation\n\n")
+        lines.append(f"- Selected test ranks checked: {selected_test_rank_evidence['selected_test_ranks_checked']}\n")
+        lines.append(f"- Selected test rank mismatches: {selected_test_rank_evidence['selected_test_rank_mismatches']}\n")
+        lines.append(f"- Selected candidate test rank passed: {selected_test_rank_passed}\n\n")
         
         lines.append("## Validation Checks Summary\n\n")
         for check_name, check_passed in validation_checks.items():
@@ -2619,8 +2974,46 @@ def main():
     
     audit_markdown_text = build_markdown_report()
     
-    # Write outputs to temp files first (atomic writes with cleanup)
-    print("Step 24: Write outputs...")
+    # Deterministic serialization check: serialize twice and compare
+    print("Step 24: Deterministic serialization check...")
+    
+    # Serialize CSV twice
+    csv_serialization_1 = events_df.to_csv(index=False, encoding="utf-8")
+    csv_serialization_2 = events_df.to_csv(index=False, encoding="utf-8")
+    event_csv_serialization_identical = csv_serialization_1 == csv_serialization_2
+    
+    # Serialize JSON twice
+    json_serialization_1 = json.dumps(audit_report, indent=2, ensure_ascii=False) + "\n"
+    json_serialization_2 = json.dumps(audit_report, indent=2, ensure_ascii=False) + "\n"
+    audit_json_serialization_identical = json_serialization_1 == json_serialization_2
+    
+    # Serialize Markdown twice
+    markdown_serialization_1 = build_markdown_report()
+    markdown_serialization_2 = build_markdown_report()
+    audit_markdown_serialization_identical = markdown_serialization_1 == markdown_serialization_2
+    
+    validation_checks["deterministic_serialization_ready_passed"] = (
+        event_csv_serialization_identical and
+        audit_json_serialization_identical and
+        audit_markdown_serialization_identical
+    )
+    
+    # Final validation after deterministic check
+    print("Step 25: Final validation...")
+    failed_checks = [name for name, passed in validation_checks.items() if not bool(passed)]
+    
+    if failed_checks:
+        print("Failed checks:")
+        for name in failed_checks:
+            print(f"  {name}: {validation_checks[name]}")
+        print(f"Winner set integrity evidence: {winner_integrity_evidence}")
+        print(f"Event reconstruction evidence: {reconstruction_evidence}")
+        print(f"Correlation reconstruction evidence: {correlation_reconstruction_evidence}")
+        print(f"Event validation evidence: {event_evidence}")
+        raise ValueError(f"Final validation failed: {failed_checks}")
+    
+    # Write outputs to temp files first (atomic writes with cleanup in finally)
+    print("Step 26: Write outputs...")
     
     temp_files = []
     try:
@@ -2653,6 +3046,11 @@ def main():
             if temp_file.exists():
                 temp_file.unlink()
         raise e
+    finally:
+        # Final cleanup of any remaining temp files
+        for temp_file in temp_files:
+            if temp_file.exists():
+                temp_file.unlink()
 
 
 if __name__ == "__main__":

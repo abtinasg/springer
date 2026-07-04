@@ -93,11 +93,21 @@
 
 - Event rows: 2100 (expected: 2100)
 - Event columns: 28 (expected: 28)
+- Column order ok: True
 - Event validation passed: True
 - Key duplicates: False
 - Rank range OK: True
 - Spearman range OK: True
 - Kendall range OK: True
+
+## Event Key Coverage
+
+- Expected event key count: 2100
+- Actual event key count: 2100
+- Duplicate event key count: 0
+- Missing event key count: 0
+- Extra event key count: 0
+- Event key coverage passed: True
 
 ## Winner Set Integrity
 
@@ -124,9 +134,19 @@
 ## Event Row Reconstruction
 
 - Event rows reconstructed: 2100
+- Event rows with exact 23 comparisons: 2100
+- Event rows with incomplete comparisons: 0
 - Fields checked per row: 23
 - Total field comparisons: 48300
 - Reconstruction mismatch count: 0
+- Structural reconstruction failures: 0
+- String mismatches: 0
+- Boolean mismatches: 0
+- Missing state mismatches: 0
+- Exact value mismatches: 0
+- Tolerance value mismatches: 0
+- Candidate alignments checked: 2100
+- Candidate alignment failures: 0
 - Event reconstruction passed: True
 
 ## Agreement Identity Validation
@@ -138,9 +158,16 @@
 
 ## Rank Identity Validation
 
-- Rank vectors reconstructed: 4200
-- Rank identity failures: 0
-- Winner-rank identity failures: 0
+- Exact rank vectors reconstructed: 4200
+- Tolerance rank vectors reconstructed: 4200
+- Total rank vectors reconstructed: 8400
+- Exact rank identity failures: 0
+- Tolerance rank identity failures: 0
+- Exact winner-rank identity failures: 0
+- Tolerance winner-rank identity failures: 0
+- Non-chaining identity failures: 0
+- Candidate alignments checked: 2100
+- Candidate alignment failures: 0
 - Rank integrity passed: True
 
 ## Correlation Value Reconstruction
@@ -149,7 +176,15 @@
 - Spearman reconstruction mismatches: 0
 - Kendall reconstruction mismatches: 0
 - Correlation state mismatches: 0
+- Candidate alignments checked: 2100
+- Candidate alignment failures: 0
 - Correlation value reconstruction passed: True
+
+## Selected Candidate Test Rank Validation
+
+- Selected test ranks checked: 2100
+- Selected test rank mismatches: 0
+- Selected candidate test rank passed: True
 
 ## Validation Checks Summary
 
@@ -184,10 +219,10 @@
 - agreement_identity_checks_passed: True
 - rank_integrity_passed: True
 - correlation_value_reconstruction_passed: True
+- selected_candidate_test_rank_passed: True
 - input_cardinality_passed: True
 - correlation_range_passed: True
 - output_integrity_ready_passed: True
-- deterministic_serialization_ready_passed: True
 
 ## Evidence Counters
 
@@ -207,17 +242,38 @@
 - synthetic_tests_checked: 3
 - event_rows_validated: 2100
 - event_rows_reconstructed: 2100
+- event_rows_with_exact_23_comparisons: 2100
+- event_rows_with_incomplete_comparisons: 0
 - event_fields_checked_per_row: 23
 - event_total_field_comparisons: 48300
 - event_reconstruction_mismatch_count: 0
+- structural_reconstruction_failure: 0
+- string_mismatches: 0
+- boolean_mismatches: 0
+- missing_state_mismatches: 0
+- exact_value_mismatches: 0
+- tolerance_value_mismatches: 0
+- reconstruction_candidate_alignments_checked: 2100
+- reconstruction_candidate_alignment_failures: 0
 - agreement_rows_checked: 2100
 - agreement_fields_checked: 21000
 - agreement_identity_mismatch_count: 0
-- rank_vectors_reconstructed: 4200
-- rank_identity_failures: 0
-- winner_rank_identity_failures: 0
+- exact_rank_vectors_reconstructed: 4200
+- tolerance_rank_vectors_reconstructed: 4200
+- total_rank_vectors_reconstructed: 8400
+- exact_rank_identity_failures: 0
+- tolerance_rank_identity_failures: 0
+- exact_winner_rank_identity_failures: 0
+- tolerance_winner_rank_identity_failures: 0
+- non_chaining_identity_failures: 0
+- rank_candidate_alignments_checked: 2100
+- rank_candidate_alignment_failures: 0
 - correlation_rows_reconstructed: 2100
 - spearman_reconstruction_mismatches: 0
 - kendall_reconstruction_mismatches: 0
 - correlation_state_mismatches: 0
+- correlation_candidate_alignments_checked: 2100
+- correlation_candidate_alignment_failures: 0
+- selected_test_ranks_checked: 2100
+- selected_test_rank_mismatches: 0
 
