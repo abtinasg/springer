@@ -272,7 +272,22 @@
       "synthetic_nan_test_failure_count": 0,
       "synthetic_nan_tests_executed": 7,
       "synthetic_nan_tests_expected": 7,
-      "synthetic_nan_tests_passed": 7
+      "synthetic_nan_tests_passed": 7,
+      "test_e_correlation_non_finite_count": 0,
+      "test_e_correlation_range_failure_count": 0,
+      "test_e_correlation_state_failure_count": 1,
+      "test_e_overall_table_passed": false,
+      "test_e_passed": true,
+      "test_f_correlation_non_finite_count": 0,
+      "test_f_correlation_range_failure_count": 0,
+      "test_f_correlation_state_failure_count": 0,
+      "test_f_overall_table_passed": true,
+      "test_f_passed": true,
+      "test_g_correlation_non_finite_count": 1,
+      "test_g_correlation_range_failure_count": 0,
+      "test_g_correlation_state_failure_count": 1,
+      "test_g_overall_table_passed": false,
+      "test_g_passed": true
     },
     "undefined_reasons_validation": {
       "actual_kendall_count": 18,

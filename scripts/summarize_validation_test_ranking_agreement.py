@@ -698,6 +698,86 @@ def check_denominator_identities(summary_dfs: Dict[str, pd.DataFrame]) -> Dict[s
     }
 
 
+def validate_correlation_summary_state(
+    df: pd.DataFrame,
+    prefix: str,
+    table_evidence: Dict[str, Any],
+) -> None:
+    """Validate correlation summary state for a single correlation type (Spearman or Kendall).
+    
+    For each correlation-row (one per summary row), increment correlation_state_failure_count
+    at most once, regardless of whether mean, median, or both are invalid.
+    
+    Args:
+        df: Summary DataFrame for a single table
+        prefix: Either "spearman" or "kendall"
+        table_evidence: Dictionary to accumulate failure counts
+    """
+    defined_n_col = f"{prefix}_defined_n"
+    mean_col = f"{prefix}_mean_defined"
+    median_col = f"{prefix}_median_defined"
+    
+    if defined_n_col not in df.columns:
+        return
+    
+    for idx, row in df.iterrows():
+        defined_n = row[defined_n_col]
+        mean_val = row[mean_col]
+        median_val = row[median_col]
+        
+        # Check if defined_n is valid
+        if pd.isna(defined_n) or not np.isfinite(defined_n) or defined_n < 0 or defined_n > row["n_event_rows"]:
+            table_evidence["correlation_state_failure_count"] += 1
+            continue
+        
+        if defined_n > 0:
+            # A. defined_n > 0: mean and median must be non-missing, finite, and in [-1, 1]
+            row_state_failed = False
+            
+            # Check mean
+            if pd.isna(mean_val):
+                table_evidence["correlation_non_finite_count"] += 1
+                row_state_failed = True
+            elif not np.isfinite(mean_val):
+                table_evidence["correlation_non_finite_count"] += 1
+                row_state_failed = True
+            elif mean_val < -1 or mean_val > 1:
+                table_evidence["correlation_range_failure_count"] += 1
+                row_state_failed = True
+            
+            # Check median
+            if pd.isna(median_val):
+                table_evidence["correlation_non_finite_count"] += 1
+                row_state_failed = True
+            elif not np.isfinite(median_val):
+                table_evidence["correlation_non_finite_count"] += 1
+                row_state_failed = True
+            elif median_val < -1 or median_val > 1:
+                table_evidence["correlation_range_failure_count"] += 1
+                row_state_failed = True
+            
+            # Increment state failure count at most once per correlation-row
+            if row_state_failed:
+                table_evidence["correlation_state_failure_count"] += 1
+        else:
+            # B. defined_n == 0: mean and median must be missing
+            row_state_failed = False
+            
+            if not pd.isna(mean_val):
+                row_state_failed = True
+                if not np.isfinite(mean_val):
+                    table_evidence["correlation_non_finite_count"] += 1
+            
+            if not pd.isna(median_val):
+                row_state_failed = True
+                if not np.isfinite(median_val):
+                    table_evidence["correlation_non_finite_count"] += 1
+            
+            # Increment state failure count at most once per correlation-row
+            if row_state_failed:
+                table_evidence["correlation_state_failure_count"] += 1
+
+
 def check_range_constraints(summary_dfs: Dict[str, pd.DataFrame]) -> Dict[str, Any]:
     """Check that all values are within expected ranges and return evidence."""
     range_details = {}
@@ -753,117 +833,9 @@ def check_range_constraints(summary_dfs: Dict[str, pd.DataFrame]) -> Dict[str, A
                     table_evidence["jaccard_range_failure_count"] += 1
         
         # Check correlation mean/median with state-aware validation
-        # Validate Spearman
-        if "spearman_defined_n" in df.columns:
-            for idx, row in df.iterrows():
-                defined_n = row["spearman_defined_n"]
-                mean_val = row["spearman_mean_defined"]
-                median_val = row["spearman_median_defined"]
-                
-                # Check if defined_n is valid
-                if pd.isna(defined_n) or not np.isfinite(defined_n) or defined_n < 0 or defined_n > row["n_event_rows"]:
-                    table_evidence["correlation_state_failure_count"] += 1
-                    continue
-                
-                if defined_n > 0:
-                    # A. defined_n > 0: mean and median must be non-missing, finite, and in [-1, 1]
-                    row_state_failed = False
-                    
-                    # Check mean
-                    if pd.isna(mean_val):
-                        table_evidence["correlation_non_finite_count"] += 1
-                        row_state_failed = True
-                    elif not np.isfinite(mean_val):
-                        table_evidence["correlation_non_finite_count"] += 1
-                        row_state_failed = True
-                    elif mean_val < -1 or mean_val > 1:
-                        table_evidence["correlation_range_failure_count"] += 1
-                        row_state_failed = True
-                    
-                    # Check median
-                    if pd.isna(median_val):
-                        table_evidence["correlation_non_finite_count"] += 1
-                        row_state_failed = True
-                    elif not np.isfinite(median_val):
-                        table_evidence["correlation_non_finite_count"] += 1
-                        row_state_failed = True
-                    elif median_val < -1 or median_val > 1:
-                        table_evidence["correlation_range_failure_count"] += 1
-                        row_state_failed = True
-                    
-                    if row_state_failed:
-                        table_evidence["correlation_state_failure_count"] += 1
-                else:
-                    # B. defined_n == 0: mean and median must be missing
-                    row_state_failed = False
-                    
-                    if not pd.isna(mean_val):
-                        table_evidence["correlation_state_failure_count"] += 1
-                        row_state_failed = True
-                        if not np.isfinite(mean_val):
-                            table_evidence["correlation_non_finite_count"] += 1
-                    
-                    if not pd.isna(median_val):
-                        table_evidence["correlation_state_failure_count"] += 1
-                        row_state_failed = True
-                        if not np.isfinite(median_val):
-                            table_evidence["correlation_non_finite_count"] += 1
-        
-        # Validate Kendall
-        if "kendall_defined_n" in df.columns:
-            for idx, row in df.iterrows():
-                defined_n = row["kendall_defined_n"]
-                mean_val = row["kendall_mean_defined"]
-                median_val = row["kendall_median_defined"]
-                
-                # Check if defined_n is valid
-                if pd.isna(defined_n) or not np.isfinite(defined_n) or defined_n < 0 or defined_n > row["n_event_rows"]:
-                    table_evidence["correlation_state_failure_count"] += 1
-                    continue
-                
-                if defined_n > 0:
-                    # A. defined_n > 0: mean and median must be non-missing, finite, and in [-1, 1]
-                    row_state_failed = False
-                    
-                    # Check mean
-                    if pd.isna(mean_val):
-                        table_evidence["correlation_non_finite_count"] += 1
-                        row_state_failed = True
-                    elif not np.isfinite(mean_val):
-                        table_evidence["correlation_non_finite_count"] += 1
-                        row_state_failed = True
-                    elif mean_val < -1 or mean_val > 1:
-                        table_evidence["correlation_range_failure_count"] += 1
-                        row_state_failed = True
-                    
-                    # Check median
-                    if pd.isna(median_val):
-                        table_evidence["correlation_non_finite_count"] += 1
-                        row_state_failed = True
-                    elif not np.isfinite(median_val):
-                        table_evidence["correlation_non_finite_count"] += 1
-                        row_state_failed = True
-                    elif median_val < -1 or median_val > 1:
-                        table_evidence["correlation_range_failure_count"] += 1
-                        row_state_failed = True
-                    
-                    if row_state_failed:
-                        table_evidence["correlation_state_failure_count"] += 1
-                else:
-                    # B. defined_n == 0: mean and median must be missing
-                    row_state_failed = False
-                    
-                    if not pd.isna(mean_val):
-                        table_evidence["correlation_state_failure_count"] += 1
-                        row_state_failed = True
-                        if not np.isfinite(mean_val):
-                            table_evidence["correlation_non_finite_count"] += 1
-                    
-                    if not pd.isna(median_val):
-                        table_evidence["correlation_state_failure_count"] += 1
-                        row_state_failed = True
-                        if not np.isfinite(median_val):
-                            table_evidence["correlation_non_finite_count"] += 1
+        # Use shared helper for both Spearman and Kendall
+        validate_correlation_summary_state(df, "spearman", table_evidence)
+        validate_correlation_summary_state(df, "kendall", table_evidence)
         
         # Check selected test rank in [1, 4] and finite
         for col in ["selected_candidate_test_rank_mean", "selected_candidate_test_rank_median"]:
@@ -1005,8 +977,10 @@ def run_synthetic_nan_tests() -> Dict[str, Any]:
         "spearman_median_defined": [0.0],
     })
     result_e = check_range_constraints({"test": test_df_e})
-    test_e_passed = (not result_e["details"]["test"]["passed"] and 
-                    result_e["details"]["test"]["correlation_state_failure_count"] > 0)
+    test_e_passed = (result_e["details"]["test"]["passed"] is False and
+                    result_e["details"]["test"]["correlation_state_failure_count"] == 1 and
+                    result_e["details"]["test"]["correlation_non_finite_count"] == 0 and
+                    result_e["details"]["test"]["correlation_range_failure_count"] == 0)
     if test_e_passed:
         tests_passed += 1
     else:
@@ -1043,8 +1017,9 @@ def run_synthetic_nan_tests() -> Dict[str, Any]:
     })
     result_g = check_range_constraints({"test": test_df_g})
     test_g_passed = (result_g["details"]["test"]["passed"] is False and
-                    result_g["details"]["test"]["correlation_non_finite_count"] > 0 and
-                    result_g["details"]["test"]["correlation_state_failure_count"] > 0)
+                    result_g["details"]["test"]["correlation_non_finite_count"] == 1 and
+                    result_g["details"]["test"]["correlation_state_failure_count"] == 1 and
+                    result_g["details"]["test"]["correlation_range_failure_count"] == 0)
     if test_g_passed:
         tests_passed += 1
     else:
@@ -1056,6 +1031,22 @@ def run_synthetic_nan_tests() -> Dict[str, Any]:
         "synthetic_nan_tests_passed": tests_passed,
         "synthetic_nan_test_failure_count": tests_failed,
         "nan_and_undefined_state_fail_safe_passed": tests_failed == 0,
+        # Exact test evidence
+        "test_e_passed": test_e_passed,
+        "test_e_overall_table_passed": result_e["details"]["test"]["passed"],
+        "test_e_correlation_non_finite_count": result_e["details"]["test"]["correlation_non_finite_count"],
+        "test_e_correlation_state_failure_count": result_e["details"]["test"]["correlation_state_failure_count"],
+        "test_e_correlation_range_failure_count": result_e["details"]["test"]["correlation_range_failure_count"],
+        "test_f_passed": test_f_passed,
+        "test_f_overall_table_passed": result_f["details"]["test"]["passed"],
+        "test_f_correlation_non_finite_count": result_f["details"]["test"]["correlation_non_finite_count"],
+        "test_f_correlation_state_failure_count": result_f["details"]["test"]["correlation_state_failure_count"],
+        "test_f_correlation_range_failure_count": result_f["details"]["test"]["correlation_range_failure_count"],
+        "test_g_passed": test_g_passed,
+        "test_g_overall_table_passed": result_g["details"]["test"]["passed"],
+        "test_g_correlation_non_finite_count": result_g["details"]["test"]["correlation_non_finite_count"],
+        "test_g_correlation_state_failure_count": result_g["details"]["test"]["correlation_state_failure_count"],
+        "test_g_correlation_range_failure_count": result_g["details"]["test"]["correlation_range_failure_count"],
     }
 
 
@@ -1425,7 +1416,23 @@ def build_audit_markdown(audit_state: Dict[str, Any]) -> str:
     lines.append(f"- Synthetic NaN tests executed: {snt['synthetic_nan_tests_executed']}\n")
     lines.append(f"- Synthetic NaN tests passed: {snt['synthetic_nan_tests_passed']}\n")
     lines.append(f"- Synthetic NaN test failures: {snt['synthetic_nan_test_failure_count']}\n")
-    lines.append(f"- NaN and undefined-state fail-safe passed: {snt['nan_and_undefined_state_fail_safe_passed']}\n\n")
+    lines.append(f"- NaN and undefined-state fail-safe passed: {snt['nan_and_undefined_state_fail_safe_passed']}\n")
+    # Exact test evidence
+    lines.append(f"- Test E passed: {snt['test_e_passed']}\n")
+    lines.append(f"- Test E overall table passed: {snt['test_e_overall_table_passed']}\n")
+    lines.append(f"- Test E correlation non-finite count: {snt['test_e_correlation_non_finite_count']}\n")
+    lines.append(f"- Test E correlation state failure count: {snt['test_e_correlation_state_failure_count']}\n")
+    lines.append(f"- Test E correlation range failure count: {snt['test_e_correlation_range_failure_count']}\n")
+    lines.append(f"- Test F passed: {snt['test_f_passed']}\n")
+    lines.append(f"- Test F overall table passed: {snt['test_f_overall_table_passed']}\n")
+    lines.append(f"- Test F correlation non-finite count: {snt['test_f_correlation_non_finite_count']}\n")
+    lines.append(f"- Test F correlation state failure count: {snt['test_f_correlation_state_failure_count']}\n")
+    lines.append(f"- Test F correlation range failure count: {snt['test_f_correlation_range_failure_count']}\n")
+    lines.append(f"- Test G passed: {snt['test_g_passed']}\n")
+    lines.append(f"- Test G overall table passed: {snt['test_g_overall_table_passed']}\n")
+    lines.append(f"- Test G correlation non-finite count: {snt['test_g_correlation_non_finite_count']}\n")
+    lines.append(f"- Test G correlation state failure count: {snt['test_g_correlation_state_failure_count']}\n")
+    lines.append(f"- Test G correlation range failure count: {snt['test_g_correlation_range_failure_count']}\n\n")
     
     return "".join(lines)
 

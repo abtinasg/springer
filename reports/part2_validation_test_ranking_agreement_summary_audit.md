@@ -256,6 +256,21 @@
 - Synthetic NaN tests passed: 7
 - Synthetic NaN test failures: 0
 - NaN and undefined-state fail-safe passed: True
+- Test E passed: True
+- Test E overall table passed: False
+- Test E correlation non-finite count: 0
+- Test E correlation state failure count: 1
+- Test E correlation range failure count: 0
+- Test F passed: True
+- Test F overall table passed: True
+- Test F correlation non-finite count: 0
+- Test F correlation state failure count: 0
+- Test F correlation range failure count: 0
+- Test G passed: True
+- Test G overall table passed: False
+- Test G correlation non-finite count: 1
+- Test G correlation state failure count: 1
+- Test G correlation range failure count: 0
 
 ## Serialization Audit
 
