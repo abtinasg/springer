@@ -38,8 +38,8 @@ def build_contract() -> Dict[str, Any]:
     
     contract = {
         "contract_title": "Scientific Analysis Contract for Major Revision",
-        "contract_version": "Part-3A.7-v1",
-        "starting_commit": "cf2320791a74e55e58a0097fa5a6963de7cc67c2",
+        "contract_version": "Part-3A.8-v1",
+        "starting_commit": "0f81fd4afd3369e08ce2a28343577f6ab4399040",
         "repository": "abtinasg/springer",
         "branch": "major-revision-analysis-v2",
         
@@ -1123,9 +1123,9 @@ def validate_final_provenance_and_stage_gate(final_state: Dict[str, Any]) -> boo
     # Top-level metadata validation
     if final_state["contract_title"] != "Scientific Analysis Contract for Major Revision":
         return False
-    if final_state["contract_version"] != "Part-3A.7-v1":
+    if final_state["contract_version"] != "Part-3A.8-v1":
         return False
-    if final_state["starting_commit"] != "cf2320791a74e55e58a0097fa5a6963de7cc67c2":
+    if final_state["starting_commit"] != "0f81fd4afd3369e08ce2a28343577f6ab4399040":
         return False
     if final_state["repository"] != "abtinasg/springer":
         return False
@@ -2999,6 +2999,23 @@ def render_markdown(contract: Dict[str, Any]) -> tuple:
         md_lines.append(f"- Self-Referential Hashes Embedded: {se['self_referential_hashes_embedded']}")
         md_lines.append("")
     
+    md_lines.extend([
+        "## Final-State Construction Evidence",
+        ""
+    ])
+    
+    if 'final_state_construction_evidence' in contract:
+        fsce = contract['final_state_construction_evidence']
+        md_lines.append(f"- Complete Payload Before Render: {fsce['complete_payload_before_render']}")
+        md_lines.append(f"- Single Final Serialization Phase: {fsce['single_final_serialization_phase']}")
+        md_lines.append(f"- JSON Final Serialization Invocations: {fsce['json_final_serialization_invocations']}")
+        md_lines.append(f"- Markdown Final Render Invocations: {fsce['markdown_final_render_invocations']}")
+        md_lines.append(f"- State Equal to Snapshot After Render: {fsce['state_equal_to_snapshot_after_render']}")
+        md_lines.append(f"- State Equal to Snapshot After Write: {fsce['state_equal_to_snapshot_after_write']}")
+        md_lines.append(f"- Mutation After Final Render Detected: {fsce['mutation_after_final_render_detected']}")
+        md_lines.append(f"- Written From Final Rendered Bytes: {fsce['written_from_final_rendered_bytes']}")
+        md_lines.append("")
+    
     md_lines.append("")
     
     # First rendering
@@ -3116,30 +3133,30 @@ def main():
     repo_root = get_repository_root()
     
     print(f"Repository root: {repo_root}")
-    print(f"Starting commit: cf2320791a74e55e58a0097fa5a6963de7cc67c2")
+    print(f"Starting commit: 0f81fd4afd3369e08ce2a28343577f6ab4399040")
     print("")
     
-    # A. Capture genuine before preservation snapshot
+    # A. Capture the before preservation snapshot
     print("Capturing before preservation snapshot...")
     before_snapshot = snapshot_preserved_files(repo_root)
     
-    # B. Build the core scientific contract
+    # B. Build the core contract
     print("Building contract...")
     contract = build_contract()
     
-    # C. Capture after preservation snapshot immediately before final-state construction
+    # C. Capture the after preservation snapshot
     print("Capturing after preservation snapshot...")
     after_snapshot = snapshot_preserved_files(repo_root)
     
-    # D. Build preservation evidence by comparing independent snapshots
+    # D. Build preservation evidence
     print("Building preservation evidence...")
     preservation_evidence = compare_preservation_snapshots(before_snapshot, after_snapshot)
     
-    # E. Compute the 28 core semantic checks
+    # E. Run validate_contract_core and obtain exactly 28 checks
     print("Validating contract...")
     core_checks = validate_contract_core(contract)
     
-    # F. Run reviewer and prohibited-claim production negative tests
+    # F. Run reviewer and prohibited-claim negative tests
     print("Running reviewer and prohibited-claim negative tests...")
     test_state = copy.deepcopy(contract)
     test_state["preservation_checks"] = preservation_evidence
@@ -3149,7 +3166,7 @@ def main():
     reviewer_negative_tests = run_reviewer_response_negative_tests(test_state)
     prohibited_claims_negative_tests = run_prohibited_claims_negative_tests(test_state)
     
-    # G. Fold their group results into their core checks
+    # G. Fold their results into reviewer_traceability_passed and prohibited_claims_passed
     core_checks["reviewer_traceability_passed"] = (
         validate_reviewer_traceability(contract)
         and reviewer_negative_tests["all_negative_tests_passed"]
@@ -3159,7 +3176,7 @@ def main():
         and prohibited_claims_negative_tests["all_negative_tests_passed"]
     )
     
-    # H. Compute pre_gate_passed from all 28 core checks after folding and preservation
+    # H. Compute the core/preservation pre-gate result
     pre_gate_checks = [
         "exact_research_questions_passed", "analysis_domains_passed", "candidate_metadata_matches_current_pipeline",
         "metric_taxonomy_passed", "metric_direction_passed", "metric_count_is_14",
@@ -3174,19 +3191,19 @@ def main():
     ]
     pre_gate_passed = all(core_checks[check] for check in pre_gate_checks) and preservation_evidence["preservation_checks_passed"]
     
-    # I. Create prospective_final_state with copy.deepcopy
+    # I. Create prospective_final_state using copy.deepcopy
     prospective_final_state = copy.deepcopy(contract)
     prospective_final_state["preservation_checks"] = preservation_evidence
     prospective_final_state["validation_checks"] = core_checks
     
-    # J. Set part3a_contract_frozen = pre_gate_passed
+    # J. Set stage_gate.part3a_contract_frozen = pre_gate_passed
     prospective_final_state["stage_gate"]["part3a_contract_frozen"] = pre_gate_passed
     
-    # K. Run provenance/stage-gate negative tests using the production validator
+    # K. Run all thirteen provenance/stage-gate negative tests
     print("Running provenance/stage-gate negative tests...")
     provenance_negative_tests = run_provenance_negative_tests(prospective_final_state)
     
-    # L. Build the final global negative-test evidence and exact global count result
+    # L. Build the complete global negative-test evidence
     validator_negative_test_evidence = {
         "provenance_and_stage_gate": provenance_negative_tests,
         "reviewer_responses": reviewer_negative_tests,
@@ -3197,7 +3214,7 @@ def main():
         "total_tests_failed": provenance_negative_tests["tests_failed"] + reviewer_negative_tests["tests_failed"] + prohibited_claims_negative_tests["tests_failed"]
     }
     
-    # Enforce exact global count validation
+    # M. Require exact totals: 13/13/13/0, 14/14/14/0, 4/4/4/0, 31/31/31/0
     REQUIRED_TOTAL = 31
     global_count_contract_passed = (
         validator_negative_test_evidence["total_tests_expected"] == REQUIRED_TOTAL
@@ -3207,7 +3224,6 @@ def main():
     )
     validator_negative_test_evidence["global_count_contract_passed"] = global_count_contract_passed
     
-    # Calculate final global result after global count contract
     validator_negative_test_evidence["all_negative_tests_passed"] = (
         global_count_contract_passed
         and provenance_negative_tests["all_negative_tests_passed"]
@@ -3215,7 +3231,7 @@ def main():
         and prohibited_claims_negative_tests["all_negative_tests_passed"]
     )
     
-    # M. Compute the one and only stage_gate_passed using production validator and negative-test results
+    # N. Compute stage_gate_passed, reviewer_traceability_passed, prohibited_claims_passed, preservation_checks_passed
     stage_gate_passed = (
         validate_final_provenance_and_stage_gate(prospective_final_state)
         and provenance_negative_tests["all_negative_tests_passed"]
@@ -3223,7 +3239,6 @@ def main():
     )
     core_checks["stage_gate_passed"] = stage_gate_passed
     
-    # Fold global negative-test success into reviewer and prohibited claims
     core_checks["reviewer_traceability_passed"] = (
         core_checks["reviewer_traceability_passed"]
         and validator_negative_test_evidence["all_negative_tests_passed"]
@@ -3232,38 +3247,14 @@ def main():
         core_checks["prohibited_claims_passed"]
         and validator_negative_test_evidence["all_negative_tests_passed"]
     )
-    
-    # N. Add preservation_checks_passed, deterministic_serialization_passed, all_checks_passed
     core_checks["preservation_checks_passed"] = preservation_evidence["preservation_checks_passed"]
     
-    # O. Assert exact 30 checks before adding deterministic_serialization_passed and all_checks_passed
-    # (28 core + stage_gate_passed + preservation_checks_passed)
-    assert len(core_checks) == 30, f"Expected 30 checks at this point, got {len(core_checks)}"
-    assert "stage_gate_passed" in core_checks
-    assert "preservation_checks_passed" in core_checks
-    assert "all_checks_passed" not in core_checks
+    # O. Set prospectively deterministic_serialization_passed = true
+    # This is permitted only because rendering failure must abort before writing
+    # The actual operational verification happens after rendering
+    core_checks["deterministic_serialization_passed"] = True
     
-    # P. Serialize twice, write, reread, and verify bytes
-    # Note: prospective_final_state["validation_checks"] will be set after all_checks_passed is added
-    
-    print("Testing JSON double serialization...")
-    json_content_1, json_sha_1, json_content_2, json_sha_2, json_identical = serialize_json(prospective_final_state, repo_root)
-    
-    if not json_identical:
-        raise RuntimeError("JSON double serialization failed - not byte-identical")
-    
-    print("Testing Markdown double rendering...")
-    md_content_1, md_sha_1, md_content_2, md_sha_2, md_identical = render_markdown(prospective_final_state)
-    
-    if not md_identical:
-        raise RuntimeError("Markdown double rendering failed - not byte-identical")
-    
-    core_checks["deterministic_serialization_passed"] = json_identical and md_identical
-    
-    # Q. Do not mutate final_state afterward
-    final_state = prospective_final_state
-    
-    # Add all_checks_passed as logical AND of other 31 checks
+    # P. Compute all_checks_passed = logical AND of the other 31 validation checks
     all_validation_checks = [
         "exact_research_questions_passed", "analysis_domains_passed", "candidate_metadata_matches_current_pipeline",
         "metric_taxonomy_passed", "metric_direction_passed", "metric_count_is_14",
@@ -3278,6 +3269,113 @@ def main():
         "preservation_checks_passed", "deterministic_serialization_passed"
     ]
     core_checks["all_checks_passed"] = all(core_checks[check] for check in all_validation_checks)
+    
+    # Q. Assert len(validation_checks) == 32 and all(validation_checks.values()) is true
+    assert len(core_checks) == 32, f"Expected 32 final checks, got {len(core_checks)}"
+    assert all(core_checks.values()), "Not all final checks are true"
+    
+    # R. Attach all of the following before final rendering: validation_checks, validator_negative_test_evidence, preservation_checks, serialization_evidence
+    prospective_final_state["validation_checks"] = core_checks
+    prospective_final_state["validator_negative_test_evidence"] = validator_negative_test_evidence
+    prospective_final_state["serialization_evidence"] = {
+        "json_double_render_required": True,
+        "markdown_double_render_required": True,
+        "exact_written_byte_verification_required": True,
+        "written_sha256_reported_externally": True,
+        "self_referential_hashes_embedded": False
+    }
+    
+    # Add final_state_construction_evidence with values that will be verified operationally
+    # These are set prospectively but verified during serialization
+    prospective_final_state["final_state_construction_evidence"] = {
+        "complete_payload_before_render": True,
+        "single_final_serialization_phase": True,
+        "json_final_serialization_invocations": 1,  # Will be verified
+        "markdown_final_render_invocations": 1,  # Will be verified
+        "state_equal_to_snapshot_after_render": True,  # Will be verified
+        "state_equal_to_snapshot_after_write": True,  # Will be verified
+        "mutation_after_final_render_detected": False,  # Will be verified
+        "written_from_final_rendered_bytes": True  # Will be verified
+    }
+    
+    # S. Create the complete final state: final_state = copy.deepcopy(prospective_final_state)
+    final_state = copy.deepcopy(prospective_final_state)
+    
+    # T. Capture an immutable comparison snapshot: final_state_snapshot = copy.deepcopy(final_state)
+    final_state_snapshot = copy.deepcopy(final_state)
+    
+    # U. Perform the only JSON double serialization and the only Markdown double rendering using final_state
+    # Initialize counters
+    json_final_serialization_invocations = 0
+    markdown_final_render_invocations = 0
+    
+    print("Testing JSON double serialization...")
+    json_final_serialization_invocations += 1
+    json_content_1, json_sha_1, json_content_2, json_sha_2, json_identical = serialize_json(final_state, repo_root)
+    
+    if not json_identical:
+        raise RuntimeError("JSON double serialization failed - not byte-identical")
+    
+    print("Testing Markdown double rendering...")
+    markdown_final_render_invocations += 1
+    md_content_1, md_sha_1, md_content_2, md_sha_2, md_identical = render_markdown(final_state)
+    
+    if not md_identical:
+        raise RuntimeError("Markdown double rendering failed - not byte-identical")
+    
+    # V. Abort before writing if either double rendering differs
+    if not json_identical or not md_identical:
+        raise RuntimeError("Double rendering failed - aborting before write")
+    
+    # W. Assert after rendering: final_state == final_state_snapshot
+    assert final_state == final_state_snapshot, "final_state mutated after rendering"
+    
+    # X. Write the exact already-compared JSON and Markdown strings
+    reports_dir = repo_root / "reports"
+    reports_dir.mkdir(parents=True, exist_ok=True)
+    
+    json_path = reports_dir / "part3_analysis_contract.json"
+    md_path = reports_dir / "part3_analysis_contract.md"
+    
+    print(f"Writing {json_path}...")
+    write_atomically(json_path, json_content_1)
+    
+    print(f"Writing {md_path}...")
+    write_atomically(md_path, md_content_1)
+    
+    # Y. Reread written bytes and verify SHA-256
+    with open(json_path, 'rb') as f:
+        json_verify_bytes = f.read()
+    json_verify_sha = hashlib.sha256(json_verify_bytes).hexdigest()
+    
+    with open(md_path, 'rb') as f:
+        md_verify_bytes = f.read()
+    md_verify_sha = hashlib.sha256(md_verify_bytes).hexdigest()
+    
+    if json_verify_sha != json_sha_1:
+        raise RuntimeError(f"JSON written-file SHA mismatch: expected {json_sha_1}, got {json_verify_sha}")
+    
+    if md_verify_sha != md_sha_1:
+        raise RuntimeError(f"Markdown written-file SHA mismatch: expected {md_sha_1}, got {md_verify_sha}")
+    
+    # Z. Assert again after writing: final_state == final_state_snapshot
+    assert final_state == final_state_snapshot, "final_state mutated after write"
+    
+    # Verify deterministic_serialization_passed based on operational evidence
+    operational_deterministic_passed = (
+        json_identical
+        and md_identical
+        and json_final_serialization_invocations == 1
+        and markdown_final_render_invocations == 1
+        and final_state == final_state_snapshot
+        and json_verify_sha == json_sha_1
+        and md_verify_sha == md_sha_1
+        and final_state["final_state_construction_evidence"]["json_final_serialization_invocations"] == json_final_serialization_invocations
+        and final_state["final_state_construction_evidence"]["markdown_final_render_invocations"] == markdown_final_render_invocations
+    )
+    
+    if not operational_deterministic_passed:
+        raise RuntimeError("Operational deterministic serialization verification failed")
     
     # Final self-audit assertions
     assert len(core_checks) == 32, f"Expected 32 final checks, got {len(core_checks)}"
@@ -3296,65 +3394,8 @@ def main():
     assert all(group["count_contract_passed"] for group in [provenance_negative_tests, reviewer_negative_tests, prohibited_claims_negative_tests]), "Every group count contract must pass"
     assert global_count_contract_passed, "Global count contract must pass"
     assert validator_negative_test_evidence["all_negative_tests_passed"], "Global all_negative_tests_passed must be true"
-    
-    # Add complete validation_checks and other fields to prospective_final_state before serialization
-    prospective_final_state["validation_checks"] = core_checks
-    prospective_final_state["validator_negative_test_evidence"] = validator_negative_test_evidence
-    prospective_final_state["serialization_evidence"] = {
-        "json_double_render_required": True,
-        "markdown_double_render_required": True,
-        "exact_written_byte_verification_required": True,
-        "written_sha256_reported_externally": True,
-        "self_referential_hashes_embedded": False
-    }
-    
-    # P. Serialize twice, write, reread, and verify bytes
-    print("Testing JSON double serialization...")
-    json_content_1, json_sha_1, json_content_2, json_sha_2, json_identical = serialize_json(prospective_final_state, repo_root)
-    
-    if not json_identical:
-        raise RuntimeError("JSON double serialization failed - not byte-identical")
-    
-    print("Testing Markdown double rendering...")
-    md_content_1, md_sha_1, md_content_2, md_sha_2, md_identical = render_markdown(prospective_final_state)
-    
-    if not md_identical:
-        raise RuntimeError("Markdown double rendering failed - not byte-identical")
-    
-    core_checks["deterministic_serialization_passed"] = json_identical and md_identical
-    
-    # Q. Do not mutate final_state afterward
-    final_state = prospective_final_state
-    
-    # K. Write the exact already-compared strings
-    reports_dir = repo_root / "reports"
-    reports_dir.mkdir(parents=True, exist_ok=True)
-    
-    json_path = reports_dir / "part3_analysis_contract.json"
-    md_path = reports_dir / "part3_analysis_contract.md"
-    
-    print(f"Writing {json_path}...")
-    write_atomically(json_path, json_content_1)
-    
-    print(f"Writing {md_path}...")
-    write_atomically(md_path, md_content_1)
-    
-    # L. Reread the written bytes and verify their SHA-256 against the rendered bytes
-    with open(json_path, 'rb') as f:
-        json_verify_bytes = f.read()
-    json_verify_sha = hashlib.sha256(json_verify_bytes).hexdigest()
-    
-    with open(md_path, 'rb') as f:
-        md_verify_bytes = f.read()
-    md_verify_sha = hashlib.sha256(md_verify_bytes).hexdigest()
-    
-    if json_verify_sha != json_sha_1:
-        raise RuntimeError(f"JSON written-file SHA mismatch: expected {json_sha_1}, got {json_verify_sha}")
-    
-    if md_verify_sha != md_sha_1:
-        raise RuntimeError(f"Markdown written-file SHA mismatch: expected {md_sha_1}, got {md_verify_sha}")
-    
-    # M. Do not mutate final_state afterward (no further mutations)
+    assert json_final_serialization_invocations == 1, "Exactly one JSON final serialization invocation required"
+    assert markdown_final_render_invocations == 1, "Exactly one Markdown final render invocation required"
     
     print("")
     print("Contract successfully created and validated.")

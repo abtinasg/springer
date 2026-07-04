@@ -1,7 +1,7 @@
 # Scientific Analysis Contract for Major Revision
 
-**Contract Version:** Part-3A.7-v1
-**Starting Commit:** cf2320791a74e55e58a0097fa5a6963de7cc67c2
+**Contract Version:** Part-3A.8-v1
+**Starting Commit:** 0f81fd4afd3369e08ce2a28343577f6ab4399040
 **Repository:** abtinasg/springer
 **Branch:** major-revision-analysis-v2
 
@@ -1315,3 +1315,14 @@ Candidate ranking by rank objective, after candidate or ensemble selection, thre
 - Exact Written Byte Verification Required: True
 - Written SHA-256 Reported Externally: True
 - Self-Referential Hashes Embedded: False
+
+## Final-State Construction Evidence
+
+- Complete Payload Before Render: True
+- Single Final Serialization Phase: True
+- JSON Final Serialization Invocations: 1
+- Markdown Final Render Invocations: 1
+- State Equal to Snapshot After Render: True
+- State Equal to Snapshot After Write: True
+- Mutation After Final Render Detected: False
+- Written From Final Rendered Bytes: True

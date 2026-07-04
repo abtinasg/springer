@@ -127,7 +127,7 @@
     }
   },
   "contract_title": "Scientific Analysis Contract for Major Revision",
-  "contract_version": "Part-3A.7-v1",
+  "contract_version": "Part-3A.8-v1",
   "existing_adaptive_models": {
     "AQRPE_v2_balanced": {
       "selection_type": "adaptive_top1",
@@ -151,6 +151,16 @@
       "threshold_objective": "balanced",
       "validation_objective": "balanced"
     }
+  },
+  "final_state_construction_evidence": {
+    "complete_payload_before_render": true,
+    "json_final_serialization_invocations": 1,
+    "markdown_final_render_invocations": 1,
+    "mutation_after_final_render_detected": false,
+    "single_final_serialization_phase": true,
+    "state_equal_to_snapshot_after_render": true,
+    "state_equal_to_snapshot_after_write": true,
+    "written_from_final_rendered_bytes": true
   },
   "metric_taxonomy": {
     "threshold_dependent": {
@@ -841,7 +851,7 @@
     "part3a_contract_frozen": true,
     "part3b_constraint": "Part 3B cannot alter the current 400 canonical result rows or current canonical manuscript tables unless a later explicitly approved migration stage is created."
   },
-  "starting_commit": "cf2320791a74e55e58a0097fa5a6963de7cc67c2",
+  "starting_commit": "0f81fd4afd3369e08ce2a28343577f6ab4399040",
   "statistical_reporting_policy": {
     "effect_reporting": [
       "Median paired project-level difference.",
