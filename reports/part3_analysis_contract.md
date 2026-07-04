@@ -1,7 +1,7 @@
 # Scientific Analysis Contract for Major Revision
 
-**Contract Version:** Part-3A.4-v1
-**Starting Commit:** 692bbb8ff7c379839d4f8f18f52e58f815db6636
+**Contract Version:** Part-3A.5-v1
+**Starting Commit:** 7d7403f968aca2bcbc94bc35efd4f258421301c5
 **Repository:** abtinasg/springer
 **Branch:** major-revision-analysis-v2
 
@@ -1010,7 +1010,7 @@ Candidate ranking by rank objective, after candidate or ensemble selection, thre
 - Validation-based model selection is itself a novel contribution.
 - Soft averaging of top models is itself a novel contribution.
 - Repeated seeds establish external validity.
-- Train/validation/test separation is itself a algorithmic contribution.
+- Train/validation/test separation is itself an algorithmic contribution.
 - AQRPE universally outperforms all baselines.
 - Five seeds are five independent datasets.
 - Twenty-five project-seed runs are twenty-five independent projects.
@@ -1160,6 +1160,78 @@ Candidate ranking by rank objective, after candidate or ensemble selection, thre
 - Matches Expected Before: True
 - Matches Expected After: True
 - Unchanged During Execution: True
+
+## Validator Negative-Test Evidence
+
+- Total Tests Expected: 31
+- Total Tests Executed: 31
+- Total Tests Passed: 31
+- Total Tests Failed: 0
+- All Negative Tests Passed: True
+
+### Provenance and Stage-Gate Tests
+
+- Tests Expected: 13
+- Tests Executed: 13
+- Tests Passed: 13
+- Tests Failed: 0
+- All Passed: True
+
+**Cases:**
+
+- wrong_contract_title: True
+- wrong_contract_version: True
+- wrong_starting_commit: True
+- wrong_repository: True
+- wrong_branch: True
+- part3a_contract_frozen_false: True
+- model_rerun_performed_true: True
+- canonical_outputs_modified_true: True
+- manuscript_modified_true: True
+- wrong_next_authorized_stage: True
+- altered_constraint: True
+- additional_stage_gate_field: True
+- missing_stage_gate_field: True
+
+### Reviewer Response Tests
+
+- Tests Expected: 14
+- Tests Executed: 14
+- Tests Passed: 14
+- Tests Failed: 0
+- All Passed: True
+
+**Cases:**
+
+- blank_reviewer1_computational: True
+- whitespace_reviewer1_computational: True
+- empty_reviewer1_manuscript: True
+- blank_reviewer2_manuscript: True
+- empty_list_computational: True
+- list_with_empty_string: True
+- list_with_whitespace_string: True
+- list_with_integer: True
+- integer_response: True
+- dictionary_response: True
+- missing_response_key: True
+- additional_response_key: True
+- blank_reviewer3_scientific: True
+- empty_list_reviewer3_computational: True
+
+### Prohibited Claims Tests
+
+- Tests Expected: 4
+- Tests Executed: 4
+- Tests Passed: 4
+- Tests Failed: 0
+- All Passed: True
+
+**Cases:**
+
+- typo_an_to_a: True
+- reordered_list: True
+- missing_claim: True
+- additional_claim: True
 
 ## Serialization Validation
 

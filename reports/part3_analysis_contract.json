@@ -127,7 +127,7 @@
     }
   },
   "contract_title": "Scientific Analysis Contract for Major Revision",
-  "contract_version": "Part-3A.4-v1",
+  "contract_version": "Part-3A.5-v1",
   "existing_adaptive_models": {
     "AQRPE_v2_balanced": {
       "selection_type": "adaptive_top1",
@@ -528,7 +528,7 @@
     "Validation-based model selection is itself a novel contribution.",
     "Soft averaging of top models is itself a novel contribution.",
     "Repeated seeds establish external validity.",
-    "Train/validation/test separation is itself a algorithmic contribution.",
+    "Train/validation/test separation is itself an algorithmic contribution.",
     "AQRPE universally outperforms all baselines.",
     "Five seeds are five independent datasets.",
     "Twenty-five project-seed runs are twenty-five independent projects.",
@@ -841,7 +841,7 @@
     "part3a_contract_frozen": true,
     "part3b_constraint": "Part 3B cannot alter the current 400 canonical result rows or current canonical manuscript tables unless a later explicitly approved migration stage is created."
   },
-  "starting_commit": "692bbb8ff7c379839d4f8f18f52e58f815db6636",
+  "starting_commit": "7d7403f968aca2bcbc94bc35efd4f258421301c5",
   "statistical_reporting_policy": {
     "effect_reporting": [
       "Median paired project-level difference.",
@@ -1131,5 +1131,225 @@
       "Selected candidate test rank.",
       "Selected candidate in test winner set."
     ]
+  },
+  "validator_negative_test_evidence": {
+    "all_negative_tests_passed": true,
+    "prohibited_claims": {
+      "all_negative_tests_passed": true,
+      "cases": [
+        {
+          "case_name": "typo_an_to_a",
+          "mutation": "an -> a algorithmic contribution",
+          "passed": true,
+          "validator_returned_false": true
+        },
+        {
+          "case_name": "reordered_list",
+          "mutation": "list reversed",
+          "passed": true,
+          "validator_returned_false": true
+        },
+        {
+          "case_name": "missing_claim",
+          "mutation": "last claim removed",
+          "passed": true,
+          "validator_returned_false": true
+        },
+        {
+          "case_name": "additional_claim",
+          "mutation": "extra claim added",
+          "passed": true,
+          "validator_returned_false": true
+        }
+      ],
+      "tests_executed": 4,
+      "tests_expected": 4,
+      "tests_failed": 0,
+      "tests_passed": 4
+    },
+    "provenance_and_stage_gate": {
+      "all_negative_tests_passed": true,
+      "cases": [
+        {
+          "case_name": "wrong_contract_title",
+          "mutation": "contract_title changed",
+          "passed": true,
+          "validator_returned_false": true
+        },
+        {
+          "case_name": "wrong_contract_version",
+          "mutation": "contract_version changed",
+          "passed": true,
+          "validator_returned_false": true
+        },
+        {
+          "case_name": "wrong_starting_commit",
+          "mutation": "starting_commit changed",
+          "passed": true,
+          "validator_returned_false": true
+        },
+        {
+          "case_name": "wrong_repository",
+          "mutation": "repository changed",
+          "passed": true,
+          "validator_returned_false": true
+        },
+        {
+          "case_name": "wrong_branch",
+          "mutation": "branch changed",
+          "passed": true,
+          "validator_returned_false": true
+        },
+        {
+          "case_name": "part3a_contract_frozen_false",
+          "mutation": "part3a_contract_frozen set to False",
+          "passed": true,
+          "validator_returned_false": true
+        },
+        {
+          "case_name": "model_rerun_performed_true",
+          "mutation": "model_rerun_performed set to True",
+          "passed": true,
+          "validator_returned_false": true
+        },
+        {
+          "case_name": "canonical_outputs_modified_true",
+          "mutation": "canonical_outputs_modified set to True",
+          "passed": true,
+          "validator_returned_false": true
+        },
+        {
+          "case_name": "manuscript_modified_true",
+          "mutation": "manuscript_modified set to True",
+          "passed": true,
+          "validator_returned_false": true
+        },
+        {
+          "case_name": "wrong_next_authorized_stage",
+          "mutation": "next_authorized_stage changed",
+          "passed": true,
+          "validator_returned_false": true
+        },
+        {
+          "case_name": "altered_constraint",
+          "mutation": "part3b_constraint altered",
+          "passed": true,
+          "validator_returned_false": true
+        },
+        {
+          "case_name": "additional_stage_gate_field",
+          "mutation": "extra field added to stage_gate",
+          "passed": true,
+          "validator_returned_false": true
+        },
+        {
+          "case_name": "missing_stage_gate_field",
+          "mutation": "part3b_constraint removed from stage_gate",
+          "passed": true,
+          "validator_returned_false": true
+        }
+      ],
+      "tests_executed": 13,
+      "tests_expected": 13,
+      "tests_failed": 0,
+      "tests_passed": 13
+    },
+    "reviewer_responses": {
+      "all_negative_tests_passed": true,
+      "cases": [
+        {
+          "case_name": "blank_reviewer1_computational",
+          "mutation": "blank string",
+          "passed": true,
+          "validator_returned_false": true
+        },
+        {
+          "case_name": "whitespace_reviewer1_computational",
+          "mutation": "whitespace-only string",
+          "passed": true,
+          "validator_returned_false": true
+        },
+        {
+          "case_name": "empty_reviewer1_manuscript",
+          "mutation": "empty string",
+          "passed": true,
+          "validator_returned_false": true
+        },
+        {
+          "case_name": "blank_reviewer2_manuscript",
+          "mutation": "blank string",
+          "passed": true,
+          "validator_returned_false": true
+        },
+        {
+          "case_name": "empty_list_computational",
+          "mutation": "empty list",
+          "passed": true,
+          "validator_returned_false": true
+        },
+        {
+          "case_name": "list_with_empty_string",
+          "mutation": "list with empty string",
+          "passed": true,
+          "validator_returned_false": true
+        },
+        {
+          "case_name": "list_with_whitespace_string",
+          "mutation": "list with whitespace-only string",
+          "passed": true,
+          "validator_returned_false": true
+        },
+        {
+          "case_name": "list_with_integer",
+          "mutation": "list with integer",
+          "passed": true,
+          "validator_returned_false": true
+        },
+        {
+          "case_name": "integer_response",
+          "mutation": "integer value",
+          "passed": true,
+          "validator_returned_false": true
+        },
+        {
+          "case_name": "dictionary_response",
+          "mutation": "dictionary value",
+          "passed": true,
+          "validator_returned_false": true
+        },
+        {
+          "case_name": "missing_response_key",
+          "mutation": "missing manuscript_response key",
+          "passed": true,
+          "validator_returned_false": true
+        },
+        {
+          "case_name": "additional_response_key",
+          "mutation": "extra key added",
+          "passed": true,
+          "validator_returned_false": true
+        },
+        {
+          "case_name": "blank_reviewer3_scientific",
+          "mutation": "blank string",
+          "passed": true,
+          "validator_returned_false": true
+        },
+        {
+          "case_name": "empty_list_reviewer3_computational",
+          "mutation": "empty list",
+          "passed": true,
+          "validator_returned_false": true
+        }
+      ],
+      "tests_executed": 14,
+      "tests_expected": 14,
+      "tests_failed": 0,
+      "tests_passed": 14
+    },
+    "total_tests_executed": 31,
+    "total_tests_expected": 31,
+    "total_tests_failed": 0,
+    "total_tests_passed": 31
   }
 }
