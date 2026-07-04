@@ -9,6 +9,7 @@ ablation, sensitivity analysis, workflow figure generation, or manuscript editin
 The contract is deterministic and validates all requirements before output.
 """
 
+import copy
 import hashlib
 import json
 import os
@@ -37,7 +38,7 @@ def build_contract() -> Dict[str, Any]:
     
     contract = {
         "contract_title": "Scientific Analysis Contract for Major Revision",
-        "contract_version": "Part-3A.2-v1",
+        "contract_version": "Part-3A.3-v1",
         "starting_commit": "ec60c38abae80046fa0d345caa817258b97cdbf1",
         "repository": "abtinasg/springer",
         "branch": "major-revision-analysis-v2",
@@ -969,18 +970,18 @@ def build_contract() -> Dict[str, Any]:
         ],
         
         "prohibited_claims": [
-            "AQRPE v2 is a fundamentally new algorithm.",
-            "Validation-based model selection is itself a novel contribution.",
-            "Soft averaging of top models is itself a novel contribution.",
-            "Repeated seeds establish external validity.",
-            "Train/validation/test separation is itself an algorithmic contribution.",
-            "AQRPE universally outperforms all baselines.",
-            "Five seeds are five independent datasets.",
-            "Twenty-five project-seed runs are twenty-five independent projects.",
-            "A p-value alone proves superiority.",
-            "The test oracle is a deployable selection method.",
-            "Soft-top-3 is optimal before ablation.",
-            "Test data may influence selection or threshold tuning."
+            "No method universally dominates all others across all metrics, projects, and settings.",
+            "Validation-based selection guarantees superior test performance.",
+            "Soft ensembles always outperform fixed candidates.",
+            "Adaptive Top-1 selection is always better than fixed baselines.",
+            "The oracle reference is a deployable model.",
+            "The five projects are a representative sample of all software projects.",
+            "The results generalize to industrial deployment without further validation.",
+            "Statistical significance tests with n=5 projects provide definitive population-level evidence.",
+            "Metric choice is arbitrary and does not affect conclusions.",
+            "Threshold policy choice is arbitrary and does not affect conclusions.",
+            "Validation-test agreement is a proof of validity.",
+            "Post-hoc regret analysis is a validation procedure."
         ],
         
         "stage_gate": {
@@ -1020,24 +1021,85 @@ def validate_contract(contract: Dict[str, Any]) -> Dict[str, bool]:
     """Validate the complete contract payload."""
     checks = {}
     
-    # Exact four RQs
+    # Exact Research Questions - validate complete exact structure
+    rq = contract["research_questions"]
     checks["exact_research_questions_passed"] = (
-        contract["research_questions"]["count"] == 4 and
-        len(contract["research_questions"]) == 5  # count + rq1-4
+        rq["count"] == 4 and
+        set(rq.keys()) == {"count", "rq1", "rq2", "rq3", "rq4"} and
+        rq["rq1"]["title"] == "Comparative performance" and
+        rq["rq1"]["exact_intent"] == "How do the four fixed candidate learners, validation-selected adaptive Top-1 variants, and validation-constructed soft ensembles compare under repeated within-project and cross-project evaluation?" and
+        rq["rq1"]["requirements"] == [
+            "Objective-matched comparisons.",
+            "Run-level outputs.",
+            "Project-level aggregation.",
+            "No post-hoc selection of a favorable comparison only.",
+            "Separate interpretation for within-project and cross-project settings."
+        ] and
+        rq["rq2"]["title"] == "Metric-dependent trade-offs" and
+        rq["rq2"]["exact_intent"] == "How do model rankings and conclusions change across discrimination, thresholded classification, early-inspection ranking, and calibration-sensitive metrics?" and
+        rq["rq2"]["requirements"] == [
+            "No single metric defines an overall winner.",
+            "Metric direction must be explicit.",
+            "Ranking metrics, thresholded metrics, and calibration metrics represent different operational goals.",
+            "Brier score is minimized.",
+            "All other retained metrics are maximized."
+        ] and
+        rq["rq3"]["title"] == "Selection behavior and stability" and
+        rq["rq3"]["exact_intent"] == "How frequently and how stably are candidates selected across projects and seeds, and how well do validation rankings agree with held-out test rankings?" and
+        rq["rq3"]["required_analyses"] == [
+            "Top-1 selection frequency.",
+            "Top-1 seed stability.",
+            "Soft-top-3 membership and order stability.",
+            "Exact validation-test Top-1 agreement.",
+            "Winner-set overlap.",
+            "Selected-candidate test rank.",
+            "Spearman and Kendall rank agreement.",
+            "Explicit statement that these are descriptive analyses, not proof of superiority."
+        ] and
+        rq["rq4"]["title"] == "Regret, ensemble size, and ablation" and
+        rq["rq4"]["exact_intent"] == "What do post-hoc regret and controlled ablation reveal about the value of adaptive Top-1 selection, Soft-top-2, Soft-top-3, and Soft-all-4 relative to fixed candidates and an oracle reference?" and
+        rq["rq4"]["requirements"] == [
+            "Fixed individual candidates.",
+            "Adaptive Top-1.",
+            "Soft-top-2.",
+            "Soft-top-3.",
+            "Soft-all-4.",
+            "Oracle best candidate on test used only as a post-hoc analytical reference.",
+            "Selected-versus-oracle regret.",
+            "Marginal ensemble-size comparisons.",
+            "No use of test information for actual model selection."
+        ] and
+        rq["rq4"]["requires_new_computation"] == True
     )
     
-    # Exact two experiments
+    # Exact analysis domains - validate complete exact dictionary
+    ad = contract["analysis_domains"]
     checks["analysis_domains_passed"] = (
-        len(contract["analysis_domains"]["experiments"]) == 2 and
-        contract["analysis_domains"]["experiments"] == ["within_project", "cross_project"]
+        set(ad.keys()) == {"experiments", "projects", "seeds", "fixed_candidate_learners", "existing_adaptive_models", "planned_additional_ensemble_models", "concept_distinctions"} and
+        ad["experiments"] == ["within_project", "cross_project"] and
+        ad["projects"] == ["CM1", "JM1", "KC1", "KC2", "PC1"] and
+        ad["seeds"] == [7, 13, 29, 42, 101] and
+        ad["fixed_candidate_learners"] == ["LR_std_C0.1", "LR_std_C1", "DT_leaf5", "ET_leaf5"] and
+        ad["existing_adaptive_models"] == ["AQRPE_v2_balanced", "AQRPE_v2_rank", "AQRPE_v2_mcc", "AQRPE_v2_soft_top3"] and
+        ad["planned_additional_ensemble_models"] == ["AQRPE_v2_soft_top2", "AQRPE_v2_soft_all4"] and
+        ad["concept_distinctions"] == ["candidate learner", "validation selector", "threshold policy", "ensemble construction rule", "post-hoc oracle"]
     )
     
-    # Candidate metadata matches current pipeline
+    # Candidate metadata matches current pipeline - enforce exact field sets
     lr_c01 = contract["candidate_learners"]["LR_std_C0.1"]
     lr_c1 = contract["candidate_learners"]["LR_std_C1"]
     dt = contract["candidate_learners"]["DT_leaf5"]
     et = contract["candidate_learners"]["ET_leaf5"]
+    
+    lr_exact_keys = {"type", "imputer", "scaler", "C", "penalty", "solver", "class_weight", "max_iter", "random_state_source"}
+    dt_exact_keys = {"type", "imputer", "criterion", "splitter", "min_samples_leaf", "max_depth", "class_weight", "random_state_source"}
+    et_exact_keys = {"type", "imputer", "n_estimators", "criterion", "max_depth", "min_samples_leaf", "max_features", "bootstrap", "class_weight", "random_state_source", "n_jobs"}
+    
     checks["candidate_metadata_matches_current_pipeline"] = (
+        set(lr_c01.keys()) == lr_exact_keys and
+        set(lr_c1.keys()) == lr_exact_keys and
+        set(dt.keys()) == dt_exact_keys and
+        set(et.keys()) == et_exact_keys and
         lr_c01["type"] == "logistic_regression" and
         lr_c01["imputer"] == "median" and
         lr_c01["scaler"] == "StandardScaler" and
@@ -1077,7 +1139,7 @@ def validate_contract(contract: Dict[str, Any]) -> Dict[str, bool]:
         et["n_jobs"] == 2
     )
     
-    # Required metric set
+    # Required metric set - validate exact taxonomy families and field sets
     all_metrics = {}
     for family in contract["metric_taxonomy"].values():
         for metric_name, metric_info in family.items():
@@ -1088,15 +1150,47 @@ def validate_contract(contract: Dict[str, Any]) -> Dict[str, bool]:
         "precision_at_20pct", "recall_at_20pct", "lift_at_20pct", "brier",
         "mcc", "f1", "balanced_accuracy", "precision", "recall"
     }
-    checks["metric_taxonomy_passed"] = set(all_metrics.keys()) == required_metrics
+    
+    # Validate exact taxonomy families
+    taxonomy_families = set(contract["metric_taxonomy"].keys())
+    exact_families = {"threshold_independent_score_ranking", "threshold_dependent"}
+    
+    # Validate exact nine threshold-independent metrics
+    ti_metrics = set(contract["metric_taxonomy"]["threshold_independent_score_ranking"].keys())
+    exact_ti = {"avg_precision", "roc_auc", "precision_at_10pct", "recall_at_10pct", "lift_at_10pct", "precision_at_20pct", "recall_at_20pct", "lift_at_20pct", "brier"}
+    
+    # Validate exact five threshold-dependent metrics
+    td_metrics = set(contract["metric_taxonomy"]["threshold_dependent"].keys())
+    exact_td = {"mcc", "f1", "balanced_accuracy", "precision", "recall"}
+    
+    # Validate exact field sets for every metric
+    common_fields = {"canonical_name", "display_name", "family", "direction", "primary_or_secondary", "threshold_dependent", "practical_interpretation", "allowed_analysis_uses"}
+    ti_extra_field = {"inspection_budget_dependent"}
+    
+    all_fields_correct = True
+    for metric_name, metric_info in all_metrics.items():
+        expected_fields = common_fields.copy()
+        if metric_name in ti_metrics:
+            expected_fields.add("inspection_budget_dependent")
+        if set(metric_info.keys()) != expected_fields:
+            all_fields_correct = False
+            break
+    
+    checks["metric_taxonomy_passed"] = (
+        set(all_metrics.keys()) == required_metrics and
+        taxonomy_families == exact_families and
+        ti_metrics == exact_ti and
+        td_metrics == exact_td and
+        all_fields_correct
+    )
     
     # Metric count is 14
     checks["metric_count_is_14"] = len(all_metrics) == 14
     
-    # Every metric has valid direction
-    valid_directions = {"higher_is_better", "lower_is_better"}
-    checks["metric_direction_passed"] = all(
-        m["direction"] in valid_directions for m in all_metrics.values()
+    # Every metric has valid direction - brier must be lower_is_better, all others higher_is_better
+    checks["metric_direction_passed"] = (
+        all_metrics["brier"]["direction"] == "lower_is_better" and
+        all(all_metrics[m]["direction"] == "higher_is_better" for m in all_metrics if m != "brier")
     )
     
     # Metric threshold dependency
@@ -1117,13 +1211,27 @@ def validate_contract(contract: Dict[str, Any]) -> Dict[str, bool]:
         all(all_metrics[m].get("inspection_budget_dependent", False) == False for m in inspection_budget_independent)
     )
     
-    # Brier marked secondary
-    checks["metric_primary_secondary_passed"] = all_metrics["brier"]["primary_or_secondary"] == "secondary"
+    # Brier marked secondary - verify complete frozen primary and secondary classification
+    primary_metrics = {"avg_precision", "precision_at_10pct", "recall_at_10pct", "lift_at_10pct", "mcc", "f1", "balanced_accuracy"}
+    secondary_metrics = {"roc_auc", "precision_at_20pct", "recall_at_20pct", "lift_at_20pct", "brier", "precision", "recall"}
     
-    # Objective policy passed - verify exact content
+    checks["metric_primary_secondary_passed"] = (
+        all(all_metrics[m]["primary_or_secondary"] == "primary" for m in primary_metrics) and
+        all(all_metrics[m]["primary_or_secondary"] == "secondary" for m in secondary_metrics)
+    )
+    
+    # Objective policy passed - validate exact key set and ordered prohibitions
     obj_policies = contract["objective_policies"]
+    exact_obj_keys = {"balanced_policy", "mcc_policy", "rank_score_only_policy", "rank_plus_validation_threshold_policy", "policy_mismatch_prohibition"}
+    exact_prohibitions = [
+        "Threshold-dependent method comparisons should use the same candidate-ranking objective and threshold-selection policy whenever scientifically possible.",
+        "An MCC-tuned adaptive method must not be compared against a baseline using only a balanced-objective threshold and then interpreted as pure evidence of adaptive-selection benefit.",
+        "Policy-mismatched comparisons may appear only as explicitly labeled descriptive legacy comparisons.",
+        "Policy-mismatched comparisons cannot support superiority claims."
+    ]
     checks["objective_policy_passed"] = (
-        len(obj_policies["policy_mismatch_prohibition"]) == 4 and
+        set(obj_policies.keys()) == exact_obj_keys and
+        obj_policies["policy_mismatch_prohibition"] == exact_prohibitions and
         obj_policies["balanced_policy"]["candidate_ranking"] == "balanced validation objective" and
         obj_policies["balanced_policy"]["threshold_selection"] == "balanced validation objective" and
         obj_policies["mcc_policy"]["candidate_ranking"] == "validation MCC objective" and
@@ -1135,9 +1243,11 @@ def validate_contract(contract: Dict[str, Any]) -> Dict[str, bool]:
         obj_policies["rank_plus_validation_threshold_policy"]["status"] == "planned sensitivity analysis"
     )
     
-    # Existing Soft-top-3 objective - verify exact content
+    # Existing Soft-top-3 objective - require exact key set and values
     soft_top3 = contract["existing_adaptive_models"]["AQRPE_v2_soft_top3"]
+    exact_soft_top3_keys = {"validation_objective", "membership_ranking_policy", "threshold_objective", "ensemble_size", "equal_weights"}
     checks["existing_soft_top3_policy_passed"] = (
+        set(soft_top3.keys()) == exact_soft_top3_keys and
         soft_top3["validation_objective"] == "balanced" and
         soft_top3["membership_ranking_policy"] == "balanced_objective" and
         soft_top3["threshold_objective"] == "balanced" and
@@ -1145,29 +1255,65 @@ def validate_contract(contract: Dict[str, Any]) -> Dict[str, bool]:
         soft_top3["equal_weights"] == True
     )
     
-    # Baseline policy passed
+    # Baseline policy passed - validate exact key set and content
+    baseline = contract["baseline_policy"]
+    exact_baseline_keys = {"individual_fixed_baselines", "best_fixed_baseline"}
+    exact_baselines = ["LR_std_C0.1", "LR_std_C1", "DT_leaf5", "ET_leaf5"]
+    exact_selection_rules = [
+        "Separately for each metric.",
+        "Separately for each experiment.",
+        "From the four fixed candidates only.",
+        "For descriptive summary after all candidate results are available."
+    ]
     checks["baseline_policy_passed"] = (
-        len(contract["baseline_policy"]["individual_fixed_baselines"]) == 4 and
-        contract["baseline_policy"]["best_fixed_baseline"]["status"] == "post-hoc descriptive"
+        set(baseline.keys()) == exact_baseline_keys and
+        baseline["individual_fixed_baselines"] == exact_baselines and
+        baseline["best_fixed_baseline"]["selection_rules"] == exact_selection_rules and
+        baseline["best_fixed_baseline"]["status"] == "post-hoc descriptive" and
+        baseline["best_fixed_baseline"]["deployment_warning"] == "Must not be treated as a validation-selected deployment rule unless a separate validation-only baseline-selection mechanism is defined."
     )
     
-    # Adaptive policy passed
+    # Adaptive policy passed - validate exact key set and content
+    adaptive = contract["adaptive_top1_policy"]
+    exact_adaptive_keys = {"definition", "distinguished_components", "prohibition"}
+    exact_definition = [
+        "Train all four candidates on training data.",
+        "Score all candidates on validation data.",
+        "Select one candidate using the specified validation objective.",
+        "Freeze its threshold according to the specified policy.",
+        "Evaluate once on held-out test data."
+    ]
+    exact_components = [
+        "Selected candidate identity.",
+        "Selection score.",
+        "Validation threshold.",
+        "Test performance.",
+        "Test rank.",
+        "Post-hoc regret."
+    ]
     checks["adaptive_policy_passed"] = (
-        contract["adaptive_top1_policy"]["prohibition"] == "No test label, test score, test metric, or test ranking may influence the selection."
+        set(adaptive.keys()) == exact_adaptive_keys and
+        adaptive["definition"] == exact_definition and
+        adaptive["distinguished_components"] == exact_components and
+        adaptive["prohibition"] == "No test label, test score, test metric, or test ranking may influence the selection."
     )
     
-    # Ensemble policy passed - verify exact content including planned models
+    # Ensemble policy passed - validate exact key sets and values
     soft_top2 = contract["planned_models"]["AQRPE_v2_soft_top2"]
     soft_all4 = contract["planned_models"]["AQRPE_v2_soft_all4"]
+    exact_soft_top2_keys = {"validation_objective", "membership_ranking_policy", "threshold_objective", "ensemble_size", "equal_weights", "status"}
+    exact_soft_all4_keys = {"validation_objective", "membership_ranking_policy", "threshold_objective", "ensemble_size", "equal_weights", "status"}
     checks["ensemble_policy_passed"] = (
         contract["soft_ensemble_policy"]["planned_k_values"] == [2, 3, 4] and
         contract["existing_adaptive_models"]["AQRPE_v2_soft_top3"]["equal_weights"] == True and
+        set(soft_top2.keys()) == exact_soft_top2_keys and
         soft_top2["validation_objective"] == "balanced" and
         soft_top2["membership_ranking_policy"] == "balanced_objective" and
         soft_top2["threshold_objective"] == "balanced" and
         soft_top2["ensemble_size"] == 2 and
         soft_top2["equal_weights"] == True and
         soft_top2["status"] == "planned" and
+        set(soft_all4.keys()) == exact_soft_all4_keys and
         soft_all4["validation_objective"] == "balanced" and
         soft_all4["membership_ranking_policy"] == "not_applicable_all_candidates" and
         soft_all4["threshold_objective"] == "balanced" and
@@ -1196,18 +1342,74 @@ def validate_contract(contract: Dict[str, Any]) -> Dict[str, bool]:
         contract["unit_of_analysis_policy"]["primary_independent_unit"] == "software project"
     )
     
-    # Statistical reporting policy passed
+    # Statistical reporting policy passed - validate exact key set and ordered contents
+    stat = contract["statistical_reporting_policy"]
+    exact_stat_keys = {"required_descriptive_reporting", "permitted_exploratory_inference", "effect_reporting", "key_assertions"}
+    exact_descriptive = [
+        "Mean.",
+        "Standard deviation.",
+        "Median.",
+        "Interquartile range.",
+        "Minimum.",
+        "Maximum.",
+        "Positive / negative / tied project counts.",
+        "Five raw project-level paired differences when space permits."
+    ]
+    exact_exploratory = [
+        "Exact Wilcoxon signed-rank test at project level only.",
+        "Only when the assumptions and zero-difference handling are explicitly stated.",
+        "Labeled exploratory.",
+        "No binary accept/reject conclusion based only on p-values."
+    ]
+    exact_effect = [
+        "Median paired project-level difference.",
+        "Rank-biserial effect size or another predeclared paired effect size.",
+        "Explicit warning that n_projects = 5."
+    ]
+    exact_key_assertions = [
+        "No multiple-comparison-adjusted confirmatory family is claimed.",
+        "No inferential superiority claim is authorized.",
+        "Conclusions must emphasize direction, magnitude, consistency, and limitations."
+    ]
     checks["statistical_reporting_policy_passed"] = (
-        len(contract["statistical_reporting_policy"]["required_descriptive_reporting"]) == 8
+        set(stat.keys()) == exact_stat_keys and
+        stat["required_descriptive_reporting"] == exact_descriptive and
+        stat["permitted_exploratory_inference"] == exact_exploratory and
+        stat["effect_reporting"] == exact_effect and
+        stat["key_assertions"] == exact_key_assertions
     )
     
-    # Agreement policy passed
+    # Agreement policy passed - validate exact key set and ordered contents
+    agreement = contract["validation_test_agreement_policy"]
+    exact_agreement_keys = {"required_agreement_analyses", "explicit_statements"}
+    exact_analyses = [
+        "Strict Top-1 exact agreement.",
+        "Tolerance-aware Top-1 agreement.",
+        "Exact winner-set equality.",
+        "Tolerance-aware winner-set equality.",
+        "Winner-set overlap.",
+        "Jaccard similarity.",
+        "Spearman correlation.",
+        "Kendall tau-b.",
+        "Selected candidate test rank.",
+        "Selected candidate in test winner set."
+    ]
+    exact_statements = [
+        "Agreement is descriptive.",
+        "Low agreement does not by itself prove the validation procedure is invalid.",
+        "High agreement does not prove predictive superiority.",
+        "Undefined rank correlations must remain missing, never substituted with zero.",
+        "All test-based agreement is retrospective analysis only."
+    ]
     checks["agreement_policy_passed"] = (
-        len(contract["validation_test_agreement_policy"]["required_agreement_analyses"]) == 10
+        set(agreement.keys()) == exact_agreement_keys and
+        agreement["required_agreement_analyses"] == exact_analyses and
+        agreement["explicit_statements"] == exact_statements
     )
     
-    # Balanced weight sensitivity frozen - verify exact dictionaries
+    # Balanced weight sensitivity frozen - verify exact dictionaries and reject extra fields
     weights = contract["sensitivity_analysis_policy"]["required_dimensions"]["balanced_objective_weights"]
+    exact_profile_keys = {"mcc", "f1", "balanced_accuracy", "avg_precision", "recall_at_10pct", "recall_at_20pct", "brier_penalty"}
     current_profile = weights["current"]
     equal_profile = weights["equal_positive_weights"]
     mcc_profile = weights["mcc_emphasis"]
@@ -1215,6 +1417,7 @@ def validate_contract(contract: Dict[str, Any]) -> Dict[str, bool]:
     
     # Verify exact current profile
     current_exact = (
+        set(current_profile.keys()) == exact_profile_keys and
         abs(current_profile["mcc"] - 0.36) < 1e-12 and
         abs(current_profile["f1"] - 0.27) < 1e-12 and
         abs(current_profile["balanced_accuracy"] - 0.20) < 1e-12 and
@@ -1226,6 +1429,7 @@ def validate_contract(contract: Dict[str, Any]) -> Dict[str, bool]:
     
     # Verify exact equal positive weights profile
     equal_exact = (
+        set(equal_profile.keys()) == exact_profile_keys and
         abs(equal_profile["mcc"] - 1/6) < 1e-12 and
         abs(equal_profile["f1"] - 1/6) < 1e-12 and
         abs(equal_profile["balanced_accuracy"] - 1/6) < 1e-12 and
@@ -1237,6 +1441,7 @@ def validate_contract(contract: Dict[str, Any]) -> Dict[str, bool]:
     
     # Verify exact MCC emphasis profile
     mcc_exact = (
+        set(mcc_profile.keys()) == exact_profile_keys and
         abs(mcc_profile["mcc"] - 0.50) < 1e-12 and
         abs(mcc_profile["f1"] - 0.20) < 1e-12 and
         abs(mcc_profile["balanced_accuracy"] - 0.15) < 1e-12 and
@@ -1248,6 +1453,7 @@ def validate_contract(contract: Dict[str, Any]) -> Dict[str, bool]:
     
     # Verify exact ranking emphasis profile
     ranking_exact = (
+        set(ranking_profile.keys()) == exact_profile_keys and
         abs(ranking_profile["mcc"] - 0.20) < 1e-12 and
         abs(ranking_profile["f1"] - 0.15) < 1e-12 and
         abs(ranking_profile["balanced_accuracy"] - 0.15) < 1e-12 and
@@ -1279,13 +1485,16 @@ def validate_contract(contract: Dict[str, Any]) -> Dict[str, bool]:
         current_sum_ok and equal_sum_ok and mcc_sum_ok and ranking_sum_ok and brier_ok
     )
     
-    # Threshold grid sensitivity frozen - verify exact dictionaries
+    # Threshold grid sensitivity frozen - verify exact dictionaries and reject extra fields
     grid = contract["sensitivity_analysis_policy"]["required_dimensions"]["threshold_grid"]
+    exact_grid_keys = {"current", "dense_sensitivity", "constraint"}
+    exact_grid_fields = {"fixed", "quantile_probabilities", "combination", "filter"}
     current_grid = grid["current"]
     dense_grid = grid["dense_sensitivity"]
     
     # Verify exact current grid
     current_grid_exact = (
+        set(current_grid.keys()) == exact_grid_fields and
         current_grid["fixed"] == "linspace(0.03, 0.97, 41)" and
         current_grid["quantile_probabilities"] == "linspace(0.03, 0.97, 25)" and
         current_grid["combination"] == "unique(round(concat(fixed, validation-score quantiles), 6))" and
@@ -1294,16 +1503,20 @@ def validate_contract(contract: Dict[str, Any]) -> Dict[str, bool]:
     
     # Verify exact dense sensitivity grid
     dense_grid_exact = (
+        set(dense_grid.keys()) == exact_grid_fields and
         dense_grid["fixed"] == "linspace(0.01, 0.99, 99)" and
         dense_grid["quantile_probabilities"] == "linspace(0.01, 0.99, 99)" and
         dense_grid["combination"] == "unique(round(concat(fixed, validation-score quantiles), 6))" and
         dense_grid["filter"] == "0 < threshold < 1"
     )
     
-    # Verify constraint is present
+    # Verify constraint is present and exact
     constraint_ok = grid.get("constraint") == "Both grids must use validation scores only."
     
-    checks["threshold_grid_sensitivity_frozen"] = current_grid_exact and dense_grid_exact and constraint_ok
+    checks["threshold_grid_sensitivity_frozen"] = (
+        set(grid.keys()) == exact_grid_keys and
+        current_grid_exact and dense_grid_exact and constraint_ok
+    )
     
     # Source-project-aware protocol frozen - verify exact ordered list
     protocol = contract["sensitivity_analysis_policy"]["required_dimensions"]["cross_project_validation_design"]["source_project_aware_protocol"]
@@ -1330,8 +1543,11 @@ def validate_contract(contract: Dict[str, Any]) -> Dict[str, bool]:
         checks["source_project_aware_protocol_frozen"]
     )
     
-    # Threats mapping passed - verify all four validity categories and required threat names
+    # Threats mapping passed - require exact four validity categories, exact threat names, exact record counts, and non-empty fields
     threats = contract["threats_to_validity"]
+    exact_categories = {"internal_validity", "construct_validity", "external_validity", "conclusion_validity"}
+    exact_threat_keys = {"threat", "possible_impact", "current_mitigation", "remaining_limitation", "planned_computational_response"}
+    
     internal_threats = {t["threat"] for t in threats["internal_validity"]}
     construct_threats = {t["threat"] for t in threats["construct_validity"]}
     external_threats = {t["threat"] for t in threats["external_validity"]}
@@ -1342,30 +1558,73 @@ def validate_contract(contract: Dict[str, Any]) -> Dict[str, bool]:
     required_external = {"Only five NASA/PROMISE projects", "Static metrics only", "Older public benchmark data", "Compact learner pool", "No industrial deployment evaluation"}
     required_conclusion = {"Five independent projects", "Repeated seeds are nested", "Low power", "Multiple metrics", "Descriptive versus inferential distinction", "Sensitivity to objective weights and validation design"}
     
-    # Verify all threats have non-empty required fields
+    # Verify exact record counts
+    exact_counts = (
+        len(threats["internal_validity"]) == 6 and
+        len(threats["construct_validity"]) == 5 and
+        len(threats["external_validity"]) == 5 and
+        len(threats["conclusion_validity"]) == 6
+    )
+    
+    # Verify all threats have exact key set and non-empty string values
     all_threats_complete = True
     for category in ["internal_validity", "construct_validity", "external_validity", "conclusion_validity"]:
         for threat in threats[category]:
-            if not threat.get("possible_impact") or not threat.get("current_mitigation") or not threat.get("remaining_limitation") or not threat.get("planned_computational_response"):
+            if set(threat.keys()) != exact_threat_keys:
                 all_threats_complete = False
                 break
+            for key in exact_threat_keys:
+                if not threat.get(key) or not str(threat[key]).strip():
+                    all_threats_complete = False
+                    break
+        if not all_threats_complete:
+            break
+    
+    # Reject duplicate threat names
+    all_unique = (
+        len(internal_threats) == 6 and
+        len(construct_threats) == 5 and
+        len(external_threats) == 5 and
+        len(conclusion_threats) == 6
+    )
     
     checks["threats_mapping_passed"] = (
+        set(threats.keys()) == exact_categories and
         internal_threats == required_internal and
         construct_threats == required_construct and
         external_threats == required_external and
         conclusion_threats == required_conclusion and
-        all_threats_complete
+        exact_counts and
+        all_threats_complete and
+        all_unique
     )
     
-    # Reviewer context complete
+    # Reviewer context complete - validate exact three reviewer-context arrays
+    rc = contract["reviewer_context"]
+    exact_reviewer_1_focus = [
+        "Practical explanation of evaluation metrics.",
+        "Key findings before detailed result tables.",
+        "Reproducible workflow diagram."
+    ]
+    exact_reviewer_2_focus = [
+        "Methodological decisions require clearer justification.",
+        "Threats to validity require deeper analysis.",
+        "Limitations and future directions must be evidence-based."
+    ]
+    exact_reviewer_3_focus = [
+        "Validation-based model selection is standard.",
+        "Averaging top models is standard.",
+        "Repeated seeds and leakage control are good practice, not algorithmic novelty.",
+        "The paper should be treated as a careful empirical study rather than a new fundamental algorithm."
+    ]
     checks["reviewer_context_complete"] = (
-        "reviewer_1_focus" in contract["reviewer_context"] and
-        "reviewer_2_focus" in contract["reviewer_context"] and
-        "reviewer_3_focus" in contract["reviewer_context"]
+        set(rc.keys()) == {"reviewer_1_focus", "reviewer_2_focus", "reviewer_3_focus"} and
+        rc["reviewer_1_focus"] == exact_reviewer_1_focus and
+        rc["reviewer_2_focus"] == exact_reviewer_2_focus and
+        rc["reviewer_3_focus"] == exact_reviewer_3_focus
     )
     
-    # Reviewer traceability passed - verify exact 11 coverage identifiers and counts
+    # Reviewer traceability passed - validate reviewer_coverage_evidence itself
     expected_reviewer_keys = {
         "reviewer_1_comment_1", "reviewer_1_comment_2", "reviewer_1_comment_3",
         "reviewer_2_comment_1", "reviewer_2_comment_2", "reviewer_2_comment_3",
@@ -1373,6 +1632,16 @@ def validate_contract(contract: Dict[str, Any]) -> Dict[str, bool]:
         "reviewer_2_comment_7", "reviewer_3_novelty_concern"
     }
     actual_keys = set(contract["reviewer_traceability_matrix"].keys())
+    
+    # Validate reviewer_coverage_evidence exact key set and values
+    rce = contract["reviewer_coverage_evidence"]
+    exact_rce_keys = {"reviewer_1_comment_count", "reviewer_2_comment_count", "reviewer_3_concern_count", "covered_comment_count", "coverage_identifiers"}
+    exact_identifiers = [
+        "reviewer_1_comment_1", "reviewer_1_comment_2", "reviewer_1_comment_3",
+        "reviewer_2_comment_1", "reviewer_2_comment_2", "reviewer_2_comment_3",
+        "reviewer_2_comment_4", "reviewer_2_comment_5", "reviewer_2_comment_6",
+        "reviewer_2_comment_7", "reviewer_3_novelty_concern"
+    ]
     
     # Verify each covered item has a non-empty response
     all_responses_nonempty = True
@@ -1387,6 +1656,12 @@ def validate_contract(contract: Dict[str, Any]) -> Dict[str, bool]:
                 break
     
     checks["reviewer_traceability_passed"] = (
+        set(rce.keys()) == exact_rce_keys and
+        rce["reviewer_1_comment_count"] == 3 and
+        rce["reviewer_2_comment_count"] == 7 and
+        rce["reviewer_3_concern_count"] == 1 and
+        rce["covered_comment_count"] == 11 and
+        rce["coverage_identifiers"] == exact_identifiers and
         actual_keys == expected_reviewer_keys and
         len(actual_keys) == 11 and
         all_responses_nonempty
@@ -1406,18 +1681,34 @@ def validate_contract(contract: Dict[str, Any]) -> Dict[str, bool]:
     ]
     checks["roadmap_passed"] = contract["remaining_stage_roadmap"] == expected_roadmap
     
-    # Prohibited claims list present
-    checks["prohibited_claims_passed"] = len(contract["prohibited_claims"]) > 0
+    # Prohibited claims list present - validate exact ordered list of twelve claims
+    exact_prohibited_claims = [
+        "No method universally dominates all others across all metrics, projects, and settings.",
+        "Validation-based selection guarantees superior test performance.",
+        "Soft ensembles always outperform fixed candidates.",
+        "Adaptive Top-1 selection is always better than fixed baselines.",
+        "The oracle reference is a deployable model.",
+        "The five projects are a representative sample of all software projects.",
+        "The results generalize to industrial deployment without further validation.",
+        "Statistical significance tests with n=5 projects provide definitive population-level evidence.",
+        "Metric choice is arbitrary and does not affect conclusions.",
+        "Threshold policy choice is arbitrary and does not affect conclusions.",
+        "Validation-test agreement is a proof of validity.",
+        "Post-hoc regret analysis is a validation procedure."
+    ]
+    checks["prohibited_claims_passed"] = contract["prohibited_claims"] == exact_prohibited_claims
     
-    # Stage gate passed - verify all conditions
+    # Stage gate passed - validate exact key set, exact values, and exact constraint
     stage_gate = contract["stage_gate"]
+    exact_stage_gate_keys = {"part3a_contract_frozen", "model_rerun_performed", "canonical_outputs_modified", "manuscript_modified", "next_authorized_stage", "part3b_constraint"}
+    exact_constraint = "Part 3B cannot alter the current 400 canonical result rows or current canonical manuscript tables unless a later explicitly approved migration stage is created."
     checks["stage_gate_passed"] = (
+        set(stage_gate.keys()) == exact_stage_gate_keys and
         stage_gate["next_authorized_stage"] == "Part 3B" and
         stage_gate["model_rerun_performed"] == False and
         stage_gate["canonical_outputs_modified"] == False and
         stage_gate["manuscript_modified"] == False and
-        "part3b_constraint" in stage_gate and
-        "Part 3B" in stage_gate["part3b_constraint"]
+        stage_gate["part3b_constraint"] == exact_constraint
     )
     
     # Combine all checks except all_checks_passed itself - exactly 32 required checks
@@ -2058,7 +2349,7 @@ def render_markdown(contract: Dict[str, Any]) -> tuple:
         md_lines.append(f"- Reviewer 3 Concern Count: {rce['reviewer_3_concern_count']}")
         md_lines.append(f"- Covered Comment Count: {rce['covered_comment_count']}")
         md_lines.append("")
-        md_lines.append("**Coverage Identifiers:")
+        md_lines.append("**Coverage Identifiers:**")
         md_lines.append("")
         for identifier in rce['coverage_identifiers']:
             md_lines.append(f"- {identifier}")
@@ -2319,13 +2610,79 @@ def main():
     print("Building preservation evidence...")
     preservation_evidence = compare_preservation_snapshots(before_snapshot, after_snapshot)
     
-    # E. Compute every semantic check except deterministic_serialization_passed
+    # E. Compute every semantic check except deterministic_serialization_passed and stage_gate_passed
     print("Validating contract...")
     validation_results = validate_contract(contract)
     
-    # F. Build a prospective final state containing all components
-    prospective_final_state = contract.copy()
+    # F. Build the scientific core with part3a_contract_frozen initially false
+    # G. Capture and compare preservation snapshots (already done)
+    # H. Compute preservation_checks_passed
+    validation_results["preservation_checks_passed"] = preservation_evidence["preservation_checks_passed"]
+    
+    # I. Determine pre_gate_passed = logical AND of every required semantic and preservation check except: stage_gate_passed, deterministic_serialization_passed, all_checks_passed
+    pre_gate_checks = [
+        "exact_research_questions_passed", "analysis_domains_passed", "candidate_metadata_matches_current_pipeline",
+        "metric_taxonomy_passed", "metric_direction_passed", "metric_count_is_14",
+        "metric_threshold_dependency_passed", "metric_inspection_budget_dependency_passed",
+        "metric_primary_secondary_passed", "objective_policy_passed", "existing_soft_top3_policy_passed",
+        "baseline_policy_passed", "adaptive_policy_passed", "ensemble_policy_passed",
+        "tie_policy_passed", "oracle_policy_passed", "unit_of_analysis_policy_passed",
+        "statistical_reporting_policy_passed", "agreement_policy_passed", "balanced_weight_sensitivity_frozen",
+        "threshold_grid_sensitivity_frozen", "source_project_aware_protocol_frozen",
+        "sensitivity_policy_passed", "threats_mapping_passed", "reviewer_context_complete",
+        "reviewer_traceability_passed", "roadmap_passed", "prohibited_claims_passed", "preservation_checks_passed"
+    ]
+    pre_gate_passed = all(validation_results[check] for check in pre_gate_checks)
+    
+    # J. Create a deep copy of the core contract using copy.deepcopy
+    prospective_final_state = copy.deepcopy(contract)
     prospective_final_state["preservation_checks"] = preservation_evidence
+    prospective_final_state["validation_checks"] = validation_results
+    
+    # K. Set prospective_final_state.stage_gate.part3a_contract_frozen = pre_gate_passed
+    prospective_final_state["stage_gate"]["part3a_contract_frozen"] = pre_gate_passed
+    
+    # L. Compute stage_gate_passed by validating the complete final gate, including part3a_contract_frozen == true and the exact constraint
+    # Re-validate stage gate with the updated part3a_contract_frozen value
+    exact_stage_gate_keys = {"part3a_contract_frozen", "model_rerun_performed", "canonical_outputs_modified", "manuscript_modified", "next_authorized_stage", "part3b_constraint"}
+    exact_constraint = "Part 3B cannot alter the current 400 canonical result rows or current canonical manuscript tables unless a later explicitly approved migration stage is created."
+    stage_gate = prospective_final_state["stage_gate"]
+    validation_results["stage_gate_passed"] = (
+        set(stage_gate.keys()) == exact_stage_gate_keys and
+        stage_gate["next_authorized_stage"] == "Part 3B" and
+        stage_gate["model_rerun_performed"] == False and
+        stage_gate["canonical_outputs_modified"] == False and
+        stage_gate["manuscript_modified"] == False and
+        stage_gate["part3b_constraint"] == exact_constraint and
+        stage_gate["part3a_contract_frozen"] == True
+    )
+    
+    # M. Add deterministic_serialization_passed = true prospectively
+    validation_results["deterministic_serialization_passed"] = True
+    
+    # N. Compute all_checks_passed as the logical AND of checks 1 through 31
+    all_validation_checks = [
+        "exact_research_questions_passed", "analysis_domains_passed", "candidate_metadata_matches_current_pipeline",
+        "metric_taxonomy_passed", "metric_direction_passed", "metric_count_is_14",
+        "metric_threshold_dependency_passed", "metric_inspection_budget_dependency_passed",
+        "metric_primary_secondary_passed", "objective_policy_passed", "existing_soft_top3_policy_passed",
+        "baseline_policy_passed", "adaptive_policy_passed", "ensemble_policy_passed",
+        "tie_policy_passed", "oracle_policy_passed", "unit_of_analysis_policy_passed",
+        "statistical_reporting_policy_passed", "agreement_policy_passed", "balanced_weight_sensitivity_frozen",
+        "threshold_grid_sensitivity_frozen", "source_project_aware_protocol_frozen",
+        "sensitivity_policy_passed", "threats_mapping_passed", "reviewer_context_complete",
+        "reviewer_traceability_passed", "roadmap_passed", "prohibited_claims_passed", "stage_gate_passed",
+        "preservation_checks_passed", "deterministic_serialization_passed"
+    ]
+    validation_results["all_checks_passed"] = all(validation_results[check] for check in all_validation_checks)
+    
+    # O. Assert the exact 32-key validation schema before serialization
+    exact_required_set = set(all_validation_checks + ["all_checks_passed"])
+    assert len(validation_results) == 32, f"Expected 32 validation keys, got {len(validation_results)}"
+    assert set(validation_results.keys()) == exact_required_set, f"Validation keys do not match required set"
+    assert validation_results["all_checks_passed"] == all(validation_results[check] for check in all_validation_checks), "all_checks_passed does not match logical AND of all checks"
+    
+    # Update validation_checks in prospective_final_state with final values (BEFORE rendering)
     prospective_final_state["validation_checks"] = validation_results
     
     # Add non-self-referential serialization evidence (before rendering)
@@ -2337,36 +2694,7 @@ def main():
         "self_referential_hashes_embedded": False
     }
     
-    # G. Set deterministic_serialization_passed to true only in the prospective state that will be tested
-    # Update validation results with serialization evidence
-    validation_results["preservation_checks_passed"] = preservation_evidence["preservation_checks_passed"]
-    validation_results["deterministic_serialization_passed"] = True
-    validation_results["all_checks_passed"] = all(
-        validation_results[check] for check in [
-            "exact_research_questions_passed", "analysis_domains_passed", "candidate_metadata_matches_current_pipeline",
-            "metric_taxonomy_passed", "metric_direction_passed", "metric_count_is_14",
-            "metric_threshold_dependency_passed", "metric_inspection_budget_dependency_passed",
-            "metric_primary_secondary_passed", "objective_policy_passed", "existing_soft_top3_policy_passed",
-            "baseline_policy_passed", "adaptive_policy_passed", "ensemble_policy_passed",
-            "tie_policy_passed", "oracle_policy_passed", "unit_of_analysis_policy_passed",
-            "statistical_reporting_policy_passed", "agreement_policy_passed", "balanced_weight_sensitivity_frozen",
-            "threshold_grid_sensitivity_frozen", "source_project_aware_protocol_frozen",
-            "sensitivity_policy_passed", "threats_mapping_passed", "reviewer_context_complete",
-            "reviewer_traceability_passed", "roadmap_passed", "prohibited_claims_passed", "stage_gate_passed",
-            "preservation_checks_passed", "deterministic_serialization_passed"
-        ]
-    )
-    
-    # Update stage gate based on final validation
-    if validation_results["all_checks_passed"]:
-        prospective_final_state["stage_gate"]["part3a_contract_frozen"] = True
-    else:
-        prospective_final_state["stage_gate"]["part3a_contract_frozen"] = False
-    
-    # Update validation_checks in prospective_final_state with final values (BEFORE rendering)
-    prospective_final_state["validation_checks"] = validation_results
-    
-    # H. Render that exact prospective final state twice as JSON and twice as Markdown
+    # P. Render the exact prospective final state twice
     print("Testing JSON double serialization...")
     json_content_1, json_sha_1, json_content_2, json_sha_2, json_identical = serialize_json(prospective_final_state, repo_root)
     
@@ -2379,8 +2707,8 @@ def main():
     if not md_identical:
         raise RuntimeError("Markdown double rendering failed - not byte-identical")
     
-    # I. Require byte-identical double rendering (already verified above)
-    # J. Once the double rendering passes, treat that exact object as immutable final_state
+    # Q. Abort before writing if either double rendering differs (already verified above)
+    # R. Treat the successfully double-rendered state as immutable final_state
     
     # K. Write the exact already-compared strings
     reports_dir = repo_root / "reports"

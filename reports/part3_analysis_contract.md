@@ -1,6 +1,6 @@
 # Scientific Analysis Contract for Major Revision
 
-**Contract Version:** Part-3A.2-v1
+**Contract Version:** Part-3A.3-v1
 **Starting Commit:** ec60c38abae80046fa0d345caa817258b97cdbf1
 **Repository:** abtinasg/springer
 **Branch:** major-revision-analysis-v2
@@ -853,7 +853,7 @@ Candidate ranking by rank objective, after candidate or ensemble selection, thre
 - Reviewer 3 Concern Count: 1
 - Covered Comment Count: 11
 
-**Coverage Identifiers:
+**Coverage Identifiers:**
 
 - reviewer_1_comment_1
 - reviewer_1_comment_2
@@ -1006,18 +1006,18 @@ Candidate ranking by rank objective, after candidate or ensemble selection, thre
 
 ## Prohibited Claims
 
-- AQRPE v2 is a fundamentally new algorithm.
-- Validation-based model selection is itself a novel contribution.
-- Soft averaging of top models is itself a novel contribution.
-- Repeated seeds establish external validity.
-- Train/validation/test separation is itself an algorithmic contribution.
-- AQRPE universally outperforms all baselines.
-- Five seeds are five independent datasets.
-- Twenty-five project-seed runs are twenty-five independent projects.
-- A p-value alone proves superiority.
-- The test oracle is a deployable selection method.
-- Soft-top-3 is optimal before ablation.
-- Test data may influence selection or threshold tuning.
+- No method universally dominates all others across all metrics, projects, and settings.
+- Validation-based selection guarantees superior test performance.
+- Soft ensembles always outperform fixed candidates.
+- Adaptive Top-1 selection is always better than fixed baselines.
+- The oracle reference is a deployable model.
+- The five projects are a representative sample of all software projects.
+- The results generalize to industrial deployment without further validation.
+- Statistical significance tests with n=5 projects provide definitive population-level evidence.
+- Metric choice is arbitrary and does not affect conclusions.
+- Threshold policy choice is arbitrary and does not affect conclusions.
+- Validation-test agreement is a proof of validity.
+- Post-hoc regret analysis is a validation procedure.
 
 ## Stage Gate
 
