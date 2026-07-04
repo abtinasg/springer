@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Part 2 Section 4B.2B: Harden summary audit, portability, and computed evidence
+Part 2 Section 4B.2: Validation-Test Ranking Agreement Summary Audit
 
 This script computes descriptive summaries from the validated event-level CSV.
 No event rows, ranking values, winner sets, correlations, or selected-candidate results are modified.
@@ -114,6 +114,12 @@ EXPECTED_EXPERIMENT_DENOMINATORS = {"within_project": 1050, "cross_project": 105
 EXPECTED_MODE_DENOMINATORS = {"balanced": 700, "rank": 700, "mcc": 700}
 EXPECTED_METRIC_DENOMINATOR = 150
 EXPECTED_PROJECT_DENOMINATOR = 420
+
+
+def finite_mask(series: pd.Series) -> pd.Series:
+    """Return a boolean mask indicating which values are finite (not NaN, None, pd.NA, +inf, -inf)."""
+    numeric = pd.to_numeric(series, errors="coerce")
+    return series.notna() & np.isfinite(numeric)
 
 
 def convert_to_python_types(obj):
@@ -350,16 +356,24 @@ def compute_summary_row(
     spearman_defined_n = spearman_defined_mask.sum()
     spearman_undefined_n = (~spearman_defined_mask).sum()
     spearman_values = df_subset.loc[spearman_defined_mask, "spearman_rho"].values
-    spearman_mean = spearman_values.mean() if len(spearman_values) > 0 else 0.0
-    spearman_median = float(pd.Series(spearman_values).median()) if len(spearman_values) > 0 else 0.0
+    if spearman_defined_n > 0:
+        spearman_mean = spearman_values.mean()
+        spearman_median = float(pd.Series(spearman_values).median())
+    else:
+        spearman_mean = np.nan
+        spearman_median = np.nan
     
     # Kendall statistics
     kendall_defined_mask = df_subset["kendall_defined"].astype(bool)
     kendall_defined_n = kendall_defined_mask.sum()
     kendall_undefined_n = (~kendall_defined_mask).sum()
     kendall_values = df_subset.loc[kendall_defined_mask, "kendall_tau_b"].values
-    kendall_mean = kendall_values.mean() if len(kendall_values) > 0 else 0.0
-    kendall_median = float(pd.Series(kendall_values).median()) if len(kendall_values) > 0 else 0.0
+    if kendall_defined_n > 0:
+        kendall_mean = kendall_values.mean()
+        kendall_median = float(pd.Series(kendall_values).median())
+    else:
+        kendall_mean = np.nan
+        kendall_median = np.nan
     
     # Selected candidate test rank statistics
     selected_ranks = df_subset["selected_candidate_test_rank"].values
@@ -587,26 +601,38 @@ def validate_summary_row(
     
     # Check correlation mean/median
     spearman_values = df_subset.loc[spearman_defined_mask, "spearman_rho"].values
-    actual_mean = spearman_values.mean() if len(spearman_values) > 0 else 0.0
-    field_comparisons += 1
-    if not math.isclose(summary_row["spearman_mean_defined"], actual_mean, rel_tol=1e-12, abs_tol=1e-12):
-        mismatches += 1
-    
-    actual_median = float(pd.Series(spearman_values).median()) if len(spearman_values) > 0 else 0.0
-    field_comparisons += 1
-    if not math.isclose(summary_row["spearman_median_defined"], actual_median, rel_tol=1e-12, abs_tol=1e-12):
-        mismatches += 1
+    spearman_defined_n_val = spearman_defined_mask.sum()
+    if spearman_defined_n_val > 0:
+        actual_mean = spearman_values.mean()
+        actual_median = float(pd.Series(spearman_values).median())
+        field_comparisons += 2
+        if not (np.isfinite(actual_mean) and np.isfinite(actual_median)):
+            mismatches += 2
+        elif not (math.isclose(summary_row["spearman_mean_defined"], actual_mean, rel_tol=1e-12, abs_tol=1e-12) and
+                  math.isclose(summary_row["spearman_median_defined"], actual_median, rel_tol=1e-12, abs_tol=1e-12)):
+            mismatches += 2
+    else:
+        # When defined_n == 0, summary mean and median must both be missing
+        field_comparisons += 2
+        if not (pd.isna(summary_row["spearman_mean_defined"]) and pd.isna(summary_row["spearman_median_defined"])):
+            mismatches += 2
     
     kendall_values = df_subset.loc[kendall_defined_mask, "kendall_tau_b"].values
-    actual_mean = kendall_values.mean() if len(kendall_values) > 0 else 0.0
-    field_comparisons += 1
-    if not math.isclose(summary_row["kendall_mean_defined"], actual_mean, rel_tol=1e-12, abs_tol=1e-12):
-        mismatches += 1
-    
-    actual_median = float(pd.Series(kendall_values).median()) if len(kendall_values) > 0 else 0.0
-    field_comparisons += 1
-    if not math.isclose(summary_row["kendall_median_defined"], actual_median, rel_tol=1e-12, abs_tol=1e-12):
-        mismatches += 1
+    kendall_defined_n_val = kendall_defined_mask.sum()
+    if kendall_defined_n_val > 0:
+        actual_mean = kendall_values.mean()
+        actual_median = float(pd.Series(kendall_values).median())
+        field_comparisons += 2
+        if not (np.isfinite(actual_mean) and np.isfinite(actual_median)):
+            mismatches += 2
+        elif not (math.isclose(summary_row["kendall_mean_defined"], actual_mean, rel_tol=1e-12, abs_tol=1e-12) and
+                  math.isclose(summary_row["kendall_median_defined"], actual_median, rel_tol=1e-12, abs_tol=1e-12)):
+            mismatches += 2
+    else:
+        # When defined_n == 0, summary mean and median must both be missing
+        field_comparisons += 2
+        if not (pd.isna(summary_row["kendall_mean_defined"]) and pd.isna(summary_row["kendall_median_defined"])):
+            mismatches += 2
     
     # Check selected rank statistics
     selected_ranks = df_subset["selected_candidate_test_rank"].values
@@ -656,33 +682,41 @@ def check_range_constraints(summary_dfs: Dict[str, pd.DataFrame]) -> Dict[str, A
     
     for name, df in summary_dfs.items():
         table_evidence = {
-            "non_finite_count": 0,
+            "mandatory_numeric_non_finite_count": 0,
+            "count_non_finite_count": 0,
+            "rate_non_finite_count": 0,
+            "jaccard_non_finite_count": 0,
+            "selected_rank_non_finite_count": 0,
+            "correlation_non_finite_count": 0,
+            "correlation_state_failure_count": 0,
             "count_range_failure_count": 0,
             "rate_range_failure_count": 0,
             "jaccard_range_failure_count": 0,
-            "correlation_state_failure_count": 0,
             "correlation_range_failure_count": 0,
             "selected_rank_range_failure_count": 0,
             "passed": True,
         }
         
-        # Check n_event_rows is finite
-        if not df["n_event_rows"].apply(lambda x: np.isfinite(x) if pd.notna(x) else False).all():
-            table_evidence["non_finite_count"] += df["n_event_rows"].apply(lambda x: not np.isfinite(x) if pd.notna(x) else False).sum()
+        # Check n_event_rows is finite (mandatory numeric)
+        non_finite_mask = ~finite_mask(df["n_event_rows"])
+        failure_count = int(non_finite_mask.sum())
+        table_evidence["mandatory_numeric_non_finite_count"] += failure_count
         
         # Check counts are between 0 and denominator and finite
         for col in df.columns:
             if col.endswith("_n") and col != "n_event_rows":
-                if not df[col].apply(lambda x: np.isfinite(x) if pd.notna(x) else False).all():
-                    table_evidence["non_finite_count"] += df[col].apply(lambda x: not np.isfinite(x) if pd.notna(x) else False).sum()
+                non_finite_mask = ~finite_mask(df[col])
+                failure_count = int(non_finite_mask.sum())
+                table_evidence["count_non_finite_count"] += failure_count
                 if (df[col] < 0).any() or (df[col] > df["n_event_rows"]).any():
                     table_evidence["count_range_failure_count"] += 1
         
         # Check rates are in [0, 1] and finite
         for col in df.columns:
             if col.endswith("_rate"):
-                if not df[col].apply(lambda x: np.isfinite(x) if pd.notna(x) else False).all():
-                    table_evidence["non_finite_count"] += df[col].apply(lambda x: not np.isfinite(x) if pd.notna(x) else False).sum()
+                non_finite_mask = ~finite_mask(df[col])
+                failure_count = int(non_finite_mask.sum())
+                table_evidence["rate_non_finite_count"] += failure_count
                 if (df[col] < 0).any() or (df[col] > 1).any():
                     table_evidence["rate_range_failure_count"] += 1
         
@@ -690,8 +724,9 @@ def check_range_constraints(summary_dfs: Dict[str, pd.DataFrame]) -> Dict[str, A
         for col in ["winner_set_jaccard_exact_mean", "winner_set_jaccard_exact_median",
                     "winner_set_jaccard_tolerance_mean", "winner_set_jaccard_tolerance_median"]:
             if col in df.columns:
-                if not df[col].apply(lambda x: np.isfinite(x) if pd.notna(x) else False).all():
-                    table_evidence["non_finite_count"] += df[col].apply(lambda x: not np.isfinite(x) if pd.notna(x) else False).sum()
+                non_finite_mask = ~finite_mask(df[col])
+                failure_count = int(non_finite_mask.sum())
+                table_evidence["jaccard_non_finite_count"] += failure_count
                 if (df[col] < 0).any() or (df[col] > 1).any():
                     table_evidence["jaccard_range_failure_count"] += 1
         
@@ -699,28 +734,38 @@ def check_range_constraints(summary_dfs: Dict[str, pd.DataFrame]) -> Dict[str, A
         for col in ["spearman_mean_defined", "spearman_median_defined",
                     "kendall_mean_defined", "kendall_median_defined"]:
             if col in df.columns:
-                # Check finite first
-                if not df[col].apply(lambda x: np.isfinite(x) if pd.notna(x) else False).all():
-                    table_evidence["non_finite_count"] += df[col].apply(lambda x: not np.isfinite(x) if pd.notna(x) else False).sum()
-                    table_evidence["correlation_state_failure_count"] += 1
+                non_finite_mask = ~finite_mask(df[col])
+                failure_count = int(non_finite_mask.sum())
+                table_evidence["correlation_non_finite_count"] += failure_count
+                # Check if defined_n == 0 but mean/median == 0.0 (invalid substitution)
+                defined_n_col = col.replace("_mean_defined", "_defined_n").replace("_median_defined", "_defined_n")
+                if defined_n_col in df.columns:
+                    for idx, row in df.iterrows():
+                        if row[defined_n_col] == 0 and (row[col] == 0.0 or not pd.isna(row[col])):
+                            table_evidence["correlation_state_failure_count"] += 1
                 if (df[col] < -1).any() or (df[col] > 1).any():
                     table_evidence["correlation_range_failure_count"] += 1
         
         # Check selected test rank in [1, 4] and finite
         for col in ["selected_candidate_test_rank_mean", "selected_candidate_test_rank_median"]:
             if col in df.columns:
-                # Check finite first
-                if not df[col].apply(lambda x: np.isfinite(x) if pd.notna(x) else False).all():
-                    table_evidence["non_finite_count"] += df[col].apply(lambda x: not np.isfinite(x) if pd.notna(x) else False).sum()
+                non_finite_mask = ~finite_mask(df[col])
+                failure_count = int(non_finite_mask.sum())
+                table_evidence["selected_rank_non_finite_count"] += failure_count
                 if (df[col] < 1).any() or (df[col] > 4).any():
                     table_evidence["selected_rank_range_failure_count"] += 1
         
         table_evidence["passed"] = (
-            table_evidence["non_finite_count"] == 0 and
+            table_evidence["mandatory_numeric_non_finite_count"] == 0 and
+            table_evidence["count_non_finite_count"] == 0 and
+            table_evidence["rate_non_finite_count"] == 0 and
+            table_evidence["jaccard_non_finite_count"] == 0 and
+            table_evidence["selected_rank_non_finite_count"] == 0 and
+            table_evidence["correlation_non_finite_count"] == 0 and
+            table_evidence["correlation_state_failure_count"] == 0 and
             table_evidence["count_range_failure_count"] == 0 and
             table_evidence["rate_range_failure_count"] == 0 and
             table_evidence["jaccard_range_failure_count"] == 0 and
-            table_evidence["correlation_state_failure_count"] == 0 and
             table_evidence["correlation_range_failure_count"] == 0 and
             table_evidence["selected_rank_range_failure_count"] == 0
         )
@@ -765,6 +810,131 @@ def validate_output_schemas(summary_dfs: Dict[str, pd.DataFrame], undefined_reas
     }
 
 
+def run_synthetic_nan_tests() -> Dict[str, Any]:
+    """Run seven in-memory synthetic fail-safe tests for NaN and undefined-state handling."""
+    tests_passed = 0
+    tests_failed = 0
+    
+    # Test A: Count field = NaN
+    test_df_a = pd.DataFrame({
+        "group_name": ["overall"],
+        "group_value": ["all"],
+        "n_event_rows": [100],
+        "strict_top1_agreement_exact_n": [np.nan],
+        "strict_top1_agreement_exact_rate": [0.5],
+    })
+    result_a = check_range_constraints({"test": test_df_a})
+    test_a_passed = not result_a["details"]["test"]["passed"] and result_a["details"]["test"]["count_non_finite_count"] > 0
+    if test_a_passed:
+        tests_passed += 1
+    else:
+        tests_failed += 1
+    
+    # Test B: Rate field = NaN
+    test_df_b = pd.DataFrame({
+        "group_name": ["overall"],
+        "group_value": ["all"],
+        "n_event_rows": [100],
+        "strict_top1_agreement_exact_n": [50],
+        "strict_top1_agreement_exact_rate": [np.nan],
+    })
+    result_b = check_range_constraints({"test": test_df_b})
+    test_b_passed = not result_b["details"]["test"]["passed"] and result_b["details"]["test"]["rate_non_finite_count"] > 0
+    if test_b_passed:
+        tests_passed += 1
+    else:
+        tests_failed += 1
+    
+    # Test C: Jaccard field = NaN
+    test_df_c = pd.DataFrame({
+        "group_name": ["overall"],
+        "group_value": ["all"],
+        "n_event_rows": [100],
+        "winner_set_jaccard_exact_mean": [np.nan],
+        "winner_set_jaccard_exact_median": [0.5],
+    })
+    result_c = check_range_constraints({"test": test_df_c})
+    test_c_passed = not result_c["details"]["test"]["passed"] and result_c["details"]["test"]["jaccard_non_finite_count"] > 0
+    if test_c_passed:
+        tests_passed += 1
+    else:
+        tests_failed += 1
+    
+    # Test D: Selected-rank mean = NaN
+    test_df_d = pd.DataFrame({
+        "group_name": ["overall"],
+        "group_value": ["all"],
+        "n_event_rows": [100],
+        "selected_candidate_test_rank_mean": [np.nan],
+        "selected_candidate_test_rank_median": [2.0],
+    })
+    result_d = check_range_constraints({"test": test_df_d})
+    test_d_passed = not result_d["details"]["test"]["passed"] and result_d["details"]["test"]["selected_rank_non_finite_count"] > 0
+    if test_d_passed:
+        tests_passed += 1
+    else:
+        tests_failed += 1
+    
+    # Test E: Correlation defined_n == 0 and mean/median == 0.0 (invalid substitution)
+    test_df_e = pd.DataFrame({
+        "group_name": ["overall"],
+        "group_value": ["all"],
+        "n_event_rows": [100],
+        "spearman_defined_n": [0],
+        "spearman_undefined_n": [100],
+        "spearman_mean_defined": [0.0],
+        "spearman_median_defined": [0.0],
+    })
+    result_e = check_range_constraints({"test": test_df_e})
+    test_e_passed = not result_e["details"]["test"]["passed"] and result_e["details"]["test"]["correlation_state_failure_count"] > 0
+    if test_e_passed:
+        tests_passed += 1
+    else:
+        tests_failed += 1
+    
+    # Test F: Correlation defined_n == 0 and mean/median == NaN (correct behavior)
+    test_df_f = pd.DataFrame({
+        "group_name": ["overall"],
+        "group_value": ["all"],
+        "n_event_rows": [100],
+        "spearman_defined_n": [0],
+        "spearman_undefined_n": [100],
+        "spearman_mean_defined": [np.nan],
+        "spearman_median_defined": [np.nan],
+    })
+    result_f = check_range_constraints({"test": test_df_f})
+    test_f_passed = result_f["details"]["test"]["correlation_state_failure_count"] == 0
+    if test_f_passed:
+        tests_passed += 1
+    else:
+        tests_failed += 1
+    
+    # Test G: Correlation defined_n > 0 and mean or median == NaN
+    test_df_g = pd.DataFrame({
+        "group_name": ["overall"],
+        "group_value": ["all"],
+        "n_event_rows": [100],
+        "spearman_defined_n": [50],
+        "spearman_undefined_n": [50],
+        "spearman_mean_defined": [np.nan],
+        "spearman_median_defined": [0.5],
+    })
+    result_g = check_range_constraints({"test": test_df_g})
+    test_g_passed = not result_g["details"]["test"]["passed"] and result_g["details"]["test"]["correlation_non_finite_count"] > 0
+    if test_g_passed:
+        tests_passed += 1
+    else:
+        tests_failed += 1
+    
+    return {
+        "synthetic_nan_tests_expected": 7,
+        "synthetic_nan_tests_executed": 7,
+        "synthetic_nan_tests_passed": tests_passed,
+        "synthetic_nan_test_failure_count": tests_failed,
+        "nan_and_undefined_state_fail_safe_passed": tests_failed == 0,
+    }
+
+
 def validate_summary_domains(summary_dfs: Dict[str, pd.DataFrame], spec: Dict[str, Any]) -> Dict[str, Any]:
     """Validate exact summary domains and row cardinalities."""
     domain_evidence = {
@@ -795,7 +965,13 @@ def validate_summary_domains(summary_dfs: Dict[str, pd.DataFrame], spec: Dict[st
         expected_set = set(expected_groups[table_name])
         actual_set = set(zip(df["group_name"], df["group_value"]))
         
-        duplicate_group_row_count = df.groupby(["group_name", "group_value"]).size().gt(1).sum()
+        # Compute duplicate_group_key_count (groups with size > 1)
+        duplicate_group_key_count = df.groupby(["group_name", "group_value"]).size().gt(1).sum()
+        
+        # Compute duplicate_group_row_count (rows that are duplicates)
+        duplicate_mask = df.duplicated(subset=["group_name", "group_value"], keep=False)
+        duplicate_group_row_count = int(duplicate_mask.sum())
+        
         missing_group_count = len(expected_set - actual_set)
         extra_group_count = len(actual_set - expected_set)
         group_name_mismatch_count = 0
@@ -827,12 +1003,14 @@ def validate_summary_domains(summary_dfs: Dict[str, pd.DataFrame], spec: Dict[st
         domain_evidence["details"][table_name] = {
             "expected_group_count": len(expected_set),
             "actual_group_count": len(actual_set),
-            "duplicate_group_row_count": int(duplicate_group_row_count),
+            "duplicate_group_key_count": int(duplicate_group_key_count),
+            "duplicate_group_row_count": duplicate_group_row_count,
             "missing_group_count": missing_group_count,
             "extra_group_count": extra_group_count,
             "group_name_mismatch_count": group_name_mismatch_count,
             "denominator_mismatch_count": denominator_mismatch_count,
             "passed": (
+                duplicate_group_key_count == 0 and
                 duplicate_group_row_count == 0 and
                 missing_group_count == 0 and
                 extra_group_count == 0 and
@@ -842,7 +1020,7 @@ def validate_summary_domains(summary_dfs: Dict[str, pd.DataFrame], spec: Dict[st
         }
         
         domain_evidence["group_domain_mismatch_count"] += (
-            duplicate_group_row_count + missing_group_count + extra_group_count + group_name_mismatch_count
+            duplicate_group_key_count + missing_group_count + extra_group_count + group_name_mismatch_count
         )
         domain_evidence["group_denominator_mismatch_count"] += denominator_mismatch_count
     
@@ -979,7 +1157,7 @@ def validate_undefined_reasons(df: pd.DataFrame, undefined_reasons_df: pd.DataFr
 def build_audit_markdown(audit_state: Dict[str, Any]) -> str:
     """Build Markdown audit report from audit state (for audit_payload)."""
     lines = []
-    lines.append("# Part 2 Section 4B.2B: Harden Summary Audit, Portability, and Computed Evidence\n\n")
+    lines.append("# Part 2 Section 4B.2: Validation-Test Ranking Agreement Summary Audit\n\n")
     
     lines.append("## Repository-Relative Execution\n\n")
     lines.append(f"- Base path: {audit_state['execution']['base_path']}\n")
@@ -1036,6 +1214,13 @@ def build_audit_markdown(audit_state: Dict[str, Any]) -> str:
     lines.append(f"- Group denominator mismatch count: {dv['details']['group_denominator_mismatch_count']}\n")
     lines.append(f"- Summary domains valid: {dv['passed']}\n\n")
     
+    lines.append("## Summary Duplicate Group Evidence\n\n")
+    details = dv['details']['details']
+    total_duplicate_keys = sum(d['duplicate_group_key_count'] for d in details.values())
+    total_duplicate_rows = sum(d['duplicate_group_row_count'] for d in details.values())
+    lines.append(f"- Summary duplicate group keys: {total_duplicate_keys}\n")
+    lines.append(f"- Summary duplicate group rows: {total_duplicate_rows}\n\n")
+    
     lines.append("## Correlation Undefined Reasons\n\n")
     cu = audit_state['correlation_undefined']
     lines.append(f"- Spearman undefined count: {cu['spearman_count']} (expected: 18)\n")
@@ -1084,11 +1269,16 @@ def build_audit_markdown(audit_state: Dict[str, Any]) -> str:
     lines.append(f"- Range checks passed: {rc['passed']}\n")
     for name, details in rc['details'].items():
         lines.append(f"- {name}:\n")
-        lines.append(f"  - Non-finite count: {details['non_finite_count']}\n")
+        lines.append(f"  - Mandatory numeric non-finite count: {details['mandatory_numeric_non_finite_count']}\n")
+        lines.append(f"  - Count-field non-finite count: {details['count_non_finite_count']}\n")
+        lines.append(f"  - Rate-field non-finite count: {details['rate_non_finite_count']}\n")
+        lines.append(f"  - Jaccard non-finite count: {details['jaccard_non_finite_count']}\n")
+        lines.append(f"  - Selected-rank non-finite count: {details['selected_rank_non_finite_count']}\n")
+        lines.append(f"  - Correlation non-finite count: {details['correlation_non_finite_count']}\n")
+        lines.append(f"  - Correlation state failure count: {details['correlation_state_failure_count']}\n")
         lines.append(f"  - Count range failure count: {details['count_range_failure_count']}\n")
         lines.append(f"  - Rate range failure count: {details['rate_range_failure_count']}\n")
         lines.append(f"  - Jaccard range failure count: {details['jaccard_range_failure_count']}\n")
-        lines.append(f"  - Correlation state failure count: {details['correlation_state_failure_count']}\n")
         lines.append(f"  - Correlation range failure count: {details['correlation_range_failure_count']}\n")
         lines.append(f"  - Selected rank range failure count: {details['selected_rank_range_failure_count']}\n")
         lines.append(f"  - Passed: {details['passed']}\n\n")
@@ -1105,13 +1295,21 @@ def build_audit_markdown(audit_state: Dict[str, Any]) -> str:
     lines.append(f"- Test data post-selection only: {il['test_data_post_selection_only']}\n")
     lines.append(f"- Present: {il['present']}\n\n")
     
+    lines.append("## Synthetic NaN Tests\n\n")
+    snt = audit_state['synthetic_nan_tests']
+    lines.append(f"- Synthetic NaN tests expected: {snt['synthetic_nan_tests_expected']}\n")
+    lines.append(f"- Synthetic NaN tests executed: {snt['synthetic_nan_tests_executed']}\n")
+    lines.append(f"- Synthetic NaN tests passed: {snt['synthetic_nan_tests_passed']}\n")
+    lines.append(f"- Synthetic NaN test failures: {snt['synthetic_nan_test_failure_count']}\n")
+    lines.append(f"- NaN and undefined-state fail-safe passed: {snt['nan_and_undefined_state_fail_safe_passed']}\n\n")
+    
     return "".join(lines)
 
 
 def build_final_audit_markdown(final_audit_state: Dict[str, Any]) -> str:
     """Build final Markdown audit report from final_audit_state."""
     lines = []
-    lines.append("# Part 2 Section 4B.2B: Harden Summary Audit, Portability, and Computed Evidence\n\n")
+    lines.append("# Part 2 Section 4B.2: Validation-Test Ranking Agreement Summary Audit\n\n")
     
     # Include audit_payload content
     lines.append("## Audit Payload\n\n")
@@ -1325,7 +1523,10 @@ def main():
     print("Step 16: Check range constraints...")
     range_checks = check_range_constraints(summary_dfs)
     
-    print("Step 17: Build immutable audit payload...")
+    print("Step 17: Run synthetic NaN fail-safe tests...")
+    synthetic_nan_tests = run_synthetic_nan_tests()
+    
+    print("Step 18: Build immutable audit payload...")
     
     # Build execution evidence
     execution_evidence = {
@@ -1389,10 +1590,11 @@ def main():
         "correlation_identity_validation": correlation_identity_validation,
         "denominator_identities": denominator_identities,
         "range_checks": range_checks,
+        "synthetic_nan_tests": synthetic_nan_tests,
         "interpretation_limits": interpretation_limits,
     }
     
-    print("Step 18: Serialize CSVs twice and compute equality flags...")
+    print("Step 19: Serialize CSVs twice and compute equality flags...")
     
     # Sort dataframes by explicit domain order
     experiment_df = experiment_df.sort_values("group_value", key=lambda x: pd.Categorical(x, categories=experiments, ordered=True))
@@ -1426,18 +1628,18 @@ def main():
     undefined_csv_2 = undefined_reasons_df.to_csv(index=False, encoding="utf-8")
     undefined_reasons_csv_identical = undefined_csv_1 == undefined_csv_2
     
-    # Serialize JSON twice and record evidence (D: Serialize audit_payload JSON twice)
+    # Serialize JSON twice and record evidence (E: Serialize audit_payload JSON twice)
     audit_payload_python = convert_to_python_types(audit_payload)
     audit_payload_json_1 = json.dumps(audit_payload_python, indent=2, ensure_ascii=False, sort_keys=True) + "\n"
     audit_payload_json_2 = json.dumps(audit_payload_python, indent=2, ensure_ascii=False, sort_keys=True) + "\n"
     audit_payload_json_identical = audit_payload_json_1 == audit_payload_json_2
     
-    # Render audit_payload Markdown twice using a pure function (E)
+    # Render audit_payload Markdown twice using a pure function (F)
     audit_payload_md_1 = build_audit_markdown(audit_payload)
     audit_payload_md_2 = build_audit_markdown(audit_payload)
     audit_payload_md_identical = audit_payload_md_1 == audit_payload_md_2
     
-    # Build serialization_audit from the six CSV checks plus payload JSON/Markdown checks (F)
+    # Build serialization_audit from the six CSV checks plus payload JSON/Markdown checks (G)
     serialization_audit = {
         "overall_csv_serialization_identical": overall_csv_identical,
         "experiment_csv_serialization_identical": experiment_csv_identical,
@@ -1467,10 +1669,10 @@ def main():
         ]),
     }
     
-    # Compute deterministic_output_serialization_passed from all eight serialization checks (G)
+    # Compute deterministic_output_serialization_passed from all eight serialization checks (H)
     deterministic_output_serialization_passed = serialization_audit["passed"]
     
-    # Build validation checks (H: Compute output_integrity_ready_passed only after every other check)
+    # Build validation checks (I: Compute output_integrity_ready_passed only after every other check)
     validation_checks = {
         "input_sha_verified": input_verification["sha256_verified"],
         "input_schema_valid": input_verification["input_schema_valid"],
@@ -1496,26 +1698,27 @@ def main():
         "undefined_reasons_validation_passed": undefined_reasons_validation["passed"],
         "interpretation_limits_present": interpretation_limits["present"],
         "deterministic_output_serialization_passed": deterministic_output_serialization_passed,
+        "nan_and_undefined_state_fail_safe_passed": synthetic_nan_tests["nan_and_undefined_state_fail_safe_passed"],
     }
     
     # Compute output_integrity_ready_passed only after every other check
     output_integrity_ready_passed = all(validation_checks.values())
     validation_checks["output_integrity_ready_passed"] = output_integrity_ready_passed
     
-    # Compute all_checks_passed only after output_integrity_ready_passed exists (I)
+    # Compute all_checks_passed only after output_integrity_ready_passed exists (J)
     all_checks_passed = output_integrity_ready_passed
     validation_checks["all_checks_passed"] = all_checks_passed
     
-    # Build one immutable final state (J)
+    # Build one immutable final state (K)
     final_audit_state = {
         "audit_payload": audit_payload,
         "serialization_audit": serialization_audit,
         "validation_checks": validation_checks,
     }
     
-    print("Step 19: Serialize final_audit_state to JSON twice and require equality...")
+    print("Step 20: Serialize final_audit_state to JSON twice and require equality...")
     
-    # Serialize final_audit_state to JSON twice (K)
+    # Serialize final_audit_state to JSON twice (L)
     final_audit_state_python = convert_to_python_types(final_audit_state)
     final_audit_json_1 = json.dumps(final_audit_state_python, indent=2, ensure_ascii=False, sort_keys=True) + "\n"
     final_audit_json_2 = json.dumps(final_audit_state_python, indent=2, ensure_ascii=False, sort_keys=True) + "\n"
@@ -1524,7 +1727,7 @@ def main():
     if not final_audit_json_identical:
         raise ValueError("Final audit state JSON serialization is not deterministic")
     
-    # Build final Markdown from final_audit_state twice and require equality (L)
+    # Build final Markdown from final_audit_state twice and require equality (M)
     final_audit_md_1 = build_final_audit_markdown(final_audit_state)
     final_audit_md_2 = build_final_audit_markdown(final_audit_state)
     final_audit_md_identical = final_audit_md_1 == final_audit_md_2
@@ -1532,12 +1735,12 @@ def main():
     if not final_audit_md_identical:
         raise ValueError("Final audit state Markdown rendering is not deterministic")
     
-    print("Step 20: Validate all checks passed before write...")
+    print("Step 21: Validate all checks passed before write...")
     if not validation_checks["all_checks_passed"]:
         failed = [k for k, v in validation_checks.items() if not v and k != "all_checks_passed"]
         raise ValueError(f"Validation checks failed: {failed}")
     
-    # Final JSON/Markdown consistency assertions (H)
+    # Final JSON/Markdown consistency assertions (I)
     assert final_audit_state["serialization_audit"]["passed"] is True
     assert final_audit_state["validation_checks"]["deterministic_output_serialization_passed"] is True
     assert final_audit_state["validation_checks"]["output_integrity_ready_passed"] is True
@@ -1549,12 +1752,13 @@ def main():
     assert "Deterministic output serialization passed: True" in final_audit_md_1
     assert "output integrity ready passed: True" in final_audit_md_1
     assert "all checks passed: True" in final_audit_md_1
+    assert "NaN and undefined-state fail-safe passed: True" in final_audit_md_1
     
     # Assert final Markdown does not contain N/A or false deterministic status
     assert "N/A" not in final_audit_md_1
     assert "Deterministic output serialization passed: False" not in final_audit_md_1
     
-    print("Step 21: Write outputs...")
+    print("Step 22: Write outputs...")
     temp_files = []
     try:
         # Write CSVs

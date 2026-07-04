@@ -1,8 +1,8 @@
-# Part 2 Section 4B.2B: Harden Summary Audit, Portability, and Computed Evidence
+# Part 2 Section 4B.2: Validation-Test Ranking Agreement Summary Audit
 
 ## Audit Payload
 
-# Part 2 Section 4B.2B: Harden Summary Audit, Portability, and Computed Evidence
+# Part 2 Section 4B.2: Validation-Test Ranking Agreement Summary Audit
 
 ## Repository-Relative Execution
 
@@ -104,6 +104,11 @@
 - Group denominator mismatch count: 0
 - Summary domains valid: True
 
+## Summary Duplicate Group Evidence
+
+- Summary duplicate group keys: 0
+- Summary duplicate group rows: 0
+
 ## Correlation Undefined Reasons
 
 - Spearman undefined count: 18 (expected: 18)
@@ -158,51 +163,76 @@
 
 - Range checks passed: True
 - overall:
-  - Non-finite count: 0
+  - Mandatory numeric non-finite count: 0
+  - Count-field non-finite count: 0
+  - Rate-field non-finite count: 0
+  - Jaccard non-finite count: 0
+  - Selected-rank non-finite count: 0
+  - Correlation non-finite count: 0
+  - Correlation state failure count: 0
   - Count range failure count: 0
   - Rate range failure count: 0
   - Jaccard range failure count: 0
-  - Correlation state failure count: 0
   - Correlation range failure count: 0
   - Selected rank range failure count: 0
   - Passed: True
 
 - by_experiment:
-  - Non-finite count: 0
+  - Mandatory numeric non-finite count: 0
+  - Count-field non-finite count: 0
+  - Rate-field non-finite count: 0
+  - Jaccard non-finite count: 0
+  - Selected-rank non-finite count: 0
+  - Correlation non-finite count: 0
+  - Correlation state failure count: 0
   - Count range failure count: 0
   - Rate range failure count: 0
   - Jaccard range failure count: 0
-  - Correlation state failure count: 0
   - Correlation range failure count: 0
   - Selected rank range failure count: 0
   - Passed: True
 
 - by_mode:
-  - Non-finite count: 0
+  - Mandatory numeric non-finite count: 0
+  - Count-field non-finite count: 0
+  - Rate-field non-finite count: 0
+  - Jaccard non-finite count: 0
+  - Selected-rank non-finite count: 0
+  - Correlation non-finite count: 0
+  - Correlation state failure count: 0
   - Count range failure count: 0
   - Rate range failure count: 0
   - Jaccard range failure count: 0
-  - Correlation state failure count: 0
   - Correlation range failure count: 0
   - Selected rank range failure count: 0
   - Passed: True
 
 - by_metric:
-  - Non-finite count: 0
+  - Mandatory numeric non-finite count: 0
+  - Count-field non-finite count: 0
+  - Rate-field non-finite count: 0
+  - Jaccard non-finite count: 0
+  - Selected-rank non-finite count: 0
+  - Correlation non-finite count: 0
+  - Correlation state failure count: 0
   - Count range failure count: 0
   - Rate range failure count: 0
   - Jaccard range failure count: 0
-  - Correlation state failure count: 0
   - Correlation range failure count: 0
   - Selected rank range failure count: 0
   - Passed: True
 
 - by_project:
-  - Non-finite count: 0
+  - Mandatory numeric non-finite count: 0
+  - Count-field non-finite count: 0
+  - Rate-field non-finite count: 0
+  - Jaccard non-finite count: 0
+  - Selected-rank non-finite count: 0
+  - Correlation non-finite count: 0
+  - Correlation state failure count: 0
   - Count range failure count: 0
   - Rate range failure count: 0
   - Jaccard range failure count: 0
-  - Correlation state failure count: 0
   - Correlation range failure count: 0
   - Selected rank range failure count: 0
   - Passed: True
@@ -218,6 +248,14 @@
 - No superiority claim based only on agreement: True
 - Test data post-selection only: True
 - Present: True
+
+## Synthetic NaN Tests
+
+- Synthetic NaN tests expected: 7
+- Synthetic NaN tests executed: 7
+- Synthetic NaN tests passed: 7
+- Synthetic NaN test failures: 0
+- NaN and undefined-state fail-safe passed: True
 
 ## Serialization Audit
 
@@ -250,6 +288,7 @@
 - undefined reasons validation passed: True
 - interpretation limits present: True
 - deterministic output serialization passed: True
+- nan and undefined state fail safe passed: True
 - output integrity ready passed: True
 - all checks passed: True
 

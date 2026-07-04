@@ -63,53 +63,78 @@
     "range_checks": {
       "details": {
         "by_experiment": {
+          "correlation_non_finite_count": 0,
           "correlation_range_failure_count": 0,
           "correlation_state_failure_count": 0,
+          "count_non_finite_count": 0,
           "count_range_failure_count": 0,
+          "jaccard_non_finite_count": 0,
           "jaccard_range_failure_count": 0,
-          "non_finite_count": 0,
+          "mandatory_numeric_non_finite_count": 0,
           "passed": true,
+          "rate_non_finite_count": 0,
           "rate_range_failure_count": 0,
+          "selected_rank_non_finite_count": 0,
           "selected_rank_range_failure_count": 0
         },
         "by_metric": {
+          "correlation_non_finite_count": 0,
           "correlation_range_failure_count": 0,
           "correlation_state_failure_count": 0,
+          "count_non_finite_count": 0,
           "count_range_failure_count": 0,
+          "jaccard_non_finite_count": 0,
           "jaccard_range_failure_count": 0,
-          "non_finite_count": 0,
+          "mandatory_numeric_non_finite_count": 0,
           "passed": true,
+          "rate_non_finite_count": 0,
           "rate_range_failure_count": 0,
+          "selected_rank_non_finite_count": 0,
           "selected_rank_range_failure_count": 0
         },
         "by_mode": {
+          "correlation_non_finite_count": 0,
           "correlation_range_failure_count": 0,
           "correlation_state_failure_count": 0,
+          "count_non_finite_count": 0,
           "count_range_failure_count": 0,
+          "jaccard_non_finite_count": 0,
           "jaccard_range_failure_count": 0,
-          "non_finite_count": 0,
+          "mandatory_numeric_non_finite_count": 0,
           "passed": true,
+          "rate_non_finite_count": 0,
           "rate_range_failure_count": 0,
+          "selected_rank_non_finite_count": 0,
           "selected_rank_range_failure_count": 0
         },
         "by_project": {
+          "correlation_non_finite_count": 0,
           "correlation_range_failure_count": 0,
           "correlation_state_failure_count": 0,
+          "count_non_finite_count": 0,
           "count_range_failure_count": 0,
+          "jaccard_non_finite_count": 0,
           "jaccard_range_failure_count": 0,
-          "non_finite_count": 0,
+          "mandatory_numeric_non_finite_count": 0,
           "passed": true,
+          "rate_non_finite_count": 0,
           "rate_range_failure_count": 0,
+          "selected_rank_non_finite_count": 0,
           "selected_rank_range_failure_count": 0
         },
         "overall": {
+          "correlation_non_finite_count": 0,
           "correlation_range_failure_count": 0,
           "correlation_state_failure_count": 0,
+          "count_non_finite_count": 0,
           "count_range_failure_count": 0,
+          "jaccard_non_finite_count": 0,
           "jaccard_range_failure_count": 0,
-          "non_finite_count": 0,
+          "mandatory_numeric_non_finite_count": 0,
           "passed": true,
+          "rate_non_finite_count": 0,
           "rate_range_failure_count": 0,
+          "selected_rank_non_finite_count": 0,
           "selected_rank_range_failure_count": 0
         }
       },
@@ -143,6 +168,7 @@
           "by_experiment": {
             "actual_group_count": 2,
             "denominator_mismatch_count": 0,
+            "duplicate_group_key_count": 0,
             "duplicate_group_row_count": 0,
             "expected_group_count": 2,
             "extra_group_count": 0,
@@ -153,6 +179,7 @@
           "by_metric": {
             "actual_group_count": 14,
             "denominator_mismatch_count": 0,
+            "duplicate_group_key_count": 0,
             "duplicate_group_row_count": 0,
             "expected_group_count": 14,
             "extra_group_count": 0,
@@ -163,6 +190,7 @@
           "by_mode": {
             "actual_group_count": 3,
             "denominator_mismatch_count": 0,
+            "duplicate_group_key_count": 0,
             "duplicate_group_row_count": 0,
             "expected_group_count": 3,
             "extra_group_count": 0,
@@ -173,6 +201,7 @@
           "by_project": {
             "actual_group_count": 5,
             "denominator_mismatch_count": 0,
+            "duplicate_group_key_count": 0,
             "duplicate_group_row_count": 0,
             "expected_group_count": 5,
             "extra_group_count": 0,
@@ -183,6 +212,7 @@
           "overall": {
             "actual_group_count": 1,
             "denominator_mismatch_count": 0,
+            "duplicate_group_key_count": 0,
             "duplicate_group_row_count": 0,
             "expected_group_count": 1,
             "extra_group_count": 0,
@@ -237,6 +267,13 @@
       },
       "passed": true
     },
+    "synthetic_nan_tests": {
+      "nan_and_undefined_state_fail_safe_passed": true,
+      "synthetic_nan_test_failure_count": 0,
+      "synthetic_nan_tests_executed": 7,
+      "synthetic_nan_tests_expected": 7,
+      "synthetic_nan_tests_passed": 7
+    },
     "undefined_reasons_validation": {
       "actual_kendall_count": 18,
       "actual_spearman_count": 18,
@@ -286,6 +323,7 @@
     "input_schema_valid": true,
     "input_sha_verified": true,
     "interpretation_limits_present": true,
+    "nan_and_undefined_state_fail_safe_passed": true,
     "output_integrity_ready_passed": true,
     "range_checks_passed": true,
     "summary_counts_correct": true,
