@@ -46,6 +46,12 @@
 - AQRPE rows checked: 150
 - Selected candidate rows checked: 150
 - Selection mode mismatches: 0
+- Domain mismatches: 0
+- Score mismatches: 0
+- Threshold mismatches: 0
+- Rank threshold mismatches: 0
+- Objective membership mismatches: 0
+- Test metric columns used for selection: 0
 - Provenance validation passed: True
 
 ## Ranking Tests
@@ -91,7 +97,8 @@
 ## Event Validation
 
 - Event rows: 2100 (expected: 2100)
-- Event columns: 28 (expected: 23)
+- Event columns: 28 (expected: 28)
+- Column order ok: True
 - Event validation passed: True
 
 ## Event Key Coverage
@@ -115,15 +122,20 @@
 
 ## Correlation State Consistency
 
-- Correlation rows checked: 2100
-- Spearman state mismatches: 0
-- Kendall state mismatches: 0
-- Correlation state consistency passed: True
+- Rows checked: 2100
+- Defined without value: 0
+- Undefined with value: 0
+- Undefined without reason: 0
+- Undefined invalid reason: 0
+- Defined with reason: 0
+- Non-finite defined value: 0
+- Value out of range: 0
+- Passed: True
 
 ## Event Row Reconstruction
 
 - Event rows reconstructed: 2100
-- Event rows with exact 2-3 comparisons: 2100
+- Event rows with exact 23 comparisons: 2100
 - Event rows with incomplete comparisons: 0
 - Event fields checked per row: 23
 - Event total field comparisons: 48300
@@ -192,104 +204,104 @@
 - Stable event ordering passed: True
 - CSV serialization identical: True
 - Audit payload JSON serialization identical: True
-- Audit payload Markdown serialization identical: True
 - Deterministic serialization ready passed: True
 - Output integrity ready passed: True
 
 ## Validation Checks Summary
 
-- canonical_verification_passed: True
-- input_schema_passed: True
-- input_numeric_finite_passed: True
-- input_domain_passed: True
-- validation_key_uniqueness_passed: True
-- repeated_key_uniqueness_passed: True
+- agreement_identity_checks_passed: True
+- artifact_semantic_consistency_passed: True
 - baseline_key_uniqueness_passed: True
+- canonical_verification_passed: True
 - controlled_join_passed: True
-- four_candidate_coverage_passed: True
-- metric_mapping_passed: True
-- selected_candidate_AQRPE_uniqueness_passed: True
-- selected_candidate_selection_mode_passed: True
-- selected_candidate_domain_passed: True
-- selected_candidate_validation_row_uniqueness_passed: True
-- selected_candidate_score_match_passed: True
-- selected_candidate_threshold_match_passed: True
-- selected_candidate_rank_threshold_passed: True
-- selected_candidate_objective_membership_passed: True
-- selected_candidate_no_test_leakage_passed: True
-- permutation_rank_test_passed: True
+- correlation_range_passed: True
+- correlation_state_consistency_passed: True
+- correlation_value_reconstruction_passed: True
+- deterministic_serialization_ready_passed: True
+- event_key_uniqueness_passed: True
+- event_reconstruction_passed: True
+- event_row_count_passed: True
+- event_schema_passed: True
 - exact_tie_rank_test_passed: True
-- synthetic_non_chaining_test_passed: True
+- four_candidate_coverage_passed: True
+- independent_exact_nonidentity_order_test_passed: True
 - independent_exact_permutation_test_passed: True
 - independent_exact_tie_test_passed: True
-- independent_exact_nonidentity_order_test_passed: True
-- event_schema_passed: True
-- event_row_count_passed: True
-- event_key_uniqueness_passed: True
-- winner_set_integrity_passed: True
-- correlation_state_consistency_passed: True
-- event_reconstruction_passed: True
-- agreement_identity_checks_passed: True
-- rank_integrity_passed: True
-- correlation_value_reconstruction_passed: True
-- selected_candidate_test_rank_passed: True
 - input_cardinality_passed: True
-- correlation_range_passed: True
-- deterministic_serialization_ready_passed: True
+- input_domain_passed: True
+- input_numeric_finite_passed: True
+- input_schema_passed: True
+- metric_mapping_passed: True
 - output_integrity_ready_passed: True
+- permutation_rank_test_passed: True
+- rank_integrity_passed: True
+- repeated_key_uniqueness_passed: True
+- selected_candidate_AQRPE_uniqueness_passed: True
+- selected_candidate_domain_passed: True
+- selected_candidate_no_test_leakage_passed: True
+- selected_candidate_objective_membership_passed: True
+- selected_candidate_rank_threshold_passed: True
+- selected_candidate_score_match_passed: True
+- selected_candidate_selection_mode_passed: True
+- selected_candidate_test_rank_passed: True
+- selected_candidate_threshold_match_passed: True
+- selected_candidate_validation_row_uniqueness_passed: True
+- synthetic_non_chaining_test_passed: True
+- validation_key_uniqueness_passed: True
+- winner_set_integrity_passed: True
 
 ## Evidence Counters
 
-- validation_rows_checked: 600
-- baseline_rows_checked: 200
 - AQRPE_rows_checked: 150
-- analysis_units_checked: 150
-- joined_rows_checked: 600
-- metric_rows_computed: 2100
-- selected_candidate_rows_checked: 150
-- winner_sets_checked: 2100
-- rank_vectors_checked: 2100
-- spearman_rows_defined: 2082
-- spearman_rows_undefined: 18
-- kendall_rows_defined: 2082
-- kendall_rows_undefined: 18
-- synthetic_tests_checked: 3
-- event_rows_validated: 2100
-- event_rows_reconstructed: 2100
-- event_rows_with_exact_23_comparisons: 2100
-- event_rows_with_incomplete_comparisons: 0
-- event_fields_checked_per_row: 23
-- event_total_field_comparisons: 48300
-- event_reconstruction_mismatch_count: 0
-- structural_reconstruction_failure: 0
-- string_mismatches: 0
-- boolean_mismatches: 0
-- missing_state_mismatches: 0
-- exact_value_mismatches: 0
-- tolerance_value_mismatches: 0
-- reconstruction_candidate_alignments_checked: 2100
-- reconstruction_candidate_alignment_failures: 0
-- agreement_rows_checked: 2100
 - agreement_fields_checked: 21000
 - agreement_identity_mismatch_count: 0
-- exact_rank_vectors_reconstructed: 4200
-- tolerance_rank_vectors_reconstructed: 4200
-- total_rank_vectors_reconstructed: 8400
-- exact_rank_vectors_independently_checked: 4200
+- agreement_rows_checked: 2100
+- analysis_units_checked: 150
+- baseline_rows_checked: 200
+- boolean_mismatches: 0
+- correlation_candidate_alignment_failures: 0
+- correlation_candidate_alignments_checked: 2100
+- correlation_rows_reconstructed: 2100
+- correlation_state_mismatches: 0
+- event_fields_checked_per_row: 23
+- event_reconstruction_mismatch_count: 0
+- event_rows_reconstructed: 2100
+- event_rows_validated: 2100
+- event_rows_with_exact_23_comparisons: 2100
+- event_rows_with_incomplete_comparisons: 0
+- event_total_field_comparisons: 48300
 - exact_rank_group_mismatches: 0
 - exact_rank_identity_failures: 0
-- tolerance_rank_identity_failures: 0
+- exact_rank_vectors_independently_checked: 4200
+- exact_rank_vectors_reconstructed: 4200
+- exact_value_mismatches: 0
 - exact_winner_rank_identity_failures: 0
-- tolerance_winner_rank_identity_failures: 0
-- non_chaining_identity_failures: 0
-- rank_candidate_alignments_checked: 2100
-- rank_candidate_alignment_failures: 0
-- correlation_rows_reconstructed: 2100
-- spearman_reconstruction_mismatches: 0
+- joined_rows_checked: 600
 - kendall_reconstruction_mismatches: 0
-- correlation_state_mismatches: 0
-- correlation_candidate_alignments_checked: 2100
-- correlation_candidate_alignment_failures: 0
-- selected_test_ranks_checked: 2100
+- kendall_rows_defined: 2082
+- kendall_rows_undefined: 18
+- metric_rows_computed: 2100
+- missing_state_mismatches: 0
+- non_chaining_identity_failures: 0
+- rank_candidate_alignment_failures: 0
+- rank_candidate_alignments_checked: 2100
+- rank_vectors_checked: 2100
+- reconstruction_candidate_alignment_failures: 0
+- reconstruction_candidate_alignments_checked: 2100
+- selected_candidate_rows_checked: 150
 - selected_test_rank_mismatches: 0
+- selected_test_ranks_checked: 2100
+- spearman_reconstruction_mismatches: 0
+- spearman_rows_defined: 2082
+- spearman_rows_undefined: 18
+- string_mismatches: 0
+- structural_reconstruction_failure: 0
+- synthetic_tests_checked: 3
+- tolerance_rank_identity_failures: 0
+- tolerance_rank_vectors_reconstructed: 4200
+- tolerance_value_mismatches: 0
+- tolerance_winner_rank_identity_failures: 0
+- total_rank_vectors_reconstructed: 8400
+- validation_rows_checked: 600
+- winner_sets_checked: 2100
 

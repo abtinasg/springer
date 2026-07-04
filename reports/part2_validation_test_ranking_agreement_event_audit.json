@@ -2445,7 +2445,6 @@
   },
   "serialization_audit": {
     "audit_payload_json_serialization_identical": true,
-    "audit_payload_markdown_serialization_identical": true,
     "event_csv_serialization_identical": true,
     "stable_event_order_expected_key_count": 2100,
     "stable_event_order_mismatch_count": 0,
@@ -2454,6 +2453,7 @@
   },
   "validation_checks": {
     "agreement_identity_checks_passed": true,
+    "artifact_semantic_consistency_passed": true,
     "baseline_key_uniqueness_passed": true,
     "canonical_verification_passed": true,
     "controlled_join_passed": true,

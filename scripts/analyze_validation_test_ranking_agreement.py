@@ -3043,273 +3043,53 @@ def main():
     audit_payload_json_2 = json.dumps(audit_payload, indent=2, ensure_ascii=False, sort_keys=True) + "\n"
     audit_payload_json_serialization_identical = audit_payload_json_1 == audit_payload_json_2
     
-    # Step 3: Build pure Markdown function for audit_payload
-    def build_audit_payload_markdown(payload: dict) -> str:
-        lines = []
-        lines.append("# Part 2 Section 4B.1: Event-Level Validation-Test Ranking Agreement Audit\n\n")
-        lines.append("## Canonical Verification\n\n")
-        lines.append(f"- Manifest validation status: {canonical_evidence['manifest_validation_status']}\n")
-        lines.append(f"- Validation log SHA-256 match: {canonical_evidence['matches']['validation_log.csv']}\n")
-        lines.append(f"- Repeated results SHA-256 match: {canonical_evidence['matches']['repeated_all_results.csv']}\n")
-        lines.append(f"- Script SHA-256 match: {canonical_evidence['matches']['run_repeated_evaluation.py']}\n\n")
-        
-        lines.append("## Input Validation\n\n")
-        lines.append(f"- Validation rows: {schema_evidence['validation_rows']} (expected: 600)\n")
-        lines.append(f"- Validation columns: {schema_evidence['validation_columns']} (expected: 21)\n")
-        lines.append(f"- Repeated results rows: {schema_evidence['repeated_rows']} (expected: 400)\n")
-        lines.append(f"- Repeated results columns: {schema_evidence['repeated_columns']} (expected: 22)\n")
-        lines.append(f"- Schema validation passed: {schema_passed}\n")
-        lines.append(f"- Numeric/finite validation passed: {numeric_passed}\n")
-        lines.append(f"- Domain validation passed: {domain_passed}\n")
-        lines.append(f"- Key uniqueness passed: {uniqueness_passed}\n\n")
-        
-        lines.append("## Baseline Extraction\n\n")
-        lines.append(f"- Baseline rows: {baseline_evidence['baseline_rows']} (expected: 200)\n")
-        lines.append(f"- Baseline extraction passed: {baseline_passed}\n\n")
-        
-        lines.append("## Controlled Join\n\n")
-        lines.append(f"- Joined rows: {join_evidence['joined_rows']} (expected: 600)\n")
-        lines.append(f"- Matched join rows: {join_evidence['matched_join_rows']}\n")
-        lines.append(f"- Join validation passed: {join_passed}\n\n")
-        
-        lines.append("## Four-Candidate Coverage\n\n")
-        lines.append(f"- Validation units with exact four candidates: {coverage_evidence['validation_units_with_exact_four_candidates']} (expected: 150)\n")
-        lines.append(f"- Joined units with exact four candidates: {coverage_evidence['joined_units_with_exact_four_candidates']} (expected: 150)\n")
-        lines.append(f"- Candidate set mismatches: {coverage_evidence['candidate_set_mismatch_count']}\n")
-        lines.append(f"- Coverage validation passed: {coverage_passed}\n\n")
-        
-        lines.append("## Metric Mapping\n\n")
-        lines.append(f"- Metrics count: {metric_evidence['metrics_count']}\n")
-        lines.append(f"- Metric mapping passed: {metric_passed}\n\n")
-        
-        lines.append("## Selected-Candidate Provenance\n\n")
-        lines.append(f"- AQRPE rows checked: {provenance_evidence['aqrpe_rows_checked']}\n")
-        lines.append(f"- Selected candidate rows checked: {provenance_evidence['selected_candidate_rows_checked']}\n")
-        lines.append(f"- Selection mode mismatches: {provenance_evidence['selection_mode_mismatches']}\n")
-        provenance_passed = all(validation_checks.get(k, False) for k in [
-            "selected_candidate_AQRPE_uniqueness_passed",
-            "selected_candidate_selection_mode_passed",
-            "selected_candidate_domain_passed",
-            "selected_candidate_validation_row_uniqueness_passed",
-            "selected_candidate_score_match_passed",
-            "selected_candidate_threshold_match_passed",
-            "selected_candidate_rank_threshold_passed",
-            "selected_candidate_objective_membership_passed",
-            "selected_candidate_no_test_leakage_passed",
-        ])
-        lines.append(f"- Provenance validation passed: {provenance_passed}\n\n")
-        
-        lines.append("## Ranking Tests\n\n")
-        lines.append("### Permutation Rank Test\n")
-        lines.append(f"- Utilities: {permutation_evidence['utilities']}\n")
-        lines.append(f"- Exact ranks: {permutation_evidence['exact_ranks']}\n")
-        lines.append(f"- Tolerance ranks: {permutation_evidence['tolerance_ranks']}\n")
-        lines.append(f"- Expected ranks: {permutation_evidence['expected_ranks']}\n")
-        lines.append(f"- Passed: {permutation_passed}\n\n")
-        
-        lines.append("### Exact Tie Rank Test\n")
-        lines.append(f"- Utilities: {exact_tie_evidence['utilities']}\n")
-        lines.append(f"- Exact ranks: {exact_tie_evidence['exact_ranks']}\n")
-        lines.append(f"- Expected ranks: {exact_tie_evidence['expected_ranks']}\n")
-        lines.append(f"- Passed: {exact_tie_passed}\n\n")
-        
-        lines.append("### Synthetic Non-Chaining Test\n")
-        lines.append(f"- Utilities: {synthetic_evidence['utilities']}\n")
-        lines.append(f"- Ranks: {synthetic_evidence['ranks']}\n")
-        lines.append(f"- Expected ranks: {synthetic_evidence['expected_ranks']}\n")
-        lines.append(f"- First two same group: {synthetic_evidence['first_two_same_group']}\n")
-        lines.append(f"- Third different group: {synthetic_evidence['third_different_group']}\n")
-        lines.append(f"- Not all three same group: {synthetic_evidence['not_all_three_same_group']}\n")
-        lines.append(f"- Test passed: {synthetic_passed}\n\n")
-        
-        lines.append("### Independent Exact-Rank Reconstruction Tests\n")
-        lines.append(f"- Permutation test passed: {validation_checks.get('independent_exact_permutation_test_passed', False)}\n")
-        lines.append(f"- Exact-tie test passed: {validation_checks.get('independent_exact_tie_test_passed', False)}\n")
-        lines.append(f"- Nonidentity-order test passed: {validation_checks.get('independent_exact_nonidentity_order_test_passed', False)}\n\n")
-        
-        lines.append("## Event Computation\n\n")
-        lines.append(f"- Analysis units checked: {events_evidence['analysis_units_checked']}\n")
-        lines.append(f"- Metric rows computed: {events_evidence['metric_rows_computed']}\n")
-        lines.append(f"- Winner sets checked: {events_evidence['winner_sets_checked']}\n")
-        lines.append(f"- Rank vectors checked: {events_evidence['rank_vectors_checked']}\n")
-        lines.append(f"- Spearman defined: {events_evidence['spearman_defined_count']}\n")
-        lines.append(f"- Spearman undefined: {events_evidence['spearman_undefined_count']}\n")
-        lines.append(f"- Kendall defined: {events_evidence['kendall_defined_count']}\n")
-        lines.append(f"- Kendall undefined: {events_evidence['kendall_undefined_count']}\n\n")
-        
-        lines.append("## Event Validation\n\n")
-        lines.append(f"- Event rows: {len(events_df)} (expected: 2100)\n")
-        lines.append(f"- Event columns: {len(events_df.columns)} (expected: 23)\n")
-        lines.append(f"- Event validation passed: {event_passed}\n\n")
-        
-        lines.append("## Event Key Coverage\n\n")
-        lines.append(f"- Expected event key count: {event_key_coverage_evidence['expected_event_key_count']}\n")
-        lines.append(f"- Actual event key count: {event_key_coverage_evidence['actual_event_key_count']}\n")
-        lines.append(f"- Missing event key count: {event_key_coverage_evidence['missing_event_key_count']}\n")
-        lines.append(f"- Extra event key count: {event_key_coverage_evidence['extra_event_key_count']}\n")
-        lines.append(f"- Duplicate event key count: {event_key_coverage_evidence['duplicate_event_key_count']}\n")
-        lines.append(f"- Event key coverage passed: {event_key_coverage_passed}\n\n")
-        
-        lines.append("## Winner Set Integrity\n\n")
-        lines.append(f"- Rows checked: {winner_integrity_evidence['rows_checked']}\n")
-        lines.append(f"- Empty sets: {winner_integrity_evidence['empty_sets']}\n")
-        lines.append(f"- Duplicate members: {winner_integrity_evidence['duplicate_members']}\n")
-        lines.append(f"- Unknown candidates: {winner_integrity_evidence['unknown_candidates']}\n")
-        lines.append(f"- Serialization order violations: {winner_integrity_evidence['serialization_order_violations']}\n")
-        lines.append(f"- Exact not subset tolerance: {winner_integrity_evidence['exact_not_subset_tolerance']}\n")
-        lines.append(f"- Winner set integrity passed: {winner_integrity_passed}\n\n")
-        
-        lines.append("## Correlation State Consistency\n\n")
-        lines.append(f"- Correlation rows checked: {correlation_state_evidence['rows_checked']}\n")
-        lines.append(f"- Spearman state mismatches: {correlation_state_evidence['defined_without_value'] + correlation_state_evidence['undefined_with_value']}\n")
-        lines.append(f"- Kendall state mismatches: {correlation_state_evidence['defined_without_value'] + correlation_state_evidence['undefined_with_value']}\n")
-        lines.append(f"- Correlation state consistency passed: {correlation_state_passed}\n\n")
-        
-        lines.append("## Event Row Reconstruction\n\n")
-        lines.append(f"- Event rows reconstructed: {reconstruction_evidence['event_rows_reconstructed']}\n")
-        lines.append(f"- Event rows with exact 2-3 comparisons: {reconstruction_evidence['event_rows_with_exact_23_comparisons']}\n")
-        lines.append(f"- Event rows with incomplete comparisons: {reconstruction_evidence['event_rows_with_incomplete_comparisons']}\n")
-        lines.append(f"- Event fields checked per row: {reconstruction_evidence['event_fields_checked_per_row']}\n")
-        lines.append(f"- Event total field comparisons: {reconstruction_evidence['event_total_field_comparisons']}\n")
-        lines.append(f"- Event reconstruction mismatch count: {reconstruction_evidence['event_reconstruction_mismatch_count']}\n")
-        lines.append(f"- Structural reconstruction failure: {reconstruction_evidence['structural_reconstruction_failure']}\n")
-        lines.append(f"- String mismatches: {reconstruction_evidence['string_mismatches']}\n")
-        lines.append(f"- Boolean mismatches: {reconstruction_evidence['boolean_mismatches']}\n")
-        lines.append(f"- Missing state mismatches: {reconstruction_evidence['missing_state_mismatches']}\n")
-        lines.append(f"- Exact value mismatches: {reconstruction_evidence['exact_value_mismatches']}\n")
-        lines.append(f"- Tolerance value mismatches: {reconstruction_evidence['tolerance_value_mismatches']}\n")
-        lines.append(f"- Reconstruction candidate alignments checked: {reconstruction_evidence['reconstruction_candidate_alignments_checked']}\n")
-        lines.append(f"- Reconstruction candidate alignment failures: {reconstruction_evidence['reconstruction_candidate_alignment_failures']}\n")
-        lines.append(f"- Event reconstruction passed: {reconstruction_passed}\n\n")
-        
-        lines.append("## Agreement Identity Validation\n\n")
-        lines.append(f"- Agreement rows checked: {agreement_evidence['agreement_rows_checked']}\n")
-        lines.append(f"- Agreement fields checked: {agreement_evidence['agreement_fields_checked']}\n")
-        lines.append(f"- Agreement identity mismatch count: {agreement_evidence['agreement_identity_mismatch_count']}\n")
-        lines.append(f"- Agreement identity passed: {agreement_passed}\n\n")
-        
-        lines.append("## Rank Identity Validation\n\n")
-        lines.append(f"- Exact rank vectors reconstructed: {rank_evidence['exact_rank_vectors_reconstructed']}\n")
-        lines.append(f"- Tolerance rank vectors reconstructed: {rank_evidence['tolerance_rank_vectors_reconstructed']}\n")
-        lines.append(f"- Total rank vectors reconstructed: {rank_evidence['total_rank_vectors_reconstructed']}\n")
-        lines.append(f"- Exact rank vectors independently checked: {rank_evidence['exact_rank_vectors_independently_checked']}\n")
-        lines.append(f"- Exact rank group mismatches: {rank_evidence['exact_rank_group_mismatches']}\n")
-        lines.append(f"- Exact rank identity failures: {rank_evidence['exact_rank_identity_failures']}\n")
-        lines.append(f"- Tolerance rank identity failures: {rank_evidence['tolerance_rank_identity_failures']}\n")
-        lines.append(f"- Exact winner rank identity failures: {rank_evidence['exact_winner_rank_identity_failures']}\n")
-        lines.append(f"- Tolerance winner rank identity failures: {rank_evidence['tolerance_winner_rank_identity_failures']}\n")
-        lines.append(f"- Non-chaining vectors checked: {rank_evidence['non_chaining_vectors_checked']}\n")
-        lines.append(f"- Non-chaining identity failures: {rank_evidence['non_chaining_identity_failures']}\n")
-        lines.append(f"- Reconstruction candidate alignments checked: {rank_evidence['reconstruction_candidate_alignments_checked']}\n")
-        lines.append(f"- Reconstruction candidate alignment failures: {rank_evidence['reconstruction_candidate_alignment_failures']}\n")
-        lines.append(f"- Rank structural failures: {rank_evidence['rank_structural_failures']}\n")
-        lines.append(f"- Rank identity passed: {rank_passed}\n\n")
-        
-        lines.append("## Correlation Value Reconstruction\n\n")
-        lines.append(f"- Correlation rows reconstructed: {correlation_reconstruction_evidence['correlation_rows_reconstructed']}\n")
-        lines.append(f"- Correlation rows fully checked: {correlation_reconstruction_evidence.get('correlation_rows_fully_checked', 0)}\n")
-        lines.append(f"- Correlation structural failures: {correlation_reconstruction_evidence.get('correlation_structural_failures', 0)}\n")
-        lines.append(f"- Spearman reconstruction mismatches: {correlation_reconstruction_evidence['spearman_reconstruction_mismatches']}\n")
-        lines.append(f"- Kendall reconstruction mismatches: {correlation_reconstruction_evidence['kendall_reconstruction_mismatches']}\n")
-        lines.append(f"- Correlation state mismatches: {correlation_reconstruction_evidence['correlation_state_mismatches']}\n")
-        lines.append(f"- Candidate alignments checked: {correlation_reconstruction_evidence['reconstruction_candidate_alignments_checked']}\n")
-        lines.append(f"- Candidate alignment failures: {correlation_reconstruction_evidence['reconstruction_candidate_alignment_failures']}\n")
-        lines.append(f"- Correlation value reconstruction passed: {correlation_reconstruction_passed}\n\n")
-        
-        lines.append("## Selected Candidate Test Rank Validation\n\n")
-        lines.append(f"- Selected-rank rows seen: {selected_test_rank_evidence.get('selected_test_rank_rows_seen', 0)}\n")
-        lines.append(f"- Selected test ranks checked: {selected_test_rank_evidence['selected_test_ranks_checked']}\n")
-        lines.append(f"- Selected-rank structural failures: {selected_test_rank_evidence.get('selected_test_rank_structural_failures', 0)}\n")
-        lines.append(f"- Selected-rank alignment failures: {selected_test_rank_evidence.get('selected_test_rank_candidate_alignment_failures', 0)}\n")
-        lines.append(f"- Selected test rank mismatches: {selected_test_rank_evidence['selected_test_rank_mismatches']}\n")
-        lines.append(f"- Selected candidate test rank passed: {selected_test_rank_passed}\n\n")
-        
-        lines.append("## Evidence Counters\n\n")
-        evidence_counters = {
-            "validation_rows_checked": int(len(validation_df)),
-            "baseline_rows_checked": int(len(baseline_df)),
-            "AQRPE_rows_checked": int(provenance_evidence.get("aqrpe_rows_checked", 0)),
-            "analysis_units_checked": int(events_evidence.get("analysis_units_checked", 0)),
-            "joined_rows_checked": int(len(joined_df)),
-            "metric_rows_computed": int(events_evidence.get("metric_rows_computed", 0)),
-            "selected_candidate_rows_checked": int(provenance_evidence.get("selected_candidate_rows_checked", 0)),
-            "winner_sets_checked": int(events_evidence.get("winner_sets_checked", 0)),
-            "rank_vectors_checked": int(events_evidence.get("rank_vectors_checked", 0)),
-            "spearman_rows_defined": int(events_evidence.get("spearman_defined_count", 0)),
-            "spearman_rows_undefined": int(events_evidence.get("spearman_undefined_count", 0)),
-            "kendall_rows_defined": int(events_evidence.get("kendall_defined_count", 0)),
-            "kendall_rows_undefined": int(events_evidence.get("kendall_undefined_count", 0)),
-            "synthetic_tests_checked": 3,
-            "event_rows_validated": int(len(events_df)),
-            "event_rows_reconstructed": int(reconstruction_evidence.get("event_rows_reconstructed", 0)),
-            "event_rows_with_exact_23_comparisons": int(reconstruction_evidence.get("event_rows_with_exact_23_comparisons", 0)),
-            "event_rows_with_incomplete_comparisons": int(reconstruction_evidence.get("event_rows_with_incomplete_comparisons", 0)),
-            "event_fields_checked_per_row": int(reconstruction_evidence.get("event_fields_checked_per_row", 0)),
-            "event_total_field_comparisons": int(reconstruction_evidence.get("event_total_field_comparisons", 0)),
-            "event_reconstruction_mismatch_count": int(reconstruction_evidence.get("event_reconstruction_mismatch_count", 0)),
-            "structural_reconstruction_failure": int(reconstruction_evidence.get("structural_reconstruction_failure", 0)),
-            "string_mismatches": int(reconstruction_evidence.get("string_mismatches", 0)),
-            "boolean_mismatches": int(reconstruction_evidence.get("boolean_mismatches", 0)),
-            "missing_state_mismatches": int(reconstruction_evidence.get("missing_state_mismatches", 0)),
-            "exact_value_mismatches": int(reconstruction_evidence.get("exact_value_mismatches", 0)),
-            "tolerance_value_mismatches": int(reconstruction_evidence.get("tolerance_value_mismatches", 0)),
-            "reconstruction_candidate_alignments_checked": int(reconstruction_evidence.get("reconstruction_candidate_alignments_checked", 0)),
-            "reconstruction_candidate_alignment_failures": int(reconstruction_evidence.get("reconstruction_candidate_alignment_failures", 0)),
-            "agreement_rows_checked": int(agreement_evidence.get("agreement_rows_checked", 0)),
-            "agreement_fields_checked": int(agreement_evidence.get("agreement_fields_checked", 0)),
-            "agreement_identity_mismatch_count": int(agreement_evidence.get("agreement_identity_mismatch_count", 0)),
-            "exact_rank_vectors_reconstructed": int(rank_evidence.get("exact_rank_vectors_reconstructed", 0)),
-            "tolerance_rank_vectors_reconstructed": int(rank_evidence.get("tolerance_rank_vectors_reconstructed", 0)),
-            "total_rank_vectors_reconstructed": int(rank_evidence.get("total_rank_vectors_reconstructed", 0)),
-            "exact_rank_vectors_independently_checked": int(rank_evidence.get("exact_rank_vectors_independently_checked", 0)),
-            "exact_rank_group_mismatches": int(rank_evidence.get("exact_rank_group_mismatches", 0)),
-            "exact_rank_identity_failures": int(rank_evidence.get("exact_rank_identity_failures", 0)),
-            "tolerance_rank_identity_failures": int(rank_evidence.get("tolerance_rank_identity_failures", 0)),
-            "exact_winner_rank_identity_failures": int(rank_evidence.get("exact_winner_rank_identity_failures", 0)),
-            "tolerance_winner_rank_identity_failures": int(rank_evidence.get("tolerance_winner_rank_identity_failures", 0)),
-            "non_chaining_identity_failures": int(rank_evidence.get("non_chaining_identity_failures", 0)),
-            "rank_candidate_alignments_checked": int(rank_evidence.get("reconstruction_candidate_alignments_checked", 0)),
-            "rank_candidate_alignment_failures": int(rank_evidence.get("reconstruction_candidate_alignment_failures", 0)),
-            "correlation_rows_reconstructed": int(correlation_reconstruction_evidence.get("correlation_rows_reconstructed", 0)),
-            "spearman_reconstruction_mismatches": int(correlation_reconstruction_evidence.get("spearman_reconstruction_mismatches", 0)),
-            "kendall_reconstruction_mismatches": int(correlation_reconstruction_evidence.get("kendall_reconstruction_mismatches", 0)),
-            "correlation_state_mismatches": int(correlation_reconstruction_evidence.get("correlation_state_mismatches", 0)),
-            "correlation_candidate_alignments_checked": int(correlation_reconstruction_evidence.get("reconstruction_candidate_alignments_checked", 0)),
-            "correlation_candidate_alignment_failures": int(correlation_reconstruction_evidence.get("reconstruction_candidate_alignment_failures", 0)),
-            "selected_test_ranks_checked": int(selected_test_rank_evidence.get("selected_test_ranks_checked", 0)),
-            "selected_test_rank_mismatches": int(selected_test_rank_evidence.get("selected_test_rank_mismatches", 0)),
-        }
-        for counter_name, counter_value in evidence_counters.items():
-            lines.append(f"- {counter_name}: {counter_value}\n")
-        lines.append("\n")
-        
-        return "".join(lines)
-    
-    # Check Markdown serialization on audit_payload
-    audit_payload_markdown_1 = build_audit_payload_markdown(audit_payload)
-    audit_payload_markdown_2 = build_audit_payload_markdown(audit_payload)
-    audit_payload_markdown_serialization_identical = audit_payload_markdown_1 == audit_payload_markdown_2
-    
-    # Step 4: Build separate serialization_audit object
+    # Step 3: Build separate serialization_audit object
     serialization_audit = {
         "event_csv_serialization_identical": event_csv_serialization_identical,
         "audit_payload_json_serialization_identical": audit_payload_json_serialization_identical,
-        "audit_payload_markdown_serialization_identical": audit_payload_markdown_serialization_identical,
         "stable_event_order_expected_key_count": stable_event_order_expected_key_count,
         "stable_event_order_rows_checked": stable_event_order_rows_checked,
         "stable_event_order_mismatch_count": stable_event_order_mismatch_count,
         "stable_event_order_passed": stable_event_order_passed,
     }
     
+    # Step 4: Calculate artifact_semantic_consistency_passed
+    markdown_projection = {
+        "event_rows": event_evidence["rows"],
+        "event_expected_rows": event_evidence["expected_rows"],
+        "event_columns": event_evidence["columns"],
+        "event_expected_columns": event_evidence["expected_columns"],
+        "event_column_order_ok": event_evidence["column_order_ok"],
+        "event_rows_exact_23": reconstruction_evidence["event_rows_with_exact_23_comparisons"],
+        "event_fields_per_row": reconstruction_evidence["event_fields_checked_per_row"],
+        "event_total_field_comparisons": reconstruction_evidence["event_total_field_comparisons"],
+        "exact_rank_vectors_checked": rank_evidence["exact_rank_vectors_independently_checked"],
+        "exact_rank_group_mismatches": rank_evidence["exact_rank_group_mismatches"],
+        "stable_order_mismatches": serialization_audit["stable_event_order_mismatch_count"],
+    }
+    
+    validation_checks["artifact_semantic_consistency_passed"] = (
+        markdown_projection["event_rows"] == 2100 and
+        markdown_projection["event_expected_rows"] == 2100 and
+        markdown_projection["event_columns"] == 28 and
+        markdown_projection["event_expected_columns"] == 28 and
+        markdown_projection["event_column_order_ok"] is True and
+        markdown_projection["event_rows_exact_23"] == 2100 and
+        markdown_projection["event_fields_per_row"] == 23 and
+        markdown_projection["event_total_field_comparisons"] == 48300 and
+        markdown_projection["exact_rank_vectors_checked"] == 4200 and
+        markdown_projection["exact_rank_group_mismatches"] == 0 and
+        markdown_projection["stable_order_mismatches"] == 0
+    )
+    
     # Step 5: Calculate deterministic_serialization_ready_passed from serialization_audit
     validation_checks["deterministic_serialization_ready_passed"] = (
         serialization_audit["event_csv_serialization_identical"] and
         serialization_audit["audit_payload_json_serialization_identical"] and
-        serialization_audit["audit_payload_markdown_serialization_identical"] and
         serialization_audit["stable_event_order_passed"]
     )
     
-    # Step 6: Calculate output_integrity_ready_passed after deterministic check
+    # Step 6: Calculate output_integrity_ready_passed after all other checks
     pre_output_failed_checks = [
         name for name, passed in validation_checks.items()
         if name != "output_integrity_ready_passed" and not bool(passed)
@@ -3330,259 +3110,211 @@ def main():
     if final_json_text_1 != final_json_text_2:
         raise ValueError("Final JSON serialization is not deterministic")
     
-    # Step 9: Build final Markdown from final_report_state
+    # Step 9: Build final Markdown from final_report_state (pure state-derived)
     def build_final_markdown(report_state: dict) -> str:
+        # Create aliases at the start of the function
+        payload = report_state["audit_payload"]
+        serialization = report_state["serialization_audit"]
+        checks = report_state["validation_checks"]
+        
         lines = []
         lines.append("# Part 2 Section 4B.1: Event-Level Validation-Test Ranking Agreement Audit\n\n")
+        
         lines.append("## Canonical Verification\n\n")
-        lines.append(f"- Manifest validation status: {canonical_evidence['manifest_validation_status']}\n")
-        lines.append(f"- Validation log SHA-256 match: {canonical_evidence['matches']['validation_log.csv']}\n")
-        lines.append(f"- Repeated results SHA-256 match: {canonical_evidence['matches']['repeated_all_results.csv']}\n")
-        lines.append(f"- Script SHA-256 match: {canonical_evidence['matches']['run_repeated_evaluation.py']}\n\n")
+        lines.append(f"- Manifest validation status: {payload['canonical_verification']['manifest_validation_status']}\n")
+        lines.append(f"- Validation log SHA-256 match: {payload['canonical_verification']['matches']['validation_log.csv']}\n")
+        lines.append(f"- Repeated results SHA-256 match: {payload['canonical_verification']['matches']['repeated_all_results.csv']}\n")
+        lines.append(f"- Script SHA-256 match: {payload['canonical_verification']['matches']['run_repeated_evaluation.py']}\n\n")
         
         lines.append("## Input Validation\n\n")
-        lines.append(f"- Validation rows: {schema_evidence['validation_rows']} (expected: 600)\n")
-        lines.append(f"- Validation columns: {schema_evidence['validation_columns']} (expected: 21)\n")
-        lines.append(f"- Repeated results rows: {schema_evidence['repeated_rows']} (expected: 400)\n")
-        lines.append(f"- Repeated results columns: {schema_evidence['repeated_columns']} (expected: 22)\n")
-        lines.append(f"- Schema validation passed: {schema_passed}\n")
-        lines.append(f"- Numeric/finite validation passed: {numeric_passed}\n")
-        lines.append(f"- Domain validation passed: {domain_passed}\n")
-        lines.append(f"- Key uniqueness passed: {uniqueness_passed}\n\n")
+        lines.append(f"- Validation rows: {payload['input_validation']['schema']['validation_rows']} (expected: 600)\n")
+        lines.append(f"- Validation columns: {payload['input_validation']['schema']['validation_columns']} (expected: 21)\n")
+        lines.append(f"- Repeated results rows: {payload['input_validation']['schema']['repeated_rows']} (expected: 400)\n")
+        lines.append(f"- Repeated results columns: {payload['input_validation']['schema']['repeated_columns']} (expected: 22)\n")
+        lines.append(f"- Schema validation passed: {checks['input_schema_passed']}\n")
+        lines.append(f"- Numeric/finite validation passed: {checks['input_numeric_finite_passed']}\n")
+        lines.append(f"- Domain validation passed: {checks['input_domain_passed']}\n")
+        lines.append(f"- Key uniqueness passed: {checks['validation_key_uniqueness_passed'] and checks['repeated_key_uniqueness_passed']}\n\n")
         
         lines.append("## Baseline Extraction\n\n")
-        lines.append(f"- Baseline rows: {baseline_evidence['baseline_rows']} (expected: 200)\n")
-        lines.append(f"- Baseline extraction passed: {baseline_passed}\n\n")
+        lines.append(f"- Baseline rows: {payload['baseline_extraction']['baseline_rows']} (expected: 200)\n")
+        lines.append(f"- Baseline extraction passed: {checks['baseline_key_uniqueness_passed']}\n\n")
         
         lines.append("## Controlled Join\n\n")
-        lines.append(f"- Joined rows: {join_evidence['joined_rows']} (expected: 600)\n")
-        lines.append(f"- Matched join rows: {join_evidence['matched_join_rows']}\n")
-        lines.append(f"- Join validation passed: {join_passed}\n\n")
+        lines.append(f"- Joined rows: {payload['controlled_join']['joined_rows']} (expected: 600)\n")
+        lines.append(f"- Matched join rows: {payload['controlled_join']['matched_join_rows']}\n")
+        lines.append(f"- Join validation passed: {checks['controlled_join_passed']}\n\n")
         
         lines.append("## Four-Candidate Coverage\n\n")
-        lines.append(f"- Validation units with exact four candidates: {coverage_evidence['validation_units_with_exact_four_candidates']} (expected: 150)\n")
-        lines.append(f"- Joined units with exact four candidates: {coverage_evidence['joined_units_with_exact_four_candidates']} (expected: 150)\n")
-        lines.append(f"- Candidate set mismatches: {coverage_evidence['candidate_set_mismatch_count']}\n")
-        lines.append(f"- Coverage validation passed: {coverage_passed}\n\n")
+        lines.append(f"- Validation units with exact four candidates: {payload['four_candidate_coverage']['validation_units_with_exact_four_candidates']} (expected: 150)\n")
+        lines.append(f"- Joined units with exact four candidates: {payload['four_candidate_coverage']['joined_units_with_exact_four_candidates']} (expected: 150)\n")
+        lines.append(f"- Candidate set mismatches: {payload['four_candidate_coverage']['candidate_set_mismatch_count']}\n")
+        lines.append(f"- Coverage validation passed: {checks['four_candidate_coverage_passed']}\n\n")
         
         lines.append("## Metric Mapping\n\n")
-        lines.append(f"- Metrics count: {metric_evidence['metrics_count']}\n")
-        lines.append(f"- Metric mapping passed: {metric_passed}\n\n")
+        lines.append(f"- Metrics count: {payload['metric_mapping']['metrics_count']}\n")
+        lines.append(f"- Metric mapping passed: {checks['metric_mapping_passed']}\n\n")
         
         lines.append("## Selected-Candidate Provenance\n\n")
-        lines.append(f"- AQRPE rows checked: {provenance_evidence['aqrpe_rows_checked']}\n")
-        lines.append(f"- Selected candidate rows checked: {provenance_evidence['selected_candidate_rows_checked']}\n")
-        lines.append(f"- Selection mode mismatches: {provenance_evidence['selection_mode_mismatches']}\n")
-        provenance_passed = all(validation_checks.get(k, False) for k in [
-            "selected_candidate_AQRPE_uniqueness_passed",
-            "selected_candidate_selection_mode_passed",
-            "selected_candidate_domain_passed",
-            "selected_candidate_validation_row_uniqueness_passed",
-            "selected_candidate_score_match_passed",
-            "selected_candidate_threshold_match_passed",
-            "selected_candidate_rank_threshold_passed",
-            "selected_candidate_objective_membership_passed",
-            "selected_candidate_no_test_leakage_passed",
-        ])
-        lines.append(f"- Provenance validation passed: {provenance_passed}\n\n")
+        lines.append(f"- AQRPE rows checked: {payload['selected_candidate_provenance']['aqrpe_rows_checked']}\n")
+        lines.append(f"- Selected candidate rows checked: {payload['selected_candidate_provenance']['selected_candidate_rows_checked']}\n")
+        lines.append(f"- Selection mode mismatches: {payload['selected_candidate_provenance']['selection_mode_mismatches']}\n")
+        lines.append(f"- Domain mismatches: {payload['selected_candidate_provenance']['domain_mismatches']}\n")
+        lines.append(f"- Score mismatches: {payload['selected_candidate_provenance']['score_mismatches']}\n")
+        lines.append(f"- Threshold mismatches: {payload['selected_candidate_provenance']['threshold_mismatches']}\n")
+        lines.append(f"- Rank threshold mismatches: {payload['selected_candidate_provenance']['rank_threshold_mismatches']}\n")
+        lines.append(f"- Objective membership mismatches: {payload['selected_candidate_provenance']['objective_membership_mismatches']}\n")
+        lines.append(f"- Test metric columns used for selection: {payload['selected_candidate_provenance']['test_metric_columns_used_for_selection_count']}\n")
+        lines.append(f"- Provenance validation passed: {checks['selected_candidate_AQRPE_uniqueness_passed'] and checks['selected_candidate_selection_mode_passed'] and checks['selected_candidate_domain_passed'] and checks['selected_candidate_validation_row_uniqueness_passed'] and checks['selected_candidate_score_match_passed'] and checks['selected_candidate_threshold_match_passed'] and checks['selected_candidate_rank_threshold_passed'] and checks['selected_candidate_objective_membership_passed'] and checks['selected_candidate_no_test_leakage_passed']}\n\n")
         
         lines.append("## Ranking Tests\n\n")
         lines.append("### Permutation Rank Test\n")
-        lines.append(f"- Utilities: {permutation_evidence['utilities']}\n")
-        lines.append(f"- Exact ranks: {permutation_evidence['exact_ranks']}\n")
-        lines.append(f"- Tolerance ranks: {permutation_evidence['tolerance_ranks']}\n")
-        lines.append(f"- Expected ranks: {permutation_evidence['expected_ranks']}\n")
-        lines.append(f"- Passed: {permutation_passed}\n\n")
+        lines.append(f"- Utilities: {payload['ranking_tests']['permutation']['utilities']}\n")
+        lines.append(f"- Exact ranks: {payload['ranking_tests']['permutation']['exact_ranks']}\n")
+        lines.append(f"- Tolerance ranks: {payload['ranking_tests']['permutation']['tolerance_ranks']}\n")
+        lines.append(f"- Expected ranks: {payload['ranking_tests']['permutation']['expected_ranks']}\n")
+        lines.append(f"- Passed: {payload['ranking_tests']['permutation']['passed']}\n\n")
         
         lines.append("### Exact Tie Rank Test\n")
-        lines.append(f"- Utilities: {exact_tie_evidence['utilities']}\n")
-        lines.append(f"- Exact ranks: {exact_tie_evidence['exact_ranks']}\n")
-        lines.append(f"- Expected ranks: {exact_tie_evidence['expected_ranks']}\n")
-        lines.append(f"- Passed: {exact_tie_passed}\n\n")
+        lines.append(f"- Utilities: {payload['ranking_tests']['exact_tie']['utilities']}\n")
+        lines.append(f"- Exact ranks: {payload['ranking_tests']['exact_tie']['exact_ranks']}\n")
+        lines.append(f"- Expected ranks: {payload['ranking_tests']['exact_tie']['expected_ranks']}\n")
+        lines.append(f"- Passed: {payload['ranking_tests']['exact_tie']['passed']}\n\n")
         
         lines.append("### Synthetic Non-Chaining Test\n")
-        lines.append(f"- Utilities: {synthetic_evidence['utilities']}\n")
-        lines.append(f"- Ranks: {synthetic_evidence['ranks']}\n")
-        lines.append(f"- Expected ranks: {synthetic_evidence['expected_ranks']}\n")
-        lines.append(f"- First two same group: {synthetic_evidence['first_two_same_group']}\n")
-        lines.append(f"- Third different group: {synthetic_evidence['third_different_group']}\n")
-        lines.append(f"- Not all three same group: {synthetic_evidence['not_all_three_same_group']}\n")
-        lines.append(f"- Test passed: {synthetic_passed}\n\n")
+        lines.append(f"- Utilities: {payload['ranking_tests']['synthetic_non_chaining']['utilities']}\n")
+        lines.append(f"- Ranks: {payload['ranking_tests']['synthetic_non_chaining']['ranks']}\n")
+        lines.append(f"- Expected ranks: {payload['ranking_tests']['synthetic_non_chaining']['expected_ranks']}\n")
+        lines.append(f"- First two same group: {payload['ranking_tests']['synthetic_non_chaining']['first_two_same_group']}\n")
+        lines.append(f"- Third different group: {payload['ranking_tests']['synthetic_non_chaining']['third_different_group']}\n")
+        lines.append(f"- Not all three same group: {payload['ranking_tests']['synthetic_non_chaining']['not_all_three_same_group']}\n")
+        lines.append(f"- Test passed: {payload['ranking_tests']['synthetic_non_chaining']['passed']}\n\n")
         
         lines.append("### Independent Exact-Rank Reconstruction Tests\n")
-        lines.append(f"- Permutation test passed: {validation_checks.get('independent_exact_permutation_test_passed', False)}\n")
-        lines.append(f"- Exact-tie test passed: {validation_checks.get('independent_exact_tie_test_passed', False)}\n")
-        lines.append(f"- Nonidentity-order test passed: {validation_checks.get('independent_exact_nonidentity_order_test_passed', False)}\n\n")
+        lines.append(f"- Permutation test passed: {checks['independent_exact_permutation_test_passed']}\n")
+        lines.append(f"- Exact-tie test passed: {checks['independent_exact_tie_test_passed']}\n")
+        lines.append(f"- Nonidentity-order test passed: {checks['independent_exact_nonidentity_order_test_passed']}\n\n")
         
         lines.append("## Event Computation\n\n")
-        lines.append(f"- Analysis units checked: {events_evidence['analysis_units_checked']}\n")
-        lines.append(f"- Metric rows computed: {events_evidence['metric_rows_computed']}\n")
-        lines.append(f"- Winner sets checked: {events_evidence['winner_sets_checked']}\n")
-        lines.append(f"- Rank vectors checked: {events_evidence['rank_vectors_checked']}\n")
-        lines.append(f"- Spearman defined: {events_evidence['spearman_defined_count']}\n")
-        lines.append(f"- Spearman undefined: {events_evidence['spearman_undefined_count']}\n")
-        lines.append(f"- Kendall defined: {events_evidence['kendall_defined_count']}\n")
-        lines.append(f"- Kendall undefined: {events_evidence['kendall_undefined_count']}\n\n")
+        lines.append(f"- Analysis units checked: {payload['event_computation']['analysis_units_checked']}\n")
+        lines.append(f"- Metric rows computed: {payload['event_computation']['metric_rows_computed']}\n")
+        lines.append(f"- Winner sets checked: {payload['event_computation']['winner_sets_checked']}\n")
+        lines.append(f"- Rank vectors checked: {payload['event_computation']['rank_vectors_checked']}\n")
+        lines.append(f"- Spearman defined: {payload['event_computation']['spearman_defined_count']}\n")
+        lines.append(f"- Spearman undefined: {payload['event_computation']['spearman_undefined_count']}\n")
+        lines.append(f"- Kendall defined: {payload['event_computation']['kendall_defined_count']}\n")
+        lines.append(f"- Kendall undefined: {payload['event_computation']['kendall_undefined_count']}\n\n")
         
         lines.append("## Event Validation\n\n")
-        lines.append(f"- Event rows: {len(events_df)} (expected: 2100)\n")
-        lines.append(f"- Event columns: {len(events_df.columns)} (expected: 23)\n")
-        lines.append(f"- Event validation passed: {event_passed}\n\n")
+        lines.append(f"- Event rows: {payload['event_validation']['rows']} (expected: {payload['event_validation']['expected_rows']})\n")
+        lines.append(f"- Event columns: {payload['event_validation']['columns']} (expected: {payload['event_validation']['expected_columns']})\n")
+        lines.append(f"- Column order ok: {payload['event_validation']['column_order_ok']}\n")
+        lines.append(f"- Event validation passed: {checks['event_schema_passed'] and checks['event_row_count_passed']}\n\n")
         
         lines.append("## Event Key Coverage\n\n")
-        lines.append(f"- Expected event key count: {event_key_coverage_evidence['expected_event_key_count']}\n")
-        lines.append(f"- Actual event key count: {event_key_coverage_evidence['actual_event_key_count']}\n")
-        lines.append(f"- Missing event key count: {event_key_coverage_evidence['missing_event_key_count']}\n")
-        lines.append(f"- Extra event key count: {event_key_coverage_evidence['extra_event_key_count']}\n")
-        lines.append(f"- Duplicate event key count: {event_key_coverage_evidence['duplicate_event_key_count']}\n")
-        lines.append(f"- Event key coverage passed: {event_key_coverage_passed}\n\n")
+        lines.append(f"- Expected event key count: {payload['event_key_coverage']['expected_event_key_count']}\n")
+        lines.append(f"- Actual event key count: {payload['event_key_coverage']['actual_event_key_count']}\n")
+        lines.append(f"- Missing event key count: {payload['event_key_coverage']['missing_event_key_count']}\n")
+        lines.append(f"- Extra event key count: {payload['event_key_coverage']['extra_event_key_count']}\n")
+        lines.append(f"- Duplicate event key count: {payload['event_key_coverage']['duplicate_event_key_count']}\n")
+        lines.append(f"- Event key coverage passed: {checks['event_key_uniqueness_passed']}\n\n")
         
         lines.append("## Winner Set Integrity\n\n")
-        lines.append(f"- Rows checked: {winner_integrity_evidence['rows_checked']}\n")
-        lines.append(f"- Empty sets: {winner_integrity_evidence['empty_sets']}\n")
-        lines.append(f"- Duplicate members: {winner_integrity_evidence['duplicate_members']}\n")
-        lines.append(f"- Unknown candidates: {winner_integrity_evidence['unknown_candidates']}\n")
-        lines.append(f"- Serialization order violations: {winner_integrity_evidence['serialization_order_violations']}\n")
-        lines.append(f"- Exact not subset tolerance: {winner_integrity_evidence['exact_not_subset_tolerance']}\n")
-        lines.append(f"- Winner set integrity passed: {winner_integrity_passed}\n\n")
+        lines.append(f"- Rows checked: {payload['winner_set_integrity']['rows_checked']}\n")
+        lines.append(f"- Empty sets: {payload['winner_set_integrity']['empty_sets']}\n")
+        lines.append(f"- Duplicate members: {payload['winner_set_integrity']['duplicate_members']}\n")
+        lines.append(f"- Unknown candidates: {payload['winner_set_integrity']['unknown_candidates']}\n")
+        lines.append(f"- Serialization order violations: {payload['winner_set_integrity']['serialization_order_violations']}\n")
+        lines.append(f"- Exact not subset tolerance: {payload['winner_set_integrity']['exact_not_subset_tolerance']}\n")
+        lines.append(f"- Winner set integrity passed: {checks['winner_set_integrity_passed']}\n\n")
         
         lines.append("## Correlation State Consistency\n\n")
-        lines.append(f"- Correlation rows checked: {correlation_state_evidence['rows_checked']}\n")
-        lines.append(f"- Spearman state mismatches: {correlation_state_evidence['defined_without_value'] + correlation_state_evidence['undefined_with_value']}\n")
-        lines.append(f"- Kendall state mismatches: {correlation_state_evidence['defined_without_value'] + correlation_state_evidence['undefined_with_value']}\n")
-        lines.append(f"- Correlation state consistency passed: {correlation_state_passed}\n\n")
+        lines.append(f"- Rows checked: {payload['correlation_state_consistency']['rows_checked']}\n")
+        lines.append(f"- Defined without value: {payload['correlation_state_consistency']['defined_without_value']}\n")
+        lines.append(f"- Undefined with value: {payload['correlation_state_consistency']['undefined_with_value']}\n")
+        lines.append(f"- Undefined without reason: {payload['correlation_state_consistency']['undefined_without_reason']}\n")
+        lines.append(f"- Undefined invalid reason: {payload['correlation_state_consistency']['undefined_invalid_reason']}\n")
+        lines.append(f"- Defined with reason: {payload['correlation_state_consistency']['defined_with_reason']}\n")
+        lines.append(f"- Non-finite defined value: {payload['correlation_state_consistency']['non_finite_defined_value']}\n")
+        lines.append(f"- Value out of range: {payload['correlation_state_consistency']['value_out_of_range']}\n")
+        lines.append(f"- Passed: {payload['correlation_state_consistency']['passed']}\n\n")
         
         lines.append("## Event Row Reconstruction\n\n")
-        lines.append(f"- Event rows reconstructed: {reconstruction_evidence['event_rows_reconstructed']}\n")
-        lines.append(f"- Event rows with exact 2-3 comparisons: {reconstruction_evidence['event_rows_with_exact_23_comparisons']}\n")
-        lines.append(f"- Event rows with incomplete comparisons: {reconstruction_evidence['event_rows_with_incomplete_comparisons']}\n")
-        lines.append(f"- Event fields checked per row: {reconstruction_evidence['event_fields_checked_per_row']}\n")
-        lines.append(f"- Event total field comparisons: {reconstruction_evidence['event_total_field_comparisons']}\n")
-        lines.append(f"- Event reconstruction mismatch count: {reconstruction_evidence['event_reconstruction_mismatch_count']}\n")
-        lines.append(f"- Structural reconstruction failure: {reconstruction_evidence['structural_reconstruction_failure']}\n")
-        lines.append(f"- String mismatches: {reconstruction_evidence['string_mismatches']}\n")
-        lines.append(f"- Boolean mismatches: {reconstruction_evidence['boolean_mismatches']}\n")
-        lines.append(f"- Missing state mismatches: {reconstruction_evidence['missing_state_mismatches']}\n")
-        lines.append(f"- Exact value mismatches: {reconstruction_evidence['exact_value_mismatches']}\n")
-        lines.append(f"- Tolerance value mismatches: {reconstruction_evidence['tolerance_value_mismatches']}\n")
-        lines.append(f"- Reconstruction candidate alignments checked: {reconstruction_evidence['reconstruction_candidate_alignments_checked']}\n")
-        lines.append(f"- Reconstruction candidate alignment failures: {reconstruction_evidence['reconstruction_candidate_alignment_failures']}\n")
-        lines.append(f"- Event reconstruction passed: {reconstruction_passed}\n\n")
+        lines.append(f"- Event rows reconstructed: {payload['event_reconstruction']['event_rows_reconstructed']}\n")
+        lines.append(f"- Event rows with exact 23 comparisons: {payload['event_reconstruction']['event_rows_with_exact_23_comparisons']}\n")
+        lines.append(f"- Event rows with incomplete comparisons: {payload['event_reconstruction']['event_rows_with_incomplete_comparisons']}\n")
+        lines.append(f"- Event fields checked per row: {payload['event_reconstruction']['event_fields_checked_per_row']}\n")
+        lines.append(f"- Event total field comparisons: {payload['event_reconstruction']['event_total_field_comparisons']}\n")
+        lines.append(f"- Event reconstruction mismatch count: {payload['event_reconstruction']['event_reconstruction_mismatch_count']}\n")
+        lines.append(f"- Structural reconstruction failure: {payload['event_reconstruction']['structural_reconstruction_failure']}\n")
+        lines.append(f"- String mismatches: {payload['event_reconstruction']['string_mismatches']}\n")
+        lines.append(f"- Boolean mismatches: {payload['event_reconstruction']['boolean_mismatches']}\n")
+        lines.append(f"- Missing state mismatches: {payload['event_reconstruction']['missing_state_mismatches']}\n")
+        lines.append(f"- Exact value mismatches: {payload['event_reconstruction']['exact_value_mismatches']}\n")
+        lines.append(f"- Tolerance value mismatches: {payload['event_reconstruction']['tolerance_value_mismatches']}\n")
+        lines.append(f"- Reconstruction candidate alignments checked: {payload['event_reconstruction']['reconstruction_candidate_alignments_checked']}\n")
+        lines.append(f"- Reconstruction candidate alignment failures: {payload['event_reconstruction']['reconstruction_candidate_alignment_failures']}\n")
+        lines.append(f"- Event reconstruction passed: {checks['event_reconstruction_passed']}\n\n")
         
         lines.append("## Agreement Identity Validation\n\n")
-        lines.append(f"- Agreement rows checked: {agreement_evidence['agreement_rows_checked']}\n")
-        lines.append(f"- Agreement fields checked: {agreement_evidence['agreement_fields_checked']}\n")
-        lines.append(f"- Agreement identity mismatch count: {agreement_evidence['agreement_identity_mismatch_count']}\n")
-        lines.append(f"- Agreement identity passed: {agreement_passed}\n\n")
+        lines.append(f"- Agreement rows checked: {payload['agreement_identity']['agreement_rows_checked']}\n")
+        lines.append(f"- Agreement fields checked: {payload['agreement_identity']['agreement_fields_checked']}\n")
+        lines.append(f"- Agreement identity mismatch count: {payload['agreement_identity']['agreement_identity_mismatch_count']}\n")
+        lines.append(f"- Agreement identity passed: {checks['agreement_identity_checks_passed']}\n\n")
         
         lines.append("## Rank Identity Validation\n\n")
-        lines.append(f"- Exact rank vectors reconstructed: {rank_evidence['exact_rank_vectors_reconstructed']}\n")
-        lines.append(f"- Tolerance rank vectors reconstructed: {rank_evidence['tolerance_rank_vectors_reconstructed']}\n")
-        lines.append(f"- Total rank vectors reconstructed: {rank_evidence['total_rank_vectors_reconstructed']}\n")
-        lines.append(f"- Exact rank vectors independently checked: {rank_evidence['exact_rank_vectors_independently_checked']}\n")
-        lines.append(f"- Exact rank group mismatches: {rank_evidence['exact_rank_group_mismatches']}\n")
-        lines.append(f"- Exact rank identity failures: {rank_evidence['exact_rank_identity_failures']}\n")
-        lines.append(f"- Tolerance rank identity failures: {rank_evidence['tolerance_rank_identity_failures']}\n")
-        lines.append(f"- Exact winner rank identity failures: {rank_evidence['exact_winner_rank_identity_failures']}\n")
-        lines.append(f"- Tolerance winner rank identity failures: {rank_evidence['tolerance_winner_rank_identity_failures']}\n")
-        lines.append(f"- Non-chaining vectors checked: {rank_evidence['non_chaining_vectors_checked']}\n")
-        lines.append(f"- Non-chaining identity failures: {rank_evidence['non_chaining_identity_failures']}\n")
-        lines.append(f"- Reconstruction candidate alignments checked: {rank_evidence['reconstruction_candidate_alignments_checked']}\n")
-        lines.append(f"- Reconstruction candidate alignment failures: {rank_evidence['reconstruction_candidate_alignment_failures']}\n")
-        lines.append(f"- Rank structural failures: {rank_evidence['rank_structural_failures']}\n")
-        lines.append(f"- Rank identity passed: {rank_passed}\n\n")
+        lines.append(f"- Exact rank vectors reconstructed: {payload['rank_identity']['exact_rank_vectors_reconstructed']}\n")
+        lines.append(f"- Tolerance rank vectors reconstructed: {payload['rank_identity']['tolerance_rank_vectors_reconstructed']}\n")
+        lines.append(f"- Total rank vectors reconstructed: {payload['rank_identity']['total_rank_vectors_reconstructed']}\n")
+        lines.append(f"- Exact rank vectors independently checked: {payload['rank_identity']['exact_rank_vectors_independently_checked']}\n")
+        lines.append(f"- Exact rank group mismatches: {payload['rank_identity']['exact_rank_group_mismatches']}\n")
+        lines.append(f"- Exact rank identity failures: {payload['rank_identity']['exact_rank_identity_failures']}\n")
+        lines.append(f"- Tolerance rank identity failures: {payload['rank_identity']['tolerance_rank_identity_failures']}\n")
+        lines.append(f"- Exact winner rank identity failures: {payload['rank_identity']['exact_winner_rank_identity_failures']}\n")
+        lines.append(f"- Tolerance winner rank identity failures: {payload['rank_identity']['tolerance_winner_rank_identity_failures']}\n")
+        lines.append(f"- Non-chaining vectors checked: {payload['rank_identity']['non_chaining_vectors_checked']}\n")
+        lines.append(f"- Non-chaining identity failures: {payload['rank_identity']['non_chaining_identity_failures']}\n")
+        lines.append(f"- Reconstruction candidate alignments checked: {payload['rank_identity']['reconstruction_candidate_alignments_checked']}\n")
+        lines.append(f"- Reconstruction candidate alignment failures: {payload['rank_identity']['reconstruction_candidate_alignment_failures']}\n")
+        lines.append(f"- Rank structural failures: {payload['rank_identity']['rank_structural_failures']}\n")
+        lines.append(f"- Rank identity passed: {checks['rank_integrity_passed']}\n\n")
         
         lines.append("## Correlation Value Reconstruction\n\n")
-        lines.append(f"- Correlation rows reconstructed: {correlation_reconstruction_evidence['correlation_rows_reconstructed']}\n")
-        lines.append(f"- Correlation rows fully checked: {correlation_reconstruction_evidence.get('correlation_rows_fully_checked', 0)}\n")
-        lines.append(f"- Correlation structural failures: {correlation_reconstruction_evidence.get('correlation_structural_failures', 0)}\n")
-        lines.append(f"- Spearman reconstruction mismatches: {correlation_reconstruction_evidence['spearman_reconstruction_mismatches']}\n")
-        lines.append(f"- Kendall reconstruction mismatches: {correlation_reconstruction_evidence['kendall_reconstruction_mismatches']}\n")
-        lines.append(f"- Correlation state mismatches: {correlation_reconstruction_evidence['correlation_state_mismatches']}\n")
-        lines.append(f"- Candidate alignments checked: {correlation_reconstruction_evidence['reconstruction_candidate_alignments_checked']}\n")
-        lines.append(f"- Candidate alignment failures: {correlation_reconstruction_evidence['reconstruction_candidate_alignment_failures']}\n")
-        lines.append(f"- Correlation value reconstruction passed: {correlation_reconstruction_passed}\n\n")
+        lines.append(f"- Correlation rows reconstructed: {payload['correlation_value_reconstruction']['correlation_rows_reconstructed']}\n")
+        lines.append(f"- Correlation rows fully checked: {payload['correlation_value_reconstruction']['correlation_rows_fully_checked']}\n")
+        lines.append(f"- Correlation structural failures: {payload['correlation_value_reconstruction']['correlation_structural_failures']}\n")
+        lines.append(f"- Spearman reconstruction mismatches: {payload['correlation_value_reconstruction']['spearman_reconstruction_mismatches']}\n")
+        lines.append(f"- Kendall reconstruction mismatches: {payload['correlation_value_reconstruction']['kendall_reconstruction_mismatches']}\n")
+        lines.append(f"- Correlation state mismatches: {payload['correlation_value_reconstruction']['correlation_state_mismatches']}\n")
+        lines.append(f"- Candidate alignments checked: {payload['correlation_value_reconstruction']['reconstruction_candidate_alignments_checked']}\n")
+        lines.append(f"- Candidate alignment failures: {payload['correlation_value_reconstruction']['reconstruction_candidate_alignment_failures']}\n")
+        lines.append(f"- Correlation value reconstruction passed: {checks['correlation_value_reconstruction_passed']}\n\n")
         
         lines.append("## Selected Candidate Test Rank Validation\n\n")
-        lines.append(f"- Selected-rank rows seen: {selected_test_rank_evidence.get('selected_test_rank_rows_seen', 0)}\n")
-        lines.append(f"- Selected test ranks checked: {selected_test_rank_evidence['selected_test_ranks_checked']}\n")
-        lines.append(f"- Selected-rank structural failures: {selected_test_rank_evidence.get('selected_test_rank_structural_failures', 0)}\n")
-        lines.append(f"- Selected-rank alignment failures: {selected_test_rank_evidence.get('selected_test_rank_candidate_alignment_failures', 0)}\n")
-        lines.append(f"- Selected test rank mismatches: {selected_test_rank_evidence['selected_test_rank_mismatches']}\n")
-        lines.append(f"- Selected candidate test rank passed: {selected_test_rank_passed}\n\n")
+        lines.append(f"- Selected-rank rows seen: {payload['selected_candidate_test_rank']['selected_test_rank_rows_seen']}\n")
+        lines.append(f"- Selected test ranks checked: {payload['selected_candidate_test_rank']['selected_test_ranks_checked']}\n")
+        lines.append(f"- Selected-rank structural failures: {payload['selected_candidate_test_rank']['selected_test_rank_structural_failures']}\n")
+        lines.append(f"- Selected-rank alignment failures: {payload['selected_candidate_test_rank']['selected_test_rank_candidate_alignment_failures']}\n")
+        lines.append(f"- Selected test rank mismatches: {payload['selected_candidate_test_rank']['selected_test_rank_mismatches']}\n")
+        lines.append(f"- Selected candidate test rank passed: {checks['selected_candidate_test_rank_passed']}\n\n")
         
         lines.append("## Deterministic Serialization\n\n")
-        lines.append(f"- Stable event ordering rows checked: {report_state['serialization_audit']['stable_event_order_rows_checked']}\n")
-        lines.append(f"- Stable event ordering expected key count: {report_state['serialization_audit']['stable_event_order_expected_key_count']}\n")
-        lines.append(f"- Stable event ordering mismatch count: {report_state['serialization_audit']['stable_event_order_mismatch_count']}\n")
-        lines.append(f"- Stable event ordering passed: {report_state['serialization_audit']['stable_event_order_passed']}\n")
-        lines.append(f"- CSV serialization identical: {report_state['serialization_audit']['event_csv_serialization_identical']}\n")
-        lines.append(f"- Audit payload JSON serialization identical: {report_state['serialization_audit']['audit_payload_json_serialization_identical']}\n")
-        lines.append(f"- Audit payload Markdown serialization identical: {report_state['serialization_audit']['audit_payload_markdown_serialization_identical']}\n")
-        lines.append(f"- Deterministic serialization ready passed: {report_state['validation_checks']['deterministic_serialization_ready_passed']}\n")
-        lines.append(f"- Output integrity ready passed: {report_state['validation_checks']['output_integrity_ready_passed']}\n\n")
+        lines.append(f"- Stable event ordering rows checked: {serialization['stable_event_order_rows_checked']}\n")
+        lines.append(f"- Stable event ordering expected key count: {serialization['stable_event_order_expected_key_count']}\n")
+        lines.append(f"- Stable event ordering mismatch count: {serialization['stable_event_order_mismatch_count']}\n")
+        lines.append(f"- Stable event ordering passed: {serialization['stable_event_order_passed']}\n")
+        lines.append(f"- CSV serialization identical: {serialization['event_csv_serialization_identical']}\n")
+        lines.append(f"- Audit payload JSON serialization identical: {serialization['audit_payload_json_serialization_identical']}\n")
+        lines.append(f"- Deterministic serialization ready passed: {checks['deterministic_serialization_ready_passed']}\n")
+        lines.append(f"- Output integrity ready passed: {checks['output_integrity_ready_passed']}\n\n")
         
         lines.append("## Validation Checks Summary\n\n")
-        for check_name, check_passed in report_state['validation_checks'].items():
+        for check_name, check_passed in sorted(checks.items()):
             lines.append(f"- {check_name}: {check_passed}\n")
         lines.append("\n")
         
         lines.append("## Evidence Counters\n\n")
-        evidence_counters = {
-            "validation_rows_checked": int(len(validation_df)),
-            "baseline_rows_checked": int(len(baseline_df)),
-            "AQRPE_rows_checked": int(provenance_evidence.get("aqrpe_rows_checked", 0)),
-            "analysis_units_checked": int(events_evidence.get("analysis_units_checked", 0)),
-            "joined_rows_checked": int(len(joined_df)),
-            "metric_rows_computed": int(events_evidence.get("metric_rows_computed", 0)),
-            "selected_candidate_rows_checked": int(provenance_evidence.get("selected_candidate_rows_checked", 0)),
-            "winner_sets_checked": int(events_evidence.get("winner_sets_checked", 0)),
-            "rank_vectors_checked": int(events_evidence.get("rank_vectors_checked", 0)),
-            "spearman_rows_defined": int(events_evidence.get("spearman_defined_count", 0)),
-            "spearman_rows_undefined": int(events_evidence.get("spearman_undefined_count", 0)),
-            "kendall_rows_defined": int(events_evidence.get("kendall_defined_count", 0)),
-            "kendall_rows_undefined": int(events_evidence.get("kendall_undefined_count", 0)),
-            "synthetic_tests_checked": 3,
-            "event_rows_validated": int(len(events_df)),
-            "event_rows_reconstructed": int(reconstruction_evidence.get("event_rows_reconstructed", 0)),
-            "event_rows_with_exact_23_comparisons": int(reconstruction_evidence.get("event_rows_with_exact_23_comparisons", 0)),
-            "event_rows_with_incomplete_comparisons": int(reconstruction_evidence.get("event_rows_with_incomplete_comparisons", 0)),
-            "event_fields_checked_per_row": int(reconstruction_evidence.get("event_fields_checked_per_row", 0)),
-            "event_total_field_comparisons": int(reconstruction_evidence.get("event_total_field_comparisons", 0)),
-            "event_reconstruction_mismatch_count": int(reconstruction_evidence.get("event_reconstruction_mismatch_count", 0)),
-            "structural_reconstruction_failure": int(reconstruction_evidence.get("structural_reconstruction_failure", 0)),
-            "string_mismatches": int(reconstruction_evidence.get("string_mismatches", 0)),
-            "boolean_mismatches": int(reconstruction_evidence.get("boolean_mismatches", 0)),
-            "missing_state_mismatches": int(reconstruction_evidence.get("missing_state_mismatches", 0)),
-            "exact_value_mismatches": int(reconstruction_evidence.get("exact_value_mismatches", 0)),
-            "tolerance_value_mismatches": int(reconstruction_evidence.get("tolerance_value_mismatches", 0)),
-            "reconstruction_candidate_alignments_checked": int(reconstruction_evidence.get("reconstruction_candidate_alignments_checked", 0)),
-            "reconstruction_candidate_alignment_failures": int(reconstruction_evidence.get("reconstruction_candidate_alignment_failures", 0)),
-            "agreement_rows_checked": int(agreement_evidence.get("agreement_rows_checked", 0)),
-            "agreement_fields_checked": int(agreement_evidence.get("agreement_fields_checked", 0)),
-            "agreement_identity_mismatch_count": int(agreement_evidence.get("agreement_identity_mismatch_count", 0)),
-            "exact_rank_vectors_reconstructed": int(rank_evidence.get("exact_rank_vectors_reconstructed", 0)),
-            "tolerance_rank_vectors_reconstructed": int(rank_evidence.get("tolerance_rank_vectors_reconstructed", 0)),
-            "total_rank_vectors_reconstructed": int(rank_evidence.get("total_rank_vectors_reconstructed", 0)),
-            "exact_rank_vectors_independently_checked": int(rank_evidence.get("exact_rank_vectors_independently_checked", 0)),
-            "exact_rank_group_mismatches": int(rank_evidence.get("exact_rank_group_mismatches", 0)),
-            "exact_rank_identity_failures": int(rank_evidence.get("exact_rank_identity_failures", 0)),
-            "tolerance_rank_identity_failures": int(rank_evidence.get("tolerance_rank_identity_failures", 0)),
-            "exact_winner_rank_identity_failures": int(rank_evidence.get("exact_winner_rank_identity_failures", 0)),
-            "tolerance_winner_rank_identity_failures": int(rank_evidence.get("tolerance_winner_rank_identity_failures", 0)),
-            "non_chaining_identity_failures": int(rank_evidence.get("non_chaining_identity_failures", 0)),
-            "rank_candidate_alignments_checked": int(rank_evidence.get("reconstruction_candidate_alignments_checked", 0)),
-            "rank_candidate_alignment_failures": int(rank_evidence.get("reconstruction_candidate_alignment_failures", 0)),
-            "correlation_rows_reconstructed": int(correlation_reconstruction_evidence.get("correlation_rows_reconstructed", 0)),
-            "spearman_reconstruction_mismatches": int(correlation_reconstruction_evidence.get("spearman_reconstruction_mismatches", 0)),
-            "kendall_reconstruction_mismatches": int(correlation_reconstruction_evidence.get("kendall_reconstruction_mismatches", 0)),
-            "correlation_state_mismatches": int(correlation_reconstruction_evidence.get("correlation_state_mismatches", 0)),
-            "correlation_candidate_alignments_checked": int(correlation_reconstruction_evidence.get("reconstruction_candidate_alignments_checked", 0)),
-            "correlation_candidate_alignment_failures": int(correlation_reconstruction_evidence.get("reconstruction_candidate_alignment_failures", 0)),
-            "selected_test_ranks_checked": int(selected_test_rank_evidence.get("selected_test_ranks_checked", 0)),
-            "selected_test_rank_mismatches": int(selected_test_rank_evidence.get("selected_test_rank_mismatches", 0)),
-        }
-        for counter_name, counter_value in evidence_counters.items():
+        for counter_name, counter_value in sorted(payload['evidence_counters'].items()):
             lines.append(f"- {counter_name}: {counter_value}\n")
         lines.append("\n")
         
@@ -3599,12 +3331,17 @@ def main():
         raise ValueError("event_csv_serialization_identical is not True")
     if not bool(serialization_audit["audit_payload_json_serialization_identical"]):
         raise ValueError("audit_payload_json_serialization_identical is not True")
-    if not bool(serialization_audit["audit_payload_markdown_serialization_identical"]):
-        raise ValueError("audit_payload_markdown_serialization_identical is not True")
     if not bool(validation_checks["deterministic_serialization_ready_passed"]):
         raise ValueError("deterministic_serialization_ready_passed is not True")
     if not bool(validation_checks["output_integrity_ready_passed"]):
         raise ValueError("output_integrity_ready_passed is not True")
+    
+    # Step 11: Final text assertions before write
+    assert "Event columns: 28 (expected: 28)" in final_markdown_text_1, "Event columns should show 28 (expected: 28)"
+    assert "Event rows with exact 23 comparisons: 2100" in final_markdown_text_1, "Should show exact 23 comparisons"
+    assert "expected: 23" not in final_markdown_text_1, "Should not have hard-coded expected: 23"
+    assert "exact 2-3 comparisons" not in final_markdown_text_1, "Should not have incorrect 2-3 label"
+    assert "pending" not in final_markdown_text_1.lower(), "Should not have pending values"
     
     # Step 12: Final validation before write
     failed_checks = [name for name, passed in validation_checks.items() if not bool(passed)]
