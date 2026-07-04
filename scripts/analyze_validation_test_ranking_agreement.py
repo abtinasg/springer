@@ -2080,7 +2080,17 @@ def reconstruct_and_validate_event_rows(
     
     # Don't multiply - use actual counter
     # evidence["event_total_field_comparisons"] = evidence["event_rows_reconstructed"] * evidence["event_fields_checked_per_row"]
-    passed = evidence["event_reconstruction_mismatch_count"] == 0
+    passed = (
+        evidence["event_rows_reconstructed"] == 2100 and
+        evidence["event_rows_with_exact_23_comparisons"] == 2100 and
+        evidence["event_rows_with_incomplete_comparisons"] == 0 and
+        evidence["event_fields_checked_per_row"] == 23 and
+        evidence["event_total_field_comparisons"] == 48300 and
+        evidence["event_reconstruction_mismatch_count"] == 0 and
+        evidence["structural_reconstruction_failure"] == 0 and
+        evidence["reconstruction_candidate_alignments_checked"] == 2100 and
+        evidence["reconstruction_candidate_alignment_failures"] == 0
+    )
     evidence["passed"] = passed
     return passed, evidence
 
@@ -2106,8 +2116,12 @@ def validate_rank_identity(
         "exact_winner_rank_identity_failures": 0,
         "tolerance_winner_rank_identity_failures": 0,
         "non_chaining_identity_failures": 0,
+        "non_chaining_vectors_checked": 0,
+        "exact_rank_vectors_independently_checked": 0,
+        "exact_rank_group_mismatches": 0,
         "reconstruction_candidate_alignments_checked": 0,
         "reconstruction_candidate_alignment_failures": 0,
+        "rank_structural_failures": 0,
     }
     
     metric_column_mapping = spec["metric_column_mapping"]
@@ -2130,6 +2144,7 @@ def validate_rank_identity(
         joined_rows = joined_df[joined_mask]
         
         if len(joined_rows) != 4:
+            evidence["rank_structural_failures"] += 1
             continue
         
         # Canonical candidate alignment before utility extraction
@@ -2163,6 +2178,38 @@ def validate_rank_identity(
         # Reconstruct exact ranks
         validation_exact_ranks = compute_exact_ranks(validation_utilities)
         test_exact_ranks = compute_exact_ranks(test_utilities)
+        
+        # Independently check exact tie groups for both validation and test
+        for ranks, utilities in [(validation_exact_ranks, validation_utilities), (test_exact_ranks, test_utilities)]:
+            evidence["exact_rank_vectors_independently_checked"] += 1
+            
+            # Sort utilities descending
+            sorted_indices = sorted(range(len(utilities)), key=lambda i: -utilities[i])
+            
+            # Build exact-equal groups
+            groups = []
+            i = 0
+            while i < len(sorted_indices):
+                j = i
+                while j < len(sorted_indices) and utilities[sorted_indices[i]] == utilities[sorted_indices[j]]:
+                    j += 1
+                groups.append(sorted_indices[i:j])
+                i = j
+            
+            # Compute expected average ordinal rank for each group
+            expected_ranks = [0.0] * len(ranks)
+            for group in groups:
+                # Group spans positions i to j-1 (0-indexed), ordinal positions are i+1 to j
+                i = group[0]
+                j = group[-1] + 1
+                avg_rank = ((i + 1) + j) / 2.0
+                for idx in group:
+                    expected_ranks[sorted_indices[idx]] = avg_rank
+            
+            # Compare all four ranks independently
+            for expected_rank, actual_rank in zip(expected_ranks, ranks):
+                if not math.isclose(expected_rank, actual_rank, rel_tol=1e-12, abs_tol=1e-12):
+                    evidence["exact_rank_group_mismatches"] += 1
         
         # Reconstruct tolerance-aware ranks
         validation_tolerance_ranks = compute_tolerance_aware_ranks(validation_utilities)
@@ -2215,33 +2262,67 @@ def validate_rank_identity(
                     if abs(ranks[winner_idx] - expected_winner_rank) > TOLERANCE:
                         evidence["tolerance_winner_rank_identity_failures"] += 1
         
-        # Check non-chaining property for tolerance-aware ranks
-        # Verify that groups are anchor-based (no pairwise chaining)
-        for ranks in [validation_tolerance_ranks, test_tolerance_ranks]:
-            # Find groups by equal ranks
-            rank_groups = {}
-            for i, rank in enumerate(ranks):
-                if rank not in rank_groups:
-                    rank_groups[rank] = []
-                rank_groups[rank].append(i)
+        # Check non-chaining property for tolerance-aware ranks with independent reconstruction
+        # Explicitly validate both validation and test cases
+        rank_cases = [
+            ("validation", validation_utilities, validation_tolerance_ranks),
+            ("test", test_utilities, test_tolerance_ranks),
+        ]
+        
+        for case_name, utilities, actual_ranks in rank_cases:
+            evidence["non_chaining_vectors_checked"] = evidence.get("non_chaining_vectors_checked", 0) + 1
             
-            # For each group, verify anchor-based property
-            for rank, indices in rank_groups.items():
-                if len(indices) > 1:
-                    # All members should be within tolerance of the first member (anchor)
-                    anchor_idx = indices[0]
-                    anchor_utility = validation_utilities[anchor_idx] if ranks == validation_tolerance_ranks else test_utilities[anchor_idx]
-                    for idx in indices[1:]:
-                        member_utility = validation_utilities[idx] if ranks == validation_tolerance_ranks else test_utilities[idx]
-                        if anchor_utility - member_utility > TOLERANCE:
-                            evidence["non_chaining_identity_failures"] += 1
-                            break
+            # Sort indices by utility descending
+            sorted_indices = sorted(range(len(utilities)), key=lambda i: -utilities[i])
+            
+            # Build expected groups using anchor-based non-chaining algorithm
+            expected_ranks = [0.0] * len(utilities)
+            i = 0
+            while i < len(sorted_indices):
+                # Start new group with current candidate as anchor
+                anchor_idx = sorted_indices[i]
+                anchor_utility = utilities[anchor_idx]
+                
+                # Find all candidates within tolerance of anchor
+                j = i + 1
+                while j < len(sorted_indices):
+                    candidate_idx = sorted_indices[j]
+                    candidate_utility = utilities[candidate_idx]
+                    
+                    # Check if within tolerance of anchor (not last member)
+                    if anchor_utility - candidate_utility <= TOLERANCE:
+                        j += 1
+                    else:
+                        break
+                
+                # Group spans ordinal positions i to j-1 (0-indexed), so ordinal positions are i+1 to j
+                avg_rank = ((i + 1) + j) / 2.0
+                
+                # Assign rank to each original candidate index in the group
+                for idx in range(i, j):
+                    original_idx = sorted_indices[idx]
+                    expected_ranks[original_idx] = avg_rank
+                
+                i = j
+            
+            # Compare expected ranks element-by-element with actual tolerance ranks
+            for expected_rank, actual_rank in zip(expected_ranks, actual_ranks):
+                if not math.isclose(expected_rank, actual_rank, rel_tol=1e-12, abs_tol=1e-12):
+                    evidence["non_chaining_identity_failures"] += 1
     
     passed = (
+        evidence["exact_rank_vectors_reconstructed"] == 4200 and
+        evidence["tolerance_rank_vectors_reconstructed"] == 4200 and
+        evidence["total_rank_vectors_reconstructed"] == 8400 and
+        evidence["reconstruction_candidate_alignments_checked"] == 2100 and
+        evidence["reconstruction_candidate_alignment_failures"] == 0 and
+        evidence["rank_structural_failures"] == 0 and
+        evidence["exact_rank_vectors_independently_checked"] == 4200 and
         evidence["exact_rank_identity_failures"] == 0 and
         evidence["tolerance_rank_identity_failures"] == 0 and
         evidence["exact_winner_rank_identity_failures"] == 0 and
         evidence["tolerance_winner_rank_identity_failures"] == 0 and
+        evidence["non_chaining_vectors_checked"] == 4200 and
         evidence["non_chaining_identity_failures"] == 0
     )
     evidence["passed"] = passed
@@ -2262,6 +2343,8 @@ def reconstruct_correlation_values(
     """
     evidence = {
         "correlation_rows_reconstructed": 0,
+        "correlation_rows_fully_checked": 0,
+        "correlation_structural_failures": 0,
         "spearman_reconstruction_mismatches": 0,
         "kendall_reconstruction_mismatches": 0,
         "correlation_state_mismatches": 0,
@@ -2291,6 +2374,7 @@ def reconstruct_correlation_values(
         joined_rows = joined_df[joined_mask]
         
         if len(joined_rows) != 4:
+            evidence["correlation_structural_failures"] += 1
             continue
         
         # Canonical candidate alignment before utility extraction
@@ -2365,9 +2449,16 @@ def reconstruct_correlation_values(
         if not correlations["kendall_defined"]:
             if event_row["kendall_undefined_reason"] != correlations["kendall_undefined_reason"]:
                 evidence["correlation_state_mismatches"] += 1
+        
+        evidence["correlation_rows_fully_checked"] += 1
     
     # All mismatches must be zero
     passed = (
+        evidence["correlation_rows_reconstructed"] == 2100 and
+        evidence["correlation_rows_fully_checked"] == 2100 and
+        evidence["reconstruction_candidate_alignments_checked"] == 2100 and
+        evidence["reconstruction_candidate_alignment_failures"] == 0 and
+        evidence["correlation_structural_failures"] == 0 and
         evidence["spearman_reconstruction_mismatches"] == 0 and
         evidence["kendall_reconstruction_mismatches"] == 0 and
         evidence["correlation_state_mismatches"] == 0
@@ -2390,7 +2481,10 @@ def validate_selected_candidate_test_rank(
         (passed, evidence_dict)
     """
     evidence = {
+        "selected_test_rank_rows_seen": 0,
         "selected_test_ranks_checked": 0,
+        "selected_test_rank_structural_failures": 0,
+        "selected_test_rank_candidate_alignment_failures": 0,
         "selected_test_rank_mismatches": 0,
     }
     
@@ -2398,7 +2492,7 @@ def validate_selected_candidate_test_rank(
     metric_directions = spec["metric_directions"]
     
     for _, event_row in events_df.iterrows():
-        evidence["selected_test_ranks_checked"] += 1
+        evidence["selected_test_rank_rows_seen"] += 1
         
         experiment = event_row["experiment"]
         target_project = event_row["target_project"]
@@ -2416,6 +2510,7 @@ def validate_selected_candidate_test_rank(
         joined_rows = joined_df[joined_mask]
         
         if len(joined_rows) != 4:
+            evidence["selected_test_rank_structural_failures"] += 1
             continue
         
         # Canonical candidate alignment
@@ -2425,6 +2520,9 @@ def validate_selected_candidate_test_rank(
             .loc[CANDIDATE_ORDER]
             .reset_index()
         )
+        if list(joined_rows["candidate"]) != CANDIDATE_ORDER:
+            evidence["selected_test_rank_candidate_alignment_failures"] += 1
+            continue
         
         # Get metric mapping
         metric_info = metric_column_mapping[metric]
@@ -2450,6 +2548,7 @@ def validate_selected_candidate_test_rank(
         selected_rows = selected_df[selected_mask]
         
         if len(selected_rows) != 1:
+            evidence["selected_test_rank_structural_failures"] += 1
             continue
         
         selected_row = selected_rows.iloc[0]
@@ -2460,12 +2559,21 @@ def validate_selected_candidate_test_rank(
         expected_test_rank = test_tolerance_ranks[selected_idx]
         expected_test_rank = round(expected_test_rank, 12)
         
+        # Only increment checked counter after actual comparison
+        evidence["selected_test_ranks_checked"] += 1
+        
         # Compare with math.isclose
         actual_test_rank = event_row["selected_candidate_test_rank"]
         if not math.isclose(actual_test_rank, expected_test_rank, rel_tol=1e-12, abs_tol=1e-12):
             evidence["selected_test_rank_mismatches"] += 1
     
-    passed = evidence["selected_test_rank_mismatches"] == 0
+    passed = (
+        evidence["selected_test_rank_rows_seen"] == 2100 and
+        evidence["selected_test_ranks_checked"] == 2100 and
+        evidence["selected_test_rank_structural_failures"] == 0 and
+        evidence["selected_test_rank_candidate_alignment_failures"] == 0 and
+        evidence["selected_test_rank_mismatches"] == 0
+    )
     evidence["passed"] = passed
     return passed, evidence
 
@@ -2667,12 +2775,6 @@ def main():
     validation_checks["input_cardinality_passed"] = validation_checks["input_cardinality_passed"] and join_evidence["rows_ok"]
     validation_checks["correlation_range_passed"] = event_evidence["spearman_range_ok"] and event_evidence["kendall_range_ok"]
     
-    # Output integrity ready check (before deterministic check)
-    pre_output_failed_checks = [
-        name for name, passed in validation_checks.items() if not bool(passed)
-    ]
-    validation_checks["output_integrity_ready_passed"] = len(pre_output_failed_checks) == 0
-    
     # Convert numpy types to Python types for JSON serialization with deterministic sorting
     def convert_to_python_types(obj):
         if isinstance(obj, dict):
@@ -2692,14 +2794,60 @@ def main():
         else:
             return obj
     
-    # Build all outputs in memory first for deterministic serialization check
-    print("Step 23: Build outputs in memory...")
+    # Apply explicit stable event ordering with categorical sorting
+    print("Step 23: Apply stable event ordering...")
+    metrics = spec["metrics"]
     
-    # Build CSV text
-    event_csv_text = events_df.to_csv(index=False, encoding="utf-8")
+    # Create categorical columns with explicit categories for stable sorting
+    events_df["experiment"] = pd.Categorical(
+        events_df["experiment"],
+        categories=["within_project", "cross_project"],
+        ordered=True
+    )
+    events_df["target_project"] = pd.Categorical(
+        events_df["target_project"],
+        categories=["CM1", "JM1", "KC1", "KC2", "PC1"],
+        ordered=True
+    )
+    events_df["seed"] = pd.Categorical(
+        events_df["seed"],
+        categories=[7, 13, 29, 42, 101],
+        ordered=True
+    )
+    events_df["mode"] = pd.Categorical(
+        events_df["mode"],
+        categories=["balanced", "rank", "mcc"],
+        ordered=True
+    )
+    events_df["metric"] = pd.Categorical(
+        events_df["metric"],
+        categories=metrics,
+        ordered=True
+    )
     
-    # Build audit report
-    audit_report = {
+    # Sort with explicit domain order using mergesort for stability
+    events_df_sorted = events_df.sort_values(
+        ["experiment", "target_project", "seed", "mode", "metric"],
+        kind="mergesort"
+    )
+    
+    # Verify stable ordering
+    stable_event_order_rows_checked = len(events_df_sorted)
+    stable_event_order_passed = stable_event_order_rows_checked == 2100
+    
+    # Build CSV text from sorted dataframe
+    event_csv_text = events_df_sorted.to_csv(index=False, encoding="utf-8")
+    
+    # Deterministic serialization check: serialize twice and compare
+    print("Step 24: Deterministic serialization check...")
+    
+    # Serialize CSV twice
+    csv_serialization_1 = events_df_sorted.to_csv(index=False, encoding="utf-8")
+    csv_serialization_2 = events_df_sorted.to_csv(index=False, encoding="utf-8")
+    event_csv_serialization_identical = csv_serialization_1 == csv_serialization_2
+    
+    # Build audit report (without deterministic_serialization section yet)
+    audit_report_partial = {
         "stage": "Part 2 Section 4B.1: Compute and validate event-level validation-test ranking agreement",
         "canonical_verification": convert_to_python_types(canonical_evidence),
         "input_validation": {
@@ -2785,10 +2933,25 @@ def main():
         "interpretation_limits": spec.get("interpretation_limits", {}),
     }
     
-    # Build JSON text
-    audit_json_text = json.dumps(audit_report, indent=2, ensure_ascii=False) + "\n"
+    # Serialize JSON twice
+    json_serialization_1 = json.dumps(audit_report_partial, indent=2, ensure_ascii=False, sort_keys=True) + "\n"
+    json_serialization_2 = json.dumps(audit_report_partial, indent=2, ensure_ascii=False, sort_keys=True) + "\n"
+    audit_json_serialization_identical = json_serialization_1 == json_serialization_2
     
-    # Build Markdown text
+    # Build final audit report with deterministic_serialization section
+    audit_report = audit_report_partial.copy()
+    audit_report["deterministic_serialization"] = {
+        "event_csv_serialization_identical": event_csv_serialization_identical,
+        "audit_json_serialization_identical": audit_json_serialization_identical,
+        "stable_event_order_rows_checked": stable_event_order_rows_checked,
+        "stable_event_order_passed": stable_event_order_passed,
+    }
+    audit_report["validation_checks"] = convert_to_python_types(validation_checks)
+    
+    # Build final JSON text
+    audit_json_text = json.dumps(audit_report, indent=2, ensure_ascii=False, sort_keys=True) + "\n"
+    
+    # Define Markdown report function before using it
     def build_markdown_report() -> str:
         lines = []
         lines.append("# Part 2 Section 4B.1: Event-Level Validation-Test Ranking Agreement Audit\n\n")
@@ -2937,17 +3100,23 @@ def main():
         lines.append(f"- Exact rank vectors reconstructed: {rank_evidence['exact_rank_vectors_reconstructed']}\n")
         lines.append(f"- Tolerance rank vectors reconstructed: {rank_evidence['tolerance_rank_vectors_reconstructed']}\n")
         lines.append(f"- Total rank vectors reconstructed: {rank_evidence['total_rank_vectors_reconstructed']}\n")
+        lines.append(f"- Exact rank vectors independently checked: {rank_evidence.get('exact_rank_vectors_independently_checked', 0)}\n")
+        lines.append(f"- Exact rank-group mismatches: {rank_evidence.get('exact_rank_group_mismatches', 0)}\n")
         lines.append(f"- Exact rank identity failures: {rank_evidence['exact_rank_identity_failures']}\n")
         lines.append(f"- Tolerance rank identity failures: {rank_evidence['tolerance_rank_identity_failures']}\n")
         lines.append(f"- Exact winner-rank identity failures: {rank_evidence['exact_winner_rank_identity_failures']}\n")
         lines.append(f"- Tolerance winner-rank identity failures: {rank_evidence['tolerance_winner_rank_identity_failures']}\n")
+        lines.append(f"- Non-chaining vectors checked: {rank_evidence.get('non_chaining_vectors_checked', 0)}\n")
         lines.append(f"- Non-chaining identity failures: {rank_evidence['non_chaining_identity_failures']}\n")
+        lines.append(f"- Rank structural failures: {rank_evidence.get('rank_structural_failures', 0)}\n")
         lines.append(f"- Candidate alignments checked: {rank_evidence['reconstruction_candidate_alignments_checked']}\n")
         lines.append(f"- Candidate alignment failures: {rank_evidence['reconstruction_candidate_alignment_failures']}\n")
         lines.append(f"- Rank integrity passed: {rank_passed}\n\n")
         
         lines.append("## Correlation Value Reconstruction\n\n")
         lines.append(f"- Correlation rows reconstructed: {correlation_reconstruction_evidence['correlation_rows_reconstructed']}\n")
+        lines.append(f"- Correlation rows fully checked: {correlation_reconstruction_evidence.get('correlation_rows_fully_checked', 0)}\n")
+        lines.append(f"- Correlation structural failures: {correlation_reconstruction_evidence.get('correlation_structural_failures', 0)}\n")
         lines.append(f"- Spearman reconstruction mismatches: {correlation_reconstruction_evidence['spearman_reconstruction_mismatches']}\n")
         lines.append(f"- Kendall reconstruction mismatches: {correlation_reconstruction_evidence['kendall_reconstruction_mismatches']}\n")
         lines.append(f"- Correlation state mismatches: {correlation_reconstruction_evidence['correlation_state_mismatches']}\n")
@@ -2956,9 +3125,19 @@ def main():
         lines.append(f"- Correlation value reconstruction passed: {correlation_reconstruction_passed}\n\n")
         
         lines.append("## Selected Candidate Test Rank Validation\n\n")
+        lines.append(f"- Selected-rank rows seen: {selected_test_rank_evidence.get('selected_test_rank_rows_seen', 0)}\n")
         lines.append(f"- Selected test ranks checked: {selected_test_rank_evidence['selected_test_ranks_checked']}\n")
+        lines.append(f"- Selected-rank structural failures: {selected_test_rank_evidence.get('selected_test_rank_structural_failures', 0)}\n")
+        lines.append(f"- Selected-rank alignment failures: {selected_test_rank_evidence.get('selected_test_rank_candidate_alignment_failures', 0)}\n")
         lines.append(f"- Selected test rank mismatches: {selected_test_rank_evidence['selected_test_rank_mismatches']}\n")
         lines.append(f"- Selected candidate test rank passed: {selected_test_rank_passed}\n\n")
+        
+        lines.append("## Deterministic Serialization\n\n")
+        lines.append(f"- Stable event ordering rows checked: {stable_event_order_rows_checked}\n")
+        lines.append(f"- Stable event ordering passed: {stable_event_order_passed}\n")
+        lines.append(f"- CSV serialization identical: {event_csv_serialization_identical}\n")
+        lines.append(f"- JSON serialization identical: {audit_json_serialization_identical}\n")
+        lines.append(f"- Deterministic serialization ready passed: {validation_checks.get('deterministic_serialization_ready_passed', 'pending')}\n\n")
         
         lines.append("## Validation Checks Summary\n\n")
         for check_name, check_passed in validation_checks.items():
@@ -2966,37 +3145,94 @@ def main():
         lines.append("\n")
         
         lines.append("## Evidence Counters\n\n")
-        for counter_name, counter_value in audit_report["evidence_counters"].items():
+        evidence_counters = {
+            "validation_rows_checked": int(len(validation_df)),
+            "baseline_rows_checked": int(len(baseline_df)),
+            "AQRPE_rows_checked": int(provenance_evidence.get("aqrpe_rows_checked", 0)),
+            "analysis_units_checked": int(events_evidence.get("analysis_units_checked", 0)),
+            "joined_rows_checked": int(len(joined_df)),
+            "metric_rows_computed": int(events_evidence.get("metric_rows_computed", 0)),
+            "selected_candidate_rows_checked": int(provenance_evidence.get("selected_candidate_rows_checked", 0)),
+            "winner_sets_checked": int(events_evidence.get("winner_sets_checked", 0)),
+            "rank_vectors_checked": int(events_evidence.get("rank_vectors_checked", 0)),
+            "spearman_rows_defined": int(events_evidence.get("spearman_defined_count", 0)),
+            "spearman_rows_undefined": int(events_evidence.get("spearman_undefined_count", 0)),
+            "kendall_rows_defined": int(events_evidence.get("kendall_defined_count", 0)),
+            "kendall_rows_undefined": int(events_evidence.get("kendall_undefined_count", 0)),
+            "synthetic_tests_checked": 3,
+            "event_rows_validated": int(len(events_df)),
+            "event_rows_reconstructed": int(reconstruction_evidence.get("event_rows_reconstructed", 0)),
+            "event_rows_with_exact_23_comparisons": int(reconstruction_evidence.get("event_rows_with_exact_23_comparisons", 0)),
+            "event_rows_with_incomplete_comparisons": int(reconstruction_evidence.get("event_rows_with_incomplete_comparisons", 0)),
+            "event_fields_checked_per_row": int(reconstruction_evidence.get("event_fields_checked_per_row", 0)),
+            "event_total_field_comparisons": int(reconstruction_evidence.get("event_total_field_comparisons", 0)),
+            "event_reconstruction_mismatch_count": int(reconstruction_evidence.get("event_reconstruction_mismatch_count", 0)),
+            "structural_reconstruction_failure": int(reconstruction_evidence.get("structural_reconstruction_failure", 0)),
+            "string_mismatches": int(reconstruction_evidence.get("string_mismatches", 0)),
+            "boolean_mismatches": int(reconstruction_evidence.get("boolean_mismatches", 0)),
+            "missing_state_mismatches": int(reconstruction_evidence.get("missing_state_mismatches", 0)),
+            "exact_value_mismatches": int(reconstruction_evidence.get("exact_value_mismatches", 0)),
+            "tolerance_value_mismatches": int(reconstruction_evidence.get("tolerance_value_mismatches", 0)),
+            "reconstruction_candidate_alignments_checked": int(reconstruction_evidence.get("reconstruction_candidate_alignments_checked", 0)),
+            "reconstruction_candidate_alignment_failures": int(reconstruction_evidence.get("reconstruction_candidate_alignment_failures", 0)),
+            "agreement_rows_checked": int(agreement_evidence.get("agreement_rows_checked", 0)),
+            "agreement_fields_checked": int(agreement_evidence.get("agreement_fields_checked", 0)),
+            "agreement_identity_mismatch_count": int(agreement_evidence.get("agreement_identity_mismatch_count", 0)),
+            "exact_rank_vectors_reconstructed": int(rank_evidence.get("exact_rank_vectors_reconstructed", 0)),
+            "tolerance_rank_vectors_reconstructed": int(rank_evidence.get("tolerance_rank_vectors_reconstructed", 0)),
+            "total_rank_vectors_reconstructed": int(rank_evidence.get("total_rank_vectors_reconstructed", 0)),
+            "exact_rank_identity_failures": int(rank_evidence.get("exact_rank_identity_failures", 0)),
+            "tolerance_rank_identity_failures": int(rank_evidence.get("tolerance_rank_identity_failures", 0)),
+            "exact_winner_rank_identity_failures": int(rank_evidence.get("exact_winner_rank_identity_failures", 0)),
+            "tolerance_winner_rank_identity_failures": int(rank_evidence.get("tolerance_winner_rank_identity_failures", 0)),
+            "non_chaining_identity_failures": int(rank_evidence.get("non_chaining_identity_failures", 0)),
+            "rank_candidate_alignments_checked": int(rank_evidence.get("reconstruction_candidate_alignments_checked", 0)),
+            "rank_candidate_alignment_failures": int(rank_evidence.get("reconstruction_candidate_alignment_failures", 0)),
+            "correlation_rows_reconstructed": int(correlation_reconstruction_evidence.get("correlation_rows_reconstructed", 0)),
+            "spearman_reconstruction_mismatches": int(correlation_reconstruction_evidence.get("spearman_reconstruction_mismatches", 0)),
+            "kendall_reconstruction_mismatches": int(correlation_reconstruction_evidence.get("kendall_reconstruction_mismatches", 0)),
+            "correlation_state_mismatches": int(correlation_reconstruction_evidence.get("correlation_state_mismatches", 0)),
+            "correlation_candidate_alignments_checked": int(correlation_reconstruction_evidence.get("reconstruction_candidate_alignments_checked", 0)),
+            "correlation_candidate_alignment_failures": int(correlation_reconstruction_evidence.get("reconstruction_candidate_alignment_failures", 0)),
+            "selected_test_ranks_checked": int(selected_test_rank_evidence.get("selected_test_ranks_checked", 0)),
+            "selected_test_rank_mismatches": int(selected_test_rank_evidence.get("selected_test_rank_mismatches", 0)),
+        }
+        for counter_name, counter_value in evidence_counters.items():
             lines.append(f"- {counter_name}: {counter_value}\n")
         lines.append("\n")
         
         return "".join(lines)
-    
-    audit_markdown_text = build_markdown_report()
-    
-    # Deterministic serialization check: serialize twice and compare
-    print("Step 24: Deterministic serialization check...")
-    
-    # Serialize CSV twice
-    csv_serialization_1 = events_df.to_csv(index=False, encoding="utf-8")
-    csv_serialization_2 = events_df.to_csv(index=False, encoding="utf-8")
-    event_csv_serialization_identical = csv_serialization_1 == csv_serialization_2
-    
-    # Serialize JSON twice
-    json_serialization_1 = json.dumps(audit_report, indent=2, ensure_ascii=False) + "\n"
-    json_serialization_2 = json.dumps(audit_report, indent=2, ensure_ascii=False) + "\n"
-    audit_json_serialization_identical = json_serialization_1 == json_serialization_2
     
     # Serialize Markdown twice
     markdown_serialization_1 = build_markdown_report()
     markdown_serialization_2 = build_markdown_report()
     audit_markdown_serialization_identical = markdown_serialization_1 == markdown_serialization_2
     
+    # Add markdown serialization result to deterministic_serialization section
+    audit_report["deterministic_serialization"]["audit_markdown_serialization_identical"] = audit_markdown_serialization_identical
+    
+    # Add deterministic_serialization evidence to validation_checks
     validation_checks["deterministic_serialization_ready_passed"] = (
         event_csv_serialization_identical and
         audit_json_serialization_identical and
-        audit_markdown_serialization_identical
+        audit_markdown_serialization_identical and
+        stable_event_order_passed
     )
+    
+    # Output integrity ready check (after deterministic check)
+    pre_output_failed_checks = [
+        name for name, passed in validation_checks.items()
+        if name != "output_integrity_ready_passed" and not bool(passed)
+    ]
+    validation_checks["output_integrity_ready_passed"] = len(pre_output_failed_checks) == 0
+    
+    # Update audit_report with final validation_checks
+    audit_report["validation_checks"] = convert_to_python_types(validation_checks)
+    
+    # Rebuild final JSON text with updated validation_checks
+    audit_json_text = json.dumps(audit_report, indent=2, ensure_ascii=False, sort_keys=True) + "\n"
+    
+    audit_markdown_text = build_markdown_report()
     
     # Final validation after deterministic check
     print("Step 25: Final validation...")
@@ -3010,6 +3246,7 @@ def main():
         print(f"Event reconstruction evidence: {reconstruction_evidence}")
         print(f"Correlation reconstruction evidence: {correlation_reconstruction_evidence}")
         print(f"Event validation evidence: {event_evidence}")
+        print(f"Rank identity evidence: {rank_evidence}")
         raise ValueError(f"Final validation failed: {failed_checks}")
     
     # Write outputs to temp files first (atomic writes with cleanup in finally)

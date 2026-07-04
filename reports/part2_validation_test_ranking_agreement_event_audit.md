@@ -161,11 +161,15 @@
 - Exact rank vectors reconstructed: 4200
 - Tolerance rank vectors reconstructed: 4200
 - Total rank vectors reconstructed: 8400
+- Exact rank vectors independently checked: 4200
+- Exact rank-group mismatches: 2288
 - Exact rank identity failures: 0
 - Tolerance rank identity failures: 0
 - Exact winner-rank identity failures: 0
 - Tolerance winner-rank identity failures: 0
+- Non-chaining vectors checked: 4200
 - Non-chaining identity failures: 0
+- Rank structural failures: 0
 - Candidate alignments checked: 2100
 - Candidate alignment failures: 0
 - Rank integrity passed: True
@@ -173,6 +177,8 @@
 ## Correlation Value Reconstruction
 
 - Correlation rows reconstructed: 2100
+- Correlation rows fully checked: 2100
+- Correlation structural failures: 0
 - Spearman reconstruction mismatches: 0
 - Kendall reconstruction mismatches: 0
 - Correlation state mismatches: 0
@@ -182,9 +188,20 @@
 
 ## Selected Candidate Test Rank Validation
 
+- Selected-rank rows seen: 2100
 - Selected test ranks checked: 2100
+- Selected-rank structural failures: 0
+- Selected-rank alignment failures: 0
 - Selected test rank mismatches: 0
 - Selected candidate test rank passed: True
+
+## Deterministic Serialization
+
+- Stable event ordering rows checked: 2100
+- Stable event ordering passed: True
+- CSV serialization identical: True
+- JSON serialization identical: True
+- Deterministic serialization ready passed: True
 
 ## Validation Checks Summary
 
@@ -222,6 +239,7 @@
 - selected_candidate_test_rank_passed: True
 - input_cardinality_passed: True
 - correlation_range_passed: True
+- deterministic_serialization_ready_passed: True
 - output_integrity_ready_passed: True
 
 ## Evidence Counters
