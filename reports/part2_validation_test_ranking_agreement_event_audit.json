@@ -1,0 +1,327 @@
+{
+  "stage": "Part 2 Section 4B.1: Compute and validate event-level validation-test ranking agreement",
+  "canonical_verification": {
+    "manifest_validation_status": "all_checks_passed",
+    "expected_sha256": {
+      "validation_log.csv": "d18dbb6b7a71f356203aa34fe41ab7d531daa1f8499fc06d06ab643b088f0272",
+      "repeated_all_results.csv": "76b430031a944708af661bee1a1355619d1e0e6f49b932d462cea421aeb01160",
+      "run_repeated_evaluation.py": "d385b6ecef2427c85299dcbc50cfff919fa8546b31829fa3ce0e5fdb307c4856"
+    },
+    "computed_sha256": {
+      "validation_log.csv": "d18dbb6b7a71f356203aa34fe41ab7d531daa1f8499fc06d06ab643b088f0272",
+      "repeated_all_results.csv": "76b430031a944708af661bee1a1355619d1e0e6f49b932d462cea421aeb01160",
+      "run_repeated_evaluation.py": "d385b6ecef2427c85299dcbc50cfff919fa8546b31829fa3ce0e5fdb307c4856"
+    },
+    "matches": {
+      "validation_log.csv": true,
+      "repeated_all_results.csv": true,
+      "run_repeated_evaluation.py": true
+    }
+  },
+  "input_validation": {
+    "schema": {
+      "validation_rows": 600,
+      "validation_columns": 21,
+      "validation_column_names": [
+        "experiment",
+        "target_project",
+        "seed",
+        "candidate",
+        "mode",
+        "val_threshold",
+        "val_selection_score",
+        "val_avg_precision",
+        "val_roc_auc",
+        "val_mcc",
+        "val_f1",
+        "val_balanced_accuracy",
+        "val_precision",
+        "val_recall",
+        "val_brier",
+        "val_precision_at_10pct",
+        "val_recall_at_10pct",
+        "val_lift_at_10pct",
+        "val_precision_at_20pct",
+        "val_recall_at_20pct",
+        "val_lift_at_20pct"
+      ],
+      "repeated_rows": 400,
+      "repeated_columns": 22,
+      "repeated_column_names": [
+        "experiment",
+        "target_project",
+        "seed",
+        "model",
+        "selected_candidate",
+        "selection_mode",
+        "threshold",
+        "selection_score",
+        "avg_precision",
+        "roc_auc",
+        "mcc",
+        "f1",
+        "balanced_accuracy",
+        "precision",
+        "recall",
+        "brier",
+        "precision_at_10pct",
+        "recall_at_10pct",
+        "lift_at_10pct",
+        "precision_at_20pct",
+        "recall_at_20pct",
+        "lift_at_20pct"
+      ],
+      "validation_rows_ok": true,
+      "repeated_rows_ok": true,
+      "validation_cols_ok": true,
+      "repeated_cols_ok": true,
+      "validation_names_ok": true,
+      "repeated_names_ok": true,
+      "validation_has_nulls": false,
+      "repeated_has_nulls": false
+    },
+    "domain": {
+      "validation_experiments": [
+        "cross_project",
+        "within_project"
+      ],
+      "repeated_experiments": [
+        "cross_project",
+        "within_project"
+      ],
+      "experiments_ok": true,
+      "validation_projects": [
+        "CM1",
+        "JM1",
+        "KC1",
+        "KC2",
+        "PC1"
+      ],
+      "repeated_projects": [
+        "CM1",
+        "JM1",
+        "KC1",
+        "KC2",
+        "PC1"
+      ],
+      "projects_ok": true,
+      "validation_seeds": [
+        7,
+        13,
+        29,
+        42,
+        101
+      ],
+      "repeated_seeds": [
+        7,
+        13,
+        29,
+        42,
+        101
+      ],
+      "seeds_ok": true,
+      "validation_modes": [
+        "balanced",
+        "mcc",
+        "rank"
+      ],
+      "modes_ok": true,
+      "validation_candidates": [
+        "DT_leaf5",
+        "ET_leaf5",
+        "LR_std_C0.1",
+        "LR_std_C1"
+      ],
+      "candidates_ok": true,
+      "repeated_models": [
+        "AQRPE_v2_balanced",
+        "AQRPE_v2_mcc",
+        "AQRPE_v2_rank",
+        "AQRPE_v2_soft_top3",
+        "DT_leaf5",
+        "ET_leaf5",
+        "LR_std_C0.1",
+        "LR_std_C1"
+      ],
+      "models_ok": true
+    },
+    "key_uniqueness": {
+      "validation_key": [
+        "experiment",
+        "target_project",
+        "seed",
+        "candidate",
+        "mode"
+      ],
+      "validation_has_duplicates": false,
+      "validation_duplicate_count": 0,
+      "repeated_key": [
+        "experiment",
+        "target_project",
+        "seed",
+        "model"
+      ],
+      "repeated_has_duplicates": false,
+      "repeated_duplicate_count": 0
+    }
+  },
+  "baseline_extraction": {
+    "baseline_models": [
+      "LR_std_C0.1",
+      "LR_std_C1",
+      "DT_leaf5",
+      "ET_leaf5"
+    ],
+    "baseline_rows": 200,
+    "expected_baseline_rows": 200,
+    "rows_ok": true,
+    "has_duplicates": false,
+    "duplicate_count": 0,
+    "all_experiment_seed_combinations_have_four_models": true,
+    "group_counts_stats": {
+      "count": 50.0,
+      "mean": 4.0,
+      "std": 0.0,
+      "min": 4.0,
+      "25%": 4.0,
+      "50%": 4.0,
+      "75%": 4.0,
+      "max": 4.0
+    }
+  },
+  "controlled_join": {
+    "validation_rows": 600,
+    "baseline_rows": 200,
+    "joined_rows": 600,
+    "expected_joined_rows": 600,
+    "rows_ok": true
+  },
+  "metric_mapping": {
+    "metrics_count": 14,
+    "directions_keys_ok": true,
+    "mapping_keys_ok": true,
+    "all_validation_cols_exist": true,
+    "all_test_cols_exist": true,
+    "metrics": [
+      "avg_precision",
+      "roc_auc",
+      "mcc",
+      "f1",
+      "balanced_accuracy",
+      "precision",
+      "recall",
+      "brier",
+      "precision_at_10pct",
+      "recall_at_10pct",
+      "lift_at_10pct",
+      "precision_at_20pct",
+      "recall_at_20pct",
+      "lift_at_20pct"
+    ]
+  },
+  "selected_candidate_provenance": {
+    "aqrpe_rows_checked": 150,
+    "selected_candidate_rows_checked": 150,
+    "provenance_errors": [],
+    "aqrpe_rows_total": 150,
+    "selected_has_duplicates": false,
+    "selected_duplicate_count": 0,
+    "passed": true,
+    "error_count": 0
+  },
+  "synthetic_test": {
+    "utilities": [
+      1.0,
+      0.99999999999925,
+      0.9999999999985
+    ],
+    "ranks": [
+      1.5,
+      1.5,
+      3.0
+    ],
+    "first_two_same_group": true,
+    "third_different_group": true,
+    "not_all_three_same_group": true,
+    "passed": true
+  },
+  "event_computation": {
+    "analysis_units_checked": 150,
+    "metric_rows_computed": 2100,
+    "winner_sets_checked": 2100,
+    "rank_vectors_checked": 2100,
+    "spearman_defined_count": 2073,
+    "spearman_undefined_count": 27,
+    "kendall_defined_count": 2073,
+    "kendall_undefined_count": 27
+  },
+  "event_validation": {
+    "rows": 2100,
+    "expected_rows": 2100,
+    "rows_ok": true,
+    "columns": 28,
+    "expected_columns": 28,
+    "cols_ok": true,
+    "names_ok": true,
+    "has_key_duplicates": false,
+    "key_duplicate_count": 0,
+    "rank_range_ok": true,
+    "spearman_range_ok": true,
+    "kendall_range_ok": true
+  },
+  "validation_checks": {
+    "canonical_verification_passed": true,
+    "input_schema_passed": true,
+    "input_domain_passed": true,
+    "validation_key_uniqueness_passed": true,
+    "baseline_key_uniqueness_passed": true,
+    "controlled_join_passed": true,
+    "metric_mapping_passed": true,
+    "selected_candidate_AQRPE_uniqueness_passed": true,
+    "selected_candidate_selection_mode_passed": true,
+    "selected_candidate_score_match_passed": true,
+    "selected_candidate_threshold_match_passed": true,
+    "selected_candidate_objective_membership_passed": true,
+    "selected_candidate_no_test_leakage_passed": true,
+    "synthetic_non_chaining_test_passed": true,
+    "event_schema_passed": true,
+    "event_row_count_passed": true,
+    "event_key_uniqueness_passed": true,
+    "winner_set_integrity_passed": true,
+    "rank_integrity_passed": true,
+    "agreement_identity_checks_passed": true,
+    "correlation_state_consistency_passed": true,
+    "correlation_range_passed": true,
+    "input_cardinality_passed": true,
+    "four_candidate_coverage_passed": true
+  },
+  "evidence_counters": {
+    "validation_rows_checked": 600,
+    "baseline_rows_checked": 200,
+    "AQRPE_rows_checked": 150,
+    "analysis_units_checked": 150,
+    "joined_rows_checked": 600,
+    "metric_rows_computed": 2100,
+    "selected_candidate_rows_checked": 150,
+    "winner_sets_checked": 2100,
+    "rank_vectors_checked": 2100,
+    "spearman_rows_defined": 2073,
+    "spearman_rows_undefined": 27,
+    "kendall_rows_defined": 2073,
+    "kendall_rows_undefined": 27,
+    "synthetic_tests_checked": 1,
+    "event_rows_validated": 2100
+  },
+  "interpretation_limits": {
+    "seed_assumption": "event-level analysis unit includes seed: experiment \u00d7 target_project \u00d7 seed \u00d7 mode. For descriptive aggregation, the five seeds are repeated, non-independent runs nested within experiment \u00d7 target_project \u00d7 mode \u00d7 metric. Seeds are not treated as iid observations for inferential testing.",
+    "seed_nesting": "event rows include seed. Summary may perform descriptive aggregation across seeds. No p-value or iid confidence interval will be produced.",
+    "excluded_inferences": [
+      "p-value",
+      "iid_seed_based_confidence_interval",
+      "significance_claim",
+      "superiority_claim",
+      "causal_claim"
+    ],
+    "test_data_usage": "test data will only be used for post-selection evaluation"
+  }
+}
