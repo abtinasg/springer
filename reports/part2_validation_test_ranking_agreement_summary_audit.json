@@ -1,0 +1,76 @@
+{
+  "correlation_undefined": {
+    "kendall_count": 18,
+    "spearman_count": 18
+  },
+  "denominator_identities": {
+    "details": {
+      "by_experiment": true,
+      "by_metric": true,
+      "by_mode": true,
+      "by_project": true,
+      "overall": true
+    },
+    "passed": true
+  },
+  "input_verification": {
+    "audit_checks_passed": true,
+    "columns": 28,
+    "duplicate_keys": 0,
+    "extra_keys": 0,
+    "missing_keys": 0,
+    "rows": 2100,
+    "sha256_verified": true
+  },
+  "range_checks": {
+    "details": {
+      "by_experiment": true,
+      "by_metric": true,
+      "by_mode": true,
+      "by_project": true,
+      "overall": true
+    },
+    "passed": true
+  },
+  "summary_counts": {
+    "by_experiment": {
+      "actual_rows": 2,
+      "expected_rows": 2
+    },
+    "by_metric": {
+      "actual_rows": 14,
+      "expected_rows": 14
+    },
+    "by_mode": {
+      "actual_rows": 3,
+      "expected_rows": 3
+    },
+    "by_project": {
+      "actual_rows": 5,
+      "expected_rows": 5
+    },
+    "overall": {
+      "actual_rows": 1,
+      "expected_rows": 1
+    }
+  },
+  "validation": {
+    "summary_field_comparisons": 850,
+    "summary_mismatch_count": 0,
+    "summary_rows_expected": 25,
+    "summary_rows_reconstructed": 25,
+    "summary_rows_with_complete_validation": 25,
+    "summary_rows_with_incomplete_validation": 0
+  },
+  "validation_checks": {
+    "all_checks_passed": true,
+    "audit_checks_passed": true,
+    "correlation_undefined_counts_correct": true,
+    "denominator_identities_passed": true,
+    "independent_validation_passed": true,
+    "input_schema_valid": true,
+    "input_sha_verified": true,
+    "range_checks_passed": true,
+    "summary_counts_correct": true
+  }
+}
