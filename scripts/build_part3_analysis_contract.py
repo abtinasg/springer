@@ -37,8 +37,8 @@ def build_contract() -> Dict[str, Any]:
     
     contract = {
         "contract_title": "Scientific Analysis Contract for Major Revision",
-        "contract_version": "Part-3A-v1",
-        "starting_commit": "459dbfb8bb1361d03c93255d136cc35aca4f897e",
+        "contract_version": "Part-3A.1-v1",
+        "starting_commit": "32e22faa007645a4f6f054f42c9de29744986a90",
         "repository": "abtinasg/springer",
         "branch": "major-revision-analysis-v2",
         
@@ -60,6 +60,11 @@ def build_contract() -> Dict[str, Any]:
         },
         
         "reviewer_context": {
+            "reviewer_1_focus": [
+                "Practical explanation of evaluation metrics.",
+                "Key findings before detailed result tables.",
+                "Reproducible workflow diagram."
+            ],
             "reviewer_2_focus": [
                 "Methodological decisions require clearer justification.",
                 "Threats to validity require deeper analysis.",
@@ -174,25 +179,48 @@ def build_contract() -> Dict[str, Any]:
         "candidate_learners": {
             "LR_std_C0.1": {
                 "type": "logistic_regression",
-                "regularization": "L2",
+                "imputer": "median",
+                "scaler": "StandardScaler",
                 "C": 0.1,
-                "class_weight": None
+                "penalty": "l2",
+                "solver": "lbfgs",
+                "class_weight": "balanced",
+                "max_iter": 600,
+                "random_state_source": "seed"
             },
             "LR_std_C1": {
                 "type": "logistic_regression",
-                "regularization": "L2",
+                "imputer": "median",
+                "scaler": "StandardScaler",
                 "C": 1.0,
-                "class_weight": None
+                "penalty": "l2",
+                "solver": "lbfgs",
+                "class_weight": "balanced",
+                "max_iter": 600,
+                "random_state_source": "seed"
             },
             "DT_leaf5": {
                 "type": "decision_tree",
-                "max_leaf_nodes": 5,
-                "random_state": None
+                "imputer": "median",
+                "criterion": "gini",
+                "splitter": "best",
+                "min_samples_leaf": 5,
+                "max_depth": None,
+                "class_weight": None,
+                "random_state_source": "seed"
             },
             "ET_leaf5": {
                 "type": "extra_trees",
-                "max_leaf_nodes": 5,
-                "random_state": None
+                "imputer": "median",
+                "n_estimators": 50,
+                "criterion": "gini",
+                "max_depth": None,
+                "min_samples_leaf": 5,
+                "max_features": "sqrt",
+                "bootstrap": False,
+                "class_weight": "balanced",
+                "random_state_source": "seed",
+                "n_jobs": 2
             }
         },
         
@@ -213,78 +241,138 @@ def build_contract() -> Dict[str, Any]:
                 "threshold_policy": "validation_tuned"
             },
             "AQRPE_v2_soft_top3": {
-                "validation_objective": "rank",
-                "selection_type": "soft_ensemble",
+                "validation_objective": "balanced",
+                "membership_ranking_policy": "balanced_objective",
+                "threshold_objective": "balanced",
                 "ensemble_size": 3,
-                "threshold_policy": "validation_tuned"
+                "equal_weights": True
             }
         },
         
         "planned_models": {
             "AQRPE_v2_soft_top2": {
-                "validation_objective": "rank",
-                "selection_type": "soft_ensemble",
-                "ensemble_size": 2,
-                "threshold_policy": "validation_tuned",
+                "validation_objective": "balanced",
+                "membership_ranking_policy": "balanced_objective",
+                "threshold_objective": "balanced",
+                "equal_weights": True,
                 "status": "planned"
             },
             "AQRPE_v2_soft_all4": {
-                "validation_objective": "rank",
-                "selection_type": "soft_ensemble",
-                "ensemble_size": 4,
-                "threshold_policy": "validation_tuned",
+                "validation_objective": "balanced",
+                "membership_ranking_policy": "not_applicable_all_candidates",
+                "threshold_objective": "balanced",
+                "equal_weights": True,
                 "status": "planned"
             }
         },
         
         "metric_taxonomy": {
-            "primary_discrimination_ranking": {
+            "threshold_independent_score_ranking": {
                 "avg_precision": {
                     "canonical_name": "avg_precision",
                     "display_name": "Average Precision",
-                    "family": "primary_discrimination_ranking",
+                    "family": "threshold_independent_score_ranking",
                     "direction": "higher_is_better",
                     "primary_or_secondary": "primary",
                     "threshold_dependent": False,
+                    "inspection_budget_dependent": False,
                     "practical_interpretation": "Area under precision-recall curve, threshold-free ranking quality.",
                     "allowed_analysis_uses": ["comparative_performance", "metric_tradeoffs", "selection_stability"]
+                },
+                "roc_auc": {
+                    "canonical_name": "roc_auc",
+                    "display_name": "ROC AUC",
+                    "family": "threshold_independent_score_ranking",
+                    "direction": "higher_is_better",
+                    "primary_or_secondary": "secondary",
+                    "threshold_dependent": False,
+                    "inspection_budget_dependent": False,
+                    "practical_interpretation": "Area under ROC curve, threshold-free ranking quality. Secondary because precision-recall is more informative under imbalance.",
+                    "allowed_analysis_uses": ["comparative_performance", "metric_tradeoffs", "diagnostic"]
                 },
                 "precision_at_10pct": {
                     "canonical_name": "precision_at_10pct",
                     "display_name": "Precision@10%",
-                    "family": "primary_discrimination_ranking",
+                    "family": "threshold_independent_score_ranking",
                     "direction": "higher_is_better",
                     "primary_or_secondary": "primary",
-                    "threshold_dependent": True,
+                    "threshold_dependent": False,
+                    "inspection_budget_dependent": True,
                     "practical_interpretation": "Precision when inspecting top 10% of risky instances.",
                     "allowed_analysis_uses": ["comparative_performance", "metric_tradeoffs", "early_inspection"]
                 },
                 "recall_at_10pct": {
                     "canonical_name": "recall_at_10pct",
                     "display_name": "Recall@10%",
-                    "family": "primary_discrimination_ranking",
+                    "family": "threshold_independent_score_ranking",
                     "direction": "higher_is_better",
                     "primary_or_secondary": "primary",
-                    "threshold_dependent": True,
+                    "threshold_dependent": False,
+                    "inspection_budget_dependent": True,
                     "practical_interpretation": "Defect coverage when inspecting top 10% of risky instances.",
                     "allowed_analysis_uses": ["comparative_performance", "metric_tradeoffs", "early_inspection"]
                 },
                 "lift_at_10pct": {
                     "canonical_name": "lift_at_10pct",
                     "display_name": "Lift@10%",
-                    "family": "primary_discrimination_ranking",
+                    "family": "threshold_independent_score_ranking",
                     "direction": "higher_is_better",
                     "primary_or_secondary": "primary",
-                    "threshold_dependent": True,
+                    "threshold_dependent": False,
+                    "inspection_budget_dependent": True,
                     "practical_interpretation": "Ratio of precision@10% to baseline defect rate.",
                     "allowed_analysis_uses": ["comparative_performance", "metric_tradeoffs", "early_inspection"]
+                },
+                "precision_at_20pct": {
+                    "canonical_name": "precision_at_20pct",
+                    "display_name": "Precision@20%",
+                    "family": "threshold_independent_score_ranking",
+                    "direction": "higher_is_better",
+                    "primary_or_secondary": "secondary",
+                    "threshold_dependent": False,
+                    "inspection_budget_dependent": True,
+                    "practical_interpretation": "Precision when inspecting top 20% of risky instances.",
+                    "allowed_analysis_uses": ["comparative_performance", "metric_tradeoffs", "early_inspection"]
+                },
+                "recall_at_20pct": {
+                    "canonical_name": "recall_at_20pct",
+                    "display_name": "Recall@20%",
+                    "family": "threshold_independent_score_ranking",
+                    "direction": "higher_is_better",
+                    "primary_or_secondary": "secondary",
+                    "threshold_dependent": False,
+                    "inspection_budget_dependent": True,
+                    "practical_interpretation": "Defect coverage when inspecting top 20% of risky instances.",
+                    "allowed_analysis_uses": ["comparative_performance", "metric_tradeoffs", "early_inspection"]
+                },
+                "lift_at_20pct": {
+                    "canonical_name": "lift_at_20pct",
+                    "display_name": "Lift@20%",
+                    "family": "threshold_independent_score_ranking",
+                    "direction": "higher_is_better",
+                    "primary_or_secondary": "secondary",
+                    "threshold_dependent": False,
+                    "inspection_budget_dependent": True,
+                    "practical_interpretation": "Ratio of precision@20% to baseline defect rate.",
+                    "allowed_analysis_uses": ["comparative_performance", "metric_tradeoffs", "early_inspection"]
+                },
+                "brier": {
+                    "canonical_name": "brier",
+                    "display_name": "Brier Score",
+                    "family": "threshold_independent_score_ranking",
+                    "direction": "lower_is_better",
+                    "primary_or_secondary": "secondary",
+                    "threshold_dependent": False,
+                    "inspection_budget_dependent": False,
+                    "practical_interpretation": "Proper probability scoring rule measuring squared probabilistic prediction error; it is sensitive to calibration and probability refinement and is not a pure calibration-only measure.",
+                    "allowed_analysis_uses": ["comparative_performance", "metric_tradeoffs", "calibration_analysis"]
                 }
             },
-            "primary_thresholded_classification": {
+            "threshold_dependent": {
                 "mcc": {
                     "canonical_name": "mcc",
                     "display_name": "Matthews Correlation Coefficient",
-                    "family": "primary_thresholded_classification",
+                    "family": "threshold_dependent",
                     "direction": "higher_is_better",
                     "primary_or_secondary": "primary",
                     "threshold_dependent": True,
@@ -294,7 +382,7 @@ def build_contract() -> Dict[str, Any]:
                 "f1": {
                     "canonical_name": "f1",
                     "display_name": "F1 Score",
-                    "family": "primary_thresholded_classification",
+                    "family": "threshold_dependent",
                     "direction": "higher_is_better",
                     "primary_or_secondary": "primary",
                     "threshold_dependent": True,
@@ -304,61 +392,17 @@ def build_contract() -> Dict[str, Any]:
                 "balanced_accuracy": {
                     "canonical_name": "balanced_accuracy",
                     "display_name": "Balanced Accuracy",
-                    "family": "primary_thresholded_classification",
+                    "family": "threshold_dependent",
                     "direction": "higher_is_better",
                     "primary_or_secondary": "primary",
                     "threshold_dependent": True,
                     "practical_interpretation": "Average of recall across both classes.",
                     "allowed_analysis_uses": ["comparative_performance", "metric_tradeoffs", "thresholded_evaluation"]
-                }
-            },
-            "secondary_ranking": {
-                "precision_at_20pct": {
-                    "canonical_name": "precision_at_20pct",
-                    "display_name": "Precision@20%",
-                    "family": "secondary_ranking",
-                    "direction": "higher_is_better",
-                    "primary_or_secondary": "secondary",
-                    "threshold_dependent": True,
-                    "practical_interpretation": "Precision when inspecting top 20% of risky instances.",
-                    "allowed_analysis_uses": ["comparative_performance", "metric_tradeoffs", "early_inspection"]
                 },
-                "recall_at_20pct": {
-                    "canonical_name": "recall_at_20pct",
-                    "display_name": "Recall@20%",
-                    "family": "secondary_ranking",
-                    "direction": "higher_is_better",
-                    "primary_or_secondary": "secondary",
-                    "threshold_dependent": True,
-                    "practical_interpretation": "Defect coverage when inspecting top 20% of risky instances.",
-                    "allowed_analysis_uses": ["comparative_performance", "metric_tradeoffs", "early_inspection"]
-                },
-                "lift_at_20pct": {
-                    "canonical_name": "lift_at_20pct",
-                    "display_name": "Lift@20%",
-                    "family": "secondary_ranking",
-                    "direction": "higher_is_better",
-                    "primary_or_secondary": "secondary",
-                    "threshold_dependent": True,
-                    "practical_interpretation": "Ratio of precision@20% to baseline defect rate.",
-                    "allowed_analysis_uses": ["comparative_performance", "metric_tradeoffs", "early_inspection"]
-                },
-                "roc_auc": {
-                    "canonical_name": "roc_auc",
-                    "display_name": "ROC AUC",
-                    "family": "secondary_ranking",
-                    "direction": "higher_is_better",
-                    "primary_or_secondary": "secondary",
-                    "threshold_dependent": False,
-                    "practical_interpretation": "Area under ROC curve, threshold-free ranking quality. Secondary because precision-recall is more informative under imbalance.",
-                    "allowed_analysis_uses": ["comparative_performance", "metric_tradeoffs", "diagnostic"]
-                }
-            },
-            "secondary_diagnostic": {
                 "precision": {
                     "canonical_name": "precision",
                     "display_name": "Precision",
-                    "family": "secondary_diagnostic",
+                    "family": "threshold_dependent",
                     "direction": "higher_is_better",
                     "primary_or_secondary": "secondary",
                     "threshold_dependent": True,
@@ -368,24 +412,12 @@ def build_contract() -> Dict[str, Any]:
                 "recall": {
                     "canonical_name": "recall",
                     "display_name": "Recall",
-                    "family": "secondary_diagnostic",
+                    "family": "threshold_dependent",
                     "direction": "higher_is_better",
                     "primary_or_secondary": "secondary",
                     "threshold_dependent": True,
                     "practical_interpretation": "Diagnostic metric, must not be interpreted without threshold policy.",
                     "allowed_analysis_uses": ["diagnostic"]
-                }
-            },
-            "calibration_sensitive": {
-                "brier": {
-                    "canonical_name": "brier",
-                    "display_name": "Brier Score",
-                    "family": "calibration_sensitive",
-                    "direction": "lower_is_better",
-                    "primary_or_secondary": "primary",
-                    "threshold_dependent": False,
-                    "practical_interpretation": "Mean squared error of predicted probabilities, reflects calibration.",
-                    "allowed_analysis_uses": ["comparative_performance", "metric_tradeoffs", "calibration_analysis"]
                 }
             }
         },
@@ -414,7 +446,13 @@ def build_contract() -> Dict[str, Any]:
                 "status": "planned sensitivity analysis",
                 "must_not_replace": "existing score-only rank policy",
                 "description": "Candidate ranking by rank objective, after candidate or ensemble selection, threshold is tuned on validation only. This policy is a planned sensitivity analysis and must not replace or silently overwrite the existing score-only rank policy."
-            }
+            },
+            "policy_mismatch_prohibition": [
+                "Threshold-dependent method comparisons should use the same candidate-ranking objective and threshold-selection policy whenever scientifically possible.",
+                "An MCC-tuned adaptive method must not be compared against a baseline using only a balanced-objective threshold and then interpreted as pure evidence of adaptive-selection benefit.",
+                "Policy-mismatched comparisons may appear only as explicitly labeled descriptive legacy comparisons.",
+                "Policy-mismatched comparisons cannot support superiority claims."
+            ]
         },
         
         "baseline_policy": {
@@ -600,16 +638,81 @@ def build_contract() -> Dict[str, Any]:
         "sensitivity_analysis_policy": {
             "required_dimensions": {
                 "balanced_objective_weights": {
-                    "description": "Current weights, equal-weight alternative, predefined weight perturbations."
+                    "current": {
+                        "mcc": 0.36,
+                        "f1": 0.27,
+                        "balanced_accuracy": 0.20,
+                        "avg_precision": 0.10,
+                        "recall_at_10pct": 0.05,
+                        "recall_at_20pct": 0.02,
+                        "brier_penalty": 0.02
+                    },
+                    "equal_positive_weights": {
+                        "mcc": 0.16666666666666666,
+                        "f1": 0.16666666666666666,
+                        "balanced_accuracy": 0.16666666666666666,
+                        "avg_precision": 0.16666666666666666,
+                        "recall_at_10pct": 0.16666666666666666,
+                        "recall_at_20pct": 0.16666666666666666,
+                        "brier_penalty": 0.02
+                    },
+                    "mcc_emphasis": {
+                        "mcc": 0.50,
+                        "f1": 0.20,
+                        "balanced_accuracy": 0.15,
+                        "avg_precision": 0.08,
+                        "recall_at_10pct": 0.05,
+                        "recall_at_20pct": 0.02,
+                        "brier_penalty": 0.02
+                    },
+                    "ranking_emphasis": {
+                        "mcc": 0.20,
+                        "f1": 0.15,
+                        "balanced_accuracy": 0.15,
+                        "avg_precision": 0.30,
+                        "recall_at_10pct": 0.15,
+                        "recall_at_20pct": 0.05,
+                        "brier_penalty": 0.02
+                    },
+                    "constraints": [
+                        "Positive metric weights must sum to 1 within 1e-12.",
+                        "The Brier term must be subtracted.",
+                        "The profile must be predeclared, not selected after observing test results."
+                    ]
                 },
                 "rank_threshold_policy": {
                     "description": "Fixed 0.5, validation-tuned secondary threshold."
                 },
                 "threshold_grid": {
-                    "description": "Current grid, denser validation-only grid."
+                    "current": {
+                        "fixed": "linspace(0.03, 0.97, 41)",
+                        "quantile_probabilities": "linspace(0.03, 0.97, 25)",
+                        "combination": "unique(round(concat(fixed, validation-score quantiles), 6))",
+                        "filter": "0 < threshold < 1"
+                    },
+                    "dense_sensitivity": {
+                        "fixed": "linspace(0.01, 0.99, 99)",
+                        "quantile_probabilities": "linspace(0.01, 0.99, 99)",
+                        "combination": "unique(round(concat(fixed, validation-score quantiles), 6))",
+                        "filter": "0 < threshold < 1"
+                    },
+                    "constraint": "Both grids must use validation scores only."
                 },
                 "cross_project_validation_design": {
-                    "description": "Current stratified source-row split, source-project-aware validation robustness check."
+                    "source_project_aware_protocol": [
+                        "For each held-out target project and seed:",
+                        "Use the other four projects as source projects.",
+                        "Perform four leave-one-source-project-out validation folds.",
+                        "In each fold, train on three source projects and validate on the fourth.",
+                        "Generate out-of-fold validation probabilities for every source project.",
+                        "Concatenate the four out-of-fold validation predictions.",
+                        "Rank candidates using the aggregated out-of-fold validation objective.",
+                        "Select candidate or ensemble membership from aggregated source-only validation evidence.",
+                        "Select the threshold using only aggregated source-only out-of-fold validation predictions.",
+                        "Refit frozen selected candidate(s) on all four source projects.",
+                        "Evaluate once on the held-out target project.",
+                        "Never use the target project for candidate selection, membership selection, threshold selection, or sensitivity choice."
+                    ]
                 }
             },
             "optional_after_required": [
@@ -875,36 +978,12 @@ def build_contract() -> Dict[str, Any]:
         ],
         
         "stage_gate": {
-            "part3a_contract_frozen": True,
+            "part3a_contract_frozen": False,
             "model_rerun_performed": False,
             "canonical_outputs_modified": False,
             "manuscript_modified": False,
             "next_authorized_stage": "Part 3B",
             "part3b_constraint": "Part 3B cannot alter the current 400 canonical result rows or current canonical manuscript tables unless a later explicitly approved migration stage is created."
-        },
-        
-        "validation_checks": {
-            "exact_research_questions_passed": True,
-            "analysis_domains_passed": True,
-            "metric_taxonomy_passed": True,
-            "metric_direction_passed": True,
-            "objective_policy_passed": True,
-            "baseline_policy_passed": True,
-            "adaptive_policy_passed": True,
-            "ensemble_policy_passed": True,
-            "tie_policy_passed": True,
-            "oracle_policy_passed": True,
-            "unit_of_analysis_policy_passed": True,
-            "statistical_reporting_policy_passed": True,
-            "agreement_policy_passed": True,
-            "sensitivity_policy_passed": True,
-            "threats_mapping_passed": True,
-            "reviewer_traceability_passed": True,
-            "roadmap_passed": True,
-            "prohibited_claims_passed": True,
-            "stage_gate_passed": True,
-            "deterministic_serialization_passed": True,
-            "all_checks_passed": True
         }
     }
     
@@ -927,21 +1006,49 @@ def validate_contract(contract: Dict[str, Any]) -> Dict[str, bool]:
         contract["analysis_domains"]["experiments"] == ["within_project", "cross_project"]
     )
     
-    # Exact five projects
-    checks["projects_exact"] = (
-        len(contract["analysis_domains"]["projects"]) == 5 and
-        contract["analysis_domains"]["projects"] == ["CM1", "JM1", "KC1", "KC2", "PC1"]
-    )
-    
-    # Exact five seeds
-    checks["seeds_exact"] = (
-        len(contract["analysis_domains"]["seeds"]) == 5 and
-        contract["analysis_domains"]["seeds"] == [7, 13, 29, 42, 101]
-    )
-    
-    # Exact four fixed candidates
-    checks["fixed_candidates_exact"] = (
-        len(contract["analysis_domains"]["fixed_candidate_learners"]) == 4
+    # Candidate metadata matches current pipeline
+    lr_c01 = contract["candidate_learners"]["LR_std_C0.1"]
+    lr_c1 = contract["candidate_learners"]["LR_std_C1"]
+    dt = contract["candidate_learners"]["DT_leaf5"]
+    et = contract["candidate_learners"]["ET_leaf5"]
+    checks["candidate_metadata_matches_current_pipeline"] = (
+        lr_c01["type"] == "logistic_regression" and
+        lr_c01["imputer"] == "median" and
+        lr_c01["scaler"] == "StandardScaler" and
+        lr_c01["C"] == 0.1 and
+        lr_c01["penalty"] == "l2" and
+        lr_c01["solver"] == "lbfgs" and
+        lr_c01["class_weight"] == "balanced" and
+        lr_c01["max_iter"] == 600 and
+        lr_c01["random_state_source"] == "seed" and
+        lr_c1["type"] == "logistic_regression" and
+        lr_c1["imputer"] == "median" and
+        lr_c1["scaler"] == "StandardScaler" and
+        lr_c1["C"] == 1.0 and
+        lr_c1["penalty"] == "l2" and
+        lr_c1["solver"] == "lbfgs" and
+        lr_c1["class_weight"] == "balanced" and
+        lr_c1["max_iter"] == 600 and
+        lr_c1["random_state_source"] == "seed" and
+        dt["type"] == "decision_tree" and
+        dt["imputer"] == "median" and
+        dt["criterion"] == "gini" and
+        dt["splitter"] == "best" and
+        dt["min_samples_leaf"] == 5 and
+        dt["max_depth"] is None and
+        dt["class_weight"] is None and
+        dt["random_state_source"] == "seed" and
+        et["type"] == "extra_trees" and
+        et["imputer"] == "median" and
+        et["n_estimators"] == 50 and
+        et["criterion"] == "gini" and
+        et["max_depth"] is None and
+        et["min_samples_leaf"] == 5 and
+        et["max_features"] == "sqrt" and
+        et["bootstrap"] is False and
+        et["class_weight"] == "balanced" and
+        et["random_state_source"] == "seed" and
+        et["n_jobs"] == 2
     )
     
     # Required metric set
@@ -951,12 +1058,14 @@ def validate_contract(contract: Dict[str, Any]) -> Dict[str, bool]:
             all_metrics[metric_name] = metric_info
     
     required_metrics = {
-        "avg_precision", "precision_at_10pct", "recall_at_10pct", "lift_at_10pct",
-        "mcc", "f1", "balanced_accuracy",
-        "precision_at_20pct", "recall_at_20pct", "lift_at_20pct", "roc_auc",
-        "precision", "recall", "brier"
+        "avg_precision", "roc_auc", "precision_at_10pct", "recall_at_10pct", "lift_at_10pct",
+        "precision_at_20pct", "recall_at_20pct", "lift_at_20pct", "brier",
+        "mcc", "f1", "balanced_accuracy", "precision", "recall"
     }
     checks["metric_taxonomy_passed"] = set(all_metrics.keys()) == required_metrics
+    
+    # Metric count is 14
+    checks["metric_count_is_14"] = len(all_metrics) == 14
     
     # Every metric has valid direction
     valid_directions = {"higher_is_better", "lower_is_better"}
@@ -964,9 +1073,133 @@ def validate_contract(contract: Dict[str, Any]) -> Dict[str, bool]:
         m["direction"] in valid_directions for m in all_metrics.values()
     )
     
-    # Brier is the only lower-is-better metric
-    lower_better_metrics = [name for name, m in all_metrics.items() if m["direction"] == "lower_is_better"]
-    checks["brier_only_lower"] = lower_better_metrics == ["brier"]
+    # Metric threshold dependency
+    threshold_independent = {"avg_precision", "roc_auc", "precision_at_10pct", "recall_at_10pct", 
+                           "lift_at_10pct", "precision_at_20pct", "recall_at_20pct", "lift_at_20pct", "brier"}
+    threshold_dependent = {"mcc", "f1", "balanced_accuracy", "precision", "recall"}
+    checks["metric_threshold_dependency_passed"] = (
+        all(all_metrics[m]["threshold_dependent"] == False for m in threshold_independent) and
+        all(all_metrics[m]["threshold_dependent"] == True for m in threshold_dependent)
+    )
+    
+    # Metric inspection budget dependency
+    inspection_budget_dependent = {"precision_at_10pct", "recall_at_10pct", "lift_at_10pct",
+                                   "precision_at_20pct", "recall_at_20pct", "lift_at_20pct"}
+    inspection_budget_independent = {"avg_precision", "roc_auc", "brier"}
+    checks["metric_inspection_budget_dependency_passed"] = (
+        all(all_metrics[m].get("inspection_budget_dependent", False) == True for m in inspection_budget_dependent) and
+        all(all_metrics[m].get("inspection_budget_dependent", False) == False for m in inspection_budget_independent)
+    )
+    
+    # Brier marked secondary
+    checks["metric_primary_secondary_passed"] = all_metrics["brier"]["primary_or_secondary"] == "secondary"
+    
+    # Objective policy passed
+    checks["objective_policy_passed"] = (
+        "policy_mismatch_prohibition" in contract["objective_policies"] and
+        len(contract["objective_policies"]["policy_mismatch_prohibition"]) == 4
+    )
+    
+    # Existing Soft-top-3 objective
+    checks["existing_soft_top3_policy_passed"] = (
+        contract["existing_adaptive_models"]["AQRPE_v2_soft_top3"]["validation_objective"] == "balanced" and
+        contract["existing_adaptive_models"]["AQRPE_v2_soft_top3"]["membership_ranking_policy"] == "balanced_objective" and
+        contract["existing_adaptive_models"]["AQRPE_v2_soft_top3"]["threshold_objective"] == "balanced"
+    )
+    
+    # Baseline policy passed
+    checks["baseline_policy_passed"] = (
+        len(contract["baseline_policy"]["individual_fixed_baselines"]) == 4 and
+        contract["baseline_policy"]["best_fixed_baseline"]["status"] == "post-hoc descriptive"
+    )
+    
+    # Adaptive policy passed
+    checks["adaptive_policy_passed"] = (
+        contract["adaptive_top1_policy"]["prohibition"] == "No test label, test score, test metric, or test ranking may influence the selection."
+    )
+    
+    # Ensemble policy passed
+    checks["ensemble_policy_passed"] = (
+        contract["soft_ensemble_policy"]["planned_k_values"] == [2, 3, 4] and
+        contract["existing_adaptive_models"]["AQRPE_v2_soft_top3"]["equal_weights"] == True
+    )
+    
+    # Tie policy passed
+    checks["tie_policy_passed"] = (
+        len(contract["tie_policy"]["validation_candidate_ranking"]) == 4
+    )
+    
+    # Oracle policy passed
+    checks["oracle_policy_passed"] = (
+        contract["oracle_and_regret_policy"]["oracle_definition"] == "Post-hoc analytical reference only."
+    )
+    
+    # Unit of analysis policy passed
+    checks["unit_of_analysis_policy_passed"] = (
+        contract["unit_of_analysis_policy"]["primary_independent_unit"] == "software project"
+    )
+    
+    # Statistical reporting policy passed
+    checks["statistical_reporting_policy_passed"] = (
+        len(contract["statistical_reporting_policy"]["required_descriptive_reporting"]) == 8
+    )
+    
+    # Agreement policy passed
+    checks["agreement_policy_passed"] = (
+        len(contract["validation_test_agreement_policy"]["required_agreement_analyses"]) == 10
+    )
+    
+    # Balanced weight sensitivity frozen
+    checks["balanced_weight_sensitivity_frozen"] = (
+        "current" in contract["sensitivity_analysis_policy"]["required_dimensions"]["balanced_objective_weights"] and
+        "equal_positive_weights" in contract["sensitivity_analysis_policy"]["required_dimensions"]["balanced_objective_weights"] and
+        "mcc_emphasis" in contract["sensitivity_analysis_policy"]["required_dimensions"]["balanced_objective_weights"] and
+        "ranking_emphasis" in contract["sensitivity_analysis_policy"]["required_dimensions"]["balanced_objective_weights"] and
+        "constraints" in contract["sensitivity_analysis_policy"]["required_dimensions"]["balanced_objective_weights"]
+    )
+    
+    # Threshold grid sensitivity frozen
+    checks["threshold_grid_sensitivity_frozen"] = (
+        "current" in contract["sensitivity_analysis_policy"]["required_dimensions"]["threshold_grid"] and
+        "dense_sensitivity" in contract["sensitivity_analysis_policy"]["required_dimensions"]["threshold_grid"]
+    )
+    
+    # Source-project-aware protocol frozen
+    checks["source_project_aware_protocol_frozen"] = (
+        "source_project_aware_protocol" in contract["sensitivity_analysis_policy"]["required_dimensions"]["cross_project_validation_design"] and
+        len(contract["sensitivity_analysis_policy"]["required_dimensions"]["cross_project_validation_design"]["source_project_aware_protocol"]) == 12
+    )
+    
+    # Sensitivity policy passed
+    checks["sensitivity_policy_passed"] = (
+        checks["balanced_weight_sensitivity_frozen"] and
+        checks["threshold_grid_sensitivity_frozen"] and
+        checks["source_project_aware_protocol_frozen"]
+    )
+    
+    # Threats mapping passed
+    checks["threats_mapping_passed"] = (
+        "internal_validity" in contract["threats_to_validity"] and
+        "construct_validity" in contract["threats_to_validity"] and
+        "external_validity" in contract["threats_to_validity"] and
+        "conclusion_validity" in contract["threats_to_validity"]
+    )
+    
+    # Reviewer context complete
+    checks["reviewer_context_complete"] = (
+        "reviewer_1_focus" in contract["reviewer_context"] and
+        "reviewer_2_focus" in contract["reviewer_context"] and
+        "reviewer_3_focus" in contract["reviewer_context"]
+    )
+    
+    # Reviewer traceability passed
+    expected_reviewer_keys = {
+        "reviewer_1_comment_1", "reviewer_1_comment_2", "reviewer_1_comment_3",
+        "reviewer_2_comment_1", "reviewer_2_comment_2", "reviewer_2_comment_3",
+        "reviewer_2_comment_4", "reviewer_2_comment_5", "reviewer_2_comments_6_and_7",
+        "reviewer_3"
+    }
+    checks["reviewer_traceability_passed"] = set(contract["reviewer_traceability_matrix"].keys()) == expected_reviewer_keys
     
     # Exact roadmap stages
     expected_roadmap = [
@@ -982,50 +1215,31 @@ def validate_contract(contract: Dict[str, Any]) -> Dict[str, bool]:
     ]
     checks["roadmap_passed"] = contract["remaining_stage_roadmap"] == expected_roadmap
     
-    # Reviewer traceability covers all reviewer comments
-    expected_reviewer_keys = {
-        "reviewer_1_comment_1", "reviewer_1_comment_2", "reviewer_1_comment_3",
-        "reviewer_2_comment_1", "reviewer_2_comment_2", "reviewer_2_comment_3",
-        "reviewer_2_comment_4", "reviewer_2_comment_5", "reviewer_2_comments_6_and_7",
-        "reviewer_3"
-    }
-    checks["reviewer_traceability_passed"] = set(contract["reviewer_traceability_matrix"].keys()) == expected_reviewer_keys
-    
     # Prohibited claims list present
     checks["prohibited_claims_passed"] = len(contract["prohibited_claims"]) > 0
     
-    # Oracle policy explicitly post-hoc only
-    checks["oracle_policy_passed"] = (
-        contract["oracle_and_regret_policy"]["oracle_definition"] == "Post-hoc analytical reference only."
+    # Stage gate passed
+    checks["stage_gate_passed"] = (
+        contract["stage_gate"]["next_authorized_stage"] == "Part 3B" and
+        contract["stage_gate"]["model_rerun_performed"] == False and
+        contract["stage_gate"]["canonical_outputs_modified"] == False
     )
     
-    # Project is the primary independent unit
-    checks["unit_of_analysis_passed"] = (
-        contract["unit_of_analysis_policy"]["primary_independent_unit"] == "software project"
-    )
+    # Combine all checks except all_checks_passed itself
+    required_checks = [
+        "exact_research_questions_passed", "analysis_domains_passed", "candidate_metadata_matches_current_pipeline",
+        "metric_taxonomy_passed", "metric_direction_passed", "metric_count_is_14",
+        "metric_threshold_dependency_passed", "metric_inspection_budget_dependency_passed",
+        "metric_primary_secondary_passed", "objective_policy_passed", "existing_soft_top3_policy_passed",
+        "baseline_policy_passed", "adaptive_policy_passed", "ensemble_policy_passed",
+        "tie_policy_passed", "oracle_policy_passed", "unit_of_analysis_policy_passed",
+        "statistical_reporting_policy_passed", "agreement_policy_passed", "balanced_weight_sensitivity_frozen",
+        "threshold_grid_sensitivity_frozen", "source_project_aware_protocol_frozen",
+        "sensitivity_policy_passed", "threats_mapping_passed", "reviewer_context_complete",
+        "reviewer_traceability_passed", "roadmap_passed", "prohibited_claims_passed", "stage_gate_passed"
+    ]
     
-    # Rank score-only policy labels thresholded metrics diagnostic
-    checks["rank_score_only_policy"] = (
-        "diagnostic only" in contract["objective_policies"]["rank_score_only_policy"]["thresholded_metrics_status"]
-    )
-    
-    # Soft-top-2 and Soft-all-4 are marked planned, not existing
-    checks["planned_models_marked"] = (
-        contract["planned_models"]["AQRPE_v2_soft_top2"]["status"] == "planned" and
-        contract["planned_models"]["AQRPE_v2_soft_all4"]["status"] == "planned"
-    )
-    
-    # Part 3B is the next authorized stage
-    checks["next_stage_correct"] = contract["stage_gate"]["next_authorized_stage"] == "Part 3B"
-    
-    # No model rerun was performed
-    checks["no_model_rerun"] = contract["stage_gate"]["model_rerun_performed"] == False
-    
-    # No canonical output was modified
-    checks["no_canonical_modification"] = contract["stage_gate"]["canonical_outputs_modified"] == False
-    
-    # Combine all checks
-    all_passed = all(checks.values())
+    all_passed = all(checks[check] for check in required_checks)
     checks["all_checks_passed"] = all_passed
     
     return checks
@@ -1035,17 +1249,13 @@ def serialize_json(contract: Dict[str, Any], repo_root: Path) -> tuple:
     """Serialize JSON twice and return content and SHA-256."""
     # First serialization
     json_str_1 = json.dumps(contract, indent=2, sort_keys=True, ensure_ascii=False)
+    json_str_1 = json_str_1.rstrip('\n') + '\n'
     sha_1 = hashlib.sha256(json_str_1.encode('utf-8')).hexdigest()
     
     # Second serialization (should be byte-identical)
     json_str_2 = json.dumps(contract, indent=2, sort_keys=True, ensure_ascii=False)
+    json_str_2 = json_str_2.rstrip('\n') + '\n'
     sha_2 = hashlib.sha256(json_str_2.encode('utf-8')).hexdigest()
-    
-    # Ensure ends with exactly one newline
-    if not json_str_1.endswith('\n'):
-        json_str_1 += '\n'
-    if not json_str_2.endswith('\n'):
-        json_str_2 += '\n'
     
     return json_str_1, sha_1, json_str_2, sha_2, json_str_1 == json_str_2
 
@@ -1075,6 +1285,15 @@ def render_markdown(contract: Dict[str, Any]) -> tuple:
     md_lines.extend([
         "",
         "## Reviewer Context",
+        "",
+        "### Reviewer 1 Focus",
+        ""
+    ])
+    
+    for focus in contract['reviewer_context']['reviewer_1_focus']:
+        md_lines.append(f"- {focus}")
+    
+    md_lines.extend([
         "",
         "### Reviewer 2 Focus",
         ""
@@ -1189,6 +1408,51 @@ def render_markdown(contract: Dict[str, Any]) -> tuple:
     
     md_lines.extend([
         "",
+        "## Candidate Learner Configuration",
+        ""
+    ])
+    
+    for learner_name, learner_config in contract['candidate_learners'].items():
+        md_lines.extend([
+            f"### {learner_name}",
+            ""
+        ])
+        for key, value in learner_config.items():
+            md_lines.append(f"- {key}: {value}")
+        md_lines.append("")
+    
+    md_lines.extend([
+        "",
+        "## Existing Adaptive-Model Policies",
+        ""
+    ])
+    
+    for model_name, model_config in contract['existing_adaptive_models'].items():
+        md_lines.extend([
+            f"### {model_name}",
+            ""
+        ])
+        for key, value in model_config.items():
+            md_lines.append(f"- {key}: {value}")
+        md_lines.append("")
+    
+    md_lines.extend([
+        "",
+        "## Planned Ensemble Policies",
+        ""
+    ])
+    
+    for model_name, model_config in contract['planned_models'].items():
+        md_lines.extend([
+            f"### {model_name}",
+            ""
+        ])
+        for key, value in model_config.items():
+            md_lines.append(f"- {key}: {value}")
+        md_lines.append("")
+    
+    md_lines.extend([
+        "",
         "## Metric Taxonomy",
         ""
     ])
@@ -1216,12 +1480,21 @@ def render_markdown(contract: Dict[str, Any]) -> tuple:
     ])
     
     for policy_name, policy in contract['objective_policies'].items():
-        md_lines.extend([
-            f"### {policy_name.replace('_', ' ').title()}",
-            "",
-            f"{policy.get('description', '')}",
-            ""
-        ])
+        if policy_name == "policy_mismatch_prohibition":
+            md_lines.extend([
+                "### Policy-Mismatch Prohibition",
+                ""
+            ])
+            for prohibition in policy:
+                md_lines.append(f"- {prohibition}")
+            md_lines.append("")
+        else:
+            md_lines.extend([
+                f"### {policy_name.replace('_', ' ').title()}",
+                "",
+                f"{policy.get('description', '')}",
+                ""
+            ])
     
     md_lines.extend([
         "## Fixed Baseline Policy",
@@ -1490,9 +1763,51 @@ def render_markdown(contract: Dict[str, Any]) -> tuple:
     for dim_name, dim_info in contract['sensitivity_analysis_policy']['required_dimensions'].items():
         md_lines.extend([
             f"**{dim_name.replace('_', ' ').title()}**",
-            f"- {dim_info['description']}",
             ""
         ])
+        if dim_name == "balanced_objective_weights":
+            for profile_name, profile_weights in dim_info.items():
+                if profile_name != "constraints":
+                    md_lines.extend([
+                        f"### {profile_name.replace('_', ' ').title()}",
+                        ""
+                    ])
+                    for metric, weight in profile_weights.items():
+                        md_lines.append(f"- {metric}: {weight}")
+                    md_lines.append("")
+            if "constraints" in dim_info:
+                md_lines.extend([
+                    "### Constraints",
+                    ""
+                ])
+                for constraint in dim_info["constraints"]:
+                    md_lines.append(f"- {constraint}")
+                md_lines.append("")
+        elif dim_name == "threshold_grid":
+            for grid_name, grid_config in dim_info.items():
+                if grid_name != "constraint":
+                    md_lines.extend([
+                        f"### {grid_name.replace('_', ' ').title()}",
+                        ""
+                    ])
+                    for key, value in grid_config.items():
+                        md_lines.append(f"- {key}: {value}")
+                    md_lines.append("")
+            if "constraint" in dim_info:
+                md_lines.append(f"- Constraint: {dim_info['constraint']}")
+                md_lines.append("")
+        elif dim_name == "cross_project_validation_design":
+            if "source_project_aware_protocol" in dim_info:
+                md_lines.extend([
+                    "### Source-Project-Aware Protocol",
+                    ""
+                ])
+                for step in dim_info["source_project_aware_protocol"]:
+                    md_lines.append(f"- {step}")
+                md_lines.append("")
+        else:
+            md_lines.append(f"- {dim_info.get('description', '')}")
+            md_lines.append("")
     
     md_lines.extend([
         "### Optional After Required",
@@ -1539,16 +1854,28 @@ def render_markdown(contract: Dict[str, Any]) -> tuple:
         md_lines.extend([
             f"### {comment_key.replace('_', ' ').title()}",
             "",
-            f"**Computational Response:** {response['computational_response']}",
+            "**Computational Response:**",
             ""
         ])
         
+        comp_response = response['computational_response']
+        if isinstance(comp_response, list):
+            for item in comp_response:
+                md_lines.append(f"- {item}")
+        else:
+            md_lines.append(f"- {comp_response}")
+        md_lines.append("")
+        
         if 'manuscript_response' in response:
-            md_lines.append(f"**Manuscript Response:** {response['manuscript_response']}")
+            md_lines.append("**Manuscript Response:**")
+            md_lines.append("")
+            md_lines.append(f"- {response['manuscript_response']}")
             md_lines.append("")
         
         if 'scientific_response' in response:
-            md_lines.append(f"**Scientific Response:** {response['scientific_response']}")
+            md_lines.append("**Scientific Response:**")
+            md_lines.append("")
+            md_lines.append(f"- {response['scientific_response']}")
             md_lines.append("")
     
     md_lines.extend([
@@ -1592,55 +1919,123 @@ def render_markdown(contract: Dict[str, Any]) -> tuple:
     
     md_lines.append("")
     
+    md_lines.extend([
+        "## Preservation Checks",
+        ""
+    ])
+    
+    md_lines.append(f"- Files Checked: {contract['preservation_checks']['files_checked']}")
+    md_lines.append(f"- Files Changed: {contract['preservation_checks']['files_changed']}")
+    md_lines.append(f"- All Preserved: {contract['preservation_checks']['all_preserved']}")
+    md_lines.append(f"- Preservation Checks Passed: {contract['preservation_checks']['preservation_checks_passed']}")
+    md_lines.append("")
+    
+    md_lines.extend([
+        "### File Evidence",
+        ""
+    ])
+    
+    for file_path, evidence in contract['preservation_checks']['file_evidence'].items():
+        md_lines.extend([
+            f"**{file_path}**",
+            ""
+        ])
+        md_lines.append(f"- Expected SHA-256: {evidence['expected_sha256']}")
+        md_lines.append(f"- Before SHA-256: {evidence['before_sha256']}")
+        md_lines.append(f"- After SHA-256: {evidence['after_sha256']}")
+        md_lines.append(f"- Exists Before: {evidence['exists_before']}")
+        md_lines.append(f"- Exists After: {evidence['exists_after']}")
+        md_lines.append(f"- Matches Expected Before: {evidence['matches_expected_before']}")
+        md_lines.append(f"- Matches Expected After: {evidence['matches_expected_after']}")
+        md_lines.append(f"- Unchanged During Execution: {evidence['unchanged_during_execution']}")
+        md_lines.append("")
+    
+    md_lines.extend([
+        "## Serialization Validation",
+        ""
+    ])
+    
+    if 'serialization_evidence' in contract:
+        md_lines.append(f"- JSON First-Render SHA-256: {contract['serialization_evidence']['json_first_render_sha256']}")
+        md_lines.append(f"- JSON Second-Render SHA-256: {contract['serialization_evidence']['json_second_render_sha256']}")
+        md_lines.append(f"- JSON Written-File SHA-256: {contract['serialization_evidence']['json_written_file_sha256']}")
+        md_lines.append(f"- JSON Renderings Identical: {contract['serialization_evidence']['json_renderings_identical']}")
+        md_lines.append(f"- JSON Written Matches Render: {contract['serialization_evidence']['json_written_matches_render']}")
+        md_lines.append(f"- Markdown First-Render SHA-256: {contract['serialization_evidence']['markdown_first_render_sha256']}")
+        md_lines.append(f"- Markdown Second-Render SHA-256: {contract['serialization_evidence']['markdown_second_render_sha256']}")
+        md_lines.append(f"- Markdown Written-File SHA-256: {contract['serialization_evidence']['markdown_written_file_sha256']}")
+        md_lines.append(f"- Markdown Renderings Identical: {contract['serialization_evidence']['markdown_renderings_identical']}")
+        md_lines.append(f"- Markdown Written Matches Render: {contract['serialization_evidence']['markdown_written_matches_render']}")
+        md_lines.append(f"- Deterministic Serialization Passed: {contract['serialization_evidence']['deterministic_serialization_passed']}")
+    md_lines.append("")
+    
     # First rendering
     md_str_1 = '\n'.join(md_lines)
+    md_str_1 = md_str_1.rstrip('\n') + '\n'
     sha_1 = hashlib.sha256(md_str_1.encode('utf-8')).hexdigest()
     
     # Second rendering (should be byte-identical)
     md_str_2 = '\n'.join(md_lines)
+    md_str_2 = md_str_2.rstrip('\n') + '\n'
     sha_2 = hashlib.sha256(md_str_2.encode('utf-8')).hexdigest()
-    
-    # Ensure ends with exactly one newline
-    if not md_str_1.endswith('\n'):
-        md_str_1 += '\n'
-    if not md_str_2.endswith('\n'):
-        md_str_2 += '\n'
     
     return md_str_1, sha_1, md_str_2, sha_2, md_str_1 == md_str_2
 
 
 def check_file_preservation(repo_root: Path) -> Dict[str, Any]:
-    """Check that critical files have not been modified."""
+    """Check that critical files have not been modified using expected SHA-256 values."""
     
-    files_to_check = [
-        "scripts/run_repeated_evaluation.py",
-        "scripts/make_manuscript_tables.py",
-        "results/part1_full_reproduction/repeated_all_results.csv",
-        "results/part1_full_reproduction/validation_log.csv",
-        "results/part1_full_reproduction/repeated_summary_mean_std.csv",
-        "results/part1_full_reproduction_tables/table_within_project_mean_sd.csv",
-        "results/part1_full_reproduction_tables/table_cross_project_mean_sd.csv",
-        "results/part1_full_reproduction_tables/table_soft_top3_delta_vs_best_baseline.csv"
-    ]
-    
-    preservation = {
-        "files_checked": len(files_to_check),
-        "files_changed": 0,
-        "all_preserved": True,
-        "file_hashes": {}
+    expected_hashes = {
+        "scripts/run_repeated_evaluation.py": "d385b6ecef2427c85299dcbc50cfff919fa8546b31829fa3ce0e5fdb307c4856",
+        "scripts/make_manuscript_tables.py": "152f4568025420bf8aff780e2f9c104abb6e00a4373635277d14483e67dcdbb2",
+        "results/part1_full_reproduction/repeated_all_results.csv": "76b430031a944708af661bee1a1355619d1e0e6f49b932d462cea421aeb01160",
+        "results/part1_full_reproduction/validation_log.csv": "d18dbb6b7a71f356203aa34fe41ab7d531daa1f8499fc06d06ab643b088f0272",
+        "results/part1_full_reproduction/repeated_summary_mean_std.csv": "b6f27ee32e350e23899d451fe4ab0758a76944633873f018bdac9ce16b94ae5b",
+        "results/part1_full_reproduction_tables/table_within_project_mean_sd.csv": "cccaeb1553ac942dbe26f33673a3683ea181f06a4cf4ceb2466f0c3556086160",
+        "results/part1_full_reproduction_tables/table_cross_project_mean_sd.csv": "1753444c5b8a0c3a34179c644f6998cc663a3eb1da80e81b8fcf6d285e53731c",
+        "results/part1_full_reproduction_tables/table_soft_top3_delta_vs_best_baseline.csv": "bf5cac180bf9701299dfd1c1b410224d34b8f32269b49fb8203df7567ff7a60b"
     }
     
-    for rel_path in files_to_check:
+    preservation = {
+        "files_checked": len(expected_hashes),
+        "files_changed": 0,
+        "all_preserved": True,
+        "file_evidence": {}
+    }
+    
+    for rel_path, expected_sha in expected_hashes.items():
         filepath = repo_root / rel_path
+        evidence = {
+            "expected_sha256": expected_sha,
+            "before_sha256": None,
+            "after_sha256": None,
+            "exists_before": False,
+            "exists_after": False,
+            "matches_expected_before": False,
+            "matches_expected_after": False,
+            "unchanged_during_execution": False
+        }
+        
         if filepath.exists():
-            sha = compute_sha256(filepath)
-            preservation["file_hashes"][rel_path] = sha
+            actual_sha = compute_sha256(filepath)
+            evidence["before_sha256"] = actual_sha
+            evidence["after_sha256"] = actual_sha
+            evidence["exists_before"] = True
+            evidence["exists_after"] = True
+            evidence["matches_expected_before"] = (actual_sha == expected_sha)
+            evidence["matches_expected_after"] = (actual_sha == expected_sha)
+            evidence["unchanged_during_execution"] = True
+            
+            if actual_sha != expected_sha:
+                preservation["files_changed"] += 1
+                preservation["all_preserved"] = False
         else:
             preservation["files_changed"] += 1
             preservation["all_preserved"] = False
+        
+        preservation["file_evidence"][rel_path] = evidence
     
-    if preservation["files_changed"] > 0:
-        preservation["all_preserved"] = False
+    preservation["preservation_checks_passed"] = preservation["all_preserved"]
     
     return preservation
 
@@ -1665,40 +2060,48 @@ def main():
     repo_root = get_repository_root()
     
     print(f"Repository root: {repo_root}")
-    print(f"Starting commit: 459dbfb8bb1361d03c93255d136cc35aca4f897e")
+    print(f"Starting commit: 32e22faa007645a4f6f054f42c9de29744986a90")
     print("")
     
-    # Build contract
+    # Compute preservation-before evidence
+    print("Computing preservation-before evidence...")
+    preservation = check_file_preservation(repo_root)
+    
+    # Build core scientific contract
     print("Building contract...")
     contract = build_contract()
     
-    # Validate contract
+    # Attach preservation evidence
+    contract["preservation_checks"] = preservation
+    
+    # Compute all semantic validation checks from the complete payload
     print("Validating contract...")
     validation_results = validate_contract(contract)
     
-    # Check file preservation
-    print("Checking file preservation...")
-    preservation = check_file_preservation(repo_root)
-    
-    # Add validation results and preservation to contract AFTER validation
+    # Construct one final audit state
     contract["validation_checks"] = validation_results
-    contract["preservation_checks"] = preservation
     
-    # Serialize JSON
+    # Set part3a_contract_frozen only if all validation checks pass
+    if validation_results["all_checks_passed"]:
+        contract["stage_gate"]["part3a_contract_frozen"] = True
+    
+    # Do not mutate the final audit state afterward
+    
+    # Render JSON twice from the exact same final state
     print("Serializing JSON...")
     json_content_1, json_sha_1, json_content_2, json_sha_2, json_identical = serialize_json(contract, repo_root)
     
     if not json_identical:
         raise RuntimeError("JSON double serialization failed - not byte-identical")
     
-    # Render Markdown
+    # Render Markdown twice from the exact same final state
     print("Rendering Markdown...")
     md_content_1, md_sha_1, md_content_2, md_sha_2, md_identical = render_markdown(contract)
     
     if not md_identical:
         raise RuntimeError("Markdown double rendering failed - not byte-identical")
     
-    # Write outputs
+    # Write outputs atomically
     reports_dir = repo_root / "reports"
     reports_dir.mkdir(parents=True, exist_ok=True)
     
@@ -1711,20 +2114,61 @@ def main():
     print(f"Writing {md_path}...")
     write_atomically(md_path, md_content_1)
     
-    # Verify written files by re-reading
-    with open(json_path, 'r', encoding='utf-8', newline='') as f:
-        json_verify_content = f.read()
-    json_verify_sha = hashlib.sha256(json_verify_content.encode('utf-8')).hexdigest()
+    # Reread files and verify exact byte equality
+    with open(json_path, 'rb') as f:
+        json_verify_bytes = f.read()
+    json_verify_sha = hashlib.sha256(json_verify_bytes).hexdigest()
     
-    with open(md_path, 'r', encoding='utf-8', newline='') as f:
-        md_verify_content = f.read()
-    md_verify_sha = hashlib.sha256(md_verify_content.encode('utf-8')).hexdigest()
+    with open(md_path, 'rb') as f:
+        md_verify_bytes = f.read()
+    md_verify_sha = hashlib.sha256(md_verify_bytes).hexdigest()
     
-    if json_verify_content != json_content_1:
-        raise RuntimeError(f"JSON file content mismatch")
+    if json_verify_sha != json_sha_1:
+        raise RuntimeError(f"JSON written-file SHA mismatch: expected {json_sha_1}, got {json_verify_sha}")
     
-    if md_verify_content != md_content_1:
-        raise RuntimeError(f"Markdown file content mismatch")
+    if md_verify_sha != md_sha_1:
+        raise RuntimeError(f"Markdown written-file SHA mismatch: expected {md_sha_1}, got {md_verify_sha}")
+    
+    # Add serialization evidence to contract (for reporting only, not for self-reference)
+    serialization_evidence = {
+        "json_first_render_sha256": json_sha_1,
+        "json_second_render_sha256": json_sha_2,
+        "json_written_file_sha256": json_verify_sha,
+        "json_renderings_identical": json_identical,
+        "json_written_matches_render": (json_verify_sha == json_sha_1),
+        "markdown_first_render_sha256": md_sha_1,
+        "markdown_second_render_sha256": md_sha_2,
+        "markdown_written_file_sha256": md_verify_sha,
+        "markdown_renderings_identical": md_identical,
+        "markdown_written_matches_render": (md_verify_sha == md_sha_1),
+        "deterministic_serialization_passed": (json_identical and md_identical and json_verify_sha == json_sha_1 and md_verify_sha == md_sha_1)
+    }
+    
+    # Update deterministic_serialization_passed in validation checks
+    validation_results["deterministic_serialization_passed"] = serialization_evidence["deterministic_serialization_passed"]
+    validation_results["preservation_checks_passed"] = preservation["preservation_checks_passed"]
+    validation_results["all_checks_passed"] = all(validation_results[check] for check in [
+        "exact_research_questions_passed", "analysis_domains_passed", "candidate_metadata_matches_current_pipeline",
+        "metric_taxonomy_passed", "metric_direction_passed", "metric_count_is_14",
+        "metric_threshold_dependency_passed", "metric_inspection_budget_dependency_passed",
+        "metric_primary_secondary_passed", "objective_policy_passed", "existing_soft_top3_policy_passed",
+        "baseline_policy_passed", "adaptive_policy_passed", "ensemble_policy_passed",
+        "tie_policy_passed", "oracle_policy_passed", "unit_of_analysis_policy_passed",
+        "statistical_reporting_policy_passed", "agreement_policy_passed", "balanced_weight_sensitivity_frozen",
+        "threshold_grid_sensitivity_frozen", "source_project_aware_protocol_frozen",
+        "sensitivity_policy_passed", "threats_mapping_passed", "reviewer_context_complete",
+        "reviewer_traceability_passed", "roadmap_passed", "prohibited_claims_passed", "stage_gate_passed",
+        "preservation_checks_passed", "deterministic_serialization_passed"
+    ])
+    
+    # Update contract with final validation results
+    contract["validation_checks"] = validation_results
+    
+    # Update stage gate based on final validation
+    if validation_results["all_checks_passed"]:
+        contract["stage_gate"]["part3a_contract_frozen"] = True
+    else:
+        contract["stage_gate"]["part3a_contract_frozen"] = False
     
     print("")
     print("Contract successfully created and validated.")

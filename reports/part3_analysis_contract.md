@@ -1,7 +1,7 @@
 # Scientific Analysis Contract for Major Revision
 
-**Contract Version:** Part-3A-v1
-**Starting Commit:** 459dbfb8bb1361d03c93255d136cc35aca4f897e
+**Contract Version:** Part-3A.1-v1
+**Starting Commit:** 32e22faa007645a4f6f054f42c9de29744986a90
 **Repository:** abtinasg/springer
 **Branch:** major-revision-analysis-v2
 
@@ -19,6 +19,12 @@ A validation-controlled empirical study of model selection behavior, metric-depe
 - Conclusions must remain dataset-, metric-, setting-, and protocol-dependent.
 
 ## Reviewer Context
+
+### Reviewer 1 Focus
+
+- Practical explanation of evaluation metrics.
+- Key findings before detailed result tables.
+- Reproducible workflow diagram.
 
 ### Reviewer 2 Focus
 
@@ -142,9 +148,109 @@ A validation-controlled empirical study of model selection behavior, metric-depe
 - ensemble construction rule
 - post-hoc oracle
 
+## Candidate Learner Configuration
+
+### LR_std_C0.1
+
+- type: logistic_regression
+- imputer: median
+- scaler: StandardScaler
+- C: 0.1
+- penalty: l2
+- solver: lbfgs
+- class_weight: balanced
+- max_iter: 600
+- random_state_source: seed
+
+### LR_std_C1
+
+- type: logistic_regression
+- imputer: median
+- scaler: StandardScaler
+- C: 1.0
+- penalty: l2
+- solver: lbfgs
+- class_weight: balanced
+- max_iter: 600
+- random_state_source: seed
+
+### DT_leaf5
+
+- type: decision_tree
+- imputer: median
+- criterion: gini
+- splitter: best
+- min_samples_leaf: 5
+- max_depth: None
+- class_weight: None
+- random_state_source: seed
+
+### ET_leaf5
+
+- type: extra_trees
+- imputer: median
+- n_estimators: 50
+- criterion: gini
+- max_depth: None
+- min_samples_leaf: 5
+- max_features: sqrt
+- bootstrap: False
+- class_weight: balanced
+- random_state_source: seed
+- n_jobs: 2
+
+
+## Existing Adaptive-Model Policies
+
+### AQRPE_v2_balanced
+
+- validation_objective: balanced
+- selection_type: adaptive_top1
+- threshold_policy: validation_tuned
+
+### AQRPE_v2_rank
+
+- validation_objective: rank
+- selection_type: adaptive_top1
+- threshold_policy: fixed_0.5
+
+### AQRPE_v2_mcc
+
+- validation_objective: mcc
+- selection_type: adaptive_top1
+- threshold_policy: validation_tuned
+
+### AQRPE_v2_soft_top3
+
+- validation_objective: balanced
+- membership_ranking_policy: balanced_objective
+- threshold_objective: balanced
+- ensemble_size: 3
+- equal_weights: True
+
+
+## Planned Ensemble Policies
+
+### AQRPE_v2_soft_top2
+
+- validation_objective: balanced
+- membership_ranking_policy: balanced_objective
+- threshold_objective: balanced
+- equal_weights: True
+- status: planned
+
+### AQRPE_v2_soft_all4
+
+- validation_objective: balanced
+- membership_ranking_policy: not_applicable_all_candidates
+- threshold_objective: balanced
+- equal_weights: True
+- status: planned
+
+
 ## Metric Taxonomy
 
-### Primary Discrimination Ranking
+### Threshold Independent Score Ranking
 
 **Average Precision (avg_precision)**
 
@@ -153,28 +259,63 @@ A validation-controlled empirical study of model selection behavior, metric-depe
 - Threshold Dependent: False
 - Practical Interpretation: Area under precision-recall curve, threshold-free ranking quality.
 
+**ROC AUC (roc_auc)**
+
+- Direction: higher_is_better
+- Primary/Secondary: secondary
+- Threshold Dependent: False
+- Practical Interpretation: Area under ROC curve, threshold-free ranking quality. Secondary because precision-recall is more informative under imbalance.
+
 **Precision@10% (precision_at_10pct)**
 
 - Direction: higher_is_better
 - Primary/Secondary: primary
-- Threshold Dependent: True
+- Threshold Dependent: False
 - Practical Interpretation: Precision when inspecting top 10% of risky instances.
 
 **Recall@10% (recall_at_10pct)**
 
 - Direction: higher_is_better
 - Primary/Secondary: primary
-- Threshold Dependent: True
+- Threshold Dependent: False
 - Practical Interpretation: Defect coverage when inspecting top 10% of risky instances.
 
 **Lift@10% (lift_at_10pct)**
 
 - Direction: higher_is_better
 - Primary/Secondary: primary
-- Threshold Dependent: True
+- Threshold Dependent: False
 - Practical Interpretation: Ratio of precision@10% to baseline defect rate.
 
-### Primary Thresholded Classification
+**Precision@20% (precision_at_20pct)**
+
+- Direction: higher_is_better
+- Primary/Secondary: secondary
+- Threshold Dependent: False
+- Practical Interpretation: Precision when inspecting top 20% of risky instances.
+
+**Recall@20% (recall_at_20pct)**
+
+- Direction: higher_is_better
+- Primary/Secondary: secondary
+- Threshold Dependent: False
+- Practical Interpretation: Defect coverage when inspecting top 20% of risky instances.
+
+**Lift@20% (lift_at_20pct)**
+
+- Direction: higher_is_better
+- Primary/Secondary: secondary
+- Threshold Dependent: False
+- Practical Interpretation: Ratio of precision@20% to baseline defect rate.
+
+**Brier Score (brier)**
+
+- Direction: lower_is_better
+- Primary/Secondary: secondary
+- Threshold Dependent: False
+- Practical Interpretation: Proper probability scoring rule measuring squared probabilistic prediction error; it is sensitive to calibration and probability refinement and is not a pure calibration-only measure.
+
+### Threshold Dependent
 
 **Matthews Correlation Coefficient (mcc)**
 
@@ -197,38 +338,6 @@ A validation-controlled empirical study of model selection behavior, metric-depe
 - Threshold Dependent: True
 - Practical Interpretation: Average of recall across both classes.
 
-### Secondary Ranking
-
-**Precision@20% (precision_at_20pct)**
-
-- Direction: higher_is_better
-- Primary/Secondary: secondary
-- Threshold Dependent: True
-- Practical Interpretation: Precision when inspecting top 20% of risky instances.
-
-**Recall@20% (recall_at_20pct)**
-
-- Direction: higher_is_better
-- Primary/Secondary: secondary
-- Threshold Dependent: True
-- Practical Interpretation: Defect coverage when inspecting top 20% of risky instances.
-
-**Lift@20% (lift_at_20pct)**
-
-- Direction: higher_is_better
-- Primary/Secondary: secondary
-- Threshold Dependent: True
-- Practical Interpretation: Ratio of precision@20% to baseline defect rate.
-
-**ROC AUC (roc_auc)**
-
-- Direction: higher_is_better
-- Primary/Secondary: secondary
-- Threshold Dependent: False
-- Practical Interpretation: Area under ROC curve, threshold-free ranking quality. Secondary because precision-recall is more informative under imbalance.
-
-### Secondary Diagnostic
-
 **Precision (precision)**
 
 - Direction: higher_is_better
@@ -242,15 +351,6 @@ A validation-controlled empirical study of model selection behavior, metric-depe
 - Primary/Secondary: secondary
 - Threshold Dependent: True
 - Practical Interpretation: Diagnostic metric, must not be interpreted without threshold policy.
-
-### Calibration Sensitive
-
-**Brier Score (brier)**
-
-- Direction: lower_is_better
-- Primary/Secondary: primary
-- Threshold Dependent: False
-- Practical Interpretation: Mean squared error of predicted probabilities, reflects calibration.
 
 ## Objective-Matched Comparison Policy
 
@@ -269,6 +369,13 @@ Candidate ranking by rank objective, primary interpretation restricted to thresh
 ### Rank Plus Validation Threshold Policy
 
 Candidate ranking by rank objective, after candidate or ensemble selection, threshold is tuned on validation only. This policy is a planned sensitivity analysis and must not replace or silently overwrite the existing score-only rank policy.
+
+### Policy-Mismatch Prohibition
+
+- Threshold-dependent method comparisons should use the same candidate-ranking objective and threshold-selection policy whenever scientifically possible.
+- An MCC-tuned adaptive method must not be compared against a baseline using only a balanced-objective threshold and then interpreted as pure evidence of adaptive-selection benefit.
+- Policy-mismatched comparisons may appear only as explicitly labeled descriptive legacy comparisons.
+- Policy-mismatched comparisons cannot support superiority claims.
 
 ## Fixed Baseline Policy
 
@@ -479,16 +586,91 @@ Candidate ranking by rank objective, after candidate or ensemble selection, thre
 ### Required Dimensions
 
 **Balanced Objective Weights**
-- Current weights, equal-weight alternative, predefined weight perturbations.
+
+### Current
+
+- mcc: 0.36
+- f1: 0.27
+- balanced_accuracy: 0.2
+- avg_precision: 0.1
+- recall_at_10pct: 0.05
+- recall_at_20pct: 0.02
+- brier_penalty: 0.02
+
+### Equal Positive Weights
+
+- mcc: 0.16666666666666666
+- f1: 0.16666666666666666
+- balanced_accuracy: 0.16666666666666666
+- avg_precision: 0.16666666666666666
+- recall_at_10pct: 0.16666666666666666
+- recall_at_20pct: 0.16666666666666666
+- brier_penalty: 0.02
+
+### Mcc Emphasis
+
+- mcc: 0.5
+- f1: 0.2
+- balanced_accuracy: 0.15
+- avg_precision: 0.08
+- recall_at_10pct: 0.05
+- recall_at_20pct: 0.02
+- brier_penalty: 0.02
+
+### Ranking Emphasis
+
+- mcc: 0.2
+- f1: 0.15
+- balanced_accuracy: 0.15
+- avg_precision: 0.3
+- recall_at_10pct: 0.15
+- recall_at_20pct: 0.05
+- brier_penalty: 0.02
+
+### Constraints
+
+- Positive metric weights must sum to 1 within 1e-12.
+- The Brier term must be subtracted.
+- The profile must be predeclared, not selected after observing test results.
 
 **Rank Threshold Policy**
+
 - Fixed 0.5, validation-tuned secondary threshold.
 
 **Threshold Grid**
-- Current grid, denser validation-only grid.
+
+### Current
+
+- fixed: linspace(0.03, 0.97, 41)
+- quantile_probabilities: linspace(0.03, 0.97, 25)
+- combination: unique(round(concat(fixed, validation-score quantiles), 6))
+- filter: 0 < threshold < 1
+
+### Dense Sensitivity
+
+- fixed: linspace(0.01, 0.99, 99)
+- quantile_probabilities: linspace(0.01, 0.99, 99)
+- combination: unique(round(concat(fixed, validation-score quantiles), 6))
+- filter: 0 < threshold < 1
+
+- Constraint: Both grids must use validation scores only.
 
 **Cross Project Validation Design**
-- Current stratified source-row split, source-project-aware validation robustness check.
+
+### Source-Project-Aware Protocol
+
+- For each held-out target project and seed:
+- Use the other four projects as source projects.
+- Perform four leave-one-source-project-out validation folds.
+- In each fold, train on three source projects and validate on the fourth.
+- Generate out-of-fold validation probabilities for every source project.
+- Concatenate the four out-of-fold validation predictions.
+- Rank candidates using the aggregated out-of-fold validation objective.
+- Select candidate or ensemble membership from aggregated source-only validation evidence.
+- Select the threshold using only aggregated source-only out-of-fold validation predictions.
+- Refit frozen selected candidate(s) on all four source projects.
+- Evaluate once on the held-out target project.
+- Never use the target project for candidate selection, membership selection, threshold selection, or sensitivity choice.
 
 ### Optional After Required
 
@@ -666,63 +848,116 @@ Candidate ranking by rank objective, after candidate or ensemble selection, thre
 
 ### Reviewer 1 Comment 1
 
-**Computational Response:** Metric dictionary in later Part 3H
+**Computational Response:**
 
-**Manuscript Response:** Brief practical metric explanation
+- Metric dictionary in later Part 3H
+
+**Manuscript Response:**
+
+- Brief practical metric explanation
 
 ### Reviewer 1 Comment 2
 
-**Computational Response:** None
+**Computational Response:**
 
-**Manuscript Response:** Key finding paragraph before every results table
+- None
+
+**Manuscript Response:**
+
+- Key finding paragraph before every results table
 
 ### Reviewer 1 Comment 3
 
-**Computational Response:** Deterministic workflow figure in later Part 3H
+**Computational Response:**
 
-**Manuscript Response:** Include figure and description
+- Deterministic workflow figure in later Part 3H
+
+**Manuscript Response:**
+
+- Include figure and description
 
 ### Reviewer 2 Comment 1
 
-**Computational Response:** None
+**Computational Response:**
 
-**Manuscript Response:** Rewrite abstract to 150-250 words
+- None
+
+**Manuscript Response:**
+
+- Rewrite abstract to 150-250 words
 
 ### Reviewer 2 Comment 2
 
-**Computational Response:** None
+**Computational Response:**
 
-**Manuscript Response:** Verified 2025-2026 literature update
+- None
+
+**Manuscript Response:**
+
+- Verified 2025-2026 literature update
 
 ### Reviewer 2 Comment 3
 
-**Computational Response:** ['Objective-matched comparisons.', 'Prediction ledger.', 'Regret.', 'Ablation.', 'Sensitivity.', 'Project-level effects']
+**Computational Response:**
 
-**Manuscript Response:** Not applicable (computational focus)
+- Objective-matched comparisons.
+- Prediction ledger.
+- Regret.
+- Ablation.
+- Sensitivity.
+- Project-level effects
+
+**Manuscript Response:**
+
+- Not applicable (computational focus)
 
 ### Reviewer 2 Comment 4
 
-**Computational Response:** ['Leakage audit.', 'Robustness analyses.', 'Dependency-aware statistical policy']
+**Computational Response:**
 
-**Manuscript Response:** Not applicable (computational focus)
+- Leakage audit.
+- Robustness analyses.
+- Dependency-aware statistical policy
+
+**Manuscript Response:**
+
+- Not applicable (computational focus)
 
 ### Reviewer 2 Comment 5
 
-**Computational Response:** Final limitations grounded in completed analyses
+**Computational Response:**
 
-**Manuscript Response:** Not applicable (computational focus)
+- Final limitations grounded in completed analyses
+
+**Manuscript Response:**
+
+- Not applicable (computational focus)
 
 ### Reviewer 2 Comments 6 And 7
 
-**Computational Response:** None
+**Computational Response:**
 
-**Manuscript Response:** Citation renumbering and Springer formatting
+- None
+
+**Manuscript Response:**
+
+- Citation renumbering and Springer formatting
 
 ### Reviewer 3
 
-**Computational Response:** ['Selection frequency.', 'Seed stability.', 'Validation-test agreement.', 'Post-hoc regret.', 'Ensemble-size ablation.', 'Sensitivity analysis.', 'Objective-matched comparison']
+**Computational Response:**
 
-**Scientific Response:** Reposition the study as a controlled empirical evaluation rather than a fundamentally novel algorithm.
+- Selection frequency.
+- Seed stability.
+- Validation-test agreement.
+- Post-hoc regret.
+- Ensemble-size ablation.
+- Sensitivity analysis.
+- Objective-matched comparison
+
+**Scientific Response:**
+
+- Reposition the study as a controlled empirical evaluation rather than a fundamentally novel algorithm.
 
 ## Remaining Computational Roadmap
 
@@ -765,20 +1000,130 @@ Candidate ranking by rank objective, after candidate or ensemble selection, thre
 
 - exact_research_questions_passed: True
 - analysis_domains_passed: True
-- projects_exact: True
-- seeds_exact: True
-- fixed_candidates_exact: True
+- candidate_metadata_matches_current_pipeline: True
 - metric_taxonomy_passed: True
+- metric_count_is_14: True
 - metric_direction_passed: True
-- brier_only_lower: True
-- roadmap_passed: True
-- reviewer_traceability_passed: True
-- prohibited_claims_passed: True
+- metric_threshold_dependency_passed: True
+- metric_inspection_budget_dependency_passed: True
+- metric_primary_secondary_passed: True
+- objective_policy_passed: True
+- existing_soft_top3_policy_passed: True
+- baseline_policy_passed: True
+- adaptive_policy_passed: True
+- ensemble_policy_passed: True
+- tie_policy_passed: True
 - oracle_policy_passed: True
-- unit_of_analysis_passed: True
-- rank_score_only_policy: True
-- planned_models_marked: True
-- next_stage_correct: True
-- no_model_rerun: True
-- no_canonical_modification: True
+- unit_of_analysis_policy_passed: True
+- statistical_reporting_policy_passed: True
+- agreement_policy_passed: True
+- balanced_weight_sensitivity_frozen: True
+- threshold_grid_sensitivity_frozen: True
+- source_project_aware_protocol_frozen: True
+- sensitivity_policy_passed: True
+- threats_mapping_passed: True
+- reviewer_context_complete: True
+- reviewer_traceability_passed: True
+- roadmap_passed: True
+- prohibited_claims_passed: True
+- stage_gate_passed: True
 - all_checks_passed: True
+
+## Preservation Checks
+
+- Files Checked: 8
+- Files Changed: 0
+- All Preserved: True
+- Preservation Checks Passed: True
+
+### File Evidence
+
+**scripts/run_repeated_evaluation.py**
+
+- Expected SHA-256: d385b6ecef2427c85299dcbc50cfff919fa8546b31829fa3ce0e5fdb307c4856
+- Before SHA-256: d385b6ecef2427c85299dcbc50cfff919fa8546b31829fa3ce0e5fdb307c4856
+- After SHA-256: d385b6ecef2427c85299dcbc50cfff919fa8546b31829fa3ce0e5fdb307c4856
+- Exists Before: True
+- Exists After: True
+- Matches Expected Before: True
+- Matches Expected After: True
+- Unchanged During Execution: True
+
+**scripts/make_manuscript_tables.py**
+
+- Expected SHA-256: 152f4568025420bf8aff780e2f9c104abb6e00a4373635277d14483e67dcdbb2
+- Before SHA-256: 152f4568025420bf8aff780e2f9c104abb6e00a4373635277d14483e67dcdbb2
+- After SHA-256: 152f4568025420bf8aff780e2f9c104abb6e00a4373635277d14483e67dcdbb2
+- Exists Before: True
+- Exists After: True
+- Matches Expected Before: True
+- Matches Expected After: True
+- Unchanged During Execution: True
+
+**results/part1_full_reproduction/repeated_all_results.csv**
+
+- Expected SHA-256: 76b430031a944708af661bee1a1355619d1e0e6f49b932d462cea421aeb01160
+- Before SHA-256: 76b430031a944708af661bee1a1355619d1e0e6f49b932d462cea421aeb01160
+- After SHA-256: 76b430031a944708af661bee1a1355619d1e0e6f49b932d462cea421aeb01160
+- Exists Before: True
+- Exists After: True
+- Matches Expected Before: True
+- Matches Expected After: True
+- Unchanged During Execution: True
+
+**results/part1_full_reproduction/validation_log.csv**
+
+- Expected SHA-256: d18dbb6b7a71f356203aa34fe41ab7d531daa1f8499fc06d06ab643b088f0272
+- Before SHA-256: d18dbb6b7a71f356203aa34fe41ab7d531daa1f8499fc06d06ab643b088f0272
+- After SHA-256: d18dbb6b7a71f356203aa34fe41ab7d531daa1f8499fc06d06ab643b088f0272
+- Exists Before: True
+- Exists After: True
+- Matches Expected Before: True
+- Matches Expected After: True
+- Unchanged During Execution: True
+
+**results/part1_full_reproduction/repeated_summary_mean_std.csv**
+
+- Expected SHA-256: b6f27ee32e350e23899d451fe4ab0758a76944633873f018bdac9ce16b94ae5b
+- Before SHA-256: b6f27ee32e350e23899d451fe4ab0758a76944633873f018bdac9ce16b94ae5b
+- After SHA-256: b6f27ee32e350e23899d451fe4ab0758a76944633873f018bdac9ce16b94ae5b
+- Exists Before: True
+- Exists After: True
+- Matches Expected Before: True
+- Matches Expected After: True
+- Unchanged During Execution: True
+
+**results/part1_full_reproduction_tables/table_within_project_mean_sd.csv**
+
+- Expected SHA-256: cccaeb1553ac942dbe26f33673a3683ea181f06a4cf4ceb2466f0c3556086160
+- Before SHA-256: cccaeb1553ac942dbe26f33673a3683ea181f06a4cf4ceb2466f0c3556086160
+- After SHA-256: cccaeb1553ac942dbe26f33673a3683ea181f06a4cf4ceb2466f0c3556086160
+- Exists Before: True
+- Exists After: True
+- Matches Expected Before: True
+- Matches Expected After: True
+- Unchanged During Execution: True
+
+**results/part1_full_reproduction_tables/table_cross_project_mean_sd.csv**
+
+- Expected SHA-256: 1753444c5b8a0c3a34179c644f6998cc663a3eb1da80e81b8fcf6d285e53731c
+- Before SHA-256: 1753444c5b8a0c3a34179c644f6998cc663a3eb1da80e81b8fcf6d285e53731c
+- After SHA-256: 1753444c5b8a0c3a34179c644f6998cc663a3eb1da80e81b8fcf6d285e53731c
+- Exists Before: True
+- Exists After: True
+- Matches Expected Before: True
+- Matches Expected After: True
+- Unchanged During Execution: True
+
+**results/part1_full_reproduction_tables/table_soft_top3_delta_vs_best_baseline.csv**
+
+- Expected SHA-256: bf5cac180bf9701299dfd1c1b410224d34b8f32269b49fb8203df7567ff7a60b
+- Before SHA-256: bf5cac180bf9701299dfd1c1b410224d34b8f32269b49fb8203df7567ff7a60b
+- After SHA-256: bf5cac180bf9701299dfd1c1b410224d34b8f32269b49fb8203df7567ff7a60b
+- Exists Before: True
+- Exists After: True
+- Matches Expected Before: True
+- Matches Expected After: True
+- Unchanged During Execution: True
+
+## Serialization Validation

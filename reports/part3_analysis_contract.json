@@ -81,30 +81,53 @@
   "branch": "major-revision-analysis-v2",
   "candidate_learners": {
     "DT_leaf5": {
-      "max_leaf_nodes": 5,
-      "random_state": null,
+      "class_weight": null,
+      "criterion": "gini",
+      "imputer": "median",
+      "max_depth": null,
+      "min_samples_leaf": 5,
+      "random_state_source": "seed",
+      "splitter": "best",
       "type": "decision_tree"
     },
     "ET_leaf5": {
-      "max_leaf_nodes": 5,
-      "random_state": null,
+      "bootstrap": false,
+      "class_weight": "balanced",
+      "criterion": "gini",
+      "imputer": "median",
+      "max_depth": null,
+      "max_features": "sqrt",
+      "min_samples_leaf": 5,
+      "n_estimators": 50,
+      "n_jobs": 2,
+      "random_state_source": "seed",
       "type": "extra_trees"
     },
     "LR_std_C0.1": {
       "C": 0.1,
-      "class_weight": null,
-      "regularization": "L2",
+      "class_weight": "balanced",
+      "imputer": "median",
+      "max_iter": 600,
+      "penalty": "l2",
+      "random_state_source": "seed",
+      "scaler": "StandardScaler",
+      "solver": "lbfgs",
       "type": "logistic_regression"
     },
     "LR_std_C1": {
       "C": 1.0,
-      "class_weight": null,
-      "regularization": "L2",
+      "class_weight": "balanced",
+      "imputer": "median",
+      "max_iter": 600,
+      "penalty": "l2",
+      "random_state_source": "seed",
+      "scaler": "StandardScaler",
+      "solver": "lbfgs",
       "type": "logistic_regression"
     }
   },
   "contract_title": "Scientific Analysis Contract for Major Revision",
-  "contract_version": "Part-3A-v1",
+  "contract_version": "Part-3A.1-v1",
   "existing_adaptive_models": {
     "AQRPE_v2_balanced": {
       "selection_type": "adaptive_top1",
@@ -123,87 +146,14 @@
     },
     "AQRPE_v2_soft_top3": {
       "ensemble_size": 3,
-      "selection_type": "soft_ensemble",
-      "threshold_policy": "validation_tuned",
-      "validation_objective": "rank"
+      "equal_weights": true,
+      "membership_ranking_policy": "balanced_objective",
+      "threshold_objective": "balanced",
+      "validation_objective": "balanced"
     }
   },
   "metric_taxonomy": {
-    "calibration_sensitive": {
-      "brier": {
-        "allowed_analysis_uses": [
-          "comparative_performance",
-          "metric_tradeoffs",
-          "calibration_analysis"
-        ],
-        "canonical_name": "brier",
-        "direction": "lower_is_better",
-        "display_name": "Brier Score",
-        "family": "calibration_sensitive",
-        "practical_interpretation": "Mean squared error of predicted probabilities, reflects calibration.",
-        "primary_or_secondary": "primary",
-        "threshold_dependent": false
-      }
-    },
-    "primary_discrimination_ranking": {
-      "avg_precision": {
-        "allowed_analysis_uses": [
-          "comparative_performance",
-          "metric_tradeoffs",
-          "selection_stability"
-        ],
-        "canonical_name": "avg_precision",
-        "direction": "higher_is_better",
-        "display_name": "Average Precision",
-        "family": "primary_discrimination_ranking",
-        "practical_interpretation": "Area under precision-recall curve, threshold-free ranking quality.",
-        "primary_or_secondary": "primary",
-        "threshold_dependent": false
-      },
-      "lift_at_10pct": {
-        "allowed_analysis_uses": [
-          "comparative_performance",
-          "metric_tradeoffs",
-          "early_inspection"
-        ],
-        "canonical_name": "lift_at_10pct",
-        "direction": "higher_is_better",
-        "display_name": "Lift@10%",
-        "family": "primary_discrimination_ranking",
-        "practical_interpretation": "Ratio of precision@10% to baseline defect rate.",
-        "primary_or_secondary": "primary",
-        "threshold_dependent": true
-      },
-      "precision_at_10pct": {
-        "allowed_analysis_uses": [
-          "comparative_performance",
-          "metric_tradeoffs",
-          "early_inspection"
-        ],
-        "canonical_name": "precision_at_10pct",
-        "direction": "higher_is_better",
-        "display_name": "Precision@10%",
-        "family": "primary_discrimination_ranking",
-        "practical_interpretation": "Precision when inspecting top 10% of risky instances.",
-        "primary_or_secondary": "primary",
-        "threshold_dependent": true
-      },
-      "recall_at_10pct": {
-        "allowed_analysis_uses": [
-          "comparative_performance",
-          "metric_tradeoffs",
-          "early_inspection"
-        ],
-        "canonical_name": "recall_at_10pct",
-        "direction": "higher_is_better",
-        "display_name": "Recall@10%",
-        "family": "primary_discrimination_ranking",
-        "practical_interpretation": "Defect coverage when inspecting top 10% of risky instances.",
-        "primary_or_secondary": "primary",
-        "threshold_dependent": true
-      }
-    },
-    "primary_thresholded_classification": {
+    "threshold_dependent": {
       "balanced_accuracy": {
         "allowed_analysis_uses": [
           "comparative_performance",
@@ -213,7 +163,7 @@
         "canonical_name": "balanced_accuracy",
         "direction": "higher_is_better",
         "display_name": "Balanced Accuracy",
-        "family": "primary_thresholded_classification",
+        "family": "threshold_dependent",
         "practical_interpretation": "Average of recall across both classes.",
         "primary_or_secondary": "primary",
         "threshold_dependent": true
@@ -227,7 +177,7 @@
         "canonical_name": "f1",
         "direction": "higher_is_better",
         "display_name": "F1 Score",
-        "family": "primary_thresholded_classification",
+        "family": "threshold_dependent",
         "practical_interpretation": "Harmonic mean of precision and recall.",
         "primary_or_secondary": "primary",
         "threshold_dependent": true
@@ -241,13 +191,11 @@
         "canonical_name": "mcc",
         "direction": "higher_is_better",
         "display_name": "Matthews Correlation Coefficient",
-        "family": "primary_thresholded_classification",
+        "family": "threshold_dependent",
         "practical_interpretation": "Balanced measure for binary classification, robust to class imbalance.",
         "primary_or_secondary": "primary",
         "threshold_dependent": true
-      }
-    },
-    "secondary_diagnostic": {
+      },
       "precision": {
         "allowed_analysis_uses": [
           "diagnostic"
@@ -255,7 +203,7 @@
         "canonical_name": "precision",
         "direction": "higher_is_better",
         "display_name": "Precision",
-        "family": "secondary_diagnostic",
+        "family": "threshold_dependent",
         "practical_interpretation": "Diagnostic metric, must not be interpreted without threshold policy.",
         "primary_or_secondary": "secondary",
         "threshold_dependent": true
@@ -267,13 +215,58 @@
         "canonical_name": "recall",
         "direction": "higher_is_better",
         "display_name": "Recall",
-        "family": "secondary_diagnostic",
+        "family": "threshold_dependent",
         "practical_interpretation": "Diagnostic metric, must not be interpreted without threshold policy.",
         "primary_or_secondary": "secondary",
         "threshold_dependent": true
       }
     },
-    "secondary_ranking": {
+    "threshold_independent_score_ranking": {
+      "avg_precision": {
+        "allowed_analysis_uses": [
+          "comparative_performance",
+          "metric_tradeoffs",
+          "selection_stability"
+        ],
+        "canonical_name": "avg_precision",
+        "direction": "higher_is_better",
+        "display_name": "Average Precision",
+        "family": "threshold_independent_score_ranking",
+        "inspection_budget_dependent": false,
+        "practical_interpretation": "Area under precision-recall curve, threshold-free ranking quality.",
+        "primary_or_secondary": "primary",
+        "threshold_dependent": false
+      },
+      "brier": {
+        "allowed_analysis_uses": [
+          "comparative_performance",
+          "metric_tradeoffs",
+          "calibration_analysis"
+        ],
+        "canonical_name": "brier",
+        "direction": "lower_is_better",
+        "display_name": "Brier Score",
+        "family": "threshold_independent_score_ranking",
+        "inspection_budget_dependent": false,
+        "practical_interpretation": "Proper probability scoring rule measuring squared probabilistic prediction error; it is sensitive to calibration and probability refinement and is not a pure calibration-only measure.",
+        "primary_or_secondary": "secondary",
+        "threshold_dependent": false
+      },
+      "lift_at_10pct": {
+        "allowed_analysis_uses": [
+          "comparative_performance",
+          "metric_tradeoffs",
+          "early_inspection"
+        ],
+        "canonical_name": "lift_at_10pct",
+        "direction": "higher_is_better",
+        "display_name": "Lift@10%",
+        "family": "threshold_independent_score_ranking",
+        "inspection_budget_dependent": true,
+        "practical_interpretation": "Ratio of precision@10% to baseline defect rate.",
+        "primary_or_secondary": "primary",
+        "threshold_dependent": false
+      },
       "lift_at_20pct": {
         "allowed_analysis_uses": [
           "comparative_performance",
@@ -283,10 +276,26 @@
         "canonical_name": "lift_at_20pct",
         "direction": "higher_is_better",
         "display_name": "Lift@20%",
-        "family": "secondary_ranking",
+        "family": "threshold_independent_score_ranking",
+        "inspection_budget_dependent": true,
         "practical_interpretation": "Ratio of precision@20% to baseline defect rate.",
         "primary_or_secondary": "secondary",
-        "threshold_dependent": true
+        "threshold_dependent": false
+      },
+      "precision_at_10pct": {
+        "allowed_analysis_uses": [
+          "comparative_performance",
+          "metric_tradeoffs",
+          "early_inspection"
+        ],
+        "canonical_name": "precision_at_10pct",
+        "direction": "higher_is_better",
+        "display_name": "Precision@10%",
+        "family": "threshold_independent_score_ranking",
+        "inspection_budget_dependent": true,
+        "practical_interpretation": "Precision when inspecting top 10% of risky instances.",
+        "primary_or_secondary": "primary",
+        "threshold_dependent": false
       },
       "precision_at_20pct": {
         "allowed_analysis_uses": [
@@ -297,10 +306,26 @@
         "canonical_name": "precision_at_20pct",
         "direction": "higher_is_better",
         "display_name": "Precision@20%",
-        "family": "secondary_ranking",
+        "family": "threshold_independent_score_ranking",
+        "inspection_budget_dependent": true,
         "practical_interpretation": "Precision when inspecting top 20% of risky instances.",
         "primary_or_secondary": "secondary",
-        "threshold_dependent": true
+        "threshold_dependent": false
+      },
+      "recall_at_10pct": {
+        "allowed_analysis_uses": [
+          "comparative_performance",
+          "metric_tradeoffs",
+          "early_inspection"
+        ],
+        "canonical_name": "recall_at_10pct",
+        "direction": "higher_is_better",
+        "display_name": "Recall@10%",
+        "family": "threshold_independent_score_ranking",
+        "inspection_budget_dependent": true,
+        "practical_interpretation": "Defect coverage when inspecting top 10% of risky instances.",
+        "primary_or_secondary": "primary",
+        "threshold_dependent": false
       },
       "recall_at_20pct": {
         "allowed_analysis_uses": [
@@ -311,10 +336,11 @@
         "canonical_name": "recall_at_20pct",
         "direction": "higher_is_better",
         "display_name": "Recall@20%",
-        "family": "secondary_ranking",
+        "family": "threshold_independent_score_ranking",
+        "inspection_budget_dependent": true,
         "practical_interpretation": "Defect coverage when inspecting top 20% of risky instances.",
         "primary_or_secondary": "secondary",
-        "threshold_dependent": true
+        "threshold_dependent": false
       },
       "roc_auc": {
         "allowed_analysis_uses": [
@@ -325,7 +351,8 @@
         "canonical_name": "roc_auc",
         "direction": "higher_is_better",
         "display_name": "ROC AUC",
-        "family": "secondary_ranking",
+        "family": "threshold_independent_score_ranking",
+        "inspection_budget_dependent": false,
         "practical_interpretation": "Area under ROC curve, threshold-free ranking quality. Secondary because precision-recall is more informative under imbalance.",
         "primary_or_secondary": "secondary",
         "threshold_dependent": false
@@ -343,6 +370,12 @@
       "description": "Candidate ranking by validation MCC objective, threshold selected by validation MCC objective.",
       "threshold_selection": "validation MCC objective"
     },
+    "policy_mismatch_prohibition": [
+      "Threshold-dependent method comparisons should use the same candidate-ranking objective and threshold-selection policy whenever scientifically possible.",
+      "An MCC-tuned adaptive method must not be compared against a baseline using only a balanced-objective threshold and then interpreted as pure evidence of adaptive-selection benefit.",
+      "Policy-mismatched comparisons may appear only as explicitly labeled descriptive legacy comparisons.",
+      "Policy-mismatched comparisons cannot support superiority claims."
+    ],
     "rank_plus_validation_threshold_policy": {
       "candidate_ranking": "rank objective",
       "description": "Candidate ranking by rank objective, after candidate or ensemble selection, threshold is tuned on validation only. This policy is a planned sensitivity analysis and must not replace or silently overwrite the existing score-only rank policy.",
@@ -386,34 +419,107 @@
   },
   "planned_models": {
     "AQRPE_v2_soft_all4": {
-      "ensemble_size": 4,
-      "selection_type": "soft_ensemble",
+      "equal_weights": true,
+      "membership_ranking_policy": "not_applicable_all_candidates",
       "status": "planned",
-      "threshold_policy": "validation_tuned",
-      "validation_objective": "rank"
+      "threshold_objective": "balanced",
+      "validation_objective": "balanced"
     },
     "AQRPE_v2_soft_top2": {
-      "ensemble_size": 2,
-      "selection_type": "soft_ensemble",
+      "equal_weights": true,
+      "membership_ranking_policy": "balanced_objective",
       "status": "planned",
-      "threshold_policy": "validation_tuned",
-      "validation_objective": "rank"
+      "threshold_objective": "balanced",
+      "validation_objective": "balanced"
     }
   },
   "preservation_checks": {
     "all_preserved": true,
-    "file_hashes": {
-      "results/part1_full_reproduction/repeated_all_results.csv": "76b430031a944708af661bee1a1355619d1e0e6f49b932d462cea421aeb01160",
-      "results/part1_full_reproduction/repeated_summary_mean_std.csv": "b6f27ee32e350e23899d451fe4ab0758a76944633873f018bdac9ce16b94ae5b",
-      "results/part1_full_reproduction/validation_log.csv": "d18dbb6b7a71f356203aa34fe41ab7d531daa1f8499fc06d06ab643b088f0272",
-      "results/part1_full_reproduction_tables/table_cross_project_mean_sd.csv": "1753444c5b8a0c3a34179c644f6998cc663a3eb1da80e81b8fcf6d285e53731c",
-      "results/part1_full_reproduction_tables/table_soft_top3_delta_vs_best_baseline.csv": "bf5cac180bf9701299dfd1c1b410224d34b8f32269b49fb8203df7567ff7a60b",
-      "results/part1_full_reproduction_tables/table_within_project_mean_sd.csv": "cccaeb1553ac942dbe26f33673a3683ea181f06a4cf4ceb2466f0c3556086160",
-      "scripts/make_manuscript_tables.py": "152f4568025420bf8aff780e2f9c104abb6e00a4373635277d14483e67dcdbb2",
-      "scripts/run_repeated_evaluation.py": "d385b6ecef2427c85299dcbc50cfff919fa8546b31829fa3ce0e5fdb307c4856"
+    "file_evidence": {
+      "results/part1_full_reproduction/repeated_all_results.csv": {
+        "after_sha256": "76b430031a944708af661bee1a1355619d1e0e6f49b932d462cea421aeb01160",
+        "before_sha256": "76b430031a944708af661bee1a1355619d1e0e6f49b932d462cea421aeb01160",
+        "exists_after": true,
+        "exists_before": true,
+        "expected_sha256": "76b430031a944708af661bee1a1355619d1e0e6f49b932d462cea421aeb01160",
+        "matches_expected_after": true,
+        "matches_expected_before": true,
+        "unchanged_during_execution": true
+      },
+      "results/part1_full_reproduction/repeated_summary_mean_std.csv": {
+        "after_sha256": "b6f27ee32e350e23899d451fe4ab0758a76944633873f018bdac9ce16b94ae5b",
+        "before_sha256": "b6f27ee32e350e23899d451fe4ab0758a76944633873f018bdac9ce16b94ae5b",
+        "exists_after": true,
+        "exists_before": true,
+        "expected_sha256": "b6f27ee32e350e23899d451fe4ab0758a76944633873f018bdac9ce16b94ae5b",
+        "matches_expected_after": true,
+        "matches_expected_before": true,
+        "unchanged_during_execution": true
+      },
+      "results/part1_full_reproduction/validation_log.csv": {
+        "after_sha256": "d18dbb6b7a71f356203aa34fe41ab7d531daa1f8499fc06d06ab643b088f0272",
+        "before_sha256": "d18dbb6b7a71f356203aa34fe41ab7d531daa1f8499fc06d06ab643b088f0272",
+        "exists_after": true,
+        "exists_before": true,
+        "expected_sha256": "d18dbb6b7a71f356203aa34fe41ab7d531daa1f8499fc06d06ab643b088f0272",
+        "matches_expected_after": true,
+        "matches_expected_before": true,
+        "unchanged_during_execution": true
+      },
+      "results/part1_full_reproduction_tables/table_cross_project_mean_sd.csv": {
+        "after_sha256": "1753444c5b8a0c3a34179c644f6998cc663a3eb1da80e81b8fcf6d285e53731c",
+        "before_sha256": "1753444c5b8a0c3a34179c644f6998cc663a3eb1da80e81b8fcf6d285e53731c",
+        "exists_after": true,
+        "exists_before": true,
+        "expected_sha256": "1753444c5b8a0c3a34179c644f6998cc663a3eb1da80e81b8fcf6d285e53731c",
+        "matches_expected_after": true,
+        "matches_expected_before": true,
+        "unchanged_during_execution": true
+      },
+      "results/part1_full_reproduction_tables/table_soft_top3_delta_vs_best_baseline.csv": {
+        "after_sha256": "bf5cac180bf9701299dfd1c1b410224d34b8f32269b49fb8203df7567ff7a60b",
+        "before_sha256": "bf5cac180bf9701299dfd1c1b410224d34b8f32269b49fb8203df7567ff7a60b",
+        "exists_after": true,
+        "exists_before": true,
+        "expected_sha256": "bf5cac180bf9701299dfd1c1b410224d34b8f32269b49fb8203df7567ff7a60b",
+        "matches_expected_after": true,
+        "matches_expected_before": true,
+        "unchanged_during_execution": true
+      },
+      "results/part1_full_reproduction_tables/table_within_project_mean_sd.csv": {
+        "after_sha256": "cccaeb1553ac942dbe26f33673a3683ea181f06a4cf4ceb2466f0c3556086160",
+        "before_sha256": "cccaeb1553ac942dbe26f33673a3683ea181f06a4cf4ceb2466f0c3556086160",
+        "exists_after": true,
+        "exists_before": true,
+        "expected_sha256": "cccaeb1553ac942dbe26f33673a3683ea181f06a4cf4ceb2466f0c3556086160",
+        "matches_expected_after": true,
+        "matches_expected_before": true,
+        "unchanged_during_execution": true
+      },
+      "scripts/make_manuscript_tables.py": {
+        "after_sha256": "152f4568025420bf8aff780e2f9c104abb6e00a4373635277d14483e67dcdbb2",
+        "before_sha256": "152f4568025420bf8aff780e2f9c104abb6e00a4373635277d14483e67dcdbb2",
+        "exists_after": true,
+        "exists_before": true,
+        "expected_sha256": "152f4568025420bf8aff780e2f9c104abb6e00a4373635277d14483e67dcdbb2",
+        "matches_expected_after": true,
+        "matches_expected_before": true,
+        "unchanged_during_execution": true
+      },
+      "scripts/run_repeated_evaluation.py": {
+        "after_sha256": "d385b6ecef2427c85299dcbc50cfff919fa8546b31829fa3ce0e5fdb307c4856",
+        "before_sha256": "d385b6ecef2427c85299dcbc50cfff919fa8546b31829fa3ce0e5fdb307c4856",
+        "exists_after": true,
+        "exists_before": true,
+        "expected_sha256": "d385b6ecef2427c85299dcbc50cfff919fa8546b31829fa3ce0e5fdb307c4856",
+        "matches_expected_after": true,
+        "matches_expected_before": true,
+        "unchanged_during_execution": true
+      }
     },
     "files_changed": 0,
-    "files_checked": 8
+    "files_checked": 8,
+    "preservation_checks_passed": true
   },
   "prohibited_claims": [
     "AQRPE v2 is a fundamentally new algorithm.",
@@ -497,6 +603,11 @@
     }
   },
   "reviewer_context": {
+    "reviewer_1_focus": [
+      "Practical explanation of evaluation metrics.",
+      "Key findings before detailed result tables.",
+      "Reproducible workflow diagram."
+    ],
     "reviewer_2_focus": [
       "Methodological decisions require clearer justification.",
       "Threats to validity require deeper analysis.",
@@ -590,16 +701,81 @@
     ],
     "required_dimensions": {
       "balanced_objective_weights": {
-        "description": "Current weights, equal-weight alternative, predefined weight perturbations."
+        "constraints": [
+          "Positive metric weights must sum to 1 within 1e-12.",
+          "The Brier term must be subtracted.",
+          "The profile must be predeclared, not selected after observing test results."
+        ],
+        "current": {
+          "avg_precision": 0.1,
+          "balanced_accuracy": 0.2,
+          "brier_penalty": 0.02,
+          "f1": 0.27,
+          "mcc": 0.36,
+          "recall_at_10pct": 0.05,
+          "recall_at_20pct": 0.02
+        },
+        "equal_positive_weights": {
+          "avg_precision": 0.16666666666666666,
+          "balanced_accuracy": 0.16666666666666666,
+          "brier_penalty": 0.02,
+          "f1": 0.16666666666666666,
+          "mcc": 0.16666666666666666,
+          "recall_at_10pct": 0.16666666666666666,
+          "recall_at_20pct": 0.16666666666666666
+        },
+        "mcc_emphasis": {
+          "avg_precision": 0.08,
+          "balanced_accuracy": 0.15,
+          "brier_penalty": 0.02,
+          "f1": 0.2,
+          "mcc": 0.5,
+          "recall_at_10pct": 0.05,
+          "recall_at_20pct": 0.02
+        },
+        "ranking_emphasis": {
+          "avg_precision": 0.3,
+          "balanced_accuracy": 0.15,
+          "brier_penalty": 0.02,
+          "f1": 0.15,
+          "mcc": 0.2,
+          "recall_at_10pct": 0.15,
+          "recall_at_20pct": 0.05
+        }
       },
       "cross_project_validation_design": {
-        "description": "Current stratified source-row split, source-project-aware validation robustness check."
+        "source_project_aware_protocol": [
+          "For each held-out target project and seed:",
+          "Use the other four projects as source projects.",
+          "Perform four leave-one-source-project-out validation folds.",
+          "In each fold, train on three source projects and validate on the fourth.",
+          "Generate out-of-fold validation probabilities for every source project.",
+          "Concatenate the four out-of-fold validation predictions.",
+          "Rank candidates using the aggregated out-of-fold validation objective.",
+          "Select candidate or ensemble membership from aggregated source-only validation evidence.",
+          "Select the threshold using only aggregated source-only out-of-fold validation predictions.",
+          "Refit frozen selected candidate(s) on all four source projects.",
+          "Evaluate once on the held-out target project.",
+          "Never use the target project for candidate selection, membership selection, threshold selection, or sensitivity choice."
+        ]
       },
       "rank_threshold_policy": {
         "description": "Fixed 0.5, validation-tuned secondary threshold."
       },
       "threshold_grid": {
-        "description": "Current grid, denser validation-only grid."
+        "constraint": "Both grids must use validation scores only.",
+        "current": {
+          "combination": "unique(round(concat(fixed, validation-score quantiles), 6))",
+          "filter": "0 < threshold < 1",
+          "fixed": "linspace(0.03, 0.97, 41)",
+          "quantile_probabilities": "linspace(0.03, 0.97, 25)"
+        },
+        "dense_sensitivity": {
+          "combination": "unique(round(concat(fixed, validation-score quantiles), 6))",
+          "filter": "0 < threshold < 1",
+          "fixed": "linspace(0.01, 0.99, 99)",
+          "quantile_probabilities": "linspace(0.01, 0.99, 99)"
+        }
       }
     }
   },
@@ -633,7 +809,7 @@
     "part3a_contract_frozen": true,
     "part3b_constraint": "Part 3B cannot alter the current 400 canonical result rows or current canonical manuscript tables unless a later explicitly approved migration stage is created."
   },
-  "starting_commit": "459dbfb8bb1361d03c93255d136cc35aca4f897e",
+  "starting_commit": "32e22faa007645a4f6f054f42c9de29744986a90",
   "statistical_reporting_policy": {
     "effect_reporting": [
       "Median paired project-level difference.",
@@ -870,25 +1046,36 @@
     ]
   },
   "validation_checks": {
+    "adaptive_policy_passed": true,
+    "agreement_policy_passed": true,
     "all_checks_passed": true,
     "analysis_domains_passed": true,
-    "brier_only_lower": true,
+    "balanced_weight_sensitivity_frozen": true,
+    "baseline_policy_passed": true,
+    "candidate_metadata_matches_current_pipeline": true,
+    "ensemble_policy_passed": true,
     "exact_research_questions_passed": true,
-    "fixed_candidates_exact": true,
+    "existing_soft_top3_policy_passed": true,
+    "metric_count_is_14": true,
     "metric_direction_passed": true,
+    "metric_inspection_budget_dependency_passed": true,
+    "metric_primary_secondary_passed": true,
     "metric_taxonomy_passed": true,
-    "next_stage_correct": true,
-    "no_canonical_modification": true,
-    "no_model_rerun": true,
+    "metric_threshold_dependency_passed": true,
+    "objective_policy_passed": true,
     "oracle_policy_passed": true,
-    "planned_models_marked": true,
     "prohibited_claims_passed": true,
-    "projects_exact": true,
-    "rank_score_only_policy": true,
+    "reviewer_context_complete": true,
     "reviewer_traceability_passed": true,
     "roadmap_passed": true,
-    "seeds_exact": true,
-    "unit_of_analysis_passed": true
+    "sensitivity_policy_passed": true,
+    "source_project_aware_protocol_frozen": true,
+    "stage_gate_passed": true,
+    "statistical_reporting_policy_passed": true,
+    "threats_mapping_passed": true,
+    "threshold_grid_sensitivity_frozen": true,
+    "tie_policy_passed": true,
+    "unit_of_analysis_policy_passed": true
   },
   "validation_test_agreement_policy": {
     "explicit_statements": [
