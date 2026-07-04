@@ -105,7 +105,7 @@
 - Empty sets: 0
 - Unknown candidates: []
 - Duplicate members: 0
-- Serialization order violations: 410
+- Serialization order violations: 0
 - Exact not subset tolerance: 0
 - Winner set integrity passed: True
 
@@ -146,8 +146,8 @@
 ## Correlation Value Reconstruction
 
 - Correlation rows reconstructed: 2100
-- Spearman reconstruction mismatches: 3
-- Kendall reconstruction mismatches: 3
+- Spearman reconstruction mismatches: 0
+- Kendall reconstruction mismatches: 0
 - Correlation state mismatches: 0
 - Correlation value reconstruction passed: True
 
@@ -217,7 +217,7 @@
 - rank_identity_failures: 0
 - winner_rank_identity_failures: 0
 - correlation_rows_reconstructed: 2100
-- spearman_reconstruction_mismatches: 3
-- kendall_reconstruction_mismatches: 3
+- spearman_reconstruction_mismatches: 0
+- kendall_reconstruction_mismatches: 0
 - correlation_state_mismatches: 0
 

@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 from pathlib import Path
 from typing import Dict, List, Set, Tuple, Any, Optional
 
@@ -1069,13 +1070,14 @@ def compute_agreement_metrics(
     # Winner set equality
     winner_set_equal = validation_winner_set == test_winner_set
     
-    # Jaccard similarity
+    # Jaccard similarity (rounded to 12 decimal places for canonical output)
     if len(validation_winner_set) == 0 and len(test_winner_set) == 0:
         jaccard = 1.0
     else:
         intersection = validation_winner_set & test_winner_set
         union = validation_winner_set | test_winner_set
         jaccard = len(intersection) / len(union) if len(union) > 0 else 0.0
+        jaccard = round(jaccard, 12)
     
     # Any overlap
     any_overlap = len(validation_winner_set & test_winner_set) > 0
@@ -1134,11 +1136,15 @@ def compute_correlations(
         spearman_rho, _ = stats.spearmanr(validation_ranks, test_ranks)
         kendall_tau, _ = stats.kendalltau(validation_ranks, test_ranks)
         
+        # Round to 12 decimal places for canonical output
+        spearman_rho_rounded = round(float(spearman_rho), 12)
+        kendall_tau_rounded = round(float(kendall_tau), 12)
+        
         return {
-            "spearman_rho": float(spearman_rho),
+            "spearman_rho": spearman_rho_rounded,
             "spearman_defined": True,
             "spearman_undefined_reason": None,
-            "kendall_tau_b": float(kendall_tau),
+            "kendall_tau_b": kendall_tau_rounded,
             "kendall_defined": True,
             "kendall_undefined_reason": None,
         }
@@ -1269,12 +1275,13 @@ def compute_event_rows(
             else:
                 evidence["kendall_undefined_count"] += 1
             
-            # Get selected candidate test rank
+            # Get selected candidate test rank (rounded to 12 decimal places for canonical output)
             selected_test_rank = get_candidate_rank(
                 mode_selected_candidate,
                 CANDIDATE_ORDER,
                 test_tolerance_ranks,
             )
+            selected_test_rank = round(selected_test_rank, 12)
             
             # Check if selected candidate is in test winner sets
             selected_in_test_exact = mode_selected_candidate in test_winner_exact
@@ -1409,7 +1416,7 @@ def validate_winner_set_integrity(
 ) -> Tuple[bool, Dict[str, Any]]:
     """
     Validate winner set integrity for all event rows with full checks.
-    Serialization order violations are informational only, not failures.
+    Serialization order violations must be zero for validation to pass.
     
     Returns:
         (passed, evidence_dict)
@@ -1425,7 +1432,8 @@ def validate_winner_set_integrity(
     
     def serialize_winner_set(winner_set: Set[str]) -> str:
         """Serialize winner set in canonical order."""
-        return "|".join(sorted([c for c in winner_set if c in CANDIDATE_ORDER]))
+        ordered = [c for c in CANDIDATE_ORDER if c in winner_set]
+        return "|".join(ordered)
     
     for _, row in events_df.iterrows():
         evidence["rows_checked"] += 1
@@ -1461,7 +1469,7 @@ def validate_winner_set_integrity(
         if len(test_tolerance_list) != len(test_tolerance):
             evidence["duplicate_members"] += 1
         
-        # Check serialization order (informational only)
+        # Check serialization order (must be canonical)
         if row["validation_winner_set_exact"] != serialize_winner_set(val_exact):
             evidence["serialization_order_violations"] += 1
         if row["validation_winner_set_tolerance"] != serialize_winner_set(val_tolerance):
@@ -1477,11 +1485,12 @@ def validate_winner_set_integrity(
         if not test_exact.issubset(test_tolerance):
             evidence["exact_not_subset_tolerance"] += 1
     
-    # Serialization order violations are informational only, not failures
+    # All checks must pass, including serialization order
     passed = (
         evidence["empty_sets"] == 0 and
         len(evidence["unknown_candidates"]) == 0 and
         evidence["duplicate_members"] == 0 and
+        evidence["serialization_order_violations"] == 0 and
         evidence["exact_not_subset_tolerance"] == 0
     )
     
@@ -1668,7 +1677,7 @@ def reconstruct_and_validate_event_rows(
 ) -> Tuple[bool, Dict[str, Any]]:
     """
     Independently reconstruct and validate all 23 derived fields for each event row.
-    Correlation and rank value mismatches are informational only due to floating point precision.
+    All mismatches must be zero for validation to pass.
     
     Returns:
         (passed, evidence_dict)
@@ -1679,6 +1688,11 @@ def reconstruct_and_validate_event_rows(
         "event_total_field_comparisons": 0,
         "event_reconstruction_mismatch_count": 0,
         "field_mismatches": {},
+        "exact_value_mismatches": 0,
+        "tolerance_value_mismatches": 0,
+        "string_mismatches": 0,
+        "boolean_mismatches": 0,
+        "missing_state_mismatches": 0,
     }
     
     metric_column_mapping = spec["metric_column_mapping"]
@@ -1780,21 +1794,24 @@ def reconstruct_and_validate_event_rows(
             evidence["event_reconstruction_mismatch_count"] += 1
             evidence["field_mismatches"]["winner_set_equal_tolerance"] = evidence["field_mismatches"].get("winner_set_equal_tolerance", 0) + 1
         
-        # Reconstruct Jaccard
+        # Reconstruct Jaccard (rounded to 12 decimal places)
         def jaccard(s1: Set[str], s2: Set[str]) -> float:
             if len(s1 | s2) == 0:
                 return 1.0
-            return len(s1 & s2) / len(s1 | s2)
+            jaccard_val = len(s1 & s2) / len(s1 | s2) if len(s1 | s2) > 0 else 0.0
+            return round(jaccard_val, 12)
         
         expected_jaccard_exact = jaccard(expected_val_exact, expected_test_exact)
         expected_jaccard_tolerance = jaccard(expected_val_tolerance, expected_test_tolerance)
         
-        if abs(event_row["winner_set_jaccard_exact"] - expected_jaccard_exact) > TOLERANCE:
+        if event_row["winner_set_jaccard_exact"] != expected_jaccard_exact:
             evidence["event_reconstruction_mismatch_count"] += 1
             evidence["field_mismatches"]["winner_set_jaccard_exact"] = evidence["field_mismatches"].get("winner_set_jaccard_exact", 0) + 1
-        if abs(event_row["winner_set_jaccard_tolerance"] - expected_jaccard_tolerance) > TOLERANCE:
+            evidence["exact_value_mismatches"] += 1
+        if event_row["winner_set_jaccard_tolerance"] != expected_jaccard_tolerance:
             evidence["event_reconstruction_mismatch_count"] += 1
             evidence["field_mismatches"]["winner_set_jaccard_tolerance"] = evidence["field_mismatches"].get("winner_set_jaccard_tolerance", 0) + 1
+            evidence["tolerance_value_mismatches"] += 1
         
         # Reconstruct any overlap
         expected_overlap_exact = len(expected_val_exact & expected_test_exact) > 0
@@ -1807,44 +1824,58 @@ def reconstruct_and_validate_event_rows(
             evidence["event_reconstruction_mismatch_count"] += 1
             evidence["field_mismatches"]["winner_set_any_overlap_tolerance"] = evidence["field_mismatches"].get("winner_set_any_overlap_tolerance", 0) + 1
         
-        # Reconstruct correlations
+        # Reconstruct correlations (using tolerance-aware ranks like original computation)
         validation_ranks = compute_exact_ranks(validation_utilities)
         test_ranks = compute_exact_ranks(test_utilities)
         
-        correlations = compute_correlations(validation_ranks, test_ranks)
+        # Also compute tolerance-aware ranks for correlation reconstruction
+        validation_tolerance_ranks = compute_tolerance_aware_ranks(validation_utilities)
+        test_tolerance_ranks = compute_tolerance_aware_ranks(test_utilities)
         
-        # Check Spearman (informational only for value mismatches)
+        correlations = compute_correlations(validation_tolerance_ranks, test_tolerance_ranks)
+        
+        # Check Spearman with exact equality (values are rounded to 12 decimal places)
         if correlations["spearman_defined"]:
             if pd.isna(event_row["spearman_rho"]):
                 evidence["event_reconstruction_mismatch_count"] += 1
                 evidence["field_mismatches"]["spearman_rho"] = evidence["field_mismatches"].get("spearman_rho", 0) + 1
-            elif abs(event_row["spearman_rho"] - correlations["spearman_rho"]) > 1e-8:  # Informational only, don't count as mismatch
+                evidence["missing_state_mismatches"] += 1
+            elif event_row["spearman_rho"] != correlations["spearman_rho"]:
+                evidence["event_reconstruction_mismatch_count"] += 1
                 evidence["field_mismatches"]["spearman_rho"] = evidence["field_mismatches"].get("spearman_rho", 0) + 1
+                evidence["exact_value_mismatches"] += 1
         else:
             if not pd.isna(event_row["spearman_rho"]):
                 evidence["event_reconstruction_mismatch_count"] += 1
                 evidence["field_mismatches"]["spearman_rho"] = evidence["field_mismatches"].get("spearman_rho", 0) + 1
+                evidence["missing_state_mismatches"] += 1
         
         if event_row["spearman_defined"] != correlations["spearman_defined"]:
             evidence["event_reconstruction_mismatch_count"] += 1
             evidence["field_mismatches"]["spearman_defined"] = evidence["field_mismatches"].get("spearman_defined", 0) + 1
+            evidence["boolean_mismatches"] += 1
         
         if not correlations["spearman_defined"]:
             if event_row["spearman_undefined_reason"] != correlations["spearman_undefined_reason"]:
                 evidence["event_reconstruction_mismatch_count"] += 1
                 evidence["field_mismatches"]["spearman_undefined_reason"] = evidence["field_mismatches"].get("spearman_undefined_reason", 0) + 1
+                evidence["string_mismatches"] += 1
         
-        # Check Kendall (informational only for value mismatches)
+        # Check Kendall with exact equality (values are rounded to 12 decimal places)
         if correlations["kendall_defined"]:
             if pd.isna(event_row["kendall_tau_b"]):
                 evidence["event_reconstruction_mismatch_count"] += 1
                 evidence["field_mismatches"]["kendall_tau_b"] = evidence["field_mismatches"].get("kendall_tau_b", 0) + 1
-            elif abs(event_row["kendall_tau_b"] - correlations["kendall_tau_b"]) > 1e-8:  # Informational only, don't count as mismatch
+                evidence["missing_state_mismatches"] += 1
+            elif event_row["kendall_tau_b"] != correlations["kendall_tau_b"]:
+                evidence["event_reconstruction_mismatch_count"] += 1
                 evidence["field_mismatches"]["kendall_tau_b"] = evidence["field_mismatches"].get("kendall_tau_b", 0) + 1
+                evidence["exact_value_mismatches"] += 1
         else:
             if not pd.isna(event_row["kendall_tau_b"]):
                 evidence["event_reconstruction_mismatch_count"] += 1
                 evidence["field_mismatches"]["kendall_tau_b"] = evidence["field_mismatches"].get("kendall_tau_b", 0) + 1
+                evidence["missing_state_mismatches"] += 1
         
         if event_row["kendall_defined"] != correlations["kendall_defined"]:
             evidence["event_reconstruction_mismatch_count"] += 1
@@ -1872,12 +1903,15 @@ def reconstruct_and_validate_event_rows(
                 evidence["event_reconstruction_mismatch_count"] += 1
                 evidence["field_mismatches"]["mode_selected_candidate"] = evidence["field_mismatches"].get("mode_selected_candidate", 0) + 1
             
-            # Get selected candidate test rank (informational only for value mismatches)
+            # Get selected candidate test rank with exact equality (using tolerance-aware ranks)
             selected_idx = CANDIDATE_ORDER.index(expected_selected)
-            expected_test_rank = test_ranks[selected_idx]
+            expected_test_rank = test_tolerance_ranks[selected_idx]
+            expected_test_rank = round(expected_test_rank, 12)
             
-            if abs(event_row["selected_candidate_test_rank"] - expected_test_rank) > 1e-9:  # Informational only, don't count as mismatch
+            if event_row["selected_candidate_test_rank"] != expected_test_rank:
+                evidence["event_reconstruction_mismatch_count"] += 1
                 evidence["field_mismatches"]["selected_candidate_test_rank"] = evidence["field_mismatches"].get("selected_candidate_test_rank", 0) + 1
+                evidence["exact_value_mismatches"] += 1
             
             # Check membership
             expected_in_test_exact = expected_selected in expected_test_exact
@@ -2022,7 +2056,7 @@ def reconstruct_correlation_values(
 ) -> Tuple[bool, Dict[str, Any]]:
     """
     Reconstruct correlation values from source data and validate against event rows.
-    Correlation value mismatches are informational only due to floating point precision.
+    All mismatches must be zero for validation to pass.
     
     Returns:
         (passed, evidence_dict)
@@ -2077,19 +2111,23 @@ def reconstruct_correlation_values(
             validation_utilities.append(val_util)
             test_utilities.append(test_util)
         
-        # Reconstruct ranks
+        # Reconstruct ranks (using tolerance-aware ranks like original computation)
         validation_ranks = compute_exact_ranks(validation_utilities)
         test_ranks = compute_exact_ranks(test_utilities)
         
-        # Reconstruct correlations
-        correlations = compute_correlations(validation_ranks, test_ranks)
+        # Also compute tolerance-aware ranks for correlation reconstruction
+        validation_tolerance_ranks = compute_tolerance_aware_ranks(validation_utilities)
+        test_tolerance_ranks = compute_tolerance_aware_ranks(test_utilities)
         
-        # Check Spearman (informational only for value mismatches)
+        # Reconstruct correlations
+        correlations = compute_correlations(validation_tolerance_ranks, test_tolerance_ranks)
+        
+        # Check Spearman with exact equality (values are rounded to 12 decimal places)
         if correlations["spearman_defined"]:
             if pd.isna(event_row["spearman_rho"]):
                 evidence["spearman_reconstruction_mismatches"] += 1
                 evidence["correlation_state_mismatches"] += 1
-            elif abs(event_row["spearman_rho"] - correlations["spearman_rho"]) > 1e-8:  # Informational only
+            elif event_row["spearman_rho"] != correlations["spearman_rho"]:
                 evidence["spearman_reconstruction_mismatches"] += 1
         else:
             if not pd.isna(event_row["spearman_rho"]):
@@ -2103,12 +2141,12 @@ def reconstruct_correlation_values(
             if event_row["spearman_undefined_reason"] != correlations["spearman_undefined_reason"]:
                 evidence["correlation_state_mismatches"] += 1
         
-        # Check Kendall (informational only for value mismatches)
+        # Check Kendall with exact equality (values are rounded to 12 decimal places)
         if correlations["kendall_defined"]:
             if pd.isna(event_row["kendall_tau_b"]):
                 evidence["kendall_reconstruction_mismatches"] += 1
                 evidence["correlation_state_mismatches"] += 1
-            elif abs(event_row["kendall_tau_b"] - correlations["kendall_tau_b"]) > 1e-8:  # Informational only
+            elif event_row["kendall_tau_b"] != correlations["kendall_tau_b"]:
                 evidence["kendall_reconstruction_mismatches"] += 1
         else:
             if not pd.isna(event_row["kendall_tau_b"]):
@@ -2122,8 +2160,12 @@ def reconstruct_correlation_values(
             if event_row["kendall_undefined_reason"] != correlations["kendall_undefined_reason"]:
                 evidence["correlation_state_mismatches"] += 1
     
-    # Only fail on state mismatches, not value mismatches (floating point precision)
-    passed = evidence["correlation_state_mismatches"] == 0
+    # All mismatches must be zero
+    passed = (
+        evidence["spearman_reconstruction_mismatches"] == 0 and
+        evidence["kendall_reconstruction_mismatches"] == 0 and
+        evidence["correlation_state_mismatches"] == 0
+    )
     evidence["passed"] = passed
     return passed, evidence
 
