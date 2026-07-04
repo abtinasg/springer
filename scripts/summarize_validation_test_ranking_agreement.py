@@ -605,34 +605,56 @@ def validate_summary_row(
     if spearman_defined_n_val > 0:
         actual_mean = spearman_values.mean()
         actual_median = float(pd.Series(spearman_values).median())
-        field_comparisons += 2
-        if not (np.isfinite(actual_mean) and np.isfinite(actual_median)):
-            mismatches += 2
-        elif not (math.isclose(summary_row["spearman_mean_defined"], actual_mean, rel_tol=1e-12, abs_tol=1e-12) and
-                  math.isclose(summary_row["spearman_median_defined"], actual_median, rel_tol=1e-12, abs_tol=1e-12)):
-            mismatches += 2
+        # Check mean separately
+        field_comparisons += 1
+        if not np.isfinite(actual_mean):
+            mismatches += 1
+        elif not math.isclose(summary_row["spearman_mean_defined"], actual_mean, rel_tol=1e-12, abs_tol=1e-12):
+            mismatches += 1
+        # Check median separately
+        field_comparisons += 1
+        if not np.isfinite(actual_median):
+            mismatches += 1
+        elif not math.isclose(summary_row["spearman_median_defined"], actual_median, rel_tol=1e-12, abs_tol=1e-12):
+            mismatches += 1
     else:
         # When defined_n == 0, summary mean and median must both be missing
-        field_comparisons += 2
-        if not (pd.isna(summary_row["spearman_mean_defined"]) and pd.isna(summary_row["spearman_median_defined"])):
-            mismatches += 2
+        # Check mean separately
+        field_comparisons += 1
+        if not pd.isna(summary_row["spearman_mean_defined"]):
+            mismatches += 1
+        # Check median separately
+        field_comparisons += 1
+        if not pd.isna(summary_row["spearman_median_defined"]):
+            mismatches += 1
     
     kendall_values = df_subset.loc[kendall_defined_mask, "kendall_tau_b"].values
     kendall_defined_n_val = kendall_defined_mask.sum()
     if kendall_defined_n_val > 0:
         actual_mean = kendall_values.mean()
         actual_median = float(pd.Series(kendall_values).median())
-        field_comparisons += 2
-        if not (np.isfinite(actual_mean) and np.isfinite(actual_median)):
-            mismatches += 2
-        elif not (math.isclose(summary_row["kendall_mean_defined"], actual_mean, rel_tol=1e-12, abs_tol=1e-12) and
-                  math.isclose(summary_row["kendall_median_defined"], actual_median, rel_tol=1e-12, abs_tol=1e-12)):
-            mismatches += 2
+        # Check mean separately
+        field_comparisons += 1
+        if not np.isfinite(actual_mean):
+            mismatches += 1
+        elif not math.isclose(summary_row["kendall_mean_defined"], actual_mean, rel_tol=1e-12, abs_tol=1e-12):
+            mismatches += 1
+        # Check median separately
+        field_comparisons += 1
+        if not np.isfinite(actual_median):
+            mismatches += 1
+        elif not math.isclose(summary_row["kendall_median_defined"], actual_median, rel_tol=1e-12, abs_tol=1e-12):
+            mismatches += 1
     else:
         # When defined_n == 0, summary mean and median must both be missing
-        field_comparisons += 2
-        if not (pd.isna(summary_row["kendall_mean_defined"]) and pd.isna(summary_row["kendall_median_defined"])):
-            mismatches += 2
+        # Check mean separately
+        field_comparisons += 1
+        if not pd.isna(summary_row["kendall_mean_defined"]):
+            mismatches += 1
+        # Check median separately
+        field_comparisons += 1
+        if not pd.isna(summary_row["kendall_median_defined"]):
+            mismatches += 1
     
     # Check selected rank statistics
     selected_ranks = df_subset["selected_candidate_test_rank"].values
@@ -730,21 +752,118 @@ def check_range_constraints(summary_dfs: Dict[str, pd.DataFrame]) -> Dict[str, A
                 if (df[col] < 0).any() or (df[col] > 1).any():
                     table_evidence["jaccard_range_failure_count"] += 1
         
-        # Check correlation mean/median in [-1, 1] and finite
-        for col in ["spearman_mean_defined", "spearman_median_defined",
-                    "kendall_mean_defined", "kendall_median_defined"]:
-            if col in df.columns:
-                non_finite_mask = ~finite_mask(df[col])
-                failure_count = int(non_finite_mask.sum())
-                table_evidence["correlation_non_finite_count"] += failure_count
-                # Check if defined_n == 0 but mean/median == 0.0 (invalid substitution)
-                defined_n_col = col.replace("_mean_defined", "_defined_n").replace("_median_defined", "_defined_n")
-                if defined_n_col in df.columns:
-                    for idx, row in df.iterrows():
-                        if row[defined_n_col] == 0 and (row[col] == 0.0 or not pd.isna(row[col])):
-                            table_evidence["correlation_state_failure_count"] += 1
-                if (df[col] < -1).any() or (df[col] > 1).any():
-                    table_evidence["correlation_range_failure_count"] += 1
+        # Check correlation mean/median with state-aware validation
+        # Validate Spearman
+        if "spearman_defined_n" in df.columns:
+            for idx, row in df.iterrows():
+                defined_n = row["spearman_defined_n"]
+                mean_val = row["spearman_mean_defined"]
+                median_val = row["spearman_median_defined"]
+                
+                # Check if defined_n is valid
+                if pd.isna(defined_n) or not np.isfinite(defined_n) or defined_n < 0 or defined_n > row["n_event_rows"]:
+                    table_evidence["correlation_state_failure_count"] += 1
+                    continue
+                
+                if defined_n > 0:
+                    # A. defined_n > 0: mean and median must be non-missing, finite, and in [-1, 1]
+                    row_state_failed = False
+                    
+                    # Check mean
+                    if pd.isna(mean_val):
+                        table_evidence["correlation_non_finite_count"] += 1
+                        row_state_failed = True
+                    elif not np.isfinite(mean_val):
+                        table_evidence["correlation_non_finite_count"] += 1
+                        row_state_failed = True
+                    elif mean_val < -1 or mean_val > 1:
+                        table_evidence["correlation_range_failure_count"] += 1
+                        row_state_failed = True
+                    
+                    # Check median
+                    if pd.isna(median_val):
+                        table_evidence["correlation_non_finite_count"] += 1
+                        row_state_failed = True
+                    elif not np.isfinite(median_val):
+                        table_evidence["correlation_non_finite_count"] += 1
+                        row_state_failed = True
+                    elif median_val < -1 or median_val > 1:
+                        table_evidence["correlation_range_failure_count"] += 1
+                        row_state_failed = True
+                    
+                    if row_state_failed:
+                        table_evidence["correlation_state_failure_count"] += 1
+                else:
+                    # B. defined_n == 0: mean and median must be missing
+                    row_state_failed = False
+                    
+                    if not pd.isna(mean_val):
+                        table_evidence["correlation_state_failure_count"] += 1
+                        row_state_failed = True
+                        if not np.isfinite(mean_val):
+                            table_evidence["correlation_non_finite_count"] += 1
+                    
+                    if not pd.isna(median_val):
+                        table_evidence["correlation_state_failure_count"] += 1
+                        row_state_failed = True
+                        if not np.isfinite(median_val):
+                            table_evidence["correlation_non_finite_count"] += 1
+        
+        # Validate Kendall
+        if "kendall_defined_n" in df.columns:
+            for idx, row in df.iterrows():
+                defined_n = row["kendall_defined_n"]
+                mean_val = row["kendall_mean_defined"]
+                median_val = row["kendall_median_defined"]
+                
+                # Check if defined_n is valid
+                if pd.isna(defined_n) or not np.isfinite(defined_n) or defined_n < 0 or defined_n > row["n_event_rows"]:
+                    table_evidence["correlation_state_failure_count"] += 1
+                    continue
+                
+                if defined_n > 0:
+                    # A. defined_n > 0: mean and median must be non-missing, finite, and in [-1, 1]
+                    row_state_failed = False
+                    
+                    # Check mean
+                    if pd.isna(mean_val):
+                        table_evidence["correlation_non_finite_count"] += 1
+                        row_state_failed = True
+                    elif not np.isfinite(mean_val):
+                        table_evidence["correlation_non_finite_count"] += 1
+                        row_state_failed = True
+                    elif mean_val < -1 or mean_val > 1:
+                        table_evidence["correlation_range_failure_count"] += 1
+                        row_state_failed = True
+                    
+                    # Check median
+                    if pd.isna(median_val):
+                        table_evidence["correlation_non_finite_count"] += 1
+                        row_state_failed = True
+                    elif not np.isfinite(median_val):
+                        table_evidence["correlation_non_finite_count"] += 1
+                        row_state_failed = True
+                    elif median_val < -1 or median_val > 1:
+                        table_evidence["correlation_range_failure_count"] += 1
+                        row_state_failed = True
+                    
+                    if row_state_failed:
+                        table_evidence["correlation_state_failure_count"] += 1
+                else:
+                    # B. defined_n == 0: mean and median must be missing
+                    row_state_failed = False
+                    
+                    if not pd.isna(mean_val):
+                        table_evidence["correlation_state_failure_count"] += 1
+                        row_state_failed = True
+                        if not np.isfinite(mean_val):
+                            table_evidence["correlation_non_finite_count"] += 1
+                    
+                    if not pd.isna(median_val):
+                        table_evidence["correlation_state_failure_count"] += 1
+                        row_state_failed = True
+                        if not np.isfinite(median_val):
+                            table_evidence["correlation_non_finite_count"] += 1
         
         # Check selected test rank in [1, 4] and finite
         for col in ["selected_candidate_test_rank_mean", "selected_candidate_test_rank_median"]:
@@ -886,7 +1005,8 @@ def run_synthetic_nan_tests() -> Dict[str, Any]:
         "spearman_median_defined": [0.0],
     })
     result_e = check_range_constraints({"test": test_df_e})
-    test_e_passed = not result_e["details"]["test"]["passed"] and result_e["details"]["test"]["correlation_state_failure_count"] > 0
+    test_e_passed = (not result_e["details"]["test"]["passed"] and 
+                    result_e["details"]["test"]["correlation_state_failure_count"] > 0)
     if test_e_passed:
         tests_passed += 1
     else:
@@ -903,7 +1023,9 @@ def run_synthetic_nan_tests() -> Dict[str, Any]:
         "spearman_median_defined": [np.nan],
     })
     result_f = check_range_constraints({"test": test_df_f})
-    test_f_passed = result_f["details"]["test"]["correlation_state_failure_count"] == 0
+    test_f_passed = (result_f["details"]["test"]["passed"] is True and
+                    result_f["details"]["test"]["correlation_state_failure_count"] == 0 and
+                    result_f["details"]["test"]["correlation_non_finite_count"] == 0)
     if test_f_passed:
         tests_passed += 1
     else:
@@ -920,7 +1042,9 @@ def run_synthetic_nan_tests() -> Dict[str, Any]:
         "spearman_median_defined": [0.5],
     })
     result_g = check_range_constraints({"test": test_df_g})
-    test_g_passed = not result_g["details"]["test"]["passed"] and result_g["details"]["test"]["correlation_non_finite_count"] > 0
+    test_g_passed = (result_g["details"]["test"]["passed"] is False and
+                    result_g["details"]["test"]["correlation_non_finite_count"] > 0 and
+                    result_g["details"]["test"]["correlation_state_failure_count"] > 0)
     if test_g_passed:
         tests_passed += 1
     else:
