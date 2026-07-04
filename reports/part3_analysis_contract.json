@@ -1,0 +1,914 @@
+{
+  "adaptive_top1_policy": {
+    "definition": [
+      "Train all four candidates on training data.",
+      "Score all candidates on validation data.",
+      "Select one candidate using the specified validation objective.",
+      "Freeze its threshold according to the specified policy.",
+      "Evaluate once on held-out test data."
+    ],
+    "distinguished_components": [
+      "Selected candidate identity.",
+      "Selection score.",
+      "Validation threshold.",
+      "Test performance.",
+      "Test rank.",
+      "Post-hoc regret."
+    ],
+    "prohibition": "No test label, test score, test metric, or test ranking may influence the selection."
+  },
+  "analysis_domains": {
+    "concept_distinctions": [
+      "candidate learner",
+      "validation selector",
+      "threshold policy",
+      "ensemble construction rule",
+      "post-hoc oracle"
+    ],
+    "existing_adaptive_models": [
+      "AQRPE_v2_balanced",
+      "AQRPE_v2_rank",
+      "AQRPE_v2_mcc",
+      "AQRPE_v2_soft_top3"
+    ],
+    "experiments": [
+      "within_project",
+      "cross_project"
+    ],
+    "fixed_candidate_learners": [
+      "LR_std_C0.1",
+      "LR_std_C1",
+      "DT_leaf5",
+      "ET_leaf5"
+    ],
+    "planned_additional_ensemble_models": [
+      "AQRPE_v2_soft_top2",
+      "AQRPE_v2_soft_all4"
+    ],
+    "projects": [
+      "CM1",
+      "JM1",
+      "KC1",
+      "KC2",
+      "PC1"
+    ],
+    "seeds": [
+      7,
+      13,
+      29,
+      42,
+      101
+    ]
+  },
+  "baseline_policy": {
+    "best_fixed_baseline": {
+      "deployment_warning": "Must not be treated as a validation-selected deployment rule unless a separate validation-only baseline-selection mechanism is defined.",
+      "selection_rules": [
+        "Separately for each metric.",
+        "Separately for each experiment.",
+        "From the four fixed candidates only.",
+        "For descriptive summary after all candidate results are available."
+      ],
+      "status": "post-hoc descriptive"
+    },
+    "individual_fixed_baselines": [
+      "LR_std_C0.1",
+      "LR_std_C1",
+      "DT_leaf5",
+      "ET_leaf5"
+    ]
+  },
+  "branch": "major-revision-analysis-v2",
+  "candidate_learners": {
+    "DT_leaf5": {
+      "max_leaf_nodes": 5,
+      "random_state": null,
+      "type": "decision_tree"
+    },
+    "ET_leaf5": {
+      "max_leaf_nodes": 5,
+      "random_state": null,
+      "type": "extra_trees"
+    },
+    "LR_std_C0.1": {
+      "C": 0.1,
+      "class_weight": null,
+      "regularization": "L2",
+      "type": "logistic_regression"
+    },
+    "LR_std_C1": {
+      "C": 1.0,
+      "class_weight": null,
+      "regularization": "L2",
+      "type": "logistic_regression"
+    }
+  },
+  "contract_title": "Scientific Analysis Contract for Major Revision",
+  "contract_version": "Part-3A-v1",
+  "existing_adaptive_models": {
+    "AQRPE_v2_balanced": {
+      "selection_type": "adaptive_top1",
+      "threshold_policy": "validation_tuned",
+      "validation_objective": "balanced"
+    },
+    "AQRPE_v2_mcc": {
+      "selection_type": "adaptive_top1",
+      "threshold_policy": "validation_tuned",
+      "validation_objective": "mcc"
+    },
+    "AQRPE_v2_rank": {
+      "selection_type": "adaptive_top1",
+      "threshold_policy": "fixed_0.5",
+      "validation_objective": "rank"
+    },
+    "AQRPE_v2_soft_top3": {
+      "ensemble_size": 3,
+      "selection_type": "soft_ensemble",
+      "threshold_policy": "validation_tuned",
+      "validation_objective": "rank"
+    }
+  },
+  "metric_taxonomy": {
+    "calibration_sensitive": {
+      "brier": {
+        "allowed_analysis_uses": [
+          "comparative_performance",
+          "metric_tradeoffs",
+          "calibration_analysis"
+        ],
+        "canonical_name": "brier",
+        "direction": "lower_is_better",
+        "display_name": "Brier Score",
+        "family": "calibration_sensitive",
+        "practical_interpretation": "Mean squared error of predicted probabilities, reflects calibration.",
+        "primary_or_secondary": "primary",
+        "threshold_dependent": false
+      }
+    },
+    "primary_discrimination_ranking": {
+      "avg_precision": {
+        "allowed_analysis_uses": [
+          "comparative_performance",
+          "metric_tradeoffs",
+          "selection_stability"
+        ],
+        "canonical_name": "avg_precision",
+        "direction": "higher_is_better",
+        "display_name": "Average Precision",
+        "family": "primary_discrimination_ranking",
+        "practical_interpretation": "Area under precision-recall curve, threshold-free ranking quality.",
+        "primary_or_secondary": "primary",
+        "threshold_dependent": false
+      },
+      "lift_at_10pct": {
+        "allowed_analysis_uses": [
+          "comparative_performance",
+          "metric_tradeoffs",
+          "early_inspection"
+        ],
+        "canonical_name": "lift_at_10pct",
+        "direction": "higher_is_better",
+        "display_name": "Lift@10%",
+        "family": "primary_discrimination_ranking",
+        "practical_interpretation": "Ratio of precision@10% to baseline defect rate.",
+        "primary_or_secondary": "primary",
+        "threshold_dependent": true
+      },
+      "precision_at_10pct": {
+        "allowed_analysis_uses": [
+          "comparative_performance",
+          "metric_tradeoffs",
+          "early_inspection"
+        ],
+        "canonical_name": "precision_at_10pct",
+        "direction": "higher_is_better",
+        "display_name": "Precision@10%",
+        "family": "primary_discrimination_ranking",
+        "practical_interpretation": "Precision when inspecting top 10% of risky instances.",
+        "primary_or_secondary": "primary",
+        "threshold_dependent": true
+      },
+      "recall_at_10pct": {
+        "allowed_analysis_uses": [
+          "comparative_performance",
+          "metric_tradeoffs",
+          "early_inspection"
+        ],
+        "canonical_name": "recall_at_10pct",
+        "direction": "higher_is_better",
+        "display_name": "Recall@10%",
+        "family": "primary_discrimination_ranking",
+        "practical_interpretation": "Defect coverage when inspecting top 10% of risky instances.",
+        "primary_or_secondary": "primary",
+        "threshold_dependent": true
+      }
+    },
+    "primary_thresholded_classification": {
+      "balanced_accuracy": {
+        "allowed_analysis_uses": [
+          "comparative_performance",
+          "metric_tradeoffs",
+          "thresholded_evaluation"
+        ],
+        "canonical_name": "balanced_accuracy",
+        "direction": "higher_is_better",
+        "display_name": "Balanced Accuracy",
+        "family": "primary_thresholded_classification",
+        "practical_interpretation": "Average of recall across both classes.",
+        "primary_or_secondary": "primary",
+        "threshold_dependent": true
+      },
+      "f1": {
+        "allowed_analysis_uses": [
+          "comparative_performance",
+          "metric_tradeoffs",
+          "thresholded_evaluation"
+        ],
+        "canonical_name": "f1",
+        "direction": "higher_is_better",
+        "display_name": "F1 Score",
+        "family": "primary_thresholded_classification",
+        "practical_interpretation": "Harmonic mean of precision and recall.",
+        "primary_or_secondary": "primary",
+        "threshold_dependent": true
+      },
+      "mcc": {
+        "allowed_analysis_uses": [
+          "comparative_performance",
+          "metric_tradeoffs",
+          "thresholded_evaluation"
+        ],
+        "canonical_name": "mcc",
+        "direction": "higher_is_better",
+        "display_name": "Matthews Correlation Coefficient",
+        "family": "primary_thresholded_classification",
+        "practical_interpretation": "Balanced measure for binary classification, robust to class imbalance.",
+        "primary_or_secondary": "primary",
+        "threshold_dependent": true
+      }
+    },
+    "secondary_diagnostic": {
+      "precision": {
+        "allowed_analysis_uses": [
+          "diagnostic"
+        ],
+        "canonical_name": "precision",
+        "direction": "higher_is_better",
+        "display_name": "Precision",
+        "family": "secondary_diagnostic",
+        "practical_interpretation": "Diagnostic metric, must not be interpreted without threshold policy.",
+        "primary_or_secondary": "secondary",
+        "threshold_dependent": true
+      },
+      "recall": {
+        "allowed_analysis_uses": [
+          "diagnostic"
+        ],
+        "canonical_name": "recall",
+        "direction": "higher_is_better",
+        "display_name": "Recall",
+        "family": "secondary_diagnostic",
+        "practical_interpretation": "Diagnostic metric, must not be interpreted without threshold policy.",
+        "primary_or_secondary": "secondary",
+        "threshold_dependent": true
+      }
+    },
+    "secondary_ranking": {
+      "lift_at_20pct": {
+        "allowed_analysis_uses": [
+          "comparative_performance",
+          "metric_tradeoffs",
+          "early_inspection"
+        ],
+        "canonical_name": "lift_at_20pct",
+        "direction": "higher_is_better",
+        "display_name": "Lift@20%",
+        "family": "secondary_ranking",
+        "practical_interpretation": "Ratio of precision@20% to baseline defect rate.",
+        "primary_or_secondary": "secondary",
+        "threshold_dependent": true
+      },
+      "precision_at_20pct": {
+        "allowed_analysis_uses": [
+          "comparative_performance",
+          "metric_tradeoffs",
+          "early_inspection"
+        ],
+        "canonical_name": "precision_at_20pct",
+        "direction": "higher_is_better",
+        "display_name": "Precision@20%",
+        "family": "secondary_ranking",
+        "practical_interpretation": "Precision when inspecting top 20% of risky instances.",
+        "primary_or_secondary": "secondary",
+        "threshold_dependent": true
+      },
+      "recall_at_20pct": {
+        "allowed_analysis_uses": [
+          "comparative_performance",
+          "metric_tradeoffs",
+          "early_inspection"
+        ],
+        "canonical_name": "recall_at_20pct",
+        "direction": "higher_is_better",
+        "display_name": "Recall@20%",
+        "family": "secondary_ranking",
+        "practical_interpretation": "Defect coverage when inspecting top 20% of risky instances.",
+        "primary_or_secondary": "secondary",
+        "threshold_dependent": true
+      },
+      "roc_auc": {
+        "allowed_analysis_uses": [
+          "comparative_performance",
+          "metric_tradeoffs",
+          "diagnostic"
+        ],
+        "canonical_name": "roc_auc",
+        "direction": "higher_is_better",
+        "display_name": "ROC AUC",
+        "family": "secondary_ranking",
+        "practical_interpretation": "Area under ROC curve, threshold-free ranking quality. Secondary because precision-recall is more informative under imbalance.",
+        "primary_or_secondary": "secondary",
+        "threshold_dependent": false
+      }
+    }
+  },
+  "objective_policies": {
+    "balanced_policy": {
+      "candidate_ranking": "balanced validation objective",
+      "description": "Candidate ranking by balanced validation objective, threshold selected by balanced validation objective.",
+      "threshold_selection": "balanced validation objective"
+    },
+    "mcc_policy": {
+      "candidate_ranking": "validation MCC objective",
+      "description": "Candidate ranking by validation MCC objective, threshold selected by validation MCC objective.",
+      "threshold_selection": "validation MCC objective"
+    },
+    "rank_plus_validation_threshold_policy": {
+      "candidate_ranking": "rank objective",
+      "description": "Candidate ranking by rank objective, after candidate or ensemble selection, threshold is tuned on validation only. This policy is a planned sensitivity analysis and must not replace or silently overwrite the existing score-only rank policy.",
+      "must_not_replace": "existing score-only rank policy",
+      "status": "planned sensitivity analysis",
+      "threshold_selection": "tuned on validation only"
+    },
+    "rank_score_only_policy": {
+      "candidate_ranking": "rank objective",
+      "description": "Candidate ranking by rank objective, primary interpretation restricted to threshold-free and top-k metrics, thresholded metrics are diagnostic only when threshold is fixed at 0.5.",
+      "primary_interpretation": "Restricted to threshold-free and top-k metrics.",
+      "threshold_selection": "fixed at 0.5",
+      "thresholded_metrics_status": "diagnostic only when threshold is fixed at 0.5"
+    }
+  },
+  "oracle_and_regret_policy": {
+    "absolute_regret": {
+      "higher_is_better": "oracle_value - selected_value",
+      "lower_is_better": "selected_value - oracle_value"
+    },
+    "key_assertions": [
+      "Oracle is not a deployable model.",
+      "Oracle uses test information only for retrospective analysis.",
+      "Oracle values must never feed candidate selection, threshold selection, ensemble construction, or model fitting."
+    ],
+    "normalized_regret_formula": "absolute_regret / max(abs(oracle_value), 1e-12)",
+    "oracle_computation": {
+      "higher_is_better": "oracle_value = maximum test value among the four fixed candidates",
+      "lower_is_better": "oracle_value = minimum test value among the four fixed candidates"
+    },
+    "oracle_definition": "Post-hoc analytical reference only.",
+    "regret_property": "Regret must always be non-negative up to floating-point tolerance.",
+    "separate_records": [
+      "Exact winner.",
+      "Tolerance winner using 1e-12.",
+      "Selected candidate test rank.",
+      "Selected candidate in oracle winner set.",
+      "Absolute regret.",
+      "Normalized regret."
+    ]
+  },
+  "planned_models": {
+    "AQRPE_v2_soft_all4": {
+      "ensemble_size": 4,
+      "selection_type": "soft_ensemble",
+      "status": "planned",
+      "threshold_policy": "validation_tuned",
+      "validation_objective": "rank"
+    },
+    "AQRPE_v2_soft_top2": {
+      "ensemble_size": 2,
+      "selection_type": "soft_ensemble",
+      "status": "planned",
+      "threshold_policy": "validation_tuned",
+      "validation_objective": "rank"
+    }
+  },
+  "preservation_checks": {
+    "all_preserved": true,
+    "file_hashes": {
+      "results/part1_full_reproduction/repeated_all_results.csv": "76b430031a944708af661bee1a1355619d1e0e6f49b932d462cea421aeb01160",
+      "results/part1_full_reproduction/repeated_summary_mean_std.csv": "b6f27ee32e350e23899d451fe4ab0758a76944633873f018bdac9ce16b94ae5b",
+      "results/part1_full_reproduction/validation_log.csv": "d18dbb6b7a71f356203aa34fe41ab7d531daa1f8499fc06d06ab643b088f0272",
+      "results/part1_full_reproduction_tables/table_cross_project_mean_sd.csv": "1753444c5b8a0c3a34179c644f6998cc663a3eb1da80e81b8fcf6d285e53731c",
+      "results/part1_full_reproduction_tables/table_soft_top3_delta_vs_best_baseline.csv": "bf5cac180bf9701299dfd1c1b410224d34b8f32269b49fb8203df7567ff7a60b",
+      "results/part1_full_reproduction_tables/table_within_project_mean_sd.csv": "cccaeb1553ac942dbe26f33673a3683ea181f06a4cf4ceb2466f0c3556086160",
+      "scripts/make_manuscript_tables.py": "152f4568025420bf8aff780e2f9c104abb6e00a4373635277d14483e67dcdbb2",
+      "scripts/run_repeated_evaluation.py": "d385b6ecef2427c85299dcbc50cfff919fa8546b31829fa3ce0e5fdb307c4856"
+    },
+    "files_changed": 0,
+    "files_checked": 8
+  },
+  "prohibited_claims": [
+    "AQRPE v2 is a fundamentally new algorithm.",
+    "Validation-based model selection is itself a novel contribution.",
+    "Soft averaging of top models is itself a novel contribution.",
+    "Repeated seeds establish external validity.",
+    "Train/validation/test separation is itself an algorithmic contribution.",
+    "AQRPE universally outperforms all baselines.",
+    "Five seeds are five independent datasets.",
+    "Twenty-five project-seed runs are twenty-five independent projects.",
+    "A p-value alone proves superiority.",
+    "The test oracle is a deployable selection method.",
+    "Soft-top-3 is optimal before ablation.",
+    "Test data may influence selection or threshold tuning."
+  ],
+  "remaining_stage_roadmap": [
+    "Part 3A: Scientific analysis contract",
+    "Part 3B: Prediction ledger and split/leakage audit",
+    "Part 3C: Objective-matched candidate and adaptive evaluation",
+    "Part 3D: Post-hoc regret and oracle-gap analysis",
+    "Part 3E: Ensemble-size and component ablation",
+    "Part 3F: Methodological sensitivity analyses",
+    "Part 3G: Project-level paired effects and uncertainty",
+    "Part 3H: Workflow diagram and metric dictionary",
+    "Part 4: Final full rerun, deterministic artifact freeze, package rebuild, and canonical manifest"
+  ],
+  "repository": "abtinasg/springer",
+  "research_questions": {
+    "count": 4,
+    "rq1": {
+      "exact_intent": "How do the four fixed candidate learners, validation-selected adaptive Top-1 variants, and validation-constructed soft ensembles compare under repeated within-project and cross-project evaluation?",
+      "requirements": [
+        "Objective-matched comparisons.",
+        "Run-level outputs.",
+        "Project-level aggregation.",
+        "No post-hoc selection of a favorable comparison only.",
+        "Separate interpretation for within-project and cross-project settings."
+      ],
+      "title": "Comparative performance"
+    },
+    "rq2": {
+      "exact_intent": "How do model rankings and conclusions change across discrimination, thresholded classification, early-inspection ranking, and calibration-sensitive metrics?",
+      "requirements": [
+        "No single metric defines an overall winner.",
+        "Metric direction must be explicit.",
+        "Ranking metrics, thresholded metrics, and calibration metrics represent different operational goals.",
+        "Brier score is minimized.",
+        "All other retained metrics are maximized."
+      ],
+      "title": "Metric-dependent trade-offs"
+    },
+    "rq3": {
+      "exact_intent": "How frequently and how stably are candidates selected across projects and seeds, and how well do validation rankings agree with held-out test rankings?",
+      "required_analyses": [
+        "Top-1 selection frequency.",
+        "Top-1 seed stability.",
+        "Soft-top-3 membership and order stability.",
+        "Exact validation-test Top-1 agreement.",
+        "Winner-set overlap.",
+        "Selected-candidate test rank.",
+        "Spearman and Kendall rank agreement.",
+        "Explicit statement that these are descriptive analyses, not proof of superiority."
+      ],
+      "title": "Selection behavior and stability"
+    },
+    "rq4": {
+      "exact_intent": "What do post-hoc regret and controlled ablation reveal about the value of adaptive Top-1 selection, Soft-top-2, Soft-top-3, and Soft-all-4 relative to fixed candidates and an oracle reference?",
+      "requirements": [
+        "Fixed individual candidates.",
+        "Adaptive Top-1.",
+        "Soft-top-2.",
+        "Soft-top-3.",
+        "Soft-all-4.",
+        "Oracle best candidate on test used only as a post-hoc analytical reference.",
+        "Selected-versus-oracle regret.",
+        "Marginal ensemble-size comparisons.",
+        "No use of test information for actual model selection."
+      ],
+      "requires_new_computation": true,
+      "title": "Regret, ensemble size, and ablation"
+    }
+  },
+  "reviewer_context": {
+    "reviewer_2_focus": [
+      "Methodological decisions require clearer justification.",
+      "Threats to validity require deeper analysis.",
+      "Limitations and future directions must be evidence-based."
+    ],
+    "reviewer_3_focus": [
+      "Validation-based model selection is standard.",
+      "Averaging top models is standard.",
+      "Repeated seeds and leakage control are good practice, not algorithmic novelty.",
+      "The paper should be treated as a careful empirical study rather than a new fundamental algorithm."
+    ]
+  },
+  "reviewer_traceability_matrix": {
+    "reviewer_1_comment_1": {
+      "computational_response": "Metric dictionary in later Part 3H",
+      "manuscript_response": "Brief practical metric explanation"
+    },
+    "reviewer_1_comment_2": {
+      "computational_response": "None",
+      "manuscript_response": "Key finding paragraph before every results table"
+    },
+    "reviewer_1_comment_3": {
+      "computational_response": "Deterministic workflow figure in later Part 3H",
+      "manuscript_response": "Include figure and description"
+    },
+    "reviewer_2_comment_1": {
+      "computational_response": "None",
+      "manuscript_response": "Rewrite abstract to 150-250 words"
+    },
+    "reviewer_2_comment_2": {
+      "computational_response": "None",
+      "manuscript_response": "Verified 2025-2026 literature update"
+    },
+    "reviewer_2_comment_3": {
+      "computational_response": [
+        "Objective-matched comparisons.",
+        "Prediction ledger.",
+        "Regret.",
+        "Ablation.",
+        "Sensitivity.",
+        "Project-level effects"
+      ],
+      "manuscript_response": "Not applicable (computational focus)"
+    },
+    "reviewer_2_comment_4": {
+      "computational_response": [
+        "Leakage audit.",
+        "Robustness analyses.",
+        "Dependency-aware statistical policy"
+      ],
+      "manuscript_response": "Not applicable (computational focus)"
+    },
+    "reviewer_2_comment_5": {
+      "computational_response": "Final limitations grounded in completed analyses",
+      "manuscript_response": "Not applicable (computational focus)"
+    },
+    "reviewer_2_comments_6_and_7": {
+      "computational_response": "None",
+      "manuscript_response": "Citation renumbering and Springer formatting"
+    },
+    "reviewer_3": {
+      "computational_response": [
+        "Selection frequency.",
+        "Seed stability.",
+        "Validation-test agreement.",
+        "Post-hoc regret.",
+        "Ensemble-size ablation.",
+        "Sensitivity analysis.",
+        "Objective-matched comparison"
+      ],
+      "scientific_response": "Reposition the study as a controlled empirical evaluation rather than a fundamentally novel algorithm."
+    }
+  },
+  "scientific_positioning": {
+    "key_assertions": [
+      "Validation-based selection is standard methodology.",
+      "Soft averaging is standard ensemble methodology.",
+      "Repeated seeds and train/validation/test separation are experimental controls.",
+      "The scientific contribution is empirical characterization and controlled evidence, not the invention of a fundamentally new learning algorithm.",
+      "No result may be framed as universal dominance.",
+      "Conclusions must remain dataset-, metric-, setting-, and protocol-dependent."
+    ],
+    "positioning_statement": "A validation-controlled empirical study of model selection behavior, metric-dependent trade-offs, selection stability, validation-test agreement, post-hoc regret, and soft-ensemble ablation for imbalanced software defect prediction under repeated within-project and cross-project evaluation."
+  },
+  "sensitivity_analysis_policy": {
+    "dataset_change_policy": "Changing the five benchmark projects is outside the current computational revision unless new verified datasets are introduced under a separate protocol.",
+    "optional_after_required": [
+      "More seeds.",
+      "Additional learners.",
+      "Broader hyperparameter search."
+    ],
+    "required_dimensions": {
+      "balanced_objective_weights": {
+        "description": "Current weights, equal-weight alternative, predefined weight perturbations."
+      },
+      "cross_project_validation_design": {
+        "description": "Current stratified source-row split, source-project-aware validation robustness check."
+      },
+      "rank_threshold_policy": {
+        "description": "Fixed 0.5, validation-tuned secondary threshold."
+      },
+      "threshold_grid": {
+        "description": "Current grid, denser validation-only grid."
+      }
+    }
+  },
+  "soft_ensemble_policy": {
+    "definition": [
+      "Rank candidates using validation scores only.",
+      "Select the top k candidates using a deterministic tie policy.",
+      "Average their defective-class probabilities with equal weights.",
+      "Tune the ensemble threshold using validation data only.",
+      "Freeze selected membership, order, weights, and threshold.",
+      "Evaluate once on test data."
+    ],
+    "key_assertions": [
+      "Equal weighting is the primary ensemble rule.",
+      "Learned weights are outside the current study scope.",
+      "Soft-top-3 must not be treated as privileged before the ablation is complete.",
+      "If Soft-top-3 does not outperform Soft-all-4 or Soft-top-2 consistently, the manuscript must report that result directly."
+    ],
+    "planned_k_values": [
+      2,
+      3,
+      4
+    ],
+    "soft_all_4_note": "Soft-all-4 includes all four candidates and therefore does not involve membership selection, but its threshold must still be tuned on validation only."
+  },
+  "stage_gate": {
+    "canonical_outputs_modified": false,
+    "manuscript_modified": false,
+    "model_rerun_performed": false,
+    "next_authorized_stage": "Part 3B",
+    "part3a_contract_frozen": true,
+    "part3b_constraint": "Part 3B cannot alter the current 400 canonical result rows or current canonical manuscript tables unless a later explicitly approved migration stage is created."
+  },
+  "starting_commit": "459dbfb8bb1361d03c93255d136cc35aca4f897e",
+  "statistical_reporting_policy": {
+    "effect_reporting": [
+      "Median paired project-level difference.",
+      "Rank-biserial effect size or another predeclared paired effect size.",
+      "Explicit warning that n_projects = 5."
+    ],
+    "key_assertions": [
+      "No multiple-comparison-adjusted confirmatory family is claimed.",
+      "No inferential superiority claim is authorized.",
+      "Conclusions must emphasize direction, magnitude, consistency, and limitations."
+    ],
+    "permitted_exploratory_inference": [
+      "Exact Wilcoxon signed-rank test at project level only.",
+      "Only when the assumptions and zero-difference handling are explicitly stated.",
+      "Labeled exploratory.",
+      "No binary accept/reject conclusion based only on p-values."
+    ],
+    "required_descriptive_reporting": [
+      "Mean.",
+      "Standard deviation.",
+      "Median.",
+      "Interquartile range.",
+      "Minimum.",
+      "Maximum.",
+      "Positive / negative / tied project counts.",
+      "Five raw project-level paired differences when space permits."
+    ]
+  },
+  "threats_to_validity": {
+    "conclusion_validity": [
+      {
+        "current_mitigation": "Project-level paired analysis, descriptive focus.",
+        "planned_computational_response": "Emphasize descriptive over inferential, report effect sizes.",
+        "possible_impact": "Low statistical power.",
+        "remaining_limitation": "N=5 is small for strong inference.",
+        "threat": "Five independent projects"
+      },
+      {
+        "current_mitigation": "Project as primary unit, seed as nested replication.",
+        "planned_computational_response": "Strict unit-of-analysis policy, no seed-level inference.",
+        "possible_impact": "Pseudo-replication if treated as independent.",
+        "remaining_limitation": "Limited independent observations.",
+        "threat": "Repeated seeds are nested"
+      },
+      {
+        "current_mitigation": "Descriptive emphasis, effect size reporting.",
+        "planned_computational_response": "Power limitation in discussion.",
+        "possible_impact": "Type II errors, missed real differences.",
+        "remaining_limitation": "Small N limits detection of small effects.",
+        "threat": "Low power"
+      },
+      {
+        "current_mitigation": "Metric taxonomy, family grouping.",
+        "planned_computational_response": "Metric-by-metric interpretation, no global superiority claim.",
+        "possible_impact": "Multiple comparisons, inconsistent conclusions.",
+        "remaining_limitation": "No unified metric family-wise error control.",
+        "threat": "Multiple metrics"
+      },
+      {
+        "current_mitigation": "Clear labeling of descriptive vs exploratory inference.",
+        "planned_computational_response": "Explicit framing, no binary accept/reject.",
+        "possible_impact": "Over-interpretation of descriptive patterns.",
+        "remaining_limitation": "Exploratory tests may be misinterpreted.",
+        "threat": "Descriptive versus inferential distinction"
+      },
+      {
+        "current_mitigation": "Pre-specified validation design.",
+        "planned_computational_response": "Sensitivity analysis in Part 3F.",
+        "possible_impact": "Results may change under different validation schemes.",
+        "remaining_limitation": "Many possible validation alternatives.",
+        "threat": "Sensitivity to objective weights and validation design"
+      }
+    ],
+    "construct_validity": [
+      {
+        "current_mitigation": "Comprehensive metric taxonomy, metric-dependent analysis.",
+        "planned_computational_response": "RQ2 analysis of metric trade-offs.",
+        "possible_impact": "Different metrics may rank models differently.",
+        "remaining_limitation": "No single metric captures all operational goals.",
+        "threat": "Metric disagreement"
+      },
+      {
+        "current_mitigation": "Validation-tuned thresholds, fixed 0.5 baseline.",
+        "planned_computational_response": "Sensitivity analysis on threshold policy in Part 3F.",
+        "possible_impact": "Thresholded metrics sensitive to threshold choice.",
+        "remaining_limitation": "Threshold policy may favor certain methods.",
+        "threat": "Threshold dependence"
+      },
+      {
+        "current_mitigation": "Multiple k values (10%, 20%).",
+        "planned_computational_response": "Report results for multiple k values.",
+        "possible_impact": "Precision@k and recall@k depend on inspection budget.",
+        "remaining_limitation": "Results may not generalize to other budgets.",
+        "threat": "Top-k budget dependence"
+      },
+      {
+        "current_mitigation": "Separate calibration metric (Brier score).",
+        "planned_computational_response": "Analyze calibration-discrimination trade-off in RQ2.",
+        "possible_impact": "Models may excel at one but not the other.",
+        "remaining_limitation": "Trade-off between calibration and discrimination.",
+        "threat": "Calibration versus discrimination"
+      },
+      {
+        "current_mitigation": "Explicit post-hoc-only labeling.",
+        "planned_computational_response": "Clear oracle framing in all reporting.",
+        "possible_impact": "Oracle may be misinterpreted as achievable target.",
+        "remaining_limitation": "Oracle is not a deployable method.",
+        "threat": "Oracle interpretation"
+      }
+    ],
+    "external_validity": [
+      {
+        "current_mitigation": "Diverse project characteristics.",
+        "planned_computational_response": "Explicit limitation statement, no universal claims.",
+        "possible_impact": "Results may not generalize to other datasets.",
+        "remaining_limitation": "Small number of datasets, all from same domain.",
+        "threat": "Only five NASA/PROMISE projects"
+      },
+      {
+        "current_mitigation": "Clear scope definition.",
+        "planned_computational_response": "Limitation statement on metric type.",
+        "possible_impact": "Results may not apply to process or change metrics.",
+        "remaining_limitation": "Static metrics may not capture dynamic defect patterns.",
+        "threat": "Static metrics only"
+      },
+      {
+        "current_mitigation": "Use of established benchmark.",
+        "planned_computational_response": "Limitation statement on data vintage.",
+        "possible_impact": "Data may not reflect modern software development.",
+        "remaining_limitation": "Data age and collection methodology.",
+        "threat": "Older public benchmark data"
+      },
+      {
+        "current_mitigation": "Diverse learner families (LR, DT, ET).",
+        "planned_computational_response": "Limitation statement on learner scope.",
+        "possible_impact": "Results may not extend to other learner types.",
+        "remaining_limitation": "Limited hyperparameter search, no deep learning.",
+        "threat": "Compact learner pool"
+      },
+      {
+        "current_mitigation": "Clear empirical study framing.",
+        "planned_computational_response": "Limitation statement on deployment gap.",
+        "possible_impact": "Practical utility unverified.",
+        "remaining_limitation": "No real-world deployment validation.",
+        "threat": "No industrial deployment evaluation"
+      }
+    ],
+    "internal_validity": [
+      {
+        "current_mitigation": "Strict train/validation/test splits, leakage audit in Part 3B.",
+        "planned_computational_response": "Comprehensive leakage audit in Part 3B.",
+        "possible_impact": "Inflated performance due to test information contaminating training.",
+        "remaining_limitation": "Complex preprocessing pipelines may have subtle leakage.",
+        "threat": "Leakage"
+      },
+      {
+        "current_mitigation": "Preprocessing fitted on training fold only.",
+        "planned_computational_response": "Audit preprocessing pipeline in Part 3B.",
+        "possible_impact": "Data leakage through preprocessing parameters.",
+        "remaining_limitation": "Need to verify all preprocessing steps.",
+        "threat": "Preprocessing fitted outside training"
+      },
+      {
+        "current_mitigation": "Fixed random seeds, deterministic algorithms.",
+        "planned_computational_response": "Verify seed stability in Part 3C.",
+        "possible_impact": "Inconsistent results across runs.",
+        "remaining_limitation": "Some library components may have nondeterministic behavior.",
+        "threat": "Nondeterminism"
+      },
+      {
+        "current_mitigation": "Deterministic tie-breaking order.",
+        "planned_computational_response": "Report tie frequency and impact in Part 3C.",
+        "possible_impact": "Selection instability when scores are equal.",
+        "remaining_limitation": "Near ties may still cause instability.",
+        "threat": "Tie handling"
+      },
+      {
+        "current_mitigation": "Objective-matched comparison policy.",
+        "planned_computational_response": "Explicit policy labeling in Part 3C.",
+        "possible_impact": "Unfair comparisons using different threshold policies.",
+        "remaining_limitation": "Policy mismatches may still occur in exploratory analyses.",
+        "threat": "Threshold-selection mismatch"
+      },
+      {
+        "current_mitigation": "Pre-specified analysis contract.",
+        "planned_computational_response": "Distinguish pre-specified from exploratory in reporting.",
+        "possible_impact": "Cherry-picking favorable analyses.",
+        "remaining_limitation": "Exploratory analyses may still be selective.",
+        "threat": "Post-hoc analytical choices"
+      }
+    ]
+  },
+  "tie_policy": {
+    "distinguished_concepts": [
+      "Exact tie.",
+      "Near tie.",
+      "Winner set.",
+      "Deterministic operational choice."
+    ],
+    "scientific_analysis_rule": "For scientific analysis, all exact tied winners must be preserved in the winner set even if one deterministic candidate is used operationally.",
+    "validation_candidate_ranking": [
+      "Use exact validation score ordering.",
+      "Use a tolerance of 1e-12 only for reporting near ties.",
+      "Do not merge non-transitive chains of near-equal values.",
+      "If exact scores are equal, use the following deterministic candidate order: LR_std_C0.1, LR_std_C1, DT_leaf5, ET_leaf5."
+    ]
+  },
+  "unit_of_analysis_policy": {
+    "primary_independent_unit": "software project",
+    "prohibitions": [
+      "Treating 25 project-seed runs as 25 fully independent projects.",
+      "Using seed-level p-values as primary superiority evidence.",
+      "Claiming general population-level significance from five projects."
+    ],
+    "project_level_paired_summaries": [
+      "First aggregate the five seeds within each project.",
+      "Then compare methods across the five projects."
+    ],
+    "repeated_seed": {
+      "definition": "Within-project replication nested inside a project.",
+      "not": [
+        "An independent project.",
+        "A valid substitute for additional datasets."
+      ]
+    },
+    "run_level_observations_may_be_used_for": [
+      "Descriptive distributions.",
+      "Stability analysis.",
+      "Event-level regret.",
+      "Debugging and provenance."
+    ],
+    "run_level_observations_must_not_be_used_for": [
+      "Fully independent observations for significance claims."
+    ]
+  },
+  "validation_checks": {
+    "all_checks_passed": true,
+    "analysis_domains_passed": true,
+    "brier_only_lower": true,
+    "exact_research_questions_passed": true,
+    "fixed_candidates_exact": true,
+    "metric_direction_passed": true,
+    "metric_taxonomy_passed": true,
+    "next_stage_correct": true,
+    "no_canonical_modification": true,
+    "no_model_rerun": true,
+    "oracle_policy_passed": true,
+    "planned_models_marked": true,
+    "prohibited_claims_passed": true,
+    "projects_exact": true,
+    "rank_score_only_policy": true,
+    "reviewer_traceability_passed": true,
+    "roadmap_passed": true,
+    "seeds_exact": true,
+    "unit_of_analysis_passed": true
+  },
+  "validation_test_agreement_policy": {
+    "explicit_statements": [
+      "Agreement is descriptive.",
+      "Low agreement does not by itself prove the validation procedure is invalid.",
+      "High agreement does not prove predictive superiority.",
+      "Undefined rank correlations must remain missing, never substituted with zero.",
+      "All test-based agreement is retrospective analysis only."
+    ],
+    "required_agreement_analyses": [
+      "Strict Top-1 exact agreement.",
+      "Tolerance-aware Top-1 agreement.",
+      "Exact winner-set equality.",
+      "Tolerance-aware winner-set equality.",
+      "Winner-set overlap.",
+      "Jaccard similarity.",
+      "Spearman correlation.",
+      "Kendall tau-b.",
+      "Selected candidate test rank.",
+      "Selected candidate in test winner set."
+    ]
+  }
+}
