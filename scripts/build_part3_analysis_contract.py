@@ -37,8 +37,8 @@ def build_contract() -> Dict[str, Any]:
     
     contract = {
         "contract_title": "Scientific Analysis Contract for Major Revision",
-        "contract_version": "Part-3A.1-v1",
-        "starting_commit": "32e22faa007645a4f6f054f42c9de29744986a90",
+        "contract_version": "Part-3A.2-v1",
+        "starting_commit": "ec60c38abae80046fa0d345caa817258b97cdbf1",
         "repository": "abtinasg/springer",
         "branch": "major-revision-analysis-v2",
         
@@ -254,6 +254,7 @@ def build_contract() -> Dict[str, Any]:
                 "validation_objective": "balanced",
                 "membership_ranking_policy": "balanced_objective",
                 "threshold_objective": "balanced",
+                "ensemble_size": 2,
                 "equal_weights": True,
                 "status": "planned"
             },
@@ -261,6 +262,7 @@ def build_contract() -> Dict[str, Any]:
                 "validation_objective": "balanced",
                 "membership_ranking_policy": "not_applicable_all_candidates",
                 "threshold_objective": "balanced",
+                "ensemble_size": 4,
                 "equal_weights": True,
                 "status": "planned"
             }
@@ -932,11 +934,15 @@ def build_contract() -> Dict[str, Any]:
                 "computational_response": "Final limitations grounded in completed analyses",
                 "manuscript_response": "Not applicable (computational focus)"
             },
-            "reviewer_2_comments_6_and_7": {
+            "reviewer_2_comment_6": {
                 "computational_response": "None",
                 "manuscript_response": "Citation renumbering and Springer formatting"
             },
-            "reviewer_3": {
+            "reviewer_2_comment_7": {
+                "computational_response": "None",
+                "manuscript_response": "Citation renumbering and Springer formatting"
+            },
+            "reviewer_3_novelty_concern": {
                 "computational_response": [
                     "Selection frequency.",
                     "Seed stability.",
@@ -984,6 +990,26 @@ def build_contract() -> Dict[str, Any]:
             "manuscript_modified": False,
             "next_authorized_stage": "Part 3B",
             "part3b_constraint": "Part 3B cannot alter the current 400 canonical result rows or current canonical manuscript tables unless a later explicitly approved migration stage is created."
+        },
+        
+        "reviewer_coverage_evidence": {
+            "reviewer_1_comment_count": 3,
+            "reviewer_2_comment_count": 7,
+            "reviewer_3_concern_count": 1,
+            "covered_comment_count": 11,
+            "coverage_identifiers": [
+                "reviewer_1_comment_1",
+                "reviewer_1_comment_2",
+                "reviewer_1_comment_3",
+                "reviewer_2_comment_1",
+                "reviewer_2_comment_2",
+                "reviewer_2_comment_3",
+                "reviewer_2_comment_4",
+                "reviewer_2_comment_5",
+                "reviewer_2_comment_6",
+                "reviewer_2_comment_7",
+                "reviewer_3_novelty_concern"
+            ]
         }
     }
     
@@ -1094,17 +1120,29 @@ def validate_contract(contract: Dict[str, Any]) -> Dict[str, bool]:
     # Brier marked secondary
     checks["metric_primary_secondary_passed"] = all_metrics["brier"]["primary_or_secondary"] == "secondary"
     
-    # Objective policy passed
+    # Objective policy passed - verify exact content
+    obj_policies = contract["objective_policies"]
     checks["objective_policy_passed"] = (
-        "policy_mismatch_prohibition" in contract["objective_policies"] and
-        len(contract["objective_policies"]["policy_mismatch_prohibition"]) == 4
+        len(obj_policies["policy_mismatch_prohibition"]) == 4 and
+        obj_policies["balanced_policy"]["candidate_ranking"] == "balanced validation objective" and
+        obj_policies["balanced_policy"]["threshold_selection"] == "balanced validation objective" and
+        obj_policies["mcc_policy"]["candidate_ranking"] == "validation MCC objective" and
+        obj_policies["mcc_policy"]["threshold_selection"] == "validation MCC objective" and
+        obj_policies["rank_score_only_policy"]["candidate_ranking"] == "rank objective" and
+        obj_policies["rank_score_only_policy"]["threshold_selection"] == "fixed at 0.5" and
+        obj_policies["rank_plus_validation_threshold_policy"]["candidate_ranking"] == "rank objective" and
+        obj_policies["rank_plus_validation_threshold_policy"]["threshold_selection"] == "tuned on validation only" and
+        obj_policies["rank_plus_validation_threshold_policy"]["status"] == "planned sensitivity analysis"
     )
     
-    # Existing Soft-top-3 objective
+    # Existing Soft-top-3 objective - verify exact content
+    soft_top3 = contract["existing_adaptive_models"]["AQRPE_v2_soft_top3"]
     checks["existing_soft_top3_policy_passed"] = (
-        contract["existing_adaptive_models"]["AQRPE_v2_soft_top3"]["validation_objective"] == "balanced" and
-        contract["existing_adaptive_models"]["AQRPE_v2_soft_top3"]["membership_ranking_policy"] == "balanced_objective" and
-        contract["existing_adaptive_models"]["AQRPE_v2_soft_top3"]["threshold_objective"] == "balanced"
+        soft_top3["validation_objective"] == "balanced" and
+        soft_top3["membership_ranking_policy"] == "balanced_objective" and
+        soft_top3["threshold_objective"] == "balanced" and
+        soft_top3["ensemble_size"] == 3 and
+        soft_top3["equal_weights"] == True
     )
     
     # Baseline policy passed
@@ -1118,16 +1156,35 @@ def validate_contract(contract: Dict[str, Any]) -> Dict[str, bool]:
         contract["adaptive_top1_policy"]["prohibition"] == "No test label, test score, test metric, or test ranking may influence the selection."
     )
     
-    # Ensemble policy passed
+    # Ensemble policy passed - verify exact content including planned models
+    soft_top2 = contract["planned_models"]["AQRPE_v2_soft_top2"]
+    soft_all4 = contract["planned_models"]["AQRPE_v2_soft_all4"]
     checks["ensemble_policy_passed"] = (
         contract["soft_ensemble_policy"]["planned_k_values"] == [2, 3, 4] and
-        contract["existing_adaptive_models"]["AQRPE_v2_soft_top3"]["equal_weights"] == True
+        contract["existing_adaptive_models"]["AQRPE_v2_soft_top3"]["equal_weights"] == True and
+        soft_top2["validation_objective"] == "balanced" and
+        soft_top2["membership_ranking_policy"] == "balanced_objective" and
+        soft_top2["threshold_objective"] == "balanced" and
+        soft_top2["ensemble_size"] == 2 and
+        soft_top2["equal_weights"] == True and
+        soft_top2["status"] == "planned" and
+        soft_all4["validation_objective"] == "balanced" and
+        soft_all4["membership_ranking_policy"] == "not_applicable_all_candidates" and
+        soft_all4["threshold_objective"] == "balanced" and
+        soft_all4["ensemble_size"] == 4 and
+        soft_all4["equal_weights"] == True and
+        soft_all4["status"] == "planned"
     )
     
-    # Tie policy passed
-    checks["tie_policy_passed"] = (
-        len(contract["tie_policy"]["validation_candidate_ranking"]) == 4
-    )
+    # Tie policy passed - verify exact ordered rules
+    tie_rules = contract["tie_policy"]["validation_candidate_ranking"]
+    expected_tie_rules = [
+        "Use exact validation score ordering.",
+        "Use a tolerance of 1e-12 only for reporting near ties.",
+        "Do not merge non-transitive chains of near-equal values.",
+        "If exact scores are equal, use the following deterministic candidate order: LR_std_C0.1, LR_std_C1, DT_leaf5, ET_leaf5."
+    ]
+    checks["tie_policy_passed"] = tie_rules == expected_tie_rules
     
     # Oracle policy passed
     checks["oracle_policy_passed"] = (
@@ -1149,26 +1206,122 @@ def validate_contract(contract: Dict[str, Any]) -> Dict[str, bool]:
         len(contract["validation_test_agreement_policy"]["required_agreement_analyses"]) == 10
     )
     
-    # Balanced weight sensitivity frozen
+    # Balanced weight sensitivity frozen - verify exact dictionaries
+    weights = contract["sensitivity_analysis_policy"]["required_dimensions"]["balanced_objective_weights"]
+    current_profile = weights["current"]
+    equal_profile = weights["equal_positive_weights"]
+    mcc_profile = weights["mcc_emphasis"]
+    ranking_profile = weights["ranking_emphasis"]
+    
+    # Verify exact current profile
+    current_exact = (
+        abs(current_profile["mcc"] - 0.36) < 1e-12 and
+        abs(current_profile["f1"] - 0.27) < 1e-12 and
+        abs(current_profile["balanced_accuracy"] - 0.20) < 1e-12 and
+        abs(current_profile["avg_precision"] - 0.10) < 1e-12 and
+        abs(current_profile["recall_at_10pct"] - 0.05) < 1e-12 and
+        abs(current_profile["recall_at_20pct"] - 0.02) < 1e-12 and
+        abs(current_profile["brier_penalty"] - 0.02) < 1e-12
+    )
+    
+    # Verify exact equal positive weights profile
+    equal_exact = (
+        abs(equal_profile["mcc"] - 1/6) < 1e-12 and
+        abs(equal_profile["f1"] - 1/6) < 1e-12 and
+        abs(equal_profile["balanced_accuracy"] - 1/6) < 1e-12 and
+        abs(equal_profile["avg_precision"] - 1/6) < 1e-12 and
+        abs(equal_profile["recall_at_10pct"] - 1/6) < 1e-12 and
+        abs(equal_profile["recall_at_20pct"] - 1/6) < 1e-12 and
+        abs(equal_profile["brier_penalty"] - 0.02) < 1e-12
+    )
+    
+    # Verify exact MCC emphasis profile
+    mcc_exact = (
+        abs(mcc_profile["mcc"] - 0.50) < 1e-12 and
+        abs(mcc_profile["f1"] - 0.20) < 1e-12 and
+        abs(mcc_profile["balanced_accuracy"] - 0.15) < 1e-12 and
+        abs(mcc_profile["avg_precision"] - 0.08) < 1e-12 and
+        abs(mcc_profile["recall_at_10pct"] - 0.05) < 1e-12 and
+        abs(mcc_profile["recall_at_20pct"] - 0.02) < 1e-12 and
+        abs(mcc_profile["brier_penalty"] - 0.02) < 1e-12
+    )
+    
+    # Verify exact ranking emphasis profile
+    ranking_exact = (
+        abs(ranking_profile["mcc"] - 0.20) < 1e-12 and
+        abs(ranking_profile["f1"] - 0.15) < 1e-12 and
+        abs(ranking_profile["balanced_accuracy"] - 0.15) < 1e-12 and
+        abs(ranking_profile["avg_precision"] - 0.30) < 1e-12 and
+        abs(ranking_profile["recall_at_10pct"] - 0.15) < 1e-12 and
+        abs(ranking_profile["recall_at_20pct"] - 0.05) < 1e-12 and
+        abs(ranking_profile["brier_penalty"] - 0.02) < 1e-12
+    )
+    
+    # Verify positive weight sums equal 1.0
+    def sum_positive_weights(profile):
+        return profile["mcc"] + profile["f1"] + profile["balanced_accuracy"] + profile["avg_precision"] + profile["recall_at_10pct"] + profile["recall_at_20pct"]
+    
+    current_sum_ok = abs(sum_positive_weights(current_profile) - 1.0) <= 1e-12
+    equal_sum_ok = abs(sum_positive_weights(equal_profile) - 1.0) <= 1e-12
+    mcc_sum_ok = abs(sum_positive_weights(mcc_profile) - 1.0) <= 1e-12
+    ranking_sum_ok = abs(sum_positive_weights(ranking_profile) - 1.0) <= 1e-12
+    
+    # Verify Brier penalty is 0.02 for all profiles
+    brier_ok = (
+        abs(current_profile["brier_penalty"] - 0.02) < 1e-12 and
+        abs(equal_profile["brier_penalty"] - 0.02) < 1e-12 and
+        abs(mcc_profile["brier_penalty"] - 0.02) < 1e-12 and
+        abs(ranking_profile["brier_penalty"] - 0.02) < 1e-12
+    )
+    
     checks["balanced_weight_sensitivity_frozen"] = (
-        "current" in contract["sensitivity_analysis_policy"]["required_dimensions"]["balanced_objective_weights"] and
-        "equal_positive_weights" in contract["sensitivity_analysis_policy"]["required_dimensions"]["balanced_objective_weights"] and
-        "mcc_emphasis" in contract["sensitivity_analysis_policy"]["required_dimensions"]["balanced_objective_weights"] and
-        "ranking_emphasis" in contract["sensitivity_analysis_policy"]["required_dimensions"]["balanced_objective_weights"] and
-        "constraints" in contract["sensitivity_analysis_policy"]["required_dimensions"]["balanced_objective_weights"]
+        current_exact and equal_exact and mcc_exact and ranking_exact and
+        current_sum_ok and equal_sum_ok and mcc_sum_ok and ranking_sum_ok and brier_ok
     )
     
-    # Threshold grid sensitivity frozen
-    checks["threshold_grid_sensitivity_frozen"] = (
-        "current" in contract["sensitivity_analysis_policy"]["required_dimensions"]["threshold_grid"] and
-        "dense_sensitivity" in contract["sensitivity_analysis_policy"]["required_dimensions"]["threshold_grid"]
+    # Threshold grid sensitivity frozen - verify exact dictionaries
+    grid = contract["sensitivity_analysis_policy"]["required_dimensions"]["threshold_grid"]
+    current_grid = grid["current"]
+    dense_grid = grid["dense_sensitivity"]
+    
+    # Verify exact current grid
+    current_grid_exact = (
+        current_grid["fixed"] == "linspace(0.03, 0.97, 41)" and
+        current_grid["quantile_probabilities"] == "linspace(0.03, 0.97, 25)" and
+        current_grid["combination"] == "unique(round(concat(fixed, validation-score quantiles), 6))" and
+        current_grid["filter"] == "0 < threshold < 1"
     )
     
-    # Source-project-aware protocol frozen
-    checks["source_project_aware_protocol_frozen"] = (
-        "source_project_aware_protocol" in contract["sensitivity_analysis_policy"]["required_dimensions"]["cross_project_validation_design"] and
-        len(contract["sensitivity_analysis_policy"]["required_dimensions"]["cross_project_validation_design"]["source_project_aware_protocol"]) == 12
+    # Verify exact dense sensitivity grid
+    dense_grid_exact = (
+        dense_grid["fixed"] == "linspace(0.01, 0.99, 99)" and
+        dense_grid["quantile_probabilities"] == "linspace(0.01, 0.99, 99)" and
+        dense_grid["combination"] == "unique(round(concat(fixed, validation-score quantiles), 6))" and
+        dense_grid["filter"] == "0 < threshold < 1"
     )
+    
+    # Verify constraint is present
+    constraint_ok = grid.get("constraint") == "Both grids must use validation scores only."
+    
+    checks["threshold_grid_sensitivity_frozen"] = current_grid_exact and dense_grid_exact and constraint_ok
+    
+    # Source-project-aware protocol frozen - verify exact ordered list
+    protocol = contract["sensitivity_analysis_policy"]["required_dimensions"]["cross_project_validation_design"]["source_project_aware_protocol"]
+    expected_protocol = [
+        "For each held-out target project and seed:",
+        "Use the other four projects as source projects.",
+        "Perform four leave-one-source-project-out validation folds.",
+        "In each fold, train on three source projects and validate on the fourth.",
+        "Generate out-of-fold validation probabilities for every source project.",
+        "Concatenate the four out-of-fold validation predictions.",
+        "Rank candidates using the aggregated out-of-fold validation objective.",
+        "Select candidate or ensemble membership from aggregated source-only validation evidence.",
+        "Select the threshold using only aggregated source-only out-of-fold validation predictions.",
+        "Refit frozen selected candidate(s) on all four source projects.",
+        "Evaluate once on the held-out target project.",
+        "Never use the target project for candidate selection, membership selection, threshold selection, or sensitivity choice."
+    ]
+    checks["source_project_aware_protocol_frozen"] = protocol == expected_protocol
     
     # Sensitivity policy passed
     checks["sensitivity_policy_passed"] = (
@@ -1177,12 +1330,32 @@ def validate_contract(contract: Dict[str, Any]) -> Dict[str, bool]:
         checks["source_project_aware_protocol_frozen"]
     )
     
-    # Threats mapping passed
+    # Threats mapping passed - verify all four validity categories and required threat names
+    threats = contract["threats_to_validity"]
+    internal_threats = {t["threat"] for t in threats["internal_validity"]}
+    construct_threats = {t["threat"] for t in threats["construct_validity"]}
+    external_threats = {t["threat"] for t in threats["external_validity"]}
+    conclusion_threats = {t["threat"] for t in threats["conclusion_validity"]}
+    
+    required_internal = {"Leakage", "Preprocessing fitted outside training", "Nondeterminism", "Tie handling", "Threshold-selection mismatch", "Post-hoc analytical choices"}
+    required_construct = {"Metric disagreement", "Threshold dependence", "Top-k budget dependence", "Calibration versus discrimination", "Oracle interpretation"}
+    required_external = {"Only five NASA/PROMISE projects", "Static metrics only", "Older public benchmark data", "Compact learner pool", "No industrial deployment evaluation"}
+    required_conclusion = {"Five independent projects", "Repeated seeds are nested", "Low power", "Multiple metrics", "Descriptive versus inferential distinction", "Sensitivity to objective weights and validation design"}
+    
+    # Verify all threats have non-empty required fields
+    all_threats_complete = True
+    for category in ["internal_validity", "construct_validity", "external_validity", "conclusion_validity"]:
+        for threat in threats[category]:
+            if not threat.get("possible_impact") or not threat.get("current_mitigation") or not threat.get("remaining_limitation") or not threat.get("planned_computational_response"):
+                all_threats_complete = False
+                break
+    
     checks["threats_mapping_passed"] = (
-        "internal_validity" in contract["threats_to_validity"] and
-        "construct_validity" in contract["threats_to_validity"] and
-        "external_validity" in contract["threats_to_validity"] and
-        "conclusion_validity" in contract["threats_to_validity"]
+        internal_threats == required_internal and
+        construct_threats == required_construct and
+        external_threats == required_external and
+        conclusion_threats == required_conclusion and
+        all_threats_complete
     )
     
     # Reviewer context complete
@@ -1192,14 +1365,32 @@ def validate_contract(contract: Dict[str, Any]) -> Dict[str, bool]:
         "reviewer_3_focus" in contract["reviewer_context"]
     )
     
-    # Reviewer traceability passed
+    # Reviewer traceability passed - verify exact 11 coverage identifiers and counts
     expected_reviewer_keys = {
         "reviewer_1_comment_1", "reviewer_1_comment_2", "reviewer_1_comment_3",
         "reviewer_2_comment_1", "reviewer_2_comment_2", "reviewer_2_comment_3",
-        "reviewer_2_comment_4", "reviewer_2_comment_5", "reviewer_2_comments_6_and_7",
-        "reviewer_3"
+        "reviewer_2_comment_4", "reviewer_2_comment_5", "reviewer_2_comment_6",
+        "reviewer_2_comment_7", "reviewer_3_novelty_concern"
     }
-    checks["reviewer_traceability_passed"] = set(contract["reviewer_traceability_matrix"].keys()) == expected_reviewer_keys
+    actual_keys = set(contract["reviewer_traceability_matrix"].keys())
+    
+    # Verify each covered item has a non-empty response
+    all_responses_nonempty = True
+    for key in expected_reviewer_keys:
+        if key in contract["reviewer_traceability_matrix"]:
+            response = contract["reviewer_traceability_matrix"][key]
+            comp_resp = response.get("computational_response")
+            manus_resp = response.get("manuscript_response")
+            sci_resp = response.get("scientific_response")
+            if not comp_resp and not manus_resp and not sci_resp:
+                all_responses_nonempty = False
+                break
+    
+    checks["reviewer_traceability_passed"] = (
+        actual_keys == expected_reviewer_keys and
+        len(actual_keys) == 11 and
+        all_responses_nonempty
+    )
     
     # Exact roadmap stages
     expected_roadmap = [
@@ -1218,14 +1409,18 @@ def validate_contract(contract: Dict[str, Any]) -> Dict[str, bool]:
     # Prohibited claims list present
     checks["prohibited_claims_passed"] = len(contract["prohibited_claims"]) > 0
     
-    # Stage gate passed
+    # Stage gate passed - verify all conditions
+    stage_gate = contract["stage_gate"]
     checks["stage_gate_passed"] = (
-        contract["stage_gate"]["next_authorized_stage"] == "Part 3B" and
-        contract["stage_gate"]["model_rerun_performed"] == False and
-        contract["stage_gate"]["canonical_outputs_modified"] == False
+        stage_gate["next_authorized_stage"] == "Part 3B" and
+        stage_gate["model_rerun_performed"] == False and
+        stage_gate["canonical_outputs_modified"] == False and
+        stage_gate["manuscript_modified"] == False and
+        "part3b_constraint" in stage_gate and
+        "Part 3B" in stage_gate["part3b_constraint"]
     )
     
-    # Combine all checks except all_checks_passed itself
+    # Combine all checks except all_checks_passed itself - exactly 32 required checks
     required_checks = [
         "exact_research_questions_passed", "analysis_domains_passed", "candidate_metadata_matches_current_pipeline",
         "metric_taxonomy_passed", "metric_direction_passed", "metric_count_is_14",
@@ -1236,10 +1431,16 @@ def validate_contract(contract: Dict[str, Any]) -> Dict[str, bool]:
         "statistical_reporting_policy_passed", "agreement_policy_passed", "balanced_weight_sensitivity_frozen",
         "threshold_grid_sensitivity_frozen", "source_project_aware_protocol_frozen",
         "sensitivity_policy_passed", "threats_mapping_passed", "reviewer_context_complete",
-        "reviewer_traceability_passed", "roadmap_passed", "prohibited_claims_passed", "stage_gate_passed"
+        "reviewer_traceability_passed", "roadmap_passed", "prohibited_claims_passed", "stage_gate_passed",
+        "preservation_checks_passed", "deterministic_serialization_passed"
     ]
     
-    all_passed = all(checks[check] for check in required_checks)
+    # Note: preservation_checks_passed and deterministic_serialization_passed will be set after serialization
+    # They are initialized to False here and updated later
+    checks["preservation_checks_passed"] = False
+    checks["deterministic_serialization_passed"] = False
+    
+    all_passed = all(checks[check] for check in required_checks if check in checks)
     checks["all_checks_passed"] = all_passed
     
     return checks
@@ -1846,6 +2047,24 @@ def render_markdown(contract: Dict[str, Any]) -> tuple:
             ])
     
     md_lines.extend([
+        "## Reviewer Coverage Evidence",
+        ""
+    ])
+    
+    if 'reviewer_coverage_evidence' in contract:
+        rce = contract['reviewer_coverage_evidence']
+        md_lines.append(f"- Reviewer 1 Comment Count: {rce['reviewer_1_comment_count']}")
+        md_lines.append(f"- Reviewer 2 Comment Count: {rce['reviewer_2_comment_count']}")
+        md_lines.append(f"- Reviewer 3 Concern Count: {rce['reviewer_3_concern_count']}")
+        md_lines.append(f"- Covered Comment Count: {rce['covered_comment_count']}")
+        md_lines.append("")
+        md_lines.append("**Coverage Identifiers:")
+        md_lines.append("")
+        for identifier in rce['coverage_identifiers']:
+            md_lines.append(f"- {identifier}")
+        md_lines.append("")
+    
+    md_lines.extend([
         "## Reviewer Traceability Matrix",
         ""
     ])
@@ -1956,17 +2175,14 @@ def render_markdown(contract: Dict[str, Any]) -> tuple:
     ])
     
     if 'serialization_evidence' in contract:
-        md_lines.append(f"- JSON First-Render SHA-256: {contract['serialization_evidence']['json_first_render_sha256']}")
-        md_lines.append(f"- JSON Second-Render SHA-256: {contract['serialization_evidence']['json_second_render_sha256']}")
-        md_lines.append(f"- JSON Written-File SHA-256: {contract['serialization_evidence']['json_written_file_sha256']}")
-        md_lines.append(f"- JSON Renderings Identical: {contract['serialization_evidence']['json_renderings_identical']}")
-        md_lines.append(f"- JSON Written Matches Render: {contract['serialization_evidence']['json_written_matches_render']}")
-        md_lines.append(f"- Markdown First-Render SHA-256: {contract['serialization_evidence']['markdown_first_render_sha256']}")
-        md_lines.append(f"- Markdown Second-Render SHA-256: {contract['serialization_evidence']['markdown_second_render_sha256']}")
-        md_lines.append(f"- Markdown Written-File SHA-256: {contract['serialization_evidence']['markdown_written_file_sha256']}")
-        md_lines.append(f"- Markdown Renderings Identical: {contract['serialization_evidence']['markdown_renderings_identical']}")
-        md_lines.append(f"- Markdown Written Matches Render: {contract['serialization_evidence']['markdown_written_matches_render']}")
-        md_lines.append(f"- Deterministic Serialization Passed: {contract['serialization_evidence']['deterministic_serialization_passed']}")
+        se = contract['serialization_evidence']
+        md_lines.append(f"- JSON Double Render Required: {se['json_double_render_required']}")
+        md_lines.append(f"- Markdown Double Render Required: {se['markdown_double_render_required']}")
+        md_lines.append(f"- Exact Written Byte Verification Required: {se['exact_written_byte_verification_required']}")
+        md_lines.append(f"- Written SHA-256 Reported Externally: {se['written_sha256_reported_externally']}")
+        md_lines.append(f"- Self-Referential Hashes Embedded: {se['self_referential_hashes_embedded']}")
+        md_lines.append("")
+    
     md_lines.append("")
     
     # First rendering
@@ -1982,8 +2198,8 @@ def render_markdown(contract: Dict[str, Any]) -> tuple:
     return md_str_1, sha_1, md_str_2, sha_2, md_str_1 == md_str_2
 
 
-def check_file_preservation(repo_root: Path) -> Dict[str, Any]:
-    """Check that critical files have not been modified using expected SHA-256 values."""
+def snapshot_preserved_files(repo_root: Path) -> Dict[str, Any]:
+    """Perform one independent filesystem snapshot of preserved files."""
     
     expected_hashes = {
         "scripts/run_repeated_evaluation.py": "d385b6ecef2427c85299dcbc50cfff919fa8546b31829fa3ce0e5fdb307c4856",
@@ -1996,40 +2212,64 @@ def check_file_preservation(repo_root: Path) -> Dict[str, Any]:
         "results/part1_full_reproduction_tables/table_soft_top3_delta_vs_best_baseline.csv": "bf5cac180bf9701299dfd1c1b410224d34b8f32269b49fb8203df7567ff7a60b"
     }
     
+    snapshot = {}
+    
+    for rel_path, expected_sha in expected_hashes.items():
+        filepath = repo_root / rel_path
+        if filepath.exists():
+            actual_sha = compute_sha256(filepath)
+            snapshot[rel_path] = {
+                "expected_sha256": expected_sha,
+                "actual_sha256": actual_sha,
+                "exists": True,
+                "matches_expected": (actual_sha == expected_sha)
+            }
+        else:
+            snapshot[rel_path] = {
+                "expected_sha256": expected_sha,
+                "actual_sha256": None,
+                "exists": False,
+                "matches_expected": False
+            }
+    
+    return snapshot
+
+
+def compare_preservation_snapshots(before_snapshot: Dict[str, Any], after_snapshot: Dict[str, Any]) -> Dict[str, Any]:
+    """Compare two independent preservation snapshots."""
+    
     preservation = {
-        "files_checked": len(expected_hashes),
+        "files_checked": len(before_snapshot),
         "files_changed": 0,
         "all_preserved": True,
         "file_evidence": {}
     }
     
-    for rel_path, expected_sha in expected_hashes.items():
-        filepath = repo_root / rel_path
+    for rel_path in before_snapshot.keys():
+        before = before_snapshot[rel_path]
+        after = after_snapshot[rel_path]
+        
         evidence = {
-            "expected_sha256": expected_sha,
-            "before_sha256": None,
-            "after_sha256": None,
-            "exists_before": False,
-            "exists_after": False,
-            "matches_expected_before": False,
-            "matches_expected_after": False,
-            "unchanged_during_execution": False
+            "expected_sha256": before["expected_sha256"],
+            "before_sha256": before["actual_sha256"],
+            "after_sha256": after["actual_sha256"],
+            "exists_before": before["exists"],
+            "exists_after": after["exists"],
+            "matches_expected_before": before["matches_expected"],
+            "matches_expected_after": after["matches_expected"],
+            "unchanged_during_execution": (before["actual_sha256"] == after["actual_sha256"])
         }
         
-        if filepath.exists():
-            actual_sha = compute_sha256(filepath)
-            evidence["before_sha256"] = actual_sha
-            evidence["after_sha256"] = actual_sha
-            evidence["exists_before"] = True
-            evidence["exists_after"] = True
-            evidence["matches_expected_before"] = (actual_sha == expected_sha)
-            evidence["matches_expected_after"] = (actual_sha == expected_sha)
-            evidence["unchanged_during_execution"] = True
-            
-            if actual_sha != expected_sha:
-                preservation["files_changed"] += 1
-                preservation["all_preserved"] = False
-        else:
+        # Count as changed if any condition is true
+        changed = (
+            not evidence["exists_before"] or
+            not evidence["exists_after"] or
+            not evidence["matches_expected_before"] or
+            not evidence["matches_expected_after"] or
+            not evidence["unchanged_during_execution"]
+        )
+        
+        if changed:
             preservation["files_changed"] += 1
             preservation["all_preserved"] = False
         
@@ -2056,52 +2296,93 @@ def write_atomically(filepath: Path, content: str) -> None:
 
 
 def main():
-    """Main execution."""
+    """Main execution with immutable final state design."""
     repo_root = get_repository_root()
     
     print(f"Repository root: {repo_root}")
-    print(f"Starting commit: 32e22faa007645a4f6f054f42c9de29744986a90")
+    print(f"Starting commit: ec60c38abae80046fa0d345caa817258b97cdbf1")
     print("")
     
-    # Compute preservation-before evidence
-    print("Computing preservation-before evidence...")
-    preservation = check_file_preservation(repo_root)
+    # A. Capture genuine before preservation snapshot
+    print("Capturing before preservation snapshot...")
+    before_snapshot = snapshot_preserved_files(repo_root)
     
-    # Build core scientific contract
+    # B. Build the core scientific contract
     print("Building contract...")
     contract = build_contract()
     
-    # Attach preservation evidence
-    contract["preservation_checks"] = preservation
+    # C. Capture after preservation snapshot immediately before final-state construction
+    print("Capturing after preservation snapshot...")
+    after_snapshot = snapshot_preserved_files(repo_root)
     
-    # Compute all semantic validation checks from the complete payload
+    # D. Build preservation evidence by comparing independent snapshots
+    print("Building preservation evidence...")
+    preservation_evidence = compare_preservation_snapshots(before_snapshot, after_snapshot)
+    
+    # E. Compute every semantic check except deterministic_serialization_passed
     print("Validating contract...")
     validation_results = validate_contract(contract)
     
-    # Construct one final audit state
-    contract["validation_checks"] = validation_results
+    # F. Build a prospective final state containing all components
+    prospective_final_state = contract.copy()
+    prospective_final_state["preservation_checks"] = preservation_evidence
+    prospective_final_state["validation_checks"] = validation_results
     
-    # Set part3a_contract_frozen only if all validation checks pass
+    # Add non-self-referential serialization evidence (before rendering)
+    prospective_final_state["serialization_evidence"] = {
+        "json_double_render_required": True,
+        "markdown_double_render_required": True,
+        "exact_written_byte_verification_required": True,
+        "written_sha256_reported_externally": True,
+        "self_referential_hashes_embedded": False
+    }
+    
+    # G. Set deterministic_serialization_passed to true only in the prospective state that will be tested
+    # Update validation results with serialization evidence
+    validation_results["preservation_checks_passed"] = preservation_evidence["preservation_checks_passed"]
+    validation_results["deterministic_serialization_passed"] = True
+    validation_results["all_checks_passed"] = all(
+        validation_results[check] for check in [
+            "exact_research_questions_passed", "analysis_domains_passed", "candidate_metadata_matches_current_pipeline",
+            "metric_taxonomy_passed", "metric_direction_passed", "metric_count_is_14",
+            "metric_threshold_dependency_passed", "metric_inspection_budget_dependency_passed",
+            "metric_primary_secondary_passed", "objective_policy_passed", "existing_soft_top3_policy_passed",
+            "baseline_policy_passed", "adaptive_policy_passed", "ensemble_policy_passed",
+            "tie_policy_passed", "oracle_policy_passed", "unit_of_analysis_policy_passed",
+            "statistical_reporting_policy_passed", "agreement_policy_passed", "balanced_weight_sensitivity_frozen",
+            "threshold_grid_sensitivity_frozen", "source_project_aware_protocol_frozen",
+            "sensitivity_policy_passed", "threats_mapping_passed", "reviewer_context_complete",
+            "reviewer_traceability_passed", "roadmap_passed", "prohibited_claims_passed", "stage_gate_passed",
+            "preservation_checks_passed", "deterministic_serialization_passed"
+        ]
+    )
+    
+    # Update stage gate based on final validation
     if validation_results["all_checks_passed"]:
-        contract["stage_gate"]["part3a_contract_frozen"] = True
+        prospective_final_state["stage_gate"]["part3a_contract_frozen"] = True
+    else:
+        prospective_final_state["stage_gate"]["part3a_contract_frozen"] = False
     
-    # Do not mutate the final audit state afterward
+    # Update validation_checks in prospective_final_state with final values (BEFORE rendering)
+    prospective_final_state["validation_checks"] = validation_results
     
-    # Render JSON twice from the exact same final state
-    print("Serializing JSON...")
-    json_content_1, json_sha_1, json_content_2, json_sha_2, json_identical = serialize_json(contract, repo_root)
+    # H. Render that exact prospective final state twice as JSON and twice as Markdown
+    print("Testing JSON double serialization...")
+    json_content_1, json_sha_1, json_content_2, json_sha_2, json_identical = serialize_json(prospective_final_state, repo_root)
     
     if not json_identical:
         raise RuntimeError("JSON double serialization failed - not byte-identical")
     
-    # Render Markdown twice from the exact same final state
-    print("Rendering Markdown...")
-    md_content_1, md_sha_1, md_content_2, md_sha_2, md_identical = render_markdown(contract)
+    print("Testing Markdown double rendering...")
+    md_content_1, md_sha_1, md_content_2, md_sha_2, md_identical = render_markdown(prospective_final_state)
     
     if not md_identical:
         raise RuntimeError("Markdown double rendering failed - not byte-identical")
     
-    # Write outputs atomically
+    # I. Require byte-identical double rendering (already verified above)
+    # J. Once the double rendering passes, treat that exact object as immutable final_state
+    
+    # K. Write the exact already-compared strings
     reports_dir = repo_root / "reports"
     reports_dir.mkdir(parents=True, exist_ok=True)
     
@@ -2114,7 +2395,7 @@ def main():
     print(f"Writing {md_path}...")
     write_atomically(md_path, md_content_1)
     
-    # Reread files and verify exact byte equality
+    # L. Reread the written bytes and verify their SHA-256 against the rendered bytes
     with open(json_path, 'rb') as f:
         json_verify_bytes = f.read()
     json_verify_sha = hashlib.sha256(json_verify_bytes).hexdigest()
@@ -2129,46 +2410,7 @@ def main():
     if md_verify_sha != md_sha_1:
         raise RuntimeError(f"Markdown written-file SHA mismatch: expected {md_sha_1}, got {md_verify_sha}")
     
-    # Add serialization evidence to contract (for reporting only, not for self-reference)
-    serialization_evidence = {
-        "json_first_render_sha256": json_sha_1,
-        "json_second_render_sha256": json_sha_2,
-        "json_written_file_sha256": json_verify_sha,
-        "json_renderings_identical": json_identical,
-        "json_written_matches_render": (json_verify_sha == json_sha_1),
-        "markdown_first_render_sha256": md_sha_1,
-        "markdown_second_render_sha256": md_sha_2,
-        "markdown_written_file_sha256": md_verify_sha,
-        "markdown_renderings_identical": md_identical,
-        "markdown_written_matches_render": (md_verify_sha == md_sha_1),
-        "deterministic_serialization_passed": (json_identical and md_identical and json_verify_sha == json_sha_1 and md_verify_sha == md_sha_1)
-    }
-    
-    # Update deterministic_serialization_passed in validation checks
-    validation_results["deterministic_serialization_passed"] = serialization_evidence["deterministic_serialization_passed"]
-    validation_results["preservation_checks_passed"] = preservation["preservation_checks_passed"]
-    validation_results["all_checks_passed"] = all(validation_results[check] for check in [
-        "exact_research_questions_passed", "analysis_domains_passed", "candidate_metadata_matches_current_pipeline",
-        "metric_taxonomy_passed", "metric_direction_passed", "metric_count_is_14",
-        "metric_threshold_dependency_passed", "metric_inspection_budget_dependency_passed",
-        "metric_primary_secondary_passed", "objective_policy_passed", "existing_soft_top3_policy_passed",
-        "baseline_policy_passed", "adaptive_policy_passed", "ensemble_policy_passed",
-        "tie_policy_passed", "oracle_policy_passed", "unit_of_analysis_policy_passed",
-        "statistical_reporting_policy_passed", "agreement_policy_passed", "balanced_weight_sensitivity_frozen",
-        "threshold_grid_sensitivity_frozen", "source_project_aware_protocol_frozen",
-        "sensitivity_policy_passed", "threats_mapping_passed", "reviewer_context_complete",
-        "reviewer_traceability_passed", "roadmap_passed", "prohibited_claims_passed", "stage_gate_passed",
-        "preservation_checks_passed", "deterministic_serialization_passed"
-    ])
-    
-    # Update contract with final validation results
-    contract["validation_checks"] = validation_results
-    
-    # Update stage gate based on final validation
-    if validation_results["all_checks_passed"]:
-        contract["stage_gate"]["part3a_contract_frozen"] = True
-    else:
-        contract["stage_gate"]["part3a_contract_frozen"] = False
+    # M. Do not mutate final_state afterward (no further mutations)
     
     print("")
     print("Contract successfully created and validated.")
@@ -2179,9 +2421,9 @@ def main():
     print(f"JSON double-serialization identical: {json_identical}")
     print(f"Markdown double-rendering identical: {md_identical}")
     print(f"All validation checks passed: {validation_results['all_checks_passed']}")
-    print(f"Files checked for preservation: {preservation['files_checked']}")
-    print(f"Files changed: {preservation['files_changed']}")
-    print(f"All preserved: {preservation['all_preserved']}")
+    print(f"Files checked for preservation: {preservation_evidence['files_checked']}")
+    print(f"Files changed: {preservation_evidence['files_changed']}")
+    print(f"All preserved: {preservation_evidence['all_preserved']}")
     print("")
     print("=== Detailed Validation ===")
     for check_name, check_result in validation_results.items():

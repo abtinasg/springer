@@ -1,7 +1,7 @@
 # Scientific Analysis Contract for Major Revision
 
-**Contract Version:** Part-3A.1-v1
-**Starting Commit:** 32e22faa007645a4f6f054f42c9de29744986a90
+**Contract Version:** Part-3A.2-v1
+**Starting Commit:** ec60c38abae80046fa0d345caa817258b97cdbf1
 **Repository:** abtinasg/springer
 **Branch:** major-revision-analysis-v2
 
@@ -236,6 +236,7 @@ A validation-controlled empirical study of model selection behavior, metric-depe
 - validation_objective: balanced
 - membership_ranking_policy: balanced_objective
 - threshold_objective: balanced
+- ensemble_size: 2
 - equal_weights: True
 - status: planned
 
@@ -244,6 +245,7 @@ A validation-controlled empirical study of model selection behavior, metric-depe
 - validation_objective: balanced
 - membership_ranking_policy: not_applicable_all_candidates
 - threshold_objective: balanced
+- ensemble_size: 4
 - equal_weights: True
 - status: planned
 
@@ -844,6 +846,27 @@ Candidate ranking by rank objective, after candidate or ensemble selection, thre
 - Remaining Limitation: Many possible validation alternatives.
 - Planned Computational Response: Sensitivity analysis in Part 3F.
 
+## Reviewer Coverage Evidence
+
+- Reviewer 1 Comment Count: 3
+- Reviewer 2 Comment Count: 7
+- Reviewer 3 Concern Count: 1
+- Covered Comment Count: 11
+
+**Coverage Identifiers:
+
+- reviewer_1_comment_1
+- reviewer_1_comment_2
+- reviewer_1_comment_3
+- reviewer_2_comment_1
+- reviewer_2_comment_2
+- reviewer_2_comment_3
+- reviewer_2_comment_4
+- reviewer_2_comment_5
+- reviewer_2_comment_6
+- reviewer_2_comment_7
+- reviewer_3_novelty_concern
+
 ## Reviewer Traceability Matrix
 
 ### Reviewer 1 Comment 1
@@ -933,7 +956,7 @@ Candidate ranking by rank objective, after candidate or ensemble selection, thre
 
 - Not applicable (computational focus)
 
-### Reviewer 2 Comments 6 And 7
+### Reviewer 2 Comment 6
 
 **Computational Response:**
 
@@ -943,7 +966,17 @@ Candidate ranking by rank objective, after candidate or ensemble selection, thre
 
 - Citation renumbering and Springer formatting
 
-### Reviewer 3
+### Reviewer 2 Comment 7
+
+**Computational Response:**
+
+- None
+
+**Manuscript Response:**
+
+- Citation renumbering and Springer formatting
+
+### Reviewer 3 Novelty Concern
 
 **Computational Response:**
 
@@ -1027,6 +1060,8 @@ Candidate ranking by rank objective, after candidate or ensemble selection, thre
 - roadmap_passed: True
 - prohibited_claims_passed: True
 - stage_gate_passed: True
+- preservation_checks_passed: True
+- deterministic_serialization_passed: True
 - all_checks_passed: True
 
 ## Preservation Checks
@@ -1127,3 +1162,9 @@ Candidate ranking by rank objective, after candidate or ensemble selection, thre
 - Unchanged During Execution: True
 
 ## Serialization Validation
+
+- JSON Double Render Required: True
+- Markdown Double Render Required: True
+- Exact Written Byte Verification Required: True
+- Written SHA-256 Reported Externally: True
+- Self-Referential Hashes Embedded: False

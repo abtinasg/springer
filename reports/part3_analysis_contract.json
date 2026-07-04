@@ -127,7 +127,7 @@
     }
   },
   "contract_title": "Scientific Analysis Contract for Major Revision",
-  "contract_version": "Part-3A.1-v1",
+  "contract_version": "Part-3A.2-v1",
   "existing_adaptive_models": {
     "AQRPE_v2_balanced": {
       "selection_type": "adaptive_top1",
@@ -419,6 +419,7 @@
   },
   "planned_models": {
     "AQRPE_v2_soft_all4": {
+      "ensemble_size": 4,
       "equal_weights": true,
       "membership_ranking_policy": "not_applicable_all_candidates",
       "status": "planned",
@@ -426,6 +427,7 @@
       "validation_objective": "balanced"
     },
     "AQRPE_v2_soft_top2": {
+      "ensemble_size": 2,
       "equal_weights": true,
       "membership_ranking_policy": "balanced_objective",
       "status": "planned",
@@ -620,6 +622,25 @@
       "The paper should be treated as a careful empirical study rather than a new fundamental algorithm."
     ]
   },
+  "reviewer_coverage_evidence": {
+    "coverage_identifiers": [
+      "reviewer_1_comment_1",
+      "reviewer_1_comment_2",
+      "reviewer_1_comment_3",
+      "reviewer_2_comment_1",
+      "reviewer_2_comment_2",
+      "reviewer_2_comment_3",
+      "reviewer_2_comment_4",
+      "reviewer_2_comment_5",
+      "reviewer_2_comment_6",
+      "reviewer_2_comment_7",
+      "reviewer_3_novelty_concern"
+    ],
+    "covered_comment_count": 11,
+    "reviewer_1_comment_count": 3,
+    "reviewer_2_comment_count": 7,
+    "reviewer_3_concern_count": 1
+  },
   "reviewer_traceability_matrix": {
     "reviewer_1_comment_1": {
       "computational_response": "Metric dictionary in later Part 3H",
@@ -664,11 +685,15 @@
       "computational_response": "Final limitations grounded in completed analyses",
       "manuscript_response": "Not applicable (computational focus)"
     },
-    "reviewer_2_comments_6_and_7": {
+    "reviewer_2_comment_6": {
       "computational_response": "None",
       "manuscript_response": "Citation renumbering and Springer formatting"
     },
-    "reviewer_3": {
+    "reviewer_2_comment_7": {
+      "computational_response": "None",
+      "manuscript_response": "Citation renumbering and Springer formatting"
+    },
+    "reviewer_3_novelty_concern": {
       "computational_response": [
         "Selection frequency.",
         "Seed stability.",
@@ -779,6 +804,13 @@
       }
     }
   },
+  "serialization_evidence": {
+    "exact_written_byte_verification_required": true,
+    "json_double_render_required": true,
+    "markdown_double_render_required": true,
+    "self_referential_hashes_embedded": false,
+    "written_sha256_reported_externally": true
+  },
   "soft_ensemble_policy": {
     "definition": [
       "Rank candidates using validation scores only.",
@@ -809,7 +841,7 @@
     "part3a_contract_frozen": true,
     "part3b_constraint": "Part 3B cannot alter the current 400 canonical result rows or current canonical manuscript tables unless a later explicitly approved migration stage is created."
   },
-  "starting_commit": "32e22faa007645a4f6f054f42c9de29744986a90",
+  "starting_commit": "ec60c38abae80046fa0d345caa817258b97cdbf1",
   "statistical_reporting_policy": {
     "effect_reporting": [
       "Median paired project-level difference.",
@@ -1053,6 +1085,7 @@
     "balanced_weight_sensitivity_frozen": true,
     "baseline_policy_passed": true,
     "candidate_metadata_matches_current_pipeline": true,
+    "deterministic_serialization_passed": true,
     "ensemble_policy_passed": true,
     "exact_research_questions_passed": true,
     "existing_soft_top3_policy_passed": true,
@@ -1064,6 +1097,7 @@
     "metric_threshold_dependency_passed": true,
     "objective_policy_passed": true,
     "oracle_policy_passed": true,
+    "preservation_checks_passed": true,
     "prohibited_claims_passed": true,
     "reviewer_context_complete": true,
     "reviewer_traceability_passed": true,
