@@ -82,9 +82,11 @@
     "spearman_reconstruction_mismatches": 0
   },
   "deterministic_serialization": {
-    "audit_json_serialization_identical": true,
-    "audit_markdown_serialization_identical": true,
     "event_csv_serialization_identical": true,
+    "final_audit_json_serialization_identical": true,
+    "final_audit_markdown_serialization_identical": true,
+    "stable_event_order_expected_key_count": 2100,
+    "stable_event_order_mismatch_count": 0,
     "stable_event_order_passed": true,
     "stable_event_order_rows_checked": 2100
   },
@@ -220,7 +222,9 @@
     "event_rows_with_exact_23_comparisons": 2100,
     "event_rows_with_incomplete_comparisons": 0,
     "event_total_field_comparisons": 48300,
+    "exact_rank_group_mismatches": 0,
     "exact_rank_identity_failures": 0,
+    "exact_rank_vectors_independently_checked": 4200,
     "exact_rank_vectors_reconstructed": 4200,
     "exact_value_mismatches": 0,
     "exact_winner_rank_identity_failures": 0,
@@ -487,7 +491,7 @@
     "metrics_count": 14
   },
   "rank_identity": {
-    "exact_rank_group_mismatches": 2288,
+    "exact_rank_group_mismatches": 0,
     "exact_rank_identity_failures": 0,
     "exact_rank_vectors_independently_checked": 4200,
     "exact_rank_vectors_reconstructed": 4200,
@@ -2452,6 +2456,9 @@
     "event_schema_passed": true,
     "exact_tie_rank_test_passed": true,
     "four_candidate_coverage_passed": true,
+    "independent_exact_nonidentity_order_test_passed": true,
+    "independent_exact_permutation_test_passed": true,
+    "independent_exact_tie_test_passed": true,
     "input_cardinality_passed": true,
     "input_domain_passed": true,
     "input_numeric_finite_passed": true,

@@ -78,6 +78,11 @@
 - Not all three same group: True
 - Test passed: True
 
+### Independent Exact-Rank Reconstruction Tests
+- Permutation test passed: True
+- Exact-tie test passed: True
+- Nonidentity-order test passed: True
+
 ## Event Computation
 
 - Analysis units checked: 150
@@ -162,7 +167,7 @@
 - Tolerance rank vectors reconstructed: 4200
 - Total rank vectors reconstructed: 8400
 - Exact rank vectors independently checked: 4200
-- Exact rank-group mismatches: 2288
+- Exact rank-group mismatches: 0
 - Exact rank identity failures: 0
 - Tolerance rank identity failures: 0
 - Exact winner-rank identity failures: 0
@@ -198,9 +203,12 @@
 ## Deterministic Serialization
 
 - Stable event ordering rows checked: 2100
+- Stable event ordering expected key count: 2100
+- Stable event ordering mismatch count: 0
 - Stable event ordering passed: True
 - CSV serialization identical: True
-- JSON serialization identical: True
+- Final JSON serialization identical: True
+- Final Markdown serialization identical: pending
 - Deterministic serialization ready passed: True
 
 ## Validation Checks Summary
@@ -227,6 +235,9 @@
 - permutation_rank_test_passed: True
 - exact_tie_rank_test_passed: True
 - synthetic_non_chaining_test_passed: True
+- independent_exact_permutation_test_passed: True
+- independent_exact_tie_test_passed: True
+- independent_exact_nonidentity_order_test_passed: True
 - event_schema_passed: True
 - event_row_count_passed: True
 - event_key_uniqueness_passed: True
@@ -279,6 +290,8 @@
 - exact_rank_vectors_reconstructed: 4200
 - tolerance_rank_vectors_reconstructed: 4200
 - total_rank_vectors_reconstructed: 8400
+- exact_rank_vectors_independently_checked: 4200
+- exact_rank_group_mismatches: 0
 - exact_rank_identity_failures: 0
 - tolerance_rank_identity_failures: 0
 - exact_winner_rank_identity_failures: 0

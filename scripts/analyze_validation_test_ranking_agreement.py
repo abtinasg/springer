@@ -845,6 +845,50 @@ def compute_exact_ranks(utilities: List[float]) -> List[float]:
     return ranks
 
 
+def reconstruct_exact_ranks_independently(utilities: List[float]) -> List[float]:
+    """
+    Independently reconstruct exact ranks using a clean implementation.
+    
+    This function does not call compute_exact_ranks; it implements the same
+    logic independently for audit verification.
+    
+    Args:
+        utilities: List of utility values for 4 candidates
+        
+    Returns:
+        List of ranks (1 is best)
+    """
+    sorted_indices = sorted(
+        range(len(utilities)),
+        key=lambda idx: -utilities[idx],
+    )
+
+    expected_ranks = [0.0] * len(utilities)
+
+    start = 0
+    while start < len(sorted_indices):
+        end = start + 1
+
+        while (
+            end < len(sorted_indices)
+            and utilities[sorted_indices[start]]
+            == utilities[sorted_indices[end]]
+        ):
+            end += 1
+
+        average_rank = (
+            (start + 1) + end
+        ) / 2.0
+
+        for sorted_position in range(start, end):
+            original_index = sorted_indices[sorted_position]
+            expected_ranks[original_index] = average_rank
+
+        start = end
+
+    return expected_ranks
+
+
 def compute_tolerance_aware_ranks(utilities: List[float]) -> List[float]:
     """
     Compute tolerance-aware ranks with non-chaining groups.
@@ -2179,32 +2223,12 @@ def validate_rank_identity(
         validation_exact_ranks = compute_exact_ranks(validation_utilities)
         test_exact_ranks = compute_exact_ranks(test_utilities)
         
-        # Independently check exact tie groups for both validation and test
+        # Independently reconstruct exact ranks for both validation and test
         for ranks, utilities in [(validation_exact_ranks, validation_utilities), (test_exact_ranks, test_utilities)]:
             evidence["exact_rank_vectors_independently_checked"] += 1
             
-            # Sort utilities descending
-            sorted_indices = sorted(range(len(utilities)), key=lambda i: -utilities[i])
-            
-            # Build exact-equal groups
-            groups = []
-            i = 0
-            while i < len(sorted_indices):
-                j = i
-                while j < len(sorted_indices) and utilities[sorted_indices[i]] == utilities[sorted_indices[j]]:
-                    j += 1
-                groups.append(sorted_indices[i:j])
-                i = j
-            
-            # Compute expected average ordinal rank for each group
-            expected_ranks = [0.0] * len(ranks)
-            for group in groups:
-                # Group spans positions i to j-1 (0-indexed), ordinal positions are i+1 to j
-                i = group[0]
-                j = group[-1] + 1
-                avg_rank = ((i + 1) + j) / 2.0
-                for idx in group:
-                    expected_ranks[sorted_indices[idx]] = avg_rank
+            # Use independent reconstruction helper
+            expected_ranks = reconstruct_exact_ranks_independently(utilities)
             
             # Compare all four ranks independently
             for expected_rank, actual_rank in zip(expected_ranks, ranks):
@@ -2318,6 +2342,7 @@ def validate_rank_identity(
         evidence["reconstruction_candidate_alignment_failures"] == 0 and
         evidence["rank_structural_failures"] == 0 and
         evidence["exact_rank_vectors_independently_checked"] == 4200 and
+        evidence["exact_rank_group_mismatches"] == 0 and
         evidence["exact_rank_identity_failures"] == 0 and
         evidence["tolerance_rank_identity_failures"] == 0 and
         evidence["exact_winner_rank_identity_failures"] == 0 and
@@ -2699,6 +2724,42 @@ def main():
     if not synthetic_passed:
         raise ValueError("Synthetic non-chaining test failed")
     
+    # 13.5. Independent exact-rank reconstruction tests
+    print("Step 13.5: Independent exact-rank reconstruction tests...")
+    
+    # Test 1: Permutation case
+    utilities_perm = [0.1, 0.2, 0.3, 0.4]
+    expected_perm = [4.0, 3.0, 2.0, 1.0]
+    actual_perm = reconstruct_exact_ranks_independently(utilities_perm)
+    independent_permutation_passed = all(
+        math.isclose(a, e, rel_tol=1e-12, abs_tol=1e-12)
+        for a, e in zip(actual_perm, expected_perm)
+    )
+    validation_checks["independent_exact_permutation_test_passed"] = independent_permutation_passed
+    
+    # Test 2: Tie case
+    utilities_tie = [0.2, 0.4, 0.4, 0.1]
+    expected_tie = [3.0, 1.5, 1.5, 4.0]
+    actual_tie = reconstruct_exact_ranks_independently(utilities_tie)
+    independent_tie_passed = all(
+        math.isclose(a, e, rel_tol=1e-12, abs_tol=1e-12)
+        for a, e in zip(actual_tie, expected_tie)
+    )
+    validation_checks["independent_exact_tie_test_passed"] = independent_tie_passed
+    
+    # Test 3: Non-identity order case
+    utilities_nonidentity = [0.4, 0.1, 0.3, 0.2]
+    expected_nonidentity = [1.0, 4.0, 2.0, 3.0]
+    actual_nonidentity = reconstruct_exact_ranks_independently(utilities_nonidentity)
+    independent_nonidentity_passed = all(
+        math.isclose(a, e, rel_tol=1e-12, abs_tol=1e-12)
+        for a, e in zip(actual_nonidentity, expected_nonidentity)
+    )
+    validation_checks["independent_exact_nonidentity_order_test_passed"] = independent_nonidentity_passed
+    
+    if not (independent_permutation_passed and independent_tie_passed and independent_nonidentity_passed):
+        raise ValueError("Independent exact-rank reconstruction tests failed")
+    
     # 14. Compute event rows
     print("Step 14: Compute event rows...")
     events_df, events_evidence = compute_event_rows(joined_df, selected_df, spec)
@@ -2831,9 +2892,46 @@ def main():
         kind="mergesort"
     )
     
-    # Verify stable ordering
-    stable_event_order_rows_checked = len(events_df_sorted)
-    stable_event_order_passed = stable_event_order_rows_checked == 2100
+    # Build expected ordered keys from Cartesian product of domain values
+    experiments = ["within_project", "cross_project"]
+    target_projects = ["CM1", "JM1", "KC1", "KC2", "PC1"]
+    seeds = [7, 13, 29, 42, 101]
+    modes = ["balanced", "rank", "mcc"]
+    
+    expected_ordered_keys = [
+        (exp, proj, seed, mode, metric)
+        for exp in experiments
+        for proj in target_projects
+        for seed in seeds
+        for mode in modes
+        for metric in metrics
+    ]
+    
+    # Extract actual ordered keys from sorted dataframe
+    actual_ordered_keys = [
+        tuple(row)
+        for row in events_df_sorted[
+            [
+                "experiment",
+                "target_project",
+                "seed",
+                "mode",
+                "metric",
+            ]
+        ].itertuples(index=False, name=None)
+    ]
+    
+    # Verify stable ordering with exact key comparison
+    stable_event_order_rows_checked = len(actual_ordered_keys)
+    stable_event_order_expected_key_count = len(expected_ordered_keys)
+    stable_event_order_mismatch_count = sum(
+        1 for actual, expected in zip(actual_ordered_keys, expected_ordered_keys)
+        if actual != expected
+    )
+    stable_event_order_passed = (
+        stable_event_order_rows_checked == 2100
+        and actual_ordered_keys == expected_ordered_keys
+    )
     
     # Build CSV text from sorted dataframe
     event_csv_text = events_df_sorted.to_csv(index=False, encoding="utf-8")
@@ -2914,6 +3012,8 @@ def main():
             "exact_rank_vectors_reconstructed": int(rank_evidence.get("exact_rank_vectors_reconstructed", 0)),
             "tolerance_rank_vectors_reconstructed": int(rank_evidence.get("tolerance_rank_vectors_reconstructed", 0)),
             "total_rank_vectors_reconstructed": int(rank_evidence.get("total_rank_vectors_reconstructed", 0)),
+            "exact_rank_vectors_independently_checked": int(rank_evidence.get("exact_rank_vectors_independently_checked", 0)),
+            "exact_rank_group_mismatches": int(rank_evidence.get("exact_rank_group_mismatches", 0)),
             "exact_rank_identity_failures": int(rank_evidence.get("exact_rank_identity_failures", 0)),
             "tolerance_rank_identity_failures": int(rank_evidence.get("tolerance_rank_identity_failures", 0)),
             "exact_winner_rank_identity_failures": int(rank_evidence.get("exact_winner_rank_identity_failures", 0)),
@@ -2933,22 +3033,26 @@ def main():
         "interpretation_limits": spec.get("interpretation_limits", {}),
     }
     
-    # Serialize JSON twice
-    json_serialization_1 = json.dumps(audit_report_partial, indent=2, ensure_ascii=False, sort_keys=True) + "\n"
-    json_serialization_2 = json.dumps(audit_report_partial, indent=2, ensure_ascii=False, sort_keys=True) + "\n"
-    audit_json_serialization_identical = json_serialization_1 == json_serialization_2
-    
-    # Build final audit report with deterministic_serialization section
+    # Build final audit report with deterministic_serialization section (preflight)
     audit_report = audit_report_partial.copy()
     audit_report["deterministic_serialization"] = {
         "event_csv_serialization_identical": event_csv_serialization_identical,
-        "audit_json_serialization_identical": audit_json_serialization_identical,
         "stable_event_order_rows_checked": stable_event_order_rows_checked,
+        "stable_event_order_expected_key_count": stable_event_order_expected_key_count,
+        "stable_event_order_mismatch_count": stable_event_order_mismatch_count,
         "stable_event_order_passed": stable_event_order_passed,
     }
     audit_report["validation_checks"] = convert_to_python_types(validation_checks)
     
-    # Build final JSON text
+    # Final JSON deterministic check on complete object
+    final_json_1 = json.dumps(audit_report, indent=2, ensure_ascii=False, sort_keys=True) + "\n"
+    final_json_2 = json.dumps(audit_report, indent=2, ensure_ascii=False, sort_keys=True) + "\n"
+    final_audit_json_serialization_identical = final_json_1 == final_json_2
+    
+    # Add final JSON serialization result to deterministic_serialization section
+    audit_report["deterministic_serialization"]["final_audit_json_serialization_identical"] = final_audit_json_serialization_identical
+    
+    # Rebuild final JSON text with updated deterministic_serialization
     audit_json_text = json.dumps(audit_report, indent=2, ensure_ascii=False, sort_keys=True) + "\n"
     
     # Define Markdown report function before using it
@@ -3024,6 +3128,11 @@ def main():
         lines.append(f"- Third different group: {synthetic_evidence['third_different_group']}\n")
         lines.append(f"- Not all three same group: {synthetic_evidence['not_all_three_same_group']}\n")
         lines.append(f"- Test passed: {synthetic_passed}\n\n")
+        
+        lines.append("### Independent Exact-Rank Reconstruction Tests\n")
+        lines.append(f"- Permutation test passed: {validation_checks.get('independent_exact_permutation_test_passed', 'pending')}\n")
+        lines.append(f"- Exact-tie test passed: {validation_checks.get('independent_exact_tie_test_passed', 'pending')}\n")
+        lines.append(f"- Nonidentity-order test passed: {validation_checks.get('independent_exact_nonidentity_order_test_passed', 'pending')}\n\n")
         
         lines.append("## Event Computation\n\n")
         lines.append(f"- Analysis units checked: {events_evidence['analysis_units_checked']}\n")
@@ -3134,9 +3243,12 @@ def main():
         
         lines.append("## Deterministic Serialization\n\n")
         lines.append(f"- Stable event ordering rows checked: {stable_event_order_rows_checked}\n")
+        lines.append(f"- Stable event ordering expected key count: {stable_event_order_expected_key_count}\n")
+        lines.append(f"- Stable event ordering mismatch count: {stable_event_order_mismatch_count}\n")
         lines.append(f"- Stable event ordering passed: {stable_event_order_passed}\n")
         lines.append(f"- CSV serialization identical: {event_csv_serialization_identical}\n")
-        lines.append(f"- JSON serialization identical: {audit_json_serialization_identical}\n")
+        lines.append(f"- Final JSON serialization identical: {final_audit_json_serialization_identical}\n")
+        lines.append(f"- Final Markdown serialization identical: {final_audit_markdown_serialization_identical if 'final_audit_markdown_serialization_identical' in locals() else 'pending'}\n")
         lines.append(f"- Deterministic serialization ready passed: {validation_checks.get('deterministic_serialization_ready_passed', 'pending')}\n\n")
         
         lines.append("## Validation Checks Summary\n\n")
@@ -3181,6 +3293,8 @@ def main():
             "exact_rank_vectors_reconstructed": int(rank_evidence.get("exact_rank_vectors_reconstructed", 0)),
             "tolerance_rank_vectors_reconstructed": int(rank_evidence.get("tolerance_rank_vectors_reconstructed", 0)),
             "total_rank_vectors_reconstructed": int(rank_evidence.get("total_rank_vectors_reconstructed", 0)),
+            "exact_rank_vectors_independently_checked": int(rank_evidence.get("exact_rank_vectors_independently_checked", 0)),
+            "exact_rank_group_mismatches": int(rank_evidence.get("exact_rank_group_mismatches", 0)),
             "exact_rank_identity_failures": int(rank_evidence.get("exact_rank_identity_failures", 0)),
             "tolerance_rank_identity_failures": int(rank_evidence.get("tolerance_rank_identity_failures", 0)),
             "exact_winner_rank_identity_failures": int(rank_evidence.get("exact_winner_rank_identity_failures", 0)),
@@ -3203,19 +3317,10 @@ def main():
         
         return "".join(lines)
     
-    # Serialize Markdown twice
-    markdown_serialization_1 = build_markdown_report()
-    markdown_serialization_2 = build_markdown_report()
-    audit_markdown_serialization_identical = markdown_serialization_1 == markdown_serialization_2
-    
-    # Add markdown serialization result to deterministic_serialization section
-    audit_report["deterministic_serialization"]["audit_markdown_serialization_identical"] = audit_markdown_serialization_identical
-    
-    # Add deterministic_serialization evidence to validation_checks
+    # Add deterministic_serialization evidence to validation_checks (preflight)
     validation_checks["deterministic_serialization_ready_passed"] = (
         event_csv_serialization_identical and
-        audit_json_serialization_identical and
-        audit_markdown_serialization_identical and
+        final_audit_json_serialization_identical and
         stable_event_order_passed
     )
     
@@ -3232,7 +3337,29 @@ def main():
     # Rebuild final JSON text with updated validation_checks
     audit_json_text = json.dumps(audit_report, indent=2, ensure_ascii=False, sort_keys=True) + "\n"
     
-    audit_markdown_text = build_markdown_report()
+    # Final Markdown deterministic check after validation_checks complete
+    final_markdown_1 = build_markdown_report()
+    final_markdown_2 = build_markdown_report()
+    final_audit_markdown_serialization_identical = final_markdown_1 == final_markdown_2
+    
+    # Add final Markdown serialization result to deterministic_serialization section
+    audit_report["deterministic_serialization"]["final_audit_markdown_serialization_identical"] = final_audit_markdown_serialization_identical
+    
+    # Update deterministic_serialization_ready_passed with Markdown check
+    validation_checks["deterministic_serialization_ready_passed"] = (
+        event_csv_serialization_identical and
+        final_audit_json_serialization_identical and
+        final_audit_markdown_serialization_identical and
+        stable_event_order_passed
+    )
+    
+    # Update audit_report with final validation_checks again
+    audit_report["validation_checks"] = convert_to_python_types(validation_checks)
+    
+    # Rebuild final JSON text with updated validation_checks
+    audit_json_text = json.dumps(audit_report, indent=2, ensure_ascii=False, sort_keys=True) + "\n"
+    
+    audit_markdown_text = final_markdown_1
     
     # Final validation after deterministic check
     print("Step 25: Final validation...")
