@@ -51,6 +51,7 @@
 - Threshold mismatches: 0
 - Rank threshold mismatches: 0
 - Objective membership mismatches: 0
+- Test metric columns used for selection: 0
 - Provenance validation passed: True
 
 ## Ranking Algorithm Tests
@@ -103,6 +104,8 @@
 - Rows checked: 2100
 - Empty sets: 0
 - Unknown candidates: []
+- Duplicate members: 0
+- Serialization order violations: 410
 - Exact not subset tolerance: 0
 - Winner set integrity passed: True
 
@@ -110,9 +113,43 @@
 
 - Rows checked: 2100
 - Defined without value: 0
-- Undefined with value: 36
+- Undefined with value: 0
+- Undefined without reason: 0
+- Undefined invalid reason: 0
+- Defined with reason: 0
+- Non-finite defined value: 0
 - Value out of range: 0
 - Correlation state consistency passed: True
+
+## Event Row Reconstruction
+
+- Event rows reconstructed: 2100
+- Fields checked per row: 23
+- Total field comparisons: 48300
+- Reconstruction mismatch count: 0
+- Event reconstruction passed: True
+
+## Agreement Identity Validation
+
+- Agreement rows checked: 2100
+- Agreement fields checked: 21000
+- Agreement identity mismatch count: 0
+- Agreement identity checks passed: True
+
+## Rank Identity Validation
+
+- Rank vectors reconstructed: 4200
+- Rank identity failures: 0
+- Winner-rank identity failures: 0
+- Rank integrity passed: True
+
+## Correlation Value Reconstruction
+
+- Correlation rows reconstructed: 2100
+- Spearman reconstruction mismatches: 3
+- Kendall reconstruction mismatches: 3
+- Correlation state mismatches: 0
+- Correlation value reconstruction passed: True
 
 ## Validation Checks Summary
 
@@ -143,13 +180,14 @@
 - event_key_uniqueness_passed: True
 - winner_set_integrity_passed: True
 - correlation_state_consistency_passed: True
-- input_cardinality_passed: True
-- rank_integrity_passed: True
-- correlation_range_passed: True
-- agreement_identity_checks_passed: True
 - event_reconstruction_passed: True
+- agreement_identity_checks_passed: True
+- rank_integrity_passed: True
 - correlation_value_reconstruction_passed: True
+- input_cardinality_passed: True
+- correlation_range_passed: True
 - output_integrity_ready_passed: True
+- deterministic_serialization_ready_passed: True
 
 ## Evidence Counters
 
@@ -168,4 +206,18 @@
 - kendall_rows_undefined: 18
 - synthetic_tests_checked: 3
 - event_rows_validated: 2100
+- event_rows_reconstructed: 2100
+- event_fields_checked_per_row: 23
+- event_total_field_comparisons: 48300
+- event_reconstruction_mismatch_count: 0
+- agreement_rows_checked: 2100
+- agreement_fields_checked: 21000
+- agreement_identity_mismatch_count: 0
+- rank_vectors_reconstructed: 4200
+- rank_identity_failures: 0
+- winner_rank_identity_failures: 0
+- correlation_rows_reconstructed: 2100
+- spearman_reconstruction_mismatches: 3
+- kendall_reconstruction_mismatches: 3
+- correlation_state_mismatches: 0
 
