@@ -38,8 +38,8 @@ def build_contract() -> Dict[str, Any]:
     
     contract = {
         "contract_title": "Scientific Analysis Contract for Major Revision",
-        "contract_version": "Part-3A.3-v1",
-        "starting_commit": "ec60c38abae80046fa0d345caa817258b97cdbf1",
+        "contract_version": "Part-3A.4-v1",
+        "starting_commit": "692bbb8ff7c379839d4f8f18f52e58f815db6636",
         "repository": "abtinasg/springer",
         "branch": "major-revision-analysis-v2",
         
@@ -970,18 +970,18 @@ def build_contract() -> Dict[str, Any]:
         ],
         
         "prohibited_claims": [
-            "No method universally dominates all others across all metrics, projects, and settings.",
-            "Validation-based selection guarantees superior test performance.",
-            "Soft ensembles always outperform fixed candidates.",
-            "Adaptive Top-1 selection is always better than fixed baselines.",
-            "The oracle reference is a deployable model.",
-            "The five projects are a representative sample of all software projects.",
-            "The results generalize to industrial deployment without further validation.",
-            "Statistical significance tests with n=5 projects provide definitive population-level evidence.",
-            "Metric choice is arbitrary and does not affect conclusions.",
-            "Threshold policy choice is arbitrary and does not affect conclusions.",
-            "Validation-test agreement is a proof of validity.",
-            "Post-hoc regret analysis is a validation procedure."
+            "AQRPE v2 is a fundamentally new algorithm.",
+            "Validation-based model selection is itself a novel contribution.",
+            "Soft averaging of top models is itself a novel contribution.",
+            "Repeated seeds establish external validity.",
+            "Train/validation/test separation is itself a algorithmic contribution.",
+            "AQRPE universally outperforms all baselines.",
+            "Five seeds are five independent datasets.",
+            "Twenty-five project-seed runs are twenty-five independent projects.",
+            "A p-value alone proves superiority.",
+            "The test oracle is a deployable selection method.",
+            "Soft-top-3 is optimal before ablation.",
+            "Test data may influence selection or threshold tuning."
         ],
         
         "stage_gate": {
@@ -1021,11 +1021,15 @@ def validate_contract(contract: Dict[str, Any]) -> Dict[str, bool]:
     """Validate the complete contract payload."""
     checks = {}
     
-    # Exact Research Questions - validate complete exact structure
+    # Exact Research Questions - validate complete exact structure and exact key sets
     rq = contract["research_questions"]
     checks["exact_research_questions_passed"] = (
         rq["count"] == 4 and
         set(rq.keys()) == {"count", "rq1", "rq2", "rq3", "rq4"} and
+        set(rq["rq1"].keys()) == {"title", "exact_intent", "requirements"} and
+        set(rq["rq2"].keys()) == {"title", "exact_intent", "requirements"} and
+        set(rq["rq3"].keys()) == {"title", "exact_intent", "required_analyses"} and
+        set(rq["rq4"].keys()) == {"title", "exact_intent", "requirements", "requires_new_computation"} and
         rq["rq1"]["title"] == "Comparative performance" and
         rq["rq1"]["exact_intent"] == "How do the four fixed candidate learners, validation-selected adaptive Top-1 variants, and validation-constructed soft ensembles compare under repeated within-project and cross-project evaluation?" and
         rq["rq1"]["requirements"] == [
@@ -1085,58 +1089,51 @@ def validate_contract(contract: Dict[str, Any]) -> Dict[str, bool]:
         ad["concept_distinctions"] == ["candidate learner", "validation selector", "threshold policy", "ensemble construction rule", "post-hoc oracle"]
     )
     
-    # Candidate metadata matches current pipeline - enforce exact field sets
-    lr_c01 = contract["candidate_learners"]["LR_std_C0.1"]
-    lr_c1 = contract["candidate_learners"]["LR_std_C1"]
-    dt = contract["candidate_learners"]["DT_leaf5"]
-    et = contract["candidate_learners"]["ET_leaf5"]
-    
-    lr_exact_keys = {"type", "imputer", "scaler", "C", "penalty", "solver", "class_weight", "max_iter", "random_state_source"}
-    dt_exact_keys = {"type", "imputer", "criterion", "splitter", "min_samples_leaf", "max_depth", "class_weight", "random_state_source"}
-    et_exact_keys = {"type", "imputer", "n_estimators", "criterion", "max_depth", "min_samples_leaf", "max_features", "bootstrap", "class_weight", "random_state_source", "n_jobs"}
-    
+    # Candidate metadata matches current pipeline - enforce exact top-level key set and exact field sets
+    candidates = contract["candidate_learners"]
     checks["candidate_metadata_matches_current_pipeline"] = (
-        set(lr_c01.keys()) == lr_exact_keys and
-        set(lr_c1.keys()) == lr_exact_keys and
-        set(dt.keys()) == dt_exact_keys and
-        set(et.keys()) == et_exact_keys and
-        lr_c01["type"] == "logistic_regression" and
-        lr_c01["imputer"] == "median" and
-        lr_c01["scaler"] == "StandardScaler" and
-        lr_c01["C"] == 0.1 and
-        lr_c01["penalty"] == "l2" and
-        lr_c01["solver"] == "lbfgs" and
-        lr_c01["class_weight"] == "balanced" and
-        lr_c01["max_iter"] == 600 and
-        lr_c01["random_state_source"] == "seed" and
-        lr_c1["type"] == "logistic_regression" and
-        lr_c1["imputer"] == "median" and
-        lr_c1["scaler"] == "StandardScaler" and
-        lr_c1["C"] == 1.0 and
-        lr_c1["penalty"] == "l2" and
-        lr_c1["solver"] == "lbfgs" and
-        lr_c1["class_weight"] == "balanced" and
-        lr_c1["max_iter"] == 600 and
-        lr_c1["random_state_source"] == "seed" and
-        dt["type"] == "decision_tree" and
-        dt["imputer"] == "median" and
-        dt["criterion"] == "gini" and
-        dt["splitter"] == "best" and
-        dt["min_samples_leaf"] == 5 and
-        dt["max_depth"] is None and
-        dt["class_weight"] is None and
-        dt["random_state_source"] == "seed" and
-        et["type"] == "extra_trees" and
-        et["imputer"] == "median" and
-        et["n_estimators"] == 50 and
-        et["criterion"] == "gini" and
-        et["max_depth"] is None and
-        et["min_samples_leaf"] == 5 and
-        et["max_features"] == "sqrt" and
-        et["bootstrap"] is False and
-        et["class_weight"] == "balanced" and
-        et["random_state_source"] == "seed" and
-        et["n_jobs"] == 2
+        set(candidates.keys()) == {"LR_std_C0.1", "LR_std_C1", "DT_leaf5", "ET_leaf5"} and
+        set(candidates["LR_std_C0.1"].keys()) == {"type", "imputer", "scaler", "C", "penalty", "solver", "class_weight", "max_iter", "random_state_source"} and
+        set(candidates["LR_std_C1"].keys()) == {"type", "imputer", "scaler", "C", "penalty", "solver", "class_weight", "max_iter", "random_state_source"} and
+        set(candidates["DT_leaf5"].keys()) == {"type", "imputer", "criterion", "splitter", "min_samples_leaf", "max_depth", "class_weight", "random_state_source"} and
+        set(candidates["ET_leaf5"].keys()) == {"type", "imputer", "n_estimators", "criterion", "max_depth", "min_samples_leaf", "max_features", "bootstrap", "class_weight", "random_state_source", "n_jobs"} and
+        candidates["LR_std_C0.1"]["type"] == "logistic_regression" and
+        candidates["LR_std_C0.1"]["imputer"] == "median" and
+        candidates["LR_std_C0.1"]["scaler"] == "StandardScaler" and
+        candidates["LR_std_C0.1"]["C"] == 0.1 and
+        candidates["LR_std_C0.1"]["penalty"] == "l2" and
+        candidates["LR_std_C0.1"]["solver"] == "lbfgs" and
+        candidates["LR_std_C0.1"]["class_weight"] == "balanced" and
+        candidates["LR_std_C0.1"]["max_iter"] == 600 and
+        candidates["LR_std_C0.1"]["random_state_source"] == "seed" and
+        candidates["LR_std_C1"]["type"] == "logistic_regression" and
+        candidates["LR_std_C1"]["imputer"] == "median" and
+        candidates["LR_std_C1"]["scaler"] == "StandardScaler" and
+        candidates["LR_std_C1"]["C"] == 1.0 and
+        candidates["LR_std_C1"]["penalty"] == "l2" and
+        candidates["LR_std_C1"]["solver"] == "lbfgs" and
+        candidates["LR_std_C1"]["class_weight"] == "balanced" and
+        candidates["LR_std_C1"]["max_iter"] == 600 and
+        candidates["LR_std_C1"]["random_state_source"] == "seed" and
+        candidates["DT_leaf5"]["type"] == "decision_tree" and
+        candidates["DT_leaf5"]["imputer"] == "median" and
+        candidates["DT_leaf5"]["criterion"] == "gini" and
+        candidates["DT_leaf5"]["splitter"] == "best" and
+        candidates["DT_leaf5"]["min_samples_leaf"] == 5 and
+        candidates["DT_leaf5"]["max_depth"] is None and
+        candidates["DT_leaf5"]["class_weight"] is None and
+        candidates["DT_leaf5"]["random_state_source"] == "seed" and
+        candidates["ET_leaf5"]["type"] == "extra_trees" and
+        candidates["ET_leaf5"]["imputer"] == "median" and
+        candidates["ET_leaf5"]["n_estimators"] == 50 and
+        candidates["ET_leaf5"]["criterion"] == "gini" and
+        candidates["ET_leaf5"]["max_depth"] is None and
+        candidates["ET_leaf5"]["min_samples_leaf"] == 5 and
+        candidates["ET_leaf5"]["max_features"] == "sqrt" and
+        candidates["ET_leaf5"]["bootstrap"] is False and
+        candidates["ET_leaf5"]["class_weight"] == "balanced" and
+        candidates["ET_leaf5"]["random_state_source"] == "seed" and
+        candidates["ET_leaf5"]["n_jobs"] == 2
     )
     
     # Required metric set - validate exact taxonomy families and field sets
@@ -1220,9 +1217,13 @@ def validate_contract(contract: Dict[str, Any]) -> Dict[str, bool]:
         all(all_metrics[m]["primary_or_secondary"] == "secondary" for m in secondary_metrics)
     )
     
-    # Objective policy passed - validate exact key set and ordered prohibitions
+    # Objective policy passed - validate exact key set, exact nested key sets, and ordered prohibitions
     obj_policies = contract["objective_policies"]
     exact_obj_keys = {"balanced_policy", "mcc_policy", "rank_score_only_policy", "rank_plus_validation_threshold_policy", "policy_mismatch_prohibition"}
+    exact_balanced_policy_keys = {"candidate_ranking", "threshold_selection", "description"}
+    exact_mcc_policy_keys = {"candidate_ranking", "threshold_selection", "description"}
+    exact_rank_score_only_keys = {"candidate_ranking", "threshold_selection", "primary_interpretation", "thresholded_metrics_status", "description"}
+    exact_rank_plus_validation_keys = {"candidate_ranking", "threshold_selection", "status", "must_not_replace", "description"}
     exact_prohibitions = [
         "Threshold-dependent method comparisons should use the same candidate-ranking objective and threshold-selection policy whenever scientifically possible.",
         "An MCC-tuned adaptive method must not be compared against a baseline using only a balanced-objective threshold and then interpreted as pure evidence of adaptive-selection benefit.",
@@ -1231,33 +1232,62 @@ def validate_contract(contract: Dict[str, Any]) -> Dict[str, bool]:
     ]
     checks["objective_policy_passed"] = (
         set(obj_policies.keys()) == exact_obj_keys and
+        set(obj_policies["balanced_policy"].keys()) == exact_balanced_policy_keys and
+        set(obj_policies["mcc_policy"].keys()) == exact_mcc_policy_keys and
+        set(obj_policies["rank_score_only_policy"].keys()) == exact_rank_score_only_keys and
+        set(obj_policies["rank_plus_validation_threshold_policy"].keys()) == exact_rank_plus_validation_keys and
         obj_policies["policy_mismatch_prohibition"] == exact_prohibitions and
         obj_policies["balanced_policy"]["candidate_ranking"] == "balanced validation objective" and
         obj_policies["balanced_policy"]["threshold_selection"] == "balanced validation objective" and
+        obj_policies["balanced_policy"]["description"] == "Candidate ranking by balanced validation objective, threshold selected by balanced validation objective." and
         obj_policies["mcc_policy"]["candidate_ranking"] == "validation MCC objective" and
         obj_policies["mcc_policy"]["threshold_selection"] == "validation MCC objective" and
+        obj_policies["mcc_policy"]["description"] == "Candidate ranking by validation MCC objective, threshold selected by validation MCC objective." and
         obj_policies["rank_score_only_policy"]["candidate_ranking"] == "rank objective" and
         obj_policies["rank_score_only_policy"]["threshold_selection"] == "fixed at 0.5" and
+        obj_policies["rank_score_only_policy"]["primary_interpretation"] == "Restricted to threshold-free and top-k metrics." and
+        obj_policies["rank_score_only_policy"]["thresholded_metrics_status"] == "diagnostic only when threshold is fixed at 0.5" and
+        obj_policies["rank_score_only_policy"]["description"] == "Candidate ranking by rank objective, primary interpretation restricted to threshold-free and top-k metrics, thresholded metrics are diagnostic only when threshold is fixed at 0.5." and
         obj_policies["rank_plus_validation_threshold_policy"]["candidate_ranking"] == "rank objective" and
         obj_policies["rank_plus_validation_threshold_policy"]["threshold_selection"] == "tuned on validation only" and
-        obj_policies["rank_plus_validation_threshold_policy"]["status"] == "planned sensitivity analysis"
+        obj_policies["rank_plus_validation_threshold_policy"]["status"] == "planned sensitivity analysis" and
+        obj_policies["rank_plus_validation_threshold_policy"]["must_not_replace"] == "existing score-only rank policy" and
+        obj_policies["rank_plus_validation_threshold_policy"]["description"] == "Candidate ranking by rank objective, after candidate or ensemble selection, threshold is tuned on validation only. This policy is a planned sensitivity analysis and must not replace or silently overwrite the existing score-only rank policy."
     )
     
-    # Existing Soft-top-3 objective - require exact key set and values
-    soft_top3 = contract["existing_adaptive_models"]["AQRPE_v2_soft_top3"]
+    # Existing Soft-top-3 objective - require exact top-level key set and exact schema/values for every existing adaptive model
+    existing_adaptive = contract["existing_adaptive_models"]
+    exact_adaptive_top_level = {"AQRPE_v2_balanced", "AQRPE_v2_rank", "AQRPE_v2_mcc", "AQRPE_v2_soft_top3"}
+    exact_balanced_keys = {"validation_objective", "selection_type", "threshold_policy"}
+    exact_rank_keys = {"validation_objective", "selection_type", "threshold_policy"}
+    exact_mcc_keys = {"validation_objective", "selection_type", "threshold_policy"}
     exact_soft_top3_keys = {"validation_objective", "membership_ranking_policy", "threshold_objective", "ensemble_size", "equal_weights"}
     checks["existing_soft_top3_policy_passed"] = (
-        set(soft_top3.keys()) == exact_soft_top3_keys and
-        soft_top3["validation_objective"] == "balanced" and
-        soft_top3["membership_ranking_policy"] == "balanced_objective" and
-        soft_top3["threshold_objective"] == "balanced" and
-        soft_top3["ensemble_size"] == 3 and
-        soft_top3["equal_weights"] == True
+        set(existing_adaptive.keys()) == exact_adaptive_top_level and
+        set(existing_adaptive["AQRPE_v2_balanced"].keys()) == exact_balanced_keys and
+        set(existing_adaptive["AQRPE_v2_rank"].keys()) == exact_rank_keys and
+        set(existing_adaptive["AQRPE_v2_mcc"].keys()) == exact_mcc_keys and
+        set(existing_adaptive["AQRPE_v2_soft_top3"].keys()) == exact_soft_top3_keys and
+        existing_adaptive["AQRPE_v2_balanced"]["validation_objective"] == "balanced" and
+        existing_adaptive["AQRPE_v2_balanced"]["selection_type"] == "adaptive_top1" and
+        existing_adaptive["AQRPE_v2_balanced"]["threshold_policy"] == "validation_tuned" and
+        existing_adaptive["AQRPE_v2_rank"]["validation_objective"] == "rank" and
+        existing_adaptive["AQRPE_v2_rank"]["selection_type"] == "adaptive_top1" and
+        existing_adaptive["AQRPE_v2_rank"]["threshold_policy"] == "fixed_0.5" and
+        existing_adaptive["AQRPE_v2_mcc"]["validation_objective"] == "mcc" and
+        existing_adaptive["AQRPE_v2_mcc"]["selection_type"] == "adaptive_top1" and
+        existing_adaptive["AQRPE_v2_mcc"]["threshold_policy"] == "validation_tuned" and
+        existing_adaptive["AQRPE_v2_soft_top3"]["validation_objective"] == "balanced" and
+        existing_adaptive["AQRPE_v2_soft_top3"]["membership_ranking_policy"] == "balanced_objective" and
+        existing_adaptive["AQRPE_v2_soft_top3"]["threshold_objective"] == "balanced" and
+        existing_adaptive["AQRPE_v2_soft_top3"]["ensemble_size"] == 3 and
+        existing_adaptive["AQRPE_v2_soft_top3"]["equal_weights"] == True
     )
     
-    # Baseline policy passed - validate exact key set and content
+    # Baseline policy passed - validate exact key set, exact nested key set, and content
     baseline = contract["baseline_policy"]
     exact_baseline_keys = {"individual_fixed_baselines", "best_fixed_baseline"}
+    exact_best_baseline_keys = {"selection_rules", "status", "deployment_warning"}
     exact_baselines = ["LR_std_C0.1", "LR_std_C1", "DT_leaf5", "ET_leaf5"]
     exact_selection_rules = [
         "Separately for each metric.",
@@ -1267,6 +1297,7 @@ def validate_contract(contract: Dict[str, Any]) -> Dict[str, bool]:
     ]
     checks["baseline_policy_passed"] = (
         set(baseline.keys()) == exact_baseline_keys and
+        set(baseline["best_fixed_baseline"].keys()) == exact_best_baseline_keys and
         baseline["individual_fixed_baselines"] == exact_baselines and
         baseline["best_fixed_baseline"]["selection_rules"] == exact_selection_rules and
         baseline["best_fixed_baseline"]["status"] == "post-hoc descriptive" and
@@ -1298,13 +1329,36 @@ def validate_contract(contract: Dict[str, Any]) -> Dict[str, bool]:
         adaptive["prohibition"] == "No test label, test score, test metric, or test ranking may influence the selection."
     )
     
-    # Ensemble policy passed - validate exact key sets and values
+    # Ensemble policy passed - validate exact key sets and values, including exact planned-model top-level schema and soft_ensemble_policy content
+    planned_models = contract["planned_models"]
+    exact_planned_top_level = {"AQRPE_v2_soft_top2", "AQRPE_v2_soft_all4"}
     soft_top2 = contract["planned_models"]["AQRPE_v2_soft_top2"]
     soft_all4 = contract["planned_models"]["AQRPE_v2_soft_all4"]
     exact_soft_top2_keys = {"validation_objective", "membership_ranking_policy", "threshold_objective", "ensemble_size", "equal_weights", "status"}
     exact_soft_all4_keys = {"validation_objective", "membership_ranking_policy", "threshold_objective", "ensemble_size", "equal_weights", "status"}
+    soft_ensemble = contract["soft_ensemble_policy"]
+    exact_soft_ensemble_keys = {"definition", "planned_k_values", "soft_all_4_note", "key_assertions"}
+    exact_definition = [
+        "Rank candidates using validation scores only.",
+        "Select the top k candidates using a deterministic tie policy.",
+        "Average their defective-class probabilities with equal weights.",
+        "Tune the ensemble threshold using validation data only.",
+        "Freeze selected membership, order, weights, and threshold.",
+        "Evaluate once on test data."
+    ]
+    exact_key_assertions = [
+        "Equal weighting is the primary ensemble rule.",
+        "Learned weights are outside the current study scope.",
+        "Soft-top-3 must not be treated as privileged before the ablation is complete.",
+        "If Soft-top-3 does not outperform Soft-all-4 or Soft-top-2 consistently, the manuscript must report that result directly."
+    ]
     checks["ensemble_policy_passed"] = (
-        contract["soft_ensemble_policy"]["planned_k_values"] == [2, 3, 4] and
+        set(planned_models.keys()) == exact_planned_top_level and
+        set(soft_ensemble.keys()) == exact_soft_ensemble_keys and
+        soft_ensemble["definition"] == exact_definition and
+        soft_ensemble["planned_k_values"] == [2, 3, 4] and
+        soft_ensemble["soft_all_4_note"] == "Soft-all-4 includes all four candidates and therefore does not involve membership selection, but its threshold must still be tuned on validation only." and
+        soft_ensemble["key_assertions"] == exact_key_assertions and
         contract["existing_adaptive_models"]["AQRPE_v2_soft_top3"]["equal_weights"] == True and
         set(soft_top2.keys()) == exact_soft_top2_keys and
         soft_top2["validation_objective"] == "balanced" and
@@ -1322,15 +1376,28 @@ def validate_contract(contract: Dict[str, Any]) -> Dict[str, bool]:
         soft_all4["status"] == "planned"
     )
     
-    # Tie policy passed - verify exact ordered rules
-    tie_rules = contract["tie_policy"]["validation_candidate_ranking"]
+    # Tie policy passed - validate exact key sets, exact ordered rules, exact distinguished concepts, and exact scientific analysis rule
+    tie_policy = contract["tie_policy"]
+    exact_tie_keys = {"validation_candidate_ranking", "distinguished_concepts", "scientific_analysis_rule"}
     expected_tie_rules = [
         "Use exact validation score ordering.",
         "Use a tolerance of 1e-12 only for reporting near ties.",
         "Do not merge non-transitive chains of near-equal values.",
         "If exact scores are equal, use the following deterministic candidate order: LR_std_C0.1, LR_std_C1, DT_leaf5, ET_leaf5."
     ]
-    checks["tie_policy_passed"] = tie_rules == expected_tie_rules
+    exact_distinguished_concepts = [
+        "Exact tie.",
+        "Near tie.",
+        "Winner set.",
+        "Deterministic operational choice."
+    ]
+    exact_scientific_rule = "For scientific analysis, all exact tied winners must be preserved in the winner set even if one deterministic candidate is used operationally."
+    checks["tie_policy_passed"] = (
+        set(tie_policy.keys()) == exact_tie_keys and
+        tie_policy["validation_candidate_ranking"] == expected_tie_rules and
+        tie_policy["distinguished_concepts"] == exact_distinguished_concepts and
+        tie_policy["scientific_analysis_rule"] == exact_scientific_rule
+    )
     
     # Oracle policy passed
     checks["oracle_policy_passed"] = (
@@ -1624,7 +1691,7 @@ def validate_contract(contract: Dict[str, Any]) -> Dict[str, bool]:
         rc["reviewer_3_focus"] == exact_reviewer_3_focus
     )
     
-    # Reviewer traceability passed - validate reviewer_coverage_evidence itself
+    # Reviewer traceability passed - validate reviewer_coverage_evidence itself and deep reviewer-response validation
     expected_reviewer_keys = {
         "reviewer_1_comment_1", "reviewer_1_comment_2", "reviewer_1_comment_3",
         "reviewer_2_comment_1", "reviewer_2_comment_2", "reviewer_2_comment_3",
@@ -1643,17 +1710,49 @@ def validate_contract(contract: Dict[str, Any]) -> Dict[str, bool]:
         "reviewer_2_comment_7", "reviewer_3_novelty_concern"
     ]
     
-    # Verify each covered item has a non-empty response
-    all_responses_nonempty = True
+    # Deep reviewer-response validation - reject blank strings, whitespace-only strings, empty lists, list items that are blank or whitespace-only, non-string list items, additional response keys, missing required response keys
+    def is_blank_or_whitespace(value):
+        if value is None:
+            return True
+        if isinstance(value, str):
+            return not value.strip()
+        if isinstance(value, list):
+            if len(value) == 0:
+                return True
+            for item in value:
+                if isinstance(item, str) and not item.strip():
+                    return True
+                if not isinstance(item, str):
+                    return True
+            return False
+        return False
+    
+    all_responses_valid = True
     for key in expected_reviewer_keys:
         if key in contract["reviewer_traceability_matrix"]:
             response = contract["reviewer_traceability_matrix"][key]
-            comp_resp = response.get("computational_response")
-            manus_resp = response.get("manuscript_response")
-            sci_resp = response.get("scientific_response")
-            if not comp_resp and not manus_resp and not sci_resp:
-                all_responses_nonempty = False
-                break
+            
+            # Reviewer 1 and Reviewer 2 require exact response key set: computational_response, manuscript_response
+            if key.startswith("reviewer_1_") or key.startswith("reviewer_2_"):
+                if set(response.keys()) != {"computational_response", "manuscript_response"}:
+                    all_responses_valid = False
+                    break
+                comp_resp = response.get("computational_response")
+                manus_resp = response.get("manuscript_response")
+                if is_blank_or_whitespace(comp_resp) and is_blank_or_whitespace(manus_resp):
+                    all_responses_valid = False
+                    break
+            
+            # Reviewer 3 requires exact response key set: computational_response, scientific_response
+            elif key.startswith("reviewer_3_"):
+                if set(response.keys()) != {"computational_response", "scientific_response"}:
+                    all_responses_valid = False
+                    break
+                comp_resp = response.get("computational_response")
+                sci_resp = response.get("scientific_response")
+                if is_blank_or_whitespace(comp_resp) and is_blank_or_whitespace(sci_resp):
+                    all_responses_valid = False
+                    break
     
     checks["reviewer_traceability_passed"] = (
         set(rce.keys()) == exact_rce_keys and
@@ -1664,7 +1763,7 @@ def validate_contract(contract: Dict[str, Any]) -> Dict[str, bool]:
         rce["coverage_identifiers"] == exact_identifiers and
         actual_keys == expected_reviewer_keys and
         len(actual_keys) == 11 and
-        all_responses_nonempty
+        all_responses_valid
     )
     
     # Exact roadmap stages
@@ -1681,24 +1780,24 @@ def validate_contract(contract: Dict[str, Any]) -> Dict[str, bool]:
     ]
     checks["roadmap_passed"] = contract["remaining_stage_roadmap"] == expected_roadmap
     
-    # Prohibited claims list present - validate exact ordered list of twelve claims
+    # Prohibited claims list present - validate exact ordered list of twelve frozen claims
     exact_prohibited_claims = [
-        "No method universally dominates all others across all metrics, projects, and settings.",
-        "Validation-based selection guarantees superior test performance.",
-        "Soft ensembles always outperform fixed candidates.",
-        "Adaptive Top-1 selection is always better than fixed baselines.",
-        "The oracle reference is a deployable model.",
-        "The five projects are a representative sample of all software projects.",
-        "The results generalize to industrial deployment without further validation.",
-        "Statistical significance tests with n=5 projects provide definitive population-level evidence.",
-        "Metric choice is arbitrary and does not affect conclusions.",
-        "Threshold policy choice is arbitrary and does not affect conclusions.",
-        "Validation-test agreement is a proof of validity.",
-        "Post-hoc regret analysis is a validation procedure."
+        "AQRPE v2 is a fundamentally new algorithm.",
+        "Validation-based model selection is itself a novel contribution.",
+        "Soft averaging of top models is itself a novel contribution.",
+        "Repeated seeds establish external validity.",
+        "Train/validation/test separation is itself a algorithmic contribution.",
+        "AQRPE universally outperforms all baselines.",
+        "Five seeds are five independent datasets.",
+        "Twenty-five project-seed runs are twenty-five independent projects.",
+        "A p-value alone proves superiority.",
+        "The test oracle is a deployable selection method.",
+        "Soft-top-3 is optimal before ablation.",
+        "Test data may influence selection or threshold tuning."
     ]
     checks["prohibited_claims_passed"] = contract["prohibited_claims"] == exact_prohibited_claims
     
-    # Stage gate passed - validate exact key set, exact values, and exact constraint
+    # Stage gate passed - validate exact key set, exact values, exact constraint, and provenance
     stage_gate = contract["stage_gate"]
     exact_stage_gate_keys = {"part3a_contract_frozen", "model_rerun_performed", "canonical_outputs_modified", "manuscript_modified", "next_authorized_stage", "part3b_constraint"}
     exact_constraint = "Part 3B cannot alter the current 400 canonical result rows or current canonical manuscript tables unless a later explicitly approved migration stage is created."
@@ -1708,7 +1807,12 @@ def validate_contract(contract: Dict[str, Any]) -> Dict[str, bool]:
         stage_gate["model_rerun_performed"] == False and
         stage_gate["canonical_outputs_modified"] == False and
         stage_gate["manuscript_modified"] == False and
-        stage_gate["part3b_constraint"] == exact_constraint
+        stage_gate["part3b_constraint"] == exact_constraint and
+        contract["contract_title"] == "Scientific Analysis Contract for Major Revision" and
+        contract["contract_version"] == "Part-3A.4-v1" and
+        contract["starting_commit"] == "692bbb8ff7c379839d4f8f18f52e58f815db6636" and
+        contract["repository"] == "abtinasg/springer" and
+        contract["branch"] == "major-revision-analysis-v2"
     )
     
     # Combine all checks except all_checks_passed itself - exactly 32 required checks
@@ -2591,7 +2695,7 @@ def main():
     repo_root = get_repository_root()
     
     print(f"Repository root: {repo_root}")
-    print(f"Starting commit: ec60c38abae80046fa0d345caa817258b97cdbf1")
+    print(f"Starting commit: 692bbb8ff7c379839d4f8f18f52e58f815db6636")
     print("")
     
     # A. Capture genuine before preservation snapshot
