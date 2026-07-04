@@ -1,7 +1,7 @@
 # Scientific Analysis Contract for Major Revision
 
-**Contract Version:** Part-3A.5-v1
-**Starting Commit:** 7d7403f968aca2bcbc94bc35efd4f258421301c5
+**Contract Version:** Part-3A.6-v1
+**Starting Commit:** 98245aaddab6431e28b222c37f8bf35b2ee2b8b4
 **Repository:** abtinasg/springer
 **Branch:** major-revision-analysis-v2
 
@@ -1167,10 +1167,15 @@ Candidate ranking by rank objective, after candidate or ensemble selection, thre
 - Total Tests Executed: 31
 - Total Tests Passed: 31
 - Total Tests Failed: 0
+- Global Count Contract Passed: True
 - All Negative Tests Passed: True
 
 ### Provenance and Stage-Gate Tests
 
+- Production Validator Name: validate_final_provenance_and_stage_gate
+- Production Validator Used: True
+- All Cases Called Production Validator: True
+- Count Contract Passed: True
 - Tests Expected: 13
 - Tests Executed: 13
 - Tests Passed: 13
@@ -1195,6 +1200,10 @@ Candidate ranking by rank objective, after candidate or ensemble selection, thre
 
 ### Reviewer Response Tests
 
+- Production Validator Name: validate_reviewer_traceability
+- Production Validator Used: True
+- All Cases Called Production Validator: True
+- Count Contract Passed: True
 - Tests Expected: 14
 - Tests Executed: 14
 - Tests Passed: 14
@@ -1220,6 +1229,10 @@ Candidate ranking by rank objective, after candidate or ensemble selection, thre
 
 ### Prohibited Claims Tests
 
+- Production Validator Name: validate_prohibited_claims
+- Production Validator Used: True
+- All Cases Called Production Validator: True
+- Count Contract Passed: True
 - Tests Expected: 4
 - Tests Executed: 4
 - Tests Passed: 4
