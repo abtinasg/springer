@@ -1,9 +1,9 @@
 # Part 3B Split / Leakage Audit Report
 
-- **Starting commit:** d16e28488aa0936014f020c05466181eff219af6
+- **Starting commit:** 2b062f80d83f903631e3ca49bd591022c066fe9f
 - **Repository:** abtinasg/springer
 - **Branch:** major-revision-analysis-v2
-- **Manifest version:** Part-3B-v1
+- **Manifest version:** Part-3B.1-v1
 
 ## Dataset Profile
 
@@ -104,15 +104,15 @@
 - Categorical match: True
 - Numeric mismatches: 0
 - Max absolute difference: 4.440892098500626e-16
-- Max relative difference: 9.689026597918819e-16
+- Max relative difference: 8.608215420122814e-16
 
 ## Canonical Result Reconstruction
 
 - Rows: 400
 - Categorical match: True
 - Numeric mismatches: 0
-- Max absolute difference: 4.283498555857079e-08
-- Max relative difference: 9.938014047236926e-08
+- Max absolute difference: 4.283498544754849e-08
+- Max relative difference: 6.392706981051185e-08
 
 ## Selection and Test Isolation
 
@@ -229,7 +229,7 @@
 - results/part3b_prediction_ledger/event_manifest.csv: 89f80b9045bae96b75a074caa5d2ccc4ad0cae59f72a4c84079ceae2e7a76431 (20749 bytes)
 - results/part3b_prediction_ledger/split_membership_within.csv.gz: cc9e8c99a79a7c8b880531a50419fdc6c460089cd5e5d684cd7ef4c8f77ed01d (768767 bytes)
 - results/part3b_prediction_ledger/split_membership_cross.csv.gz: 1478568991c0b9661fdbc80e7b7731cc984b1e418ca9bdba07910f41e8a869ad (3904404 bytes)
-- results/part3b_prediction_ledger/prediction_ledger_within.csv.gz: 52724f5194969ee5a44b9761f80508c5ef095f6f5df05eeaf1c0745f6ed8a071 (1356761 bytes)
-- results/part3b_prediction_ledger/prediction_ledger_cross.csv.gz: 1726f756c014ea2c75c023070679dd4d0b3b9ec50e7403879f29224ccbf780b5 (6587556 bytes)
-- results/part3b_prediction_ledger/validation_reconstruction.csv: afc1c57c1e68cfd23b98bd20f2255e5984b187854aa883f27e8a986f6ab8a54f (202733 bytes)
-- results/part3b_prediction_ledger/canonical_result_reconstruction.csv: 35e295d1b7b6b830c032a0924878cfd86e95926768c49b06b9f1e5b8ff59bd1e (153640 bytes)
+- results/part3b_prediction_ledger/prediction_ledger_within.csv.gz: a2570699e87ed88b485298016dfa0395f3928a901c6b2877826fffb0c3501c6e (2243828 bytes)
+- results/part3b_prediction_ledger/prediction_ledger_cross.csv.gz: cd813462c469f09c0f87fd93293ff685df64300cfcd94b4d089d4edeed07f19f (10739177 bytes)
+- results/part3b_prediction_ledger/validation_reconstruction.csv: f538dc65635ffc4c71835ace075b7f19dcaf00d2e77b751f2d8c354c9d8e8eb9 (202727 bytes)
+- results/part3b_prediction_ledger/canonical_result_reconstruction.csv: 91865baba778bb51b123f668227fb3c21ea8cca5df0fef32b1710b9dfc125be5 (153647 bytes)

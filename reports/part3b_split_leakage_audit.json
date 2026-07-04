@@ -1,8 +1,8 @@
 {
-  "starting_commit": "d16e28488aa0936014f020c05466181eff219af6",
+  "starting_commit": "2b062f80d83f903631e3ca49bd591022c066fe9f",
   "repository": "abtinasg/springer",
   "branch": "major-revision-analysis-v2",
-  "manifest_version": "Part-3B-v1",
+  "manifest_version": "Part-3B.1-v1",
   "source_file_hashes": {
     "scripts/run_repeated_evaluation.py": "d385b6ecef2427c85299dcbc50cfff919fa8546b31829fa3ce0e5fdb307c4856",
     "reports/part3_analysis_contract.json": "b0c8a199041815e63b410bd666e67da9f763d34822269665208fb72906175201",
@@ -159,13 +159,34 @@
       }
     },
     "detected_target_columns": {
-      "CM1": "detected",
-      "JM1": "detected",
-      "KC1": "detected",
-      "KC2": "detected",
-      "PC1": "detected"
+      "CM1": "defects",
+      "JM1": "defects",
+      "KC1": "defects",
+      "KC2": "problems",
+      "PC1": "defects"
     },
     "original_numeric_feature_counts": {
+      "CM1": 21,
+      "JM1": 21,
+      "KC1": 21,
+      "KC2": 21,
+      "PC1": 21
+    },
+    "numeric_coercible_feature_counts": {
+      "CM1": 21,
+      "JM1": 21,
+      "KC1": 21,
+      "KC2": 21,
+      "PC1": 21
+    },
+    "all_null_numeric_columns_removed": {
+      "CM1": 0,
+      "JM1": 0,
+      "KC1": 0,
+      "KC2": 0,
+      "PC1": 0
+    },
+    "retained_numeric_feature_counts": {
       "CM1": 20,
       "JM1": 20,
       "KC1": 20,
@@ -194,9 +215,131 @@
       "v",
       "v(g)"
     ],
+    "common_feature_count": 20,
+    "per_project_missing_value_counts": {
+      "CM1": {
+        "loc": 0,
+        "v(g)": 0,
+        "ev(g)": 0,
+        "iv(g)": 0,
+        "n": 0,
+        "v": 0,
+        "l": 0,
+        "d": 0,
+        "i": 0,
+        "e": 0,
+        "b": 0,
+        "t": 0,
+        "locode": 0,
+        "locomment": 0,
+        "loblank": 0,
+        "loccodeandcomment": 0,
+        "uniq_op": 0,
+        "uniq_opnd": 0,
+        "total_op": 0,
+        "total_opnd": 0,
+        "branchcount": 0
+      },
+      "JM1": {
+        "loc": 0,
+        "v(g)": 0,
+        "ev(g)": 0,
+        "iv(g)": 0,
+        "n": 0,
+        "v": 0,
+        "l": 0,
+        "d": 0,
+        "i": 0,
+        "e": 0,
+        "b": 0,
+        "t": 0,
+        "locode": 0,
+        "locomment": 0,
+        "loblank": 0,
+        "loccodeandcomment": 0,
+        "uniq_op": 0,
+        "uniq_opnd": 0,
+        "total_op": 0,
+        "total_opnd": 0,
+        "branchcount": 0
+      },
+      "KC1": {
+        "loc": 0,
+        "v(g)": 0,
+        "ev(g)": 0,
+        "iv(g)": 0,
+        "n": 0,
+        "v": 0,
+        "l": 0,
+        "d": 0,
+        "i": 0,
+        "e": 0,
+        "b": 0,
+        "t": 0,
+        "locode": 0,
+        "locomment": 0,
+        "loblank": 0,
+        "loccodeandcomment": 0,
+        "uniq_op": 0,
+        "uniq_opnd": 0,
+        "total_op": 0,
+        "total_opnd": 0,
+        "branchcount": 0
+      },
+      "KC2": {
+        "loc": 0,
+        "v(g)": 0,
+        "ev(g)": 0,
+        "iv(g)": 0,
+        "n": 0,
+        "v": 0,
+        "l": 0,
+        "d": 0,
+        "i": 0,
+        "e": 0,
+        "b": 0,
+        "t": 0,
+        "locode": 0,
+        "locomment": 0,
+        "loblank": 0,
+        "locodeandcomment": 0,
+        "uniq_op": 0,
+        "uniq_opnd": 0,
+        "total_op": 0,
+        "total_opnd": 0,
+        "branchcount": 0
+      },
+      "PC1": {
+        "loc": 0,
+        "v(g)": 0,
+        "ev(g)": 0,
+        "iv(g)": 0,
+        "n": 0,
+        "v": 0,
+        "l": 0,
+        "d": 0,
+        "i": 0,
+        "e": 0,
+        "b": 0,
+        "t": 0,
+        "locode": 0,
+        "locomment": 0,
+        "loccodeandcomment": 0,
+        "loblank": 0,
+        "uniq_op": 0,
+        "uniq_opnd": 0,
+        "total_op": 0,
+        "total_opnd": 0,
+        "branchcount": 0
+      }
+    },
     "total_rows": 17442,
     "total_defective": 2662,
-    "total_nondefective": 14780
+    "total_nondefective": 14780,
+    "common_schema_uses_all_project_column_names": true,
+    "common_schema_uses_target_feature_values": false,
+    "common_schema_uses_target_labels": false,
+    "pooled_source_validation": true
   },
   "feature_schema_sha256": "ba0553dd1defe6a2da2e183979c58b165c964eef99915505e4d43e02ad47ee89",
   "common_feature_names": [
@@ -158852,6 +158995,17 @@
       "event_id": "within_project__CM1__seed_007"
     },
     {
+      "candidate": "LR_std_C0.1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "within_project__CM1__seed_007"
+    },
+    {
       "candidate": "LR_std_C1",
       "type": "imputer",
       "expected": [
@@ -158999,6 +159153,17 @@
       "event_id": "within_project__CM1__seed_007"
     },
     {
+      "candidate": "LR_std_C1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "within_project__CM1__seed_007"
+    },
+    {
       "candidate": "DT_leaf5",
       "type": "imputer",
       "expected": [
@@ -159045,6 +159210,17 @@
         297.73,
         3.0
       ],
+      "passed": true,
+      "event_id": "within_project__CM1__seed_007"
+    },
+    {
+      "candidate": "DT_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
       "passed": true,
       "event_id": "within_project__CM1__seed_007"
     },
@@ -159099,6 +159275,17 @@
       "event_id": "within_project__CM1__seed_007"
     },
     {
+      "candidate": "ET_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "within_project__CM1__seed_007"
+    },
+    {
       "candidate": "LR_std_C0.1",
       "type": "imputer",
       "expected": [
@@ -159246,6 +159433,17 @@
       "event_id": "within_project__JM1__seed_007"
     },
     {
+      "candidate": "LR_std_C0.1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "within_project__JM1__seed_007"
+    },
+    {
       "candidate": "LR_std_C1",
       "type": "imputer",
       "expected": [
@@ -159389,6 +159587,17 @@
       "passed_mean": true,
       "passed_var": true,
       "passed_features": true,
+      "passed": true,
+      "event_id": "within_project__JM1__seed_007"
+    },
+    {
+      "candidate": "LR_std_C1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
       "passed": true,
       "event_id": "within_project__JM1__seed_007"
     },
@@ -159443,6 +159652,17 @@
       "event_id": "within_project__JM1__seed_007"
     },
     {
+      "candidate": "DT_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "within_project__JM1__seed_007"
+    },
+    {
       "candidate": "ET_leaf5",
       "type": "imputer",
       "expected": [
@@ -159489,6 +159709,17 @@
         206.32,
         3.0
       ],
+      "passed": true,
+      "event_id": "within_project__JM1__seed_007"
+    },
+    {
+      "candidate": "ET_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
       "passed": true,
       "event_id": "within_project__JM1__seed_007"
     },
@@ -159640,6 +159871,17 @@
       "event_id": "within_project__KC1__seed_007"
     },
     {
+      "candidate": "LR_std_C0.1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "within_project__KC1__seed_007"
+    },
+    {
       "candidate": "LR_std_C1",
       "type": "imputer",
       "expected": [
@@ -159787,6 +160029,17 @@
       "event_id": "within_project__KC1__seed_007"
     },
     {
+      "candidate": "LR_std_C1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "within_project__KC1__seed_007"
+    },
+    {
       "candidate": "DT_leaf5",
       "type": "imputer",
       "expected": [
@@ -159833,6 +160086,17 @@
         50.19,
         1.0
       ],
+      "passed": true,
+      "event_id": "within_project__KC1__seed_007"
+    },
+    {
+      "candidate": "DT_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
       "passed": true,
       "event_id": "within_project__KC1__seed_007"
     },
@@ -159887,6 +160151,17 @@
       "event_id": "within_project__KC1__seed_007"
     },
     {
+      "candidate": "ET_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "within_project__KC1__seed_007"
+    },
+    {
       "candidate": "LR_std_C0.1",
       "type": "imputer",
       "expected": [
@@ -160034,6 +160309,17 @@
       "event_id": "within_project__KC2__seed_007"
     },
     {
+      "candidate": "LR_std_C0.1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "within_project__KC2__seed_007"
+    },
+    {
       "candidate": "LR_std_C1",
       "type": "imputer",
       "expected": [
@@ -160177,6 +160463,17 @@
       "passed_mean": true,
       "passed_var": true,
       "passed_features": true,
+      "passed": true,
+      "event_id": "within_project__KC2__seed_007"
+    },
+    {
+      "candidate": "LR_std_C1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
       "passed": true,
       "event_id": "within_project__KC2__seed_007"
     },
@@ -160231,6 +160528,17 @@
       "event_id": "within_project__KC2__seed_007"
     },
     {
+      "candidate": "DT_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "within_project__KC2__seed_007"
+    },
+    {
       "candidate": "ET_leaf5",
       "type": "imputer",
       "expected": [
@@ -160277,6 +160585,17 @@
         92.405,
         2.0
       ],
+      "passed": true,
+      "event_id": "within_project__KC2__seed_007"
+    },
+    {
+      "candidate": "ET_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
       "passed": true,
       "event_id": "within_project__KC2__seed_007"
     },
@@ -160428,6 +160747,17 @@
       "event_id": "within_project__PC1__seed_007"
     },
     {
+      "candidate": "LR_std_C0.1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "within_project__PC1__seed_007"
+    },
+    {
       "candidate": "LR_std_C1",
       "type": "imputer",
       "expected": [
@@ -160575,6 +160905,17 @@
       "event_id": "within_project__PC1__seed_007"
     },
     {
+      "candidate": "LR_std_C1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "within_project__PC1__seed_007"
+    },
+    {
       "candidate": "DT_leaf5",
       "type": "imputer",
       "expected": [
@@ -160621,6 +160962,17 @@
         285.29,
         3.0
       ],
+      "passed": true,
+      "event_id": "within_project__PC1__seed_007"
+    },
+    {
+      "candidate": "DT_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
       "passed": true,
       "event_id": "within_project__PC1__seed_007"
     },
@@ -160675,6 +161027,17 @@
       "event_id": "within_project__PC1__seed_007"
     },
     {
+      "candidate": "ET_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "within_project__PC1__seed_007"
+    },
+    {
       "candidate": "LR_std_C0.1",
       "type": "imputer",
       "expected": [
@@ -160822,6 +161185,17 @@
       "event_id": "within_project__CM1__seed_013"
     },
     {
+      "candidate": "LR_std_C0.1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "within_project__CM1__seed_013"
+    },
+    {
       "candidate": "LR_std_C1",
       "type": "imputer",
       "expected": [
@@ -160965,6 +161339,17 @@
       "passed_mean": true,
       "passed_var": true,
       "passed_features": true,
+      "passed": true,
+      "event_id": "within_project__CM1__seed_013"
+    },
+    {
+      "candidate": "LR_std_C1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
       "passed": true,
       "event_id": "within_project__CM1__seed_013"
     },
@@ -161019,6 +161404,17 @@
       "event_id": "within_project__CM1__seed_013"
     },
     {
+      "candidate": "DT_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "within_project__CM1__seed_013"
+    },
+    {
       "candidate": "ET_leaf5",
       "type": "imputer",
       "expected": [
@@ -161065,6 +161461,17 @@
         336.36,
         3.0
       ],
+      "passed": true,
+      "event_id": "within_project__CM1__seed_013"
+    },
+    {
+      "candidate": "ET_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
       "passed": true,
       "event_id": "within_project__CM1__seed_013"
     },
@@ -161216,6 +161623,17 @@
       "event_id": "within_project__JM1__seed_013"
     },
     {
+      "candidate": "LR_std_C0.1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "within_project__JM1__seed_013"
+    },
+    {
       "candidate": "LR_std_C1",
       "type": "imputer",
       "expected": [
@@ -161363,6 +161781,17 @@
       "event_id": "within_project__JM1__seed_013"
     },
     {
+      "candidate": "LR_std_C1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "within_project__JM1__seed_013"
+    },
+    {
       "candidate": "DT_leaf5",
       "type": "imputer",
       "expected": [
@@ -161409,6 +161838,17 @@
         205.13,
         3.0
       ],
+      "passed": true,
+      "event_id": "within_project__JM1__seed_013"
+    },
+    {
+      "candidate": "DT_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
       "passed": true,
       "event_id": "within_project__JM1__seed_013"
     },
@@ -161463,6 +161903,17 @@
       "event_id": "within_project__JM1__seed_013"
     },
     {
+      "candidate": "ET_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "within_project__JM1__seed_013"
+    },
+    {
       "candidate": "LR_std_C0.1",
       "type": "imputer",
       "expected": [
@@ -161610,6 +162061,17 @@
       "event_id": "within_project__KC1__seed_013"
     },
     {
+      "candidate": "LR_std_C0.1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "within_project__KC1__seed_013"
+    },
+    {
       "candidate": "LR_std_C1",
       "type": "imputer",
       "expected": [
@@ -161753,6 +162215,17 @@
       "passed_mean": true,
       "passed_var": true,
       "passed_features": true,
+      "passed": true,
+      "event_id": "within_project__KC1__seed_013"
+    },
+    {
+      "candidate": "LR_std_C1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
       "passed": true,
       "event_id": "within_project__KC1__seed_013"
     },
@@ -161807,6 +162280,17 @@
       "event_id": "within_project__KC1__seed_013"
     },
     {
+      "candidate": "DT_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "within_project__KC1__seed_013"
+    },
+    {
       "candidate": "ET_leaf5",
       "type": "imputer",
       "expected": [
@@ -161853,6 +162337,17 @@
         55.51,
         1.0
       ],
+      "passed": true,
+      "event_id": "within_project__KC1__seed_013"
+    },
+    {
+      "candidate": "ET_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
       "passed": true,
       "event_id": "within_project__KC1__seed_013"
     },
@@ -162004,6 +162499,17 @@
       "event_id": "within_project__KC2__seed_013"
     },
     {
+      "candidate": "LR_std_C0.1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "within_project__KC2__seed_013"
+    },
+    {
       "candidate": "LR_std_C1",
       "type": "imputer",
       "expected": [
@@ -162151,6 +162657,17 @@
       "event_id": "within_project__KC2__seed_013"
     },
     {
+      "candidate": "LR_std_C1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "within_project__KC2__seed_013"
+    },
+    {
       "candidate": "DT_leaf5",
       "type": "imputer",
       "expected": [
@@ -162197,6 +162714,17 @@
         88.405,
         2.0
       ],
+      "passed": true,
+      "event_id": "within_project__KC2__seed_013"
+    },
+    {
+      "candidate": "DT_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
       "passed": true,
       "event_id": "within_project__KC2__seed_013"
     },
@@ -162251,6 +162779,17 @@
       "event_id": "within_project__KC2__seed_013"
     },
     {
+      "candidate": "ET_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "within_project__KC2__seed_013"
+    },
+    {
       "candidate": "LR_std_C0.1",
       "type": "imputer",
       "expected": [
@@ -162398,6 +162937,17 @@
       "event_id": "within_project__PC1__seed_013"
     },
     {
+      "candidate": "LR_std_C0.1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "within_project__PC1__seed_013"
+    },
+    {
       "candidate": "LR_std_C1",
       "type": "imputer",
       "expected": [
@@ -162541,6 +163091,17 @@
       "passed_mean": true,
       "passed_var": true,
       "passed_features": true,
+      "passed": true,
+      "event_id": "within_project__PC1__seed_013"
+    },
+    {
+      "candidate": "LR_std_C1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
       "passed": true,
       "event_id": "within_project__PC1__seed_013"
     },
@@ -162595,6 +163156,17 @@
       "event_id": "within_project__PC1__seed_013"
     },
     {
+      "candidate": "DT_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "within_project__PC1__seed_013"
+    },
+    {
       "candidate": "ET_leaf5",
       "type": "imputer",
       "expected": [
@@ -162641,6 +163213,17 @@
         285.29,
         3.0
       ],
+      "passed": true,
+      "event_id": "within_project__PC1__seed_013"
+    },
+    {
+      "candidate": "ET_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
       "passed": true,
       "event_id": "within_project__PC1__seed_013"
     },
@@ -162792,6 +163375,17 @@
       "event_id": "within_project__CM1__seed_029"
     },
     {
+      "candidate": "LR_std_C0.1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "within_project__CM1__seed_029"
+    },
+    {
       "candidate": "LR_std_C1",
       "type": "imputer",
       "expected": [
@@ -162939,6 +163533,17 @@
       "event_id": "within_project__CM1__seed_029"
     },
     {
+      "candidate": "LR_std_C1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "within_project__CM1__seed_029"
+    },
+    {
       "candidate": "DT_leaf5",
       "type": "imputer",
       "expected": [
@@ -162985,6 +163590,17 @@
         299.105,
         3.0
       ],
+      "passed": true,
+      "event_id": "within_project__CM1__seed_029"
+    },
+    {
+      "candidate": "DT_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
       "passed": true,
       "event_id": "within_project__CM1__seed_029"
     },
@@ -163039,6 +163655,17 @@
       "event_id": "within_project__CM1__seed_029"
     },
     {
+      "candidate": "ET_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "within_project__CM1__seed_029"
+    },
+    {
       "candidate": "LR_std_C0.1",
       "type": "imputer",
       "expected": [
@@ -163186,6 +163813,17 @@
       "event_id": "within_project__JM1__seed_029"
     },
     {
+      "candidate": "LR_std_C0.1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "within_project__JM1__seed_029"
+    },
+    {
       "candidate": "LR_std_C1",
       "type": "imputer",
       "expected": [
@@ -163329,6 +163967,17 @@
       "passed_mean": true,
       "passed_var": true,
       "passed_features": true,
+      "passed": true,
+      "event_id": "within_project__JM1__seed_029"
+    },
+    {
+      "candidate": "LR_std_C1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
       "passed": true,
       "event_id": "within_project__JM1__seed_029"
     },
@@ -163383,6 +164032,17 @@
       "event_id": "within_project__JM1__seed_029"
     },
     {
+      "candidate": "DT_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "within_project__JM1__seed_029"
+    },
+    {
       "candidate": "ET_leaf5",
       "type": "imputer",
       "expected": [
@@ -163429,6 +164089,17 @@
         209.405,
         3.0
       ],
+      "passed": true,
+      "event_id": "within_project__JM1__seed_029"
+    },
+    {
+      "candidate": "ET_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
       "passed": true,
       "event_id": "within_project__JM1__seed_029"
     },
@@ -163580,6 +164251,17 @@
       "event_id": "within_project__KC1__seed_029"
     },
     {
+      "candidate": "LR_std_C0.1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "within_project__KC1__seed_029"
+    },
+    {
       "candidate": "LR_std_C1",
       "type": "imputer",
       "expected": [
@@ -163727,6 +164409,17 @@
       "event_id": "within_project__KC1__seed_029"
     },
     {
+      "candidate": "LR_std_C1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "within_project__KC1__seed_029"
+    },
+    {
       "candidate": "DT_leaf5",
       "type": "imputer",
       "expected": [
@@ -163773,6 +164466,17 @@
         57.36,
         1.0
       ],
+      "passed": true,
+      "event_id": "within_project__KC1__seed_029"
+    },
+    {
+      "candidate": "DT_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
       "passed": true,
       "event_id": "within_project__KC1__seed_029"
     },
@@ -163827,6 +164531,17 @@
       "event_id": "within_project__KC1__seed_029"
     },
     {
+      "candidate": "ET_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "within_project__KC1__seed_029"
+    },
+    {
       "candidate": "LR_std_C0.1",
       "type": "imputer",
       "expected": [
@@ -163974,6 +164689,17 @@
       "event_id": "within_project__KC2__seed_029"
     },
     {
+      "candidate": "LR_std_C0.1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "within_project__KC2__seed_029"
+    },
+    {
       "candidate": "LR_std_C1",
       "type": "imputer",
       "expected": [
@@ -164117,6 +164843,17 @@
       "passed_mean": true,
       "passed_var": true,
       "passed_features": true,
+      "passed": true,
+      "event_id": "within_project__KC2__seed_029"
+    },
+    {
+      "candidate": "LR_std_C1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
       "passed": true,
       "event_id": "within_project__KC2__seed_029"
     },
@@ -164171,6 +164908,17 @@
       "event_id": "within_project__KC2__seed_029"
     },
     {
+      "candidate": "DT_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "within_project__KC2__seed_029"
+    },
+    {
       "candidate": "ET_leaf5",
       "type": "imputer",
       "expected": [
@@ -164217,6 +164965,17 @@
         129.865,
         2.0
       ],
+      "passed": true,
+      "event_id": "within_project__KC2__seed_029"
+    },
+    {
+      "candidate": "ET_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
       "passed": true,
       "event_id": "within_project__KC2__seed_029"
     },
@@ -164368,6 +165127,17 @@
       "event_id": "within_project__PC1__seed_029"
     },
     {
+      "candidate": "LR_std_C0.1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "within_project__PC1__seed_029"
+    },
+    {
       "candidate": "LR_std_C1",
       "type": "imputer",
       "expected": [
@@ -164515,6 +165285,17 @@
       "event_id": "within_project__PC1__seed_029"
     },
     {
+      "candidate": "LR_std_C1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "within_project__PC1__seed_029"
+    },
+    {
       "candidate": "DT_leaf5",
       "type": "imputer",
       "expected": [
@@ -164561,6 +165342,17 @@
         272.48,
         3.0
       ],
+      "passed": true,
+      "event_id": "within_project__PC1__seed_029"
+    },
+    {
+      "candidate": "DT_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
       "passed": true,
       "event_id": "within_project__PC1__seed_029"
     },
@@ -164615,6 +165407,17 @@
       "event_id": "within_project__PC1__seed_029"
     },
     {
+      "candidate": "ET_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "within_project__PC1__seed_029"
+    },
+    {
       "candidate": "LR_std_C0.1",
       "type": "imputer",
       "expected": [
@@ -164762,6 +165565,17 @@
       "event_id": "within_project__CM1__seed_042"
     },
     {
+      "candidate": "LR_std_C0.1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "within_project__CM1__seed_042"
+    },
+    {
       "candidate": "LR_std_C1",
       "type": "imputer",
       "expected": [
@@ -164905,6 +165719,17 @@
       "passed_mean": true,
       "passed_var": true,
       "passed_features": true,
+      "passed": true,
+      "event_id": "within_project__CM1__seed_042"
+    },
+    {
+      "candidate": "LR_std_C1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
       "passed": true,
       "event_id": "within_project__CM1__seed_042"
     },
@@ -164959,6 +165784,17 @@
       "event_id": "within_project__CM1__seed_042"
     },
     {
+      "candidate": "DT_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "within_project__CM1__seed_042"
+    },
+    {
       "candidate": "ET_leaf5",
       "type": "imputer",
       "expected": [
@@ -165005,6 +165841,17 @@
         310.625,
         3.0
       ],
+      "passed": true,
+      "event_id": "within_project__CM1__seed_042"
+    },
+    {
+      "candidate": "ET_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
       "passed": true,
       "event_id": "within_project__CM1__seed_042"
     },
@@ -165156,6 +166003,17 @@
       "event_id": "within_project__JM1__seed_042"
     },
     {
+      "candidate": "LR_std_C0.1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "within_project__JM1__seed_042"
+    },
+    {
       "candidate": "LR_std_C1",
       "type": "imputer",
       "expected": [
@@ -165303,6 +166161,17 @@
       "event_id": "within_project__JM1__seed_042"
     },
     {
+      "candidate": "LR_std_C1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "within_project__JM1__seed_042"
+    },
+    {
       "candidate": "DT_leaf5",
       "type": "imputer",
       "expected": [
@@ -165349,6 +166218,17 @@
         203.56,
         3.0
       ],
+      "passed": true,
+      "event_id": "within_project__JM1__seed_042"
+    },
+    {
+      "candidate": "DT_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
       "passed": true,
       "event_id": "within_project__JM1__seed_042"
     },
@@ -165403,6 +166283,17 @@
       "event_id": "within_project__JM1__seed_042"
     },
     {
+      "candidate": "ET_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "within_project__JM1__seed_042"
+    },
+    {
       "candidate": "LR_std_C0.1",
       "type": "imputer",
       "expected": [
@@ -165550,6 +166441,17 @@
       "event_id": "within_project__KC1__seed_042"
     },
     {
+      "candidate": "LR_std_C0.1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "within_project__KC1__seed_042"
+    },
+    {
       "candidate": "LR_std_C1",
       "type": "imputer",
       "expected": [
@@ -165693,6 +166595,17 @@
       "passed_mean": true,
       "passed_var": true,
       "passed_features": true,
+      "passed": true,
+      "event_id": "within_project__KC1__seed_042"
+    },
+    {
+      "candidate": "LR_std_C1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
       "passed": true,
       "event_id": "within_project__KC1__seed_042"
     },
@@ -165747,6 +166660,17 @@
       "event_id": "within_project__KC1__seed_042"
     },
     {
+      "candidate": "DT_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "within_project__KC1__seed_042"
+    },
+    {
       "candidate": "ET_leaf5",
       "type": "imputer",
       "expected": [
@@ -165793,6 +166717,17 @@
         62.27,
         1.0
       ],
+      "passed": true,
+      "event_id": "within_project__KC1__seed_042"
+    },
+    {
+      "candidate": "ET_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
       "passed": true,
       "event_id": "within_project__KC1__seed_042"
     },
@@ -165944,6 +166879,17 @@
       "event_id": "within_project__KC2__seed_042"
     },
     {
+      "candidate": "LR_std_C0.1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "within_project__KC2__seed_042"
+    },
+    {
       "candidate": "LR_std_C1",
       "type": "imputer",
       "expected": [
@@ -166091,6 +167037,17 @@
       "event_id": "within_project__KC2__seed_042"
     },
     {
+      "candidate": "LR_std_C1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "within_project__KC2__seed_042"
+    },
+    {
       "candidate": "DT_leaf5",
       "type": "imputer",
       "expected": [
@@ -166137,6 +167094,17 @@
         133.445,
         2.0
       ],
+      "passed": true,
+      "event_id": "within_project__KC2__seed_042"
+    },
+    {
+      "candidate": "DT_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
       "passed": true,
       "event_id": "within_project__KC2__seed_042"
     },
@@ -166191,6 +167159,17 @@
       "event_id": "within_project__KC2__seed_042"
     },
     {
+      "candidate": "ET_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "within_project__KC2__seed_042"
+    },
+    {
       "candidate": "LR_std_C0.1",
       "type": "imputer",
       "expected": [
@@ -166338,6 +167317,17 @@
       "event_id": "within_project__PC1__seed_042"
     },
     {
+      "candidate": "LR_std_C0.1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "within_project__PC1__seed_042"
+    },
+    {
       "candidate": "LR_std_C1",
       "type": "imputer",
       "expected": [
@@ -166481,6 +167471,17 @@
       "passed_mean": true,
       "passed_var": true,
       "passed_features": true,
+      "passed": true,
+      "event_id": "within_project__PC1__seed_042"
+    },
+    {
+      "candidate": "LR_std_C1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
       "passed": true,
       "event_id": "within_project__PC1__seed_042"
     },
@@ -166535,6 +167536,17 @@
       "event_id": "within_project__PC1__seed_042"
     },
     {
+      "candidate": "DT_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "within_project__PC1__seed_042"
+    },
+    {
       "candidate": "ET_leaf5",
       "type": "imputer",
       "expected": [
@@ -166581,6 +167593,17 @@
         293.89,
         3.0
       ],
+      "passed": true,
+      "event_id": "within_project__PC1__seed_042"
+    },
+    {
+      "candidate": "ET_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
       "passed": true,
       "event_id": "within_project__PC1__seed_042"
     },
@@ -166732,6 +167755,17 @@
       "event_id": "within_project__CM1__seed_101"
     },
     {
+      "candidate": "LR_std_C0.1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "within_project__CM1__seed_101"
+    },
+    {
       "candidate": "LR_std_C1",
       "type": "imputer",
       "expected": [
@@ -166879,6 +167913,17 @@
       "event_id": "within_project__CM1__seed_101"
     },
     {
+      "candidate": "LR_std_C1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "within_project__CM1__seed_101"
+    },
+    {
       "candidate": "DT_leaf5",
       "type": "imputer",
       "expected": [
@@ -166925,6 +167970,17 @@
         343.065,
         3.0
       ],
+      "passed": true,
+      "event_id": "within_project__CM1__seed_101"
+    },
+    {
+      "candidate": "DT_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
       "passed": true,
       "event_id": "within_project__CM1__seed_101"
     },
@@ -166979,6 +168035,17 @@
       "event_id": "within_project__CM1__seed_101"
     },
     {
+      "candidate": "ET_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "within_project__CM1__seed_101"
+    },
+    {
       "candidate": "LR_std_C0.1",
       "type": "imputer",
       "expected": [
@@ -167126,6 +168193,17 @@
       "event_id": "within_project__JM1__seed_101"
     },
     {
+      "candidate": "LR_std_C0.1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "within_project__JM1__seed_101"
+    },
+    {
       "candidate": "LR_std_C1",
       "type": "imputer",
       "expected": [
@@ -167269,6 +168347,17 @@
       "passed_mean": true,
       "passed_var": true,
       "passed_features": true,
+      "passed": true,
+      "event_id": "within_project__JM1__seed_101"
+    },
+    {
+      "candidate": "LR_std_C1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
       "passed": true,
       "event_id": "within_project__JM1__seed_101"
     },
@@ -167323,6 +168412,17 @@
       "event_id": "within_project__JM1__seed_101"
     },
     {
+      "candidate": "DT_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "within_project__JM1__seed_101"
+    },
+    {
       "candidate": "ET_leaf5",
       "type": "imputer",
       "expected": [
@@ -167369,6 +168469,17 @@
         204.46,
         3.0
       ],
+      "passed": true,
+      "event_id": "within_project__JM1__seed_101"
+    },
+    {
+      "candidate": "ET_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
       "passed": true,
       "event_id": "within_project__JM1__seed_101"
     },
@@ -167520,6 +168631,17 @@
       "event_id": "within_project__KC1__seed_101"
     },
     {
+      "candidate": "LR_std_C0.1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "within_project__KC1__seed_101"
+    },
+    {
       "candidate": "LR_std_C1",
       "type": "imputer",
       "expected": [
@@ -167667,6 +168789,17 @@
       "event_id": "within_project__KC1__seed_101"
     },
     {
+      "candidate": "LR_std_C1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "within_project__KC1__seed_101"
+    },
+    {
       "candidate": "DT_leaf5",
       "type": "imputer",
       "expected": [
@@ -167713,6 +168846,17 @@
         51.89,
         1.0
       ],
+      "passed": true,
+      "event_id": "within_project__KC1__seed_101"
+    },
+    {
+      "candidate": "DT_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
       "passed": true,
       "event_id": "within_project__KC1__seed_101"
     },
@@ -167767,6 +168911,17 @@
       "event_id": "within_project__KC1__seed_101"
     },
     {
+      "candidate": "ET_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "within_project__KC1__seed_101"
+    },
+    {
       "candidate": "LR_std_C0.1",
       "type": "imputer",
       "expected": [
@@ -167914,6 +169069,17 @@
       "event_id": "within_project__KC2__seed_101"
     },
     {
+      "candidate": "LR_std_C0.1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "within_project__KC2__seed_101"
+    },
+    {
       "candidate": "LR_std_C1",
       "type": "imputer",
       "expected": [
@@ -168057,6 +169223,17 @@
       "passed_mean": true,
       "passed_var": true,
       "passed_features": true,
+      "passed": true,
+      "event_id": "within_project__KC2__seed_101"
+    },
+    {
+      "candidate": "LR_std_C1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
       "passed": true,
       "event_id": "within_project__KC2__seed_101"
     },
@@ -168111,6 +169288,17 @@
       "event_id": "within_project__KC2__seed_101"
     },
     {
+      "candidate": "DT_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "within_project__KC2__seed_101"
+    },
+    {
       "candidate": "ET_leaf5",
       "type": "imputer",
       "expected": [
@@ -168157,6 +169345,17 @@
         88.405,
         2.0
       ],
+      "passed": true,
+      "event_id": "within_project__KC2__seed_101"
+    },
+    {
+      "candidate": "ET_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
       "passed": true,
       "event_id": "within_project__KC2__seed_101"
     },
@@ -168308,6 +169507,17 @@
       "event_id": "within_project__PC1__seed_101"
     },
     {
+      "candidate": "LR_std_C0.1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "within_project__PC1__seed_101"
+    },
+    {
       "candidate": "LR_std_C1",
       "type": "imputer",
       "expected": [
@@ -168455,6 +169665,17 @@
       "event_id": "within_project__PC1__seed_101"
     },
     {
+      "candidate": "LR_std_C1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "within_project__PC1__seed_101"
+    },
+    {
       "candidate": "DT_leaf5",
       "type": "imputer",
       "expected": [
@@ -168501,6 +169722,17 @@
         272.28,
         3.0
       ],
+      "passed": true,
+      "event_id": "within_project__PC1__seed_101"
+    },
+    {
+      "candidate": "DT_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
       "passed": true,
       "event_id": "within_project__PC1__seed_101"
     },
@@ -168555,6 +169787,17 @@
       "event_id": "within_project__PC1__seed_101"
     },
     {
+      "candidate": "ET_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "within_project__PC1__seed_101"
+    },
+    {
       "candidate": "LR_std_C0.1",
       "type": "imputer",
       "expected": [
@@ -168702,6 +169945,17 @@
       "event_id": "cross_project__CM1__seed_007"
     },
     {
+      "candidate": "LR_std_C0.1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "cross_project__CM1__seed_007"
+    },
+    {
       "candidate": "LR_std_C1",
       "type": "imputer",
       "expected": [
@@ -168845,6 +170099,17 @@
       "passed_mean": true,
       "passed_var": true,
       "passed_features": true,
+      "passed": true,
+      "event_id": "cross_project__CM1__seed_007"
+    },
+    {
+      "candidate": "LR_std_C1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
       "passed": true,
       "event_id": "cross_project__CM1__seed_007"
     },
@@ -168899,6 +170164,17 @@
       "event_id": "cross_project__CM1__seed_007"
     },
     {
+      "candidate": "DT_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "cross_project__CM1__seed_007"
+    },
+    {
       "candidate": "ET_leaf5",
       "type": "imputer",
       "expected": [
@@ -168945,6 +170221,17 @@
         182.84,
         3.0
       ],
+      "passed": true,
+      "event_id": "cross_project__CM1__seed_007"
+    },
+    {
+      "candidate": "ET_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
       "passed": true,
       "event_id": "cross_project__CM1__seed_007"
     },
@@ -169096,6 +170383,17 @@
       "event_id": "cross_project__JM1__seed_007"
     },
     {
+      "candidate": "LR_std_C0.1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "cross_project__JM1__seed_007"
+    },
+    {
       "candidate": "LR_std_C1",
       "type": "imputer",
       "expected": [
@@ -169243,6 +170541,17 @@
       "event_id": "cross_project__JM1__seed_007"
     },
     {
+      "candidate": "LR_std_C1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "cross_project__JM1__seed_007"
+    },
+    {
       "candidate": "DT_leaf5",
       "type": "imputer",
       "expected": [
@@ -169289,6 +170598,17 @@
         134.89,
         2.0
       ],
+      "passed": true,
+      "event_id": "cross_project__JM1__seed_007"
+    },
+    {
+      "candidate": "DT_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
       "passed": true,
       "event_id": "cross_project__JM1__seed_007"
     },
@@ -169343,6 +170663,17 @@
       "event_id": "cross_project__JM1__seed_007"
     },
     {
+      "candidate": "ET_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "cross_project__JM1__seed_007"
+    },
+    {
       "candidate": "LR_std_C0.1",
       "type": "imputer",
       "expected": [
@@ -169490,6 +170821,17 @@
       "event_id": "cross_project__KC1__seed_007"
     },
     {
+      "candidate": "LR_std_C0.1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "cross_project__KC1__seed_007"
+    },
+    {
       "candidate": "LR_std_C1",
       "type": "imputer",
       "expected": [
@@ -169633,6 +170975,17 @@
       "passed_mean": true,
       "passed_var": true,
       "passed_features": true,
+      "passed": true,
+      "event_id": "cross_project__KC1__seed_007"
+    },
+    {
+      "candidate": "LR_std_C1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
       "passed": true,
       "event_id": "cross_project__KC1__seed_007"
     },
@@ -169687,6 +171040,17 @@
       "event_id": "cross_project__KC1__seed_007"
     },
     {
+      "candidate": "DT_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "cross_project__KC1__seed_007"
+    },
+    {
       "candidate": "ET_leaf5",
       "type": "imputer",
       "expected": [
@@ -169733,6 +171097,17 @@
         211.52,
         3.0
       ],
+      "passed": true,
+      "event_id": "cross_project__KC1__seed_007"
+    },
+    {
+      "candidate": "ET_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
       "passed": true,
       "event_id": "cross_project__KC1__seed_007"
     },
@@ -169884,6 +171259,17 @@
       "event_id": "cross_project__KC2__seed_007"
     },
     {
+      "candidate": "LR_std_C0.1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "cross_project__KC2__seed_007"
+    },
+    {
       "candidate": "LR_std_C1",
       "type": "imputer",
       "expected": [
@@ -170031,6 +171417,17 @@
       "event_id": "cross_project__KC2__seed_007"
     },
     {
+      "candidate": "LR_std_C1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "cross_project__KC2__seed_007"
+    },
+    {
       "candidate": "DT_leaf5",
       "type": "imputer",
       "expected": [
@@ -170077,6 +171474,17 @@
         188.87,
         3.0
       ],
+      "passed": true,
+      "event_id": "cross_project__KC2__seed_007"
+    },
+    {
+      "candidate": "DT_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
       "passed": true,
       "event_id": "cross_project__KC2__seed_007"
     },
@@ -170131,6 +171539,17 @@
       "event_id": "cross_project__KC2__seed_007"
     },
     {
+      "candidate": "ET_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "cross_project__KC2__seed_007"
+    },
+    {
       "candidate": "LR_std_C0.1",
       "type": "imputer",
       "expected": [
@@ -170278,6 +171697,17 @@
       "event_id": "cross_project__PC1__seed_007"
     },
     {
+      "candidate": "LR_std_C0.1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "cross_project__PC1__seed_007"
+    },
+    {
       "candidate": "LR_std_C1",
       "type": "imputer",
       "expected": [
@@ -170421,6 +171851,17 @@
       "passed_mean": true,
       "passed_var": true,
       "passed_features": true,
+      "passed": true,
+      "event_id": "cross_project__PC1__seed_007"
+    },
+    {
+      "candidate": "LR_std_C1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
       "passed": true,
       "event_id": "cross_project__PC1__seed_007"
     },
@@ -170475,6 +171916,17 @@
       "event_id": "cross_project__PC1__seed_007"
     },
     {
+      "candidate": "DT_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "cross_project__PC1__seed_007"
+    },
+    {
       "candidate": "ET_leaf5",
       "type": "imputer",
       "expected": [
@@ -170521,6 +171973,17 @@
         182.84,
         3.0
       ],
+      "passed": true,
+      "event_id": "cross_project__PC1__seed_007"
+    },
+    {
+      "candidate": "ET_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
       "passed": true,
       "event_id": "cross_project__PC1__seed_007"
     },
@@ -170672,6 +172135,17 @@
       "event_id": "cross_project__CM1__seed_013"
     },
     {
+      "candidate": "LR_std_C0.1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "cross_project__CM1__seed_013"
+    },
+    {
       "candidate": "LR_std_C1",
       "type": "imputer",
       "expected": [
@@ -170819,6 +172293,17 @@
       "event_id": "cross_project__CM1__seed_013"
     },
     {
+      "candidate": "LR_std_C1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "cross_project__CM1__seed_013"
+    },
+    {
       "candidate": "DT_leaf5",
       "type": "imputer",
       "expected": [
@@ -170865,6 +172350,17 @@
         183.4,
         3.0
       ],
+      "passed": true,
+      "event_id": "cross_project__CM1__seed_013"
+    },
+    {
+      "candidate": "DT_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
       "passed": true,
       "event_id": "cross_project__CM1__seed_013"
     },
@@ -170919,6 +172415,17 @@
       "event_id": "cross_project__CM1__seed_013"
     },
     {
+      "candidate": "ET_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "cross_project__CM1__seed_013"
+    },
+    {
       "candidate": "LR_std_C0.1",
       "type": "imputer",
       "expected": [
@@ -171066,6 +172573,17 @@
       "event_id": "cross_project__JM1__seed_013"
     },
     {
+      "candidate": "LR_std_C0.1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "cross_project__JM1__seed_013"
+    },
+    {
       "candidate": "LR_std_C1",
       "type": "imputer",
       "expected": [
@@ -171209,6 +172727,17 @@
       "passed_mean": true,
       "passed_var": true,
       "passed_features": true,
+      "passed": true,
+      "event_id": "cross_project__JM1__seed_013"
+    },
+    {
+      "candidate": "LR_std_C1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
       "passed": true,
       "event_id": "cross_project__JM1__seed_013"
     },
@@ -171263,6 +172792,17 @@
       "event_id": "cross_project__JM1__seed_013"
     },
     {
+      "candidate": "DT_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "cross_project__JM1__seed_013"
+    },
+    {
       "candidate": "ET_leaf5",
       "type": "imputer",
       "expected": [
@@ -171309,6 +172849,17 @@
         128.635,
         2.0
       ],
+      "passed": true,
+      "event_id": "cross_project__JM1__seed_013"
+    },
+    {
+      "candidate": "ET_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
       "passed": true,
       "event_id": "cross_project__JM1__seed_013"
     },
@@ -171460,6 +173011,17 @@
       "event_id": "cross_project__KC1__seed_013"
     },
     {
+      "candidate": "LR_std_C0.1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "cross_project__KC1__seed_013"
+    },
+    {
       "candidate": "LR_std_C1",
       "type": "imputer",
       "expected": [
@@ -171607,6 +173169,17 @@
       "event_id": "cross_project__KC1__seed_013"
     },
     {
+      "candidate": "LR_std_C1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "cross_project__KC1__seed_013"
+    },
+    {
       "candidate": "DT_leaf5",
       "type": "imputer",
       "expected": [
@@ -171653,6 +173226,17 @@
         208.08,
         3.0
       ],
+      "passed": true,
+      "event_id": "cross_project__KC1__seed_013"
+    },
+    {
+      "candidate": "DT_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
       "passed": true,
       "event_id": "cross_project__KC1__seed_013"
     },
@@ -171707,6 +173291,17 @@
       "event_id": "cross_project__KC1__seed_013"
     },
     {
+      "candidate": "ET_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "cross_project__KC1__seed_013"
+    },
+    {
       "candidate": "LR_std_C0.1",
       "type": "imputer",
       "expected": [
@@ -171854,6 +173449,17 @@
       "event_id": "cross_project__KC2__seed_013"
     },
     {
+      "candidate": "LR_std_C0.1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "cross_project__KC2__seed_013"
+    },
+    {
       "candidate": "LR_std_C1",
       "type": "imputer",
       "expected": [
@@ -171997,6 +173603,17 @@
       "passed_mean": true,
       "passed_var": true,
       "passed_features": true,
+      "passed": true,
+      "event_id": "cross_project__KC2__seed_013"
+    },
+    {
+      "candidate": "LR_std_C1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
       "passed": true,
       "event_id": "cross_project__KC2__seed_013"
     },
@@ -172051,6 +173668,17 @@
       "event_id": "cross_project__KC2__seed_013"
     },
     {
+      "candidate": "DT_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "cross_project__KC2__seed_013"
+    },
+    {
       "candidate": "ET_leaf5",
       "type": "imputer",
       "expected": [
@@ -172097,6 +173725,17 @@
         187.3,
         3.0
       ],
+      "passed": true,
+      "event_id": "cross_project__KC2__seed_013"
+    },
+    {
+      "candidate": "ET_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
       "passed": true,
       "event_id": "cross_project__KC2__seed_013"
     },
@@ -172248,6 +173887,17 @@
       "event_id": "cross_project__PC1__seed_013"
     },
     {
+      "candidate": "LR_std_C0.1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "cross_project__PC1__seed_013"
+    },
+    {
       "candidate": "LR_std_C1",
       "type": "imputer",
       "expected": [
@@ -172395,6 +174045,17 @@
       "event_id": "cross_project__PC1__seed_013"
     },
     {
+      "candidate": "LR_std_C1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "cross_project__PC1__seed_013"
+    },
+    {
       "candidate": "DT_leaf5",
       "type": "imputer",
       "expected": [
@@ -172441,6 +174102,17 @@
         180.94,
         3.0
       ],
+      "passed": true,
+      "event_id": "cross_project__PC1__seed_013"
+    },
+    {
+      "candidate": "DT_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
       "passed": true,
       "event_id": "cross_project__PC1__seed_013"
     },
@@ -172495,6 +174167,17 @@
       "event_id": "cross_project__PC1__seed_013"
     },
     {
+      "candidate": "ET_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "cross_project__PC1__seed_013"
+    },
+    {
       "candidate": "LR_std_C0.1",
       "type": "imputer",
       "expected": [
@@ -172642,6 +174325,17 @@
       "event_id": "cross_project__CM1__seed_029"
     },
     {
+      "candidate": "LR_std_C0.1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "cross_project__CM1__seed_029"
+    },
+    {
       "candidate": "LR_std_C1",
       "type": "imputer",
       "expected": [
@@ -172785,6 +174479,17 @@
       "passed_mean": true,
       "passed_var": true,
       "passed_features": true,
+      "passed": true,
+      "event_id": "cross_project__CM1__seed_029"
+    },
+    {
+      "candidate": "LR_std_C1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
       "passed": true,
       "event_id": "cross_project__CM1__seed_029"
     },
@@ -172839,6 +174544,17 @@
       "event_id": "cross_project__CM1__seed_029"
     },
     {
+      "candidate": "DT_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "cross_project__CM1__seed_029"
+    },
+    {
       "candidate": "ET_leaf5",
       "type": "imputer",
       "expected": [
@@ -172885,6 +174601,17 @@
         185.84,
         3.0
       ],
+      "passed": true,
+      "event_id": "cross_project__CM1__seed_029"
+    },
+    {
+      "candidate": "ET_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
       "passed": true,
       "event_id": "cross_project__CM1__seed_029"
     },
@@ -173036,6 +174763,17 @@
       "event_id": "cross_project__JM1__seed_029"
     },
     {
+      "candidate": "LR_std_C0.1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "cross_project__JM1__seed_029"
+    },
+    {
       "candidate": "LR_std_C1",
       "type": "imputer",
       "expected": [
@@ -173183,6 +174921,17 @@
       "event_id": "cross_project__JM1__seed_029"
     },
     {
+      "candidate": "LR_std_C1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "cross_project__JM1__seed_029"
+    },
+    {
       "candidate": "DT_leaf5",
       "type": "imputer",
       "expected": [
@@ -173229,6 +174978,17 @@
         130.8,
         2.0
       ],
+      "passed": true,
+      "event_id": "cross_project__JM1__seed_029"
+    },
+    {
+      "candidate": "DT_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
       "passed": true,
       "event_id": "cross_project__JM1__seed_029"
     },
@@ -173283,6 +175043,17 @@
       "event_id": "cross_project__JM1__seed_029"
     },
     {
+      "candidate": "ET_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "cross_project__JM1__seed_029"
+    },
+    {
       "candidate": "LR_std_C0.1",
       "type": "imputer",
       "expected": [
@@ -173430,6 +175201,17 @@
       "event_id": "cross_project__KC1__seed_029"
     },
     {
+      "candidate": "LR_std_C0.1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "cross_project__KC1__seed_029"
+    },
+    {
       "candidate": "LR_std_C1",
       "type": "imputer",
       "expected": [
@@ -173573,6 +175355,17 @@
       "passed_mean": true,
       "passed_var": true,
       "passed_features": true,
+      "passed": true,
+      "event_id": "cross_project__KC1__seed_029"
+    },
+    {
+      "candidate": "LR_std_C1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
       "passed": true,
       "event_id": "cross_project__KC1__seed_029"
     },
@@ -173627,6 +175420,17 @@
       "event_id": "cross_project__KC1__seed_029"
     },
     {
+      "candidate": "DT_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "cross_project__KC1__seed_029"
+    },
+    {
       "candidate": "ET_leaf5",
       "type": "imputer",
       "expected": [
@@ -173673,6 +175477,17 @@
         210.83,
         3.0
       ],
+      "passed": true,
+      "event_id": "cross_project__KC1__seed_029"
+    },
+    {
+      "candidate": "ET_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
       "passed": true,
       "event_id": "cross_project__KC1__seed_029"
     },
@@ -173824,6 +175639,17 @@
       "event_id": "cross_project__KC2__seed_029"
     },
     {
+      "candidate": "LR_std_C0.1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "cross_project__KC2__seed_029"
+    },
+    {
       "candidate": "LR_std_C1",
       "type": "imputer",
       "expected": [
@@ -173971,6 +175797,17 @@
       "event_id": "cross_project__KC2__seed_029"
     },
     {
+      "candidate": "LR_std_C1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "cross_project__KC2__seed_029"
+    },
+    {
       "candidate": "DT_leaf5",
       "type": "imputer",
       "expected": [
@@ -174017,6 +175854,17 @@
         188.87,
         3.0
       ],
+      "passed": true,
+      "event_id": "cross_project__KC2__seed_029"
+    },
+    {
+      "candidate": "DT_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
       "passed": true,
       "event_id": "cross_project__KC2__seed_029"
     },
@@ -174071,6 +175919,17 @@
       "event_id": "cross_project__KC2__seed_029"
     },
     {
+      "candidate": "ET_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "cross_project__KC2__seed_029"
+    },
+    {
       "candidate": "LR_std_C0.1",
       "type": "imputer",
       "expected": [
@@ -174218,6 +176077,17 @@
       "event_id": "cross_project__PC1__seed_029"
     },
     {
+      "candidate": "LR_std_C0.1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "cross_project__PC1__seed_029"
+    },
+    {
       "candidate": "LR_std_C1",
       "type": "imputer",
       "expected": [
@@ -174361,6 +176231,17 @@
       "passed_mean": true,
       "passed_var": true,
       "passed_features": true,
+      "passed": true,
+      "event_id": "cross_project__PC1__seed_029"
+    },
+    {
+      "candidate": "LR_std_C1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
       "passed": true,
       "event_id": "cross_project__PC1__seed_029"
     },
@@ -174415,6 +176296,17 @@
       "event_id": "cross_project__PC1__seed_029"
     },
     {
+      "candidate": "DT_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "cross_project__PC1__seed_029"
+    },
+    {
       "candidate": "ET_leaf5",
       "type": "imputer",
       "expected": [
@@ -174461,6 +176353,17 @@
         182.84,
         3.0
       ],
+      "passed": true,
+      "event_id": "cross_project__PC1__seed_029"
+    },
+    {
+      "candidate": "ET_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
       "passed": true,
       "event_id": "cross_project__PC1__seed_029"
     },
@@ -174612,6 +176515,17 @@
       "event_id": "cross_project__CM1__seed_042"
     },
     {
+      "candidate": "LR_std_C0.1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "cross_project__CM1__seed_042"
+    },
+    {
       "candidate": "LR_std_C1",
       "type": "imputer",
       "expected": [
@@ -174759,6 +176673,17 @@
       "event_id": "cross_project__CM1__seed_042"
     },
     {
+      "candidate": "LR_std_C1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "cross_project__CM1__seed_042"
+    },
+    {
       "candidate": "DT_leaf5",
       "type": "imputer",
       "expected": [
@@ -174805,6 +176730,17 @@
         183.62,
         3.0
       ],
+      "passed": true,
+      "event_id": "cross_project__CM1__seed_042"
+    },
+    {
+      "candidate": "DT_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
       "passed": true,
       "event_id": "cross_project__CM1__seed_042"
     },
@@ -174859,6 +176795,17 @@
       "event_id": "cross_project__CM1__seed_042"
     },
     {
+      "candidate": "ET_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "cross_project__CM1__seed_042"
+    },
+    {
       "candidate": "LR_std_C0.1",
       "type": "imputer",
       "expected": [
@@ -175006,6 +176953,17 @@
       "event_id": "cross_project__JM1__seed_042"
     },
     {
+      "candidate": "LR_std_C0.1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "cross_project__JM1__seed_042"
+    },
+    {
       "candidate": "LR_std_C1",
       "type": "imputer",
       "expected": [
@@ -175149,6 +177107,17 @@
       "passed_mean": true,
       "passed_var": true,
       "passed_features": true,
+      "passed": true,
+      "event_id": "cross_project__JM1__seed_042"
+    },
+    {
+      "candidate": "LR_std_C1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
       "passed": true,
       "event_id": "cross_project__JM1__seed_042"
     },
@@ -175203,6 +177172,17 @@
       "event_id": "cross_project__JM1__seed_042"
     },
     {
+      "candidate": "DT_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "cross_project__JM1__seed_042"
+    },
+    {
       "candidate": "ET_leaf5",
       "type": "imputer",
       "expected": [
@@ -175249,6 +177229,17 @@
         121.86500000000001,
         2.0
       ],
+      "passed": true,
+      "event_id": "cross_project__JM1__seed_042"
+    },
+    {
+      "candidate": "ET_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
       "passed": true,
       "event_id": "cross_project__JM1__seed_042"
     },
@@ -175400,6 +177391,17 @@
       "event_id": "cross_project__KC1__seed_042"
     },
     {
+      "candidate": "LR_std_C0.1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "cross_project__KC1__seed_042"
+    },
+    {
       "candidate": "LR_std_C1",
       "type": "imputer",
       "expected": [
@@ -175547,6 +177549,17 @@
       "event_id": "cross_project__KC1__seed_042"
     },
     {
+      "candidate": "LR_std_C1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "cross_project__KC1__seed_042"
+    },
+    {
       "candidate": "DT_leaf5",
       "type": "imputer",
       "expected": [
@@ -175593,6 +177606,17 @@
         211.52,
         3.0
       ],
+      "passed": true,
+      "event_id": "cross_project__KC1__seed_042"
+    },
+    {
+      "candidate": "DT_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
       "passed": true,
       "event_id": "cross_project__KC1__seed_042"
     },
@@ -175647,6 +177671,17 @@
       "event_id": "cross_project__KC1__seed_042"
     },
     {
+      "candidate": "ET_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "cross_project__KC1__seed_042"
+    },
+    {
       "candidate": "LR_std_C0.1",
       "type": "imputer",
       "expected": [
@@ -175794,6 +177829,17 @@
       "event_id": "cross_project__KC2__seed_042"
     },
     {
+      "candidate": "LR_std_C0.1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "cross_project__KC2__seed_042"
+    },
+    {
       "candidate": "LR_std_C1",
       "type": "imputer",
       "expected": [
@@ -175937,6 +177983,17 @@
       "passed_mean": true,
       "passed_var": true,
       "passed_features": true,
+      "passed": true,
+      "event_id": "cross_project__KC2__seed_042"
+    },
+    {
+      "candidate": "LR_std_C1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
       "passed": true,
       "event_id": "cross_project__KC2__seed_042"
     },
@@ -175991,6 +178048,17 @@
       "event_id": "cross_project__KC2__seed_042"
     },
     {
+      "candidate": "DT_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "cross_project__KC2__seed_042"
+    },
+    {
       "candidate": "ET_leaf5",
       "type": "imputer",
       "expected": [
@@ -176037,6 +178105,17 @@
         188.87,
         3.0
       ],
+      "passed": true,
+      "event_id": "cross_project__KC2__seed_042"
+    },
+    {
+      "candidate": "ET_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
       "passed": true,
       "event_id": "cross_project__KC2__seed_042"
     },
@@ -176188,6 +178267,17 @@
       "event_id": "cross_project__PC1__seed_042"
     },
     {
+      "candidate": "LR_std_C0.1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "cross_project__PC1__seed_042"
+    },
+    {
       "candidate": "LR_std_C1",
       "type": "imputer",
       "expected": [
@@ -176335,6 +178425,17 @@
       "event_id": "cross_project__PC1__seed_042"
     },
     {
+      "candidate": "LR_std_C1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "cross_project__PC1__seed_042"
+    },
+    {
       "candidate": "DT_leaf5",
       "type": "imputer",
       "expected": [
@@ -176381,6 +178482,17 @@
         184.48,
         3.0
       ],
+      "passed": true,
+      "event_id": "cross_project__PC1__seed_042"
+    },
+    {
+      "candidate": "DT_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
       "passed": true,
       "event_id": "cross_project__PC1__seed_042"
     },
@@ -176435,6 +178547,17 @@
       "event_id": "cross_project__PC1__seed_042"
     },
     {
+      "candidate": "ET_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "cross_project__PC1__seed_042"
+    },
+    {
       "candidate": "LR_std_C0.1",
       "type": "imputer",
       "expected": [
@@ -176582,6 +178705,17 @@
       "event_id": "cross_project__CM1__seed_101"
     },
     {
+      "candidate": "LR_std_C0.1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "cross_project__CM1__seed_101"
+    },
+    {
       "candidate": "LR_std_C1",
       "type": "imputer",
       "expected": [
@@ -176725,6 +178859,17 @@
       "passed_mean": true,
       "passed_var": true,
       "passed_features": true,
+      "passed": true,
+      "event_id": "cross_project__CM1__seed_101"
+    },
+    {
+      "candidate": "LR_std_C1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
       "passed": true,
       "event_id": "cross_project__CM1__seed_101"
     },
@@ -176779,6 +178924,17 @@
       "event_id": "cross_project__CM1__seed_101"
     },
     {
+      "candidate": "DT_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "cross_project__CM1__seed_101"
+    },
+    {
       "candidate": "ET_leaf5",
       "type": "imputer",
       "expected": [
@@ -176825,6 +178981,17 @@
         184.48,
         3.0
       ],
+      "passed": true,
+      "event_id": "cross_project__CM1__seed_101"
+    },
+    {
+      "candidate": "ET_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
       "passed": true,
       "event_id": "cross_project__CM1__seed_101"
     },
@@ -176976,6 +179143,17 @@
       "event_id": "cross_project__JM1__seed_101"
     },
     {
+      "candidate": "LR_std_C0.1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "cross_project__JM1__seed_101"
+    },
+    {
       "candidate": "LR_std_C1",
       "type": "imputer",
       "expected": [
@@ -177123,6 +179301,17 @@
       "event_id": "cross_project__JM1__seed_101"
     },
     {
+      "candidate": "LR_std_C1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "cross_project__JM1__seed_101"
+    },
+    {
       "candidate": "DT_leaf5",
       "type": "imputer",
       "expected": [
@@ -177169,6 +179358,17 @@
         133.70999999999998,
         2.0
       ],
+      "passed": true,
+      "event_id": "cross_project__JM1__seed_101"
+    },
+    {
+      "candidate": "DT_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
       "passed": true,
       "event_id": "cross_project__JM1__seed_101"
     },
@@ -177223,6 +179423,17 @@
       "event_id": "cross_project__JM1__seed_101"
     },
     {
+      "candidate": "ET_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "cross_project__JM1__seed_101"
+    },
+    {
       "candidate": "LR_std_C0.1",
       "type": "imputer",
       "expected": [
@@ -177370,6 +179581,17 @@
       "event_id": "cross_project__KC1__seed_101"
     },
     {
+      "candidate": "LR_std_C0.1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "cross_project__KC1__seed_101"
+    },
+    {
       "candidate": "LR_std_C1",
       "type": "imputer",
       "expected": [
@@ -177513,6 +179735,17 @@
       "passed_mean": true,
       "passed_var": true,
       "passed_features": true,
+      "passed": true,
+      "event_id": "cross_project__KC1__seed_101"
+    },
+    {
+      "candidate": "LR_std_C1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
       "passed": true,
       "event_id": "cross_project__KC1__seed_101"
     },
@@ -177567,6 +179800,17 @@
       "event_id": "cross_project__KC1__seed_101"
     },
     {
+      "candidate": "DT_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "cross_project__KC1__seed_101"
+    },
+    {
       "candidate": "ET_leaf5",
       "type": "imputer",
       "expected": [
@@ -177613,6 +179857,17 @@
         211.77,
         3.0
       ],
+      "passed": true,
+      "event_id": "cross_project__KC1__seed_101"
+    },
+    {
+      "candidate": "ET_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
       "passed": true,
       "event_id": "cross_project__KC1__seed_101"
     },
@@ -177764,6 +180019,17 @@
       "event_id": "cross_project__KC2__seed_101"
     },
     {
+      "candidate": "LR_std_C0.1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "cross_project__KC2__seed_101"
+    },
+    {
       "candidate": "LR_std_C1",
       "type": "imputer",
       "expected": [
@@ -177911,6 +180177,17 @@
       "event_id": "cross_project__KC2__seed_101"
     },
     {
+      "candidate": "LR_std_C1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "cross_project__KC2__seed_101"
+    },
+    {
       "candidate": "DT_leaf5",
       "type": "imputer",
       "expected": [
@@ -177961,6 +180238,17 @@
       "event_id": "cross_project__KC2__seed_101"
     },
     {
+      "candidate": "DT_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "cross_project__KC2__seed_101"
+    },
+    {
       "candidate": "ET_leaf5",
       "type": "imputer",
       "expected": [
@@ -178007,6 +180295,17 @@
         190.4,
         3.0
       ],
+      "passed": true,
+      "event_id": "cross_project__KC2__seed_101"
+    },
+    {
+      "candidate": "ET_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
       "passed": true,
       "event_id": "cross_project__KC2__seed_101"
     },
@@ -178158,6 +180457,17 @@
       "event_id": "cross_project__PC1__seed_101"
     },
     {
+      "candidate": "LR_std_C0.1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "cross_project__PC1__seed_101"
+    },
+    {
       "candidate": "LR_std_C1",
       "type": "imputer",
       "expected": [
@@ -178305,6 +180615,17 @@
       "event_id": "cross_project__PC1__seed_101"
     },
     {
+      "candidate": "LR_std_C1",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": 20,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "cross_project__PC1__seed_101"
+    },
+    {
       "candidate": "DT_leaf5",
       "type": "imputer",
       "expected": [
@@ -178355,6 +180676,17 @@
       "event_id": "cross_project__PC1__seed_101"
     },
     {
+      "candidate": "DT_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
+      "passed": true,
+      "event_id": "cross_project__PC1__seed_101"
+    },
+    {
       "candidate": "ET_leaf5",
       "type": "imputer",
       "expected": [
@@ -178401,6 +180733,17 @@
         183.62,
         3.0
       ],
+      "passed": true,
+      "event_id": "cross_project__PC1__seed_101"
+    },
+    {
+      "candidate": "ET_leaf5",
+      "type": "feature_count",
+      "expected_features": 20,
+      "pipeline_n_features_in": 20,
+      "imputer_n_features_in": 20,
+      "scaler_n_features_in": null,
+      "classifier_n_features_in": 20,
       "passed": true,
       "event_id": "cross_project__PC1__seed_101"
     }
@@ -181426,14 +183769,14 @@
     },
     {
       "case_name": "mutate one numeric validation-reconstruction value",
-      "mutation": "increment one metric by 1.0",
+      "mutation": "add 1e-6 to one metric",
       "validator_name": "validate_validation_reconstruction",
       "validator_returned_false": true,
       "passed": true
     },
     {
       "case_name": "mutate one numeric canonical-result-reconstruction value",
-      "mutation": "increment one metric by 1.0",
+      "mutation": "add 1e-6 to one metric",
       "validator_name": "validate_result_reconstruction",
       "validator_returned_false": true,
       "passed": true
@@ -182214,7 +184557,7 @@
       "val_balanced_accuracy": 0.7669683257918551,
       "val_precision": 0.373134328358209,
       "val_recall": 0.7692307692307693,
-      "val_brier": 0.1609439628581787,
+      "val_brier": 0.16094396285817866,
       "val_precision_at_10pct": 0.6046511627906976,
       "val_recall_at_10pct": 0.4,
       "val_lift_at_10pct": 3.9255813953488365,
@@ -182237,7 +184580,7 @@
       "val_balanced_accuracy": 0.7557638439991381,
       "val_precision": 0.352112676056338,
       "val_recall": 0.7692307692307693,
-      "val_brier": 0.1609439628581787,
+      "val_brier": 0.16094396285817866,
       "val_precision_at_10pct": 0.6046511627906976,
       "val_recall_at_10pct": 0.4,
       "val_lift_at_10pct": 3.9255813953488365,
@@ -182260,7 +184603,7 @@
       "val_balanced_accuracy": 0.6824822236586943,
       "val_precision": 0.6,
       "val_recall": 0.4153846153846154,
-      "val_brier": 0.1609439628581787,
+      "val_brier": 0.16094396285817866,
       "val_precision_at_10pct": 0.6046511627906976,
       "val_recall_at_10pct": 0.4,
       "val_lift_at_10pct": 3.9255813953488365,
@@ -183042,7 +185385,7 @@
       "val_balanced_accuracy": 0.7611111111111111,
       "val_precision": 0.30434782608695654,
       "val_recall": 0.7,
-      "val_brier": 0.15214753827781316,
+      "val_brier": 0.1521475382778132,
       "val_precision_at_10pct": 0.2,
       "val_recall_at_10pct": 0.2,
       "val_lift_at_10pct": 2.0,
@@ -183065,7 +185408,7 @@
       "val_balanced_accuracy": 0.75,
       "val_precision": 0.28,
       "val_recall": 0.7,
-      "val_brier": 0.15214753827781316,
+      "val_brier": 0.1521475382778132,
       "val_precision_at_10pct": 0.2,
       "val_recall_at_10pct": 0.2,
       "val_lift_at_10pct": 2.0,
@@ -183088,7 +185431,7 @@
       "val_balanced_accuracy": 0.7611111111111111,
       "val_precision": 0.30434782608695654,
       "val_recall": 0.7,
-      "val_brier": 0.15214753827781316,
+      "val_brier": 0.1521475382778132,
       "val_precision_at_10pct": 0.2,
       "val_recall_at_10pct": 0.2,
       "val_lift_at_10pct": 2.0,
@@ -184146,7 +186489,7 @@
       "val_balanced_accuracy": 0.7281553398058253,
       "val_precision": 0.47058823529411764,
       "val_recall": 0.5,
-      "val_brier": 0.11286947938617665,
+      "val_brier": 0.11286947938617664,
       "val_precision_at_10pct": 0.34782608695652173,
       "val_recall_at_10pct": 0.5,
       "val_lift_at_10pct": 4.826086956521739,
@@ -184169,7 +186512,7 @@
       "val_balanced_accuracy": 0.6941747572815534,
       "val_precision": 0.25806451612903225,
       "val_recall": 0.5,
-      "val_brier": 0.11286947938617665,
+      "val_brier": 0.11286947938617664,
       "val_precision_at_10pct": 0.34782608695652173,
       "val_recall_at_10pct": 0.5,
       "val_lift_at_10pct": 4.826086956521739,
@@ -184192,7 +186535,7 @@
       "val_balanced_accuracy": 0.7281553398058253,
       "val_precision": 0.47058823529411764,
       "val_recall": 0.5,
-      "val_brier": 0.11286947938617665,
+      "val_brier": 0.11286947938617664,
       "val_precision_at_10pct": 0.34782608695652173,
       "val_recall_at_10pct": 0.5,
       "val_lift_at_10pct": 4.826086956521739,
@@ -185250,7 +187593,7 @@
       "val_balanced_accuracy": 0.6666666666666666,
       "val_precision": 1.0,
       "val_recall": 0.3333333333333333,
-      "val_brier": 0.17405536683893316,
+      "val_brier": 0.1740553668389332,
       "val_precision_at_10pct": 0.7272727272727273,
       "val_recall_at_10pct": 0.38095238095238093,
       "val_lift_at_10pct": 3.6363636363636362,
@@ -185273,7 +187616,7 @@
       "val_balanced_accuracy": 0.6904761904761905,
       "val_precision": 0.3939393939393939,
       "val_recall": 0.6190476190476191,
-      "val_brier": 0.17405536683893316,
+      "val_brier": 0.1740553668389332,
       "val_precision_at_10pct": 0.7272727272727273,
       "val_recall_at_10pct": 0.38095238095238093,
       "val_lift_at_10pct": 3.6363636363636362,
@@ -185296,7 +187639,7 @@
       "val_balanced_accuracy": 0.6666666666666666,
       "val_precision": 1.0,
       "val_recall": 0.3333333333333333,
-      "val_brier": 0.17405536683893316,
+      "val_brier": 0.1740553668389332,
       "val_precision_at_10pct": 0.7272727272727273,
       "val_recall_at_10pct": 0.38095238095238093,
       "val_lift_at_10pct": 3.6363636363636362,
@@ -185526,7 +187869,7 @@
       "val_balanced_accuracy": 0.7257281553398058,
       "val_precision": 0.4444444444444444,
       "val_recall": 0.5,
-      "val_brier": 0.1002624088941687,
+      "val_brier": 0.10026240889416867,
       "val_precision_at_10pct": 0.34782608695652173,
       "val_recall_at_10pct": 0.5,
       "val_lift_at_10pct": 4.826086956521739,
@@ -185549,7 +187892,7 @@
       "val_balanced_accuracy": 0.7257281553398058,
       "val_precision": 0.4444444444444444,
       "val_recall": 0.5,
-      "val_brier": 0.1002624088941687,
+      "val_brier": 0.10026240889416867,
       "val_precision_at_10pct": 0.34782608695652173,
       "val_recall_at_10pct": 0.5,
       "val_lift_at_10pct": 4.826086956521739,
@@ -185572,7 +187915,7 @@
       "val_balanced_accuracy": 0.7257281553398058,
       "val_precision": 0.4444444444444444,
       "val_recall": 0.5,
-      "val_brier": 0.1002624088941687,
+      "val_brier": 0.10026240889416867,
       "val_precision_at_10pct": 0.34782608695652173,
       "val_recall_at_10pct": 0.5,
       "val_lift_at_10pct": 4.826086956521739,
@@ -187734,7 +190077,7 @@
       "val_balanced_accuracy": 0.7159663865546219,
       "val_precision": 0.3939393939393939,
       "val_recall": 0.6,
-      "val_brier": 0.17091117979737724,
+      "val_brier": 0.17091117979737727,
       "val_precision_at_10pct": 0.4418604651162791,
       "val_recall_at_10pct": 0.2923076923076923,
       "val_lift_at_10pct": 2.8686940966010734,
@@ -187757,7 +190100,7 @@
       "val_balanced_accuracy": 0.7054298642533936,
       "val_precision": 0.3333333333333333,
       "val_recall": 0.6461538461538462,
-      "val_brier": 0.17091117979737724,
+      "val_brier": 0.17091117979737727,
       "val_precision_at_10pct": 0.4418604651162791,
       "val_recall_at_10pct": 0.2923076923076923,
       "val_lift_at_10pct": 2.8686940966010734,
@@ -187780,7 +190123,7 @@
       "val_balanced_accuracy": 0.7159663865546219,
       "val_precision": 0.3939393939393939,
       "val_recall": 0.6,
-      "val_brier": 0.17091117979737724,
+      "val_brier": 0.17091117979737727,
       "val_precision_at_10pct": 0.4418604651162791,
       "val_recall_at_10pct": 0.2923076923076923,
       "val_lift_at_10pct": 2.8686940966010734,
@@ -188010,7 +190353,7 @@
       "val_balanced_accuracy": 0.8214285714285714,
       "val_precision": 0.5,
       "val_recall": 0.8571428571428571,
-      "val_brier": 0.19832759216018997,
+      "val_brier": 0.19832759216019,
       "val_precision_at_10pct": 0.6363636363636364,
       "val_recall_at_10pct": 0.3333333333333333,
       "val_lift_at_10pct": 3.1818181818181817,
@@ -188033,7 +190376,7 @@
       "val_balanced_accuracy": 0.8214285714285714,
       "val_precision": 0.4634146341463415,
       "val_recall": 0.9047619047619048,
-      "val_brier": 0.19832759216018997,
+      "val_brier": 0.19832759216019,
       "val_precision_at_10pct": 0.6363636363636364,
       "val_recall_at_10pct": 0.3333333333333333,
       "val_lift_at_10pct": 3.1818181818181817,
@@ -188056,7 +190399,7 @@
       "val_balanced_accuracy": 0.8214285714285714,
       "val_precision": 0.5,
       "val_recall": 0.8571428571428571,
-      "val_brier": 0.19832759216018997,
+      "val_brier": 0.19832759216019,
       "val_precision_at_10pct": 0.6363636363636364,
       "val_recall_at_10pct": 0.3333333333333333,
       "val_lift_at_10pct": 3.1818181818181817,
@@ -188286,7 +190629,7 @@
       "val_balanced_accuracy": 0.6777912621359223,
       "val_precision": 0.6,
       "val_recall": 0.375,
-      "val_brier": 0.1160518585314895,
+      "val_brier": 0.11605185853148953,
       "val_precision_at_10pct": 0.30434782608695654,
       "val_recall_at_10pct": 0.4375,
       "val_lift_at_10pct": 4.222826086956522,
@@ -188309,7 +190652,7 @@
       "val_balanced_accuracy": 0.7278519417475728,
       "val_precision": 0.2903225806451613,
       "val_recall": 0.5625,
-      "val_brier": 0.1160518585314895,
+      "val_brier": 0.11605185853148953,
       "val_precision_at_10pct": 0.30434782608695654,
       "val_recall_at_10pct": 0.4375,
       "val_lift_at_10pct": 4.222826086956522,
@@ -188332,7 +190675,7 @@
       "val_balanced_accuracy": 0.6777912621359223,
       "val_precision": 0.6,
       "val_recall": 0.375,
-      "val_brier": 0.1160518585314895,
+      "val_brier": 0.11605185853148953,
       "val_precision_at_10pct": 0.30434782608695654,
       "val_recall_at_10pct": 0.4375,
       "val_lift_at_10pct": 4.222826086956522,
@@ -189114,7 +191457,7 @@
       "val_balanced_accuracy": 0.7072966280295048,
       "val_precision": 0.3895953757225434,
       "val_recall": 0.577054794520548,
-      "val_brier": 0.16142343925713815,
+      "val_brier": 0.16142343925713812,
       "val_precision_at_10pct": 0.4765625,
       "val_recall_at_10pct": 0.3133561643835616,
       "val_lift_at_10pct": 3.1286654537671237,
@@ -189137,7 +191480,7 @@
       "val_balanced_accuracy": 0.7084399367755532,
       "val_precision": 0.3582834331337325,
       "val_recall": 0.6147260273972602,
-      "val_brier": 0.16142343925713815,
+      "val_brier": 0.16142343925713812,
       "val_precision_at_10pct": 0.4765625,
       "val_recall_at_10pct": 0.3133561643835616,
       "val_lift_at_10pct": 3.1286654537671237,
@@ -189160,7 +191503,7 @@
       "val_balanced_accuracy": 0.7072966280295048,
       "val_precision": 0.3895953757225434,
       "val_recall": 0.577054794520548,
-      "val_brier": 0.16142343925713815,
+      "val_brier": 0.16142343925713812,
       "val_precision_at_10pct": 0.4765625,
       "val_recall_at_10pct": 0.3133561643835616,
       "val_lift_at_10pct": 3.1286654537671237,
@@ -191046,7 +193389,7 @@
       "val_balanced_accuracy": 0.6963368795667435,
       "val_precision": 0.33011272141706927,
       "val_recall": 0.6346749226006192,
-      "val_brier": 0.16061719116643094,
+      "val_brier": 0.16061719116643092,
       "val_precision_at_10pct": 0.49144254278728605,
       "val_recall_at_10pct": 0.3111455108359133,
       "val_lift_at_10pct": 3.1068906265375795,
@@ -191069,7 +193412,7 @@
       "val_balanced_accuracy": 0.6793216230186389,
       "val_precision": 0.35598377281947263,
       "val_recall": 0.5433436532507739,
-      "val_brier": 0.16061719116643094,
+      "val_brier": 0.16061719116643092,
       "val_precision_at_10pct": 0.49144254278728605,
       "val_recall_at_10pct": 0.3111455108359133,
       "val_lift_at_10pct": 3.1068906265375795,
@@ -191092,7 +193435,7 @@
       "val_balanced_accuracy": 0.6614954514918855,
       "val_precision": 0.4145985401459854,
       "val_recall": 0.43962848297213625,
-      "val_brier": 0.16061719116643094,
+      "val_brier": 0.16061719116643092,
       "val_precision_at_10pct": 0.49144254278728605,
       "val_recall_at_10pct": 0.3111455108359133,
       "val_lift_at_10pct": 3.1068906265375795,
@@ -192978,7 +195321,7 @@
       "val_balanced_accuracy": 0.6656832298136646,
       "val_precision": 0.3885350318471338,
       "val_recall": 0.4357142857142857,
-      "val_brier": 0.15156909791378667,
+      "val_brier": 0.15156909791378664,
       "val_precision_at_10pct": 0.44339622641509435,
       "val_recall_at_10pct": 0.3357142857142857,
       "val_lift_at_10pct": 3.357142857142857,
@@ -193001,7 +195344,7 @@
       "val_balanced_accuracy": 0.6790372670807453,
       "val_precision": 0.3089430894308943,
       "val_recall": 0.5428571428571428,
-      "val_brier": 0.15156909791378667,
+      "val_brier": 0.15156909791378664,
       "val_precision_at_10pct": 0.44339622641509435,
       "val_recall_at_10pct": 0.3357142857142857,
       "val_lift_at_10pct": 3.357142857142857,
@@ -193024,7 +195367,7 @@
       "val_balanced_accuracy": 0.647360248447205,
       "val_precision": 0.4434782608695652,
       "val_recall": 0.36428571428571427,
-      "val_brier": 0.15156909791378667,
+      "val_brier": 0.15156909791378664,
       "val_precision_at_10pct": 0.44339622641509435,
       "val_recall_at_10pct": 0.3357142857142857,
       "val_lift_at_10pct": 3.357142857142857,
@@ -195714,7 +198057,7 @@
       "balanced_accuracy": 0.6523163111398406,
       "precision": 0.32323232323232326,
       "recall": 0.49230769230769234,
-      "brier": 0.1676918246396866,
+      "brier": 0.16769182463968663,
       "precision_at_10pct": 0.46511627906976744,
       "recall_at_10pct": 0.3076923076923077,
       "lift_at_10pct": 3.0196779964221823,
@@ -195738,7 +198081,7 @@
       "balanced_accuracy": 0.6523163111398406,
       "precision": 0.32323232323232326,
       "recall": 0.49230769230769234,
-      "brier": 0.1676918246396866,
+      "brier": 0.16769182463968663,
       "precision_at_10pct": 0.46511627906976744,
       "recall_at_10pct": 0.3076923076923077,
       "lift_at_10pct": 3.0196779964221823,
@@ -195762,7 +198105,7 @@
       "balanced_accuracy": 0.6718810601163543,
       "precision": 0.32432432432432434,
       "recall": 0.5538461538461539,
-      "brier": 0.1676918246396866,
+      "brier": 0.16769182463968663,
       "precision_at_10pct": 0.46511627906976744,
       "recall_at_10pct": 0.3076923076923077,
       "lift_at_10pct": 3.0196779964221823,
@@ -196194,7 +198537,7 @@
       "balanced_accuracy": 0.7594202898550725,
       "precision": 0.7272727272727273,
       "recall": 0.5333333333333333,
-      "brier": 0.08135806562382142,
+      "brier": 0.0813580656238214,
       "precision_at_10pct": 0.391304347826087,
       "recall_at_10pct": 0.6,
       "lift_at_10pct": 5.791304347826087,
@@ -197826,7 +200169,7 @@
       "balanced_accuracy": 0.6530668127053669,
       "precision": 0.875,
       "recall": 0.3181818181818182,
-      "brier": 0.14502936087794596,
+      "brier": 0.145029360877946,
       "precision_at_10pct": 0.9090909090909091,
       "recall_at_10pct": 0.45454545454545453,
       "lift_at_10pct": 4.338842975206611,
@@ -197874,7 +200217,7 @@
       "balanced_accuracy": 0.7899780941949617,
       "precision": 0.5151515151515151,
       "recall": 0.7727272727272727,
-      "brier": 0.14502936087794596,
+      "brier": 0.145029360877946,
       "precision_at_10pct": 0.9090909090909091,
       "recall_at_10pct": 0.45454545454545453,
       "lift_at_10pct": 4.338842975206611,
@@ -199170,7 +201513,7 @@
       "balanced_accuracy": 0.788888888888889,
       "precision": 0.23684210526315788,
       "recall": 0.9,
-      "brier": 0.15310282329386066,
+      "brier": 0.15310282329386063,
       "precision_at_10pct": 0.2,
       "recall_at_10pct": 0.2,
       "lift_at_10pct": 2.0,
@@ -199362,7 +201705,7 @@
       "balanced_accuracy": 0.6481329310307933,
       "precision": 0.41204819277108434,
       "recall": 0.40617577197149646,
-      "brier": 0.17489820906857376,
+      "brier": 0.17489820906857373,
       "precision_at_10pct": 0.4679245283018868,
       "recall_at_10pct": 0.29453681710213775,
       "lift_at_10pct": 2.935365033836777,
@@ -199386,7 +201729,7 @@
       "balanced_accuracy": 0.6481329310307933,
       "precision": 0.41204819277108434,
       "recall": 0.40617577197149646,
-      "brier": 0.17489820906857376,
+      "brier": 0.17489820906857373,
       "precision_at_10pct": 0.4679245283018868,
       "recall_at_10pct": 0.29453681710213775,
       "lift_at_10pct": 2.935365033836777,
@@ -199410,7 +201753,7 @@
       "balanced_accuracy": 0.6914451862789155,
       "precision": 0.3497191011235955,
       "recall": 0.5914489311163895,
-      "brier": 0.17489820906857376,
+      "brier": 0.17489820906857373,
       "precision_at_10pct": 0.4679245283018868,
       "recall_at_10pct": 0.29453681710213775,
       "lift_at_10pct": 2.935365033836777,
@@ -199434,7 +201777,7 @@
       "balanced_accuracy": 0.6481329310307933,
       "precision": 0.41204819277108434,
       "recall": 0.40617577197149646,
-      "brier": 0.17489820906857376,
+      "brier": 0.17489820906857373,
       "precision_at_10pct": 0.4679245283018868,
       "recall_at_10pct": 0.29453681710213775,
       "lift_at_10pct": 2.935365033836777,
@@ -199554,7 +201897,7 @@
       "balanced_accuracy": 0.6747252747252748,
       "precision": 0.3855421686746988,
       "recall": 0.49230769230769234,
-      "brier": 0.16095356254959872,
+      "brier": 0.1609535625495987,
       "precision_at_10pct": 0.46511627906976744,
       "recall_at_10pct": 0.3076923076923077,
       "lift_at_10pct": 3.0196779964221823,
@@ -201275,8 +203618,8 @@
       "selection_mode": "single_candidate_balanced_threshold",
       "threshold": 0.6175,
       "selection_score": 0.4751346978697403,
-      "avg_precision": 0.30380010752693754,
-      "roc_auc": 0.66931206970383,
+      "avg_precision": 0.30380013771863795,
+      "roc_auc": 0.6693121125388155,
       "mcc": 0.2053037921490553,
       "f1": 0.32639920752847945,
       "balanced_accuracy": 0.5992086322090906,
@@ -201299,8 +203642,8 @@
       "selection_mode": "balanced_objective",
       "threshold": 0.6175,
       "selection_score": 0.4751346978697403,
-      "avg_precision": 0.30380010752693754,
-      "roc_auc": 0.66931206970383,
+      "avg_precision": 0.30380013771863795,
+      "roc_auc": 0.6693121125388155,
       "mcc": 0.2053037921490553,
       "f1": 0.32639920752847945,
       "balanced_accuracy": 0.5992086322090906,
@@ -201323,8 +203666,8 @@
       "selection_mode": "rank_objective_fixed_threshold",
       "threshold": 0.5,
       "selection_score": 0.4174722835580368,
-      "avg_precision": 0.30380010752693754,
-      "roc_auc": 0.66931206970383,
+      "avg_precision": 0.30380013771863795,
+      "roc_auc": 0.6693121125388155,
       "mcc": 0.17753567431747028,
       "f1": 0.33863453815261046,
       "balanced_accuracy": 0.612408639936522,
@@ -201347,8 +203690,8 @@
       "selection_mode": "mcc_objective",
       "threshold": 0.6175,
       "selection_score": 0.3942523786150614,
-      "avg_precision": 0.30380010752693754,
-      "roc_auc": 0.66931206970383,
+      "avg_precision": 0.30380013771863795,
+      "roc_auc": 0.6693121125388155,
       "mcc": 0.2053037921490553,
       "f1": 0.32639920752847945,
       "balanced_accuracy": 0.5992086322090906,
@@ -202050,7 +204393,7 @@
       "balanced_accuracy": 0.6714012999409118,
       "precision": 0.26666666666666666,
       "recall": 0.4897959183673469,
-      "brier": 0.1737514292724619,
+      "brier": 0.17375142927246187,
       "precision_at_10pct": 0.3,
       "recall_at_10pct": 0.30612244897959184,
       "lift_at_10pct": 3.0489795918367344,
@@ -202074,7 +204417,7 @@
       "balanced_accuracy": 0.6714012999409118,
       "precision": 0.26666666666666666,
       "recall": 0.4897959183673469,
-      "brier": 0.1737514292724619,
+      "brier": 0.17375142927246187,
       "precision_at_10pct": 0.3,
       "recall_at_10pct": 0.30612244897959184,
       "lift_at_10pct": 3.0489795918367344,
@@ -202098,7 +204441,7 @@
       "balanced_accuracy": 0.7138766419708196,
       "precision": 0.25203252032520324,
       "recall": 0.6326530612244898,
-      "brier": 0.1737514292724619,
+      "brier": 0.17375142927246187,
       "precision_at_10pct": 0.3,
       "recall_at_10pct": 0.30612244897959184,
       "lift_at_10pct": 3.0489795918367344,
@@ -202122,7 +204465,7 @@
       "balanced_accuracy": 0.6048134175719285,
       "precision": 0.34210526315789475,
       "recall": 0.2653061224489796,
-      "brier": 0.1737514292724619,
+      "brier": 0.17375142927246187,
       "precision_at_10pct": 0.3,
       "recall_at_10pct": 0.30612244897959184,
       "lift_at_10pct": 3.0489795918367344,
@@ -203010,7 +205353,7 @@
       "balanced_accuracy": 0.667310576791964,
       "precision": 0.22807017543859648,
       "recall": 0.5306122448979592,
-      "brier": 0.17095420178997717,
+      "brier": 0.1709542017899772,
       "precision_at_10pct": 0.34,
       "recall_at_10pct": 0.3469387755102041,
       "lift_at_10pct": 3.455510204081633,
@@ -203034,7 +205377,7 @@
       "balanced_accuracy": 0.667310576791964,
       "precision": 0.22807017543859648,
       "recall": 0.5306122448979592,
-      "brier": 0.17095420178997717,
+      "brier": 0.1709542017899772,
       "precision_at_10pct": 0.34,
       "recall_at_10pct": 0.3469387755102041,
       "lift_at_10pct": 3.455510204081633,
@@ -203058,7 +205401,7 @@
       "balanced_accuracy": 0.667310576791964,
       "precision": 0.22807017543859648,
       "recall": 0.5306122448979592,
-      "brier": 0.17095420178997717,
+      "brier": 0.1709542017899772,
       "precision_at_10pct": 0.34,
       "recall_at_10pct": 0.3469387755102041,
       "lift_at_10pct": 3.455510204081633,
@@ -203082,7 +205425,7 @@
       "balanced_accuracy": 0.667310576791964,
       "precision": 0.22807017543859648,
       "recall": 0.5306122448979592,
-      "brier": 0.17095420178997717,
+      "brier": 0.1709542017899772,
       "precision_at_10pct": 0.34,
       "recall_at_10pct": 0.3469387755102041,
       "lift_at_10pct": 3.455510204081633,
@@ -203586,7 +205929,7 @@
       "balanced_accuracy": 0.7697443981533612,
       "precision": 0.528169014084507,
       "recall": 0.7009345794392523,
-      "brier": 0.14364889884426704,
+      "brier": 0.14364889884426707,
       "precision_at_10pct": 0.6981132075471698,
       "recall_at_10pct": 0.34579439252336447,
       "lift_at_10pct": 3.405748545230118,
@@ -203610,7 +205953,7 @@
       "balanced_accuracy": 0.7697443981533612,
       "precision": 0.528169014084507,
       "recall": 0.7009345794392523,
-      "brier": 0.14364889884426704,
+      "brier": 0.14364889884426707,
       "precision_at_10pct": 0.6981132075471698,
       "recall_at_10pct": 0.34579439252336447,
       "lift_at_10pct": 3.405748545230118,
@@ -203634,7 +205977,7 @@
       "balanced_accuracy": 0.766569080058552,
       "precision": 0.5538461538461539,
       "recall": 0.6728971962616822,
-      "brier": 0.14364889884426704,
+      "brier": 0.14364889884426707,
       "precision_at_10pct": 0.6981132075471698,
       "recall_at_10pct": 0.34579439252336447,
       "lift_at_10pct": 3.405748545230118,
@@ -203658,7 +206001,7 @@
       "balanced_accuracy": 0.766569080058552,
       "precision": 0.5538461538461539,
       "recall": 0.6728971962616822,
-      "brier": 0.14364889884426704,
+      "brier": 0.14364889884426707,
       "precision_at_10pct": 0.6981132075471698,
       "recall_at_10pct": 0.34579439252336447,
       "lift_at_10pct": 3.405748545230118,
@@ -204066,7 +206409,7 @@
       "balanced_accuracy": 0.693263942548066,
       "precision": 0.19767441860465115,
       "recall": 0.6938775510204082,
-      "brier": 0.21395837600446155,
+      "brier": 0.21395837600446152,
       "precision_at_10pct": 0.26,
       "recall_at_10pct": 0.2653061224489796,
       "lift_at_10pct": 2.642448979591837,
@@ -205278,11 +207621,29 @@
       "row_count": 17442,
       "unique_uid_count": 17442,
       "duplicate_uid_count": 0,
-      "columns_match": true
+      "columns_match": true,
+      "uid_format_ok": "True",
+      "project_uppercase": "True",
+      "y_true_valid": "True",
+      "feature_hash_format_ok": "True",
+      "content_hash_format_ok": "True",
+      "raw_csv_row_number_ok": "True"
     },
     "event_manifest": {
       "row_count": 50,
-      "columns_match": true
+      "columns_match": true,
+      "event_id_format_ok": "True",
+      "experiment_values_ok": "True",
+      "target_uppercase_ok": "True",
+      "seed_values_ok": "True",
+      "membership_sum_ok": "True",
+      "train_sum_ok": "True",
+      "validation_sum_ok": "True",
+      "test_sum_ok": "True",
+      "feature_count_ok": "True",
+      "feature_schema_hash_format_ok": "True",
+      "uid_hash_format_ok": "True",
+      "preprocessing_bool_ok": "True"
     },
     "split_membership": {
       "within": {
@@ -205308,7 +207669,15 @@
         "overlap_val_test": 0
       },
       "within_coverage_ok": true,
-      "cross_isolation_ok": true
+      "cross_isolation_ok": true,
+      "within_schema_ok": true,
+      "cross_schema_ok": true,
+      "within_target_uppercase": "True",
+      "cross_target_uppercase": "True",
+      "within_sample_uppercase": "True",
+      "cross_sample_uppercase": "True",
+      "uid_duplicates": 505818,
+      "hash_reproduction_ok": true
     },
     "prediction_ledger": {
       "within_row_count": 34900,
@@ -205337,6 +207706,12 @@
       "executed": 200,
       "passed": 200,
       "failed": 0
+    },
+    "configuration": {
+      "expected": 200,
+      "executed": 200,
+      "passed": 200,
+      "failed": 0
     }
   },
   "prediction_ledger_evidence": {
@@ -205353,22 +207728,22 @@
     "categorical_match": true,
     "numeric_mismatches": 0,
     "max_abs_diff": 4.440892098500626e-16,
-    "max_rel_diff": 9.689026597918819e-16
+    "max_rel_diff": 8.608215420122814e-16
   },
   "result_reconstruction_evidence": {
     "row_count": 400,
     "canonical_row_count": 400,
     "categorical_match": true,
     "numeric_mismatches": 0,
-    "max_abs_diff": 4.283498555857079e-08,
-    "max_rel_diff": 9.938014047236926e-08,
+    "max_abs_diff": 4.283498544754849e-08,
+    "max_rel_diff": 6.392706981051185e-08,
     "selected_candidate_mode_match": true
   },
   "audit_checks": {
     "source_commit_verified": true,
     "imported_pipeline_sha_verified": true,
     "dataset_profile_passed": true,
-    "sample_registry_passed": true,
+    "sample_registry_passed": "True",
     "feature_schema_passed": true,
     "event_manifest_count_passed": "True",
     "within_split_counts_passed": true,
@@ -205380,7 +207755,7 @@
     "cross_target_isolation_passed": true,
     "cross_source_isolation_passed": true,
     "split_determinism_passed": true,
-    "class_count_consistency_passed": true,
+    "class_count_consistency_passed": "True",
     "preprocessing_train_only_passed": true,
     "candidate_fit_count_passed": true,
     "prediction_row_counts_passed": "True",
@@ -205525,7 +207900,7 @@
       "format": "csv.gz",
       "compressed": true,
       "row_count": 34900,
-      "column_count": 14,
+      "column_count": 205,
       "columns": [
         "event_id",
         "experiment",
@@ -205538,19 +207913,210 @@
         "original_row_index",
         "y_true",
         "score__LR_std_C0.1",
+        "threshold_balanced__LR_std_C0.1",
+        "objective_balanced__LR_std_C0.1",
+        "objective_rank__LR_std_C0.1",
+        "threshold_mcc__LR_std_C0.1",
+        "objective_mcc__LR_std_C0.1",
         "score__LR_std_C1",
+        "threshold_balanced__LR_std_C1",
+        "objective_balanced__LR_std_C1",
+        "objective_rank__LR_std_C1",
+        "threshold_mcc__LR_std_C1",
+        "objective_mcc__LR_std_C1",
         "score__DT_leaf5",
-        "score__ET_leaf5"
+        "threshold_balanced__DT_leaf5",
+        "objective_balanced__DT_leaf5",
+        "objective_rank__DT_leaf5",
+        "threshold_mcc__DT_leaf5",
+        "objective_mcc__DT_leaf5",
+        "score__ET_leaf5",
+        "threshold_balanced__ET_leaf5",
+        "objective_balanced__ET_leaf5",
+        "objective_rank__ET_leaf5",
+        "threshold_mcc__ET_leaf5",
+        "objective_mcc__ET_leaf5",
+        "soft_top3_threshold",
+        "soft_top3_objective",
+        "soft_top3_candidates",
+        "metric__LR_std_C0.1__avg_precision",
+        "metric__LR_std_C0.1__roc_auc",
+        "metric__LR_std_C0.1__mcc",
+        "metric__LR_std_C0.1__f1",
+        "metric__LR_std_C0.1__balanced_accuracy",
+        "metric__LR_std_C0.1__precision",
+        "metric__LR_std_C0.1__recall",
+        "metric__LR_std_C0.1__brier",
+        "metric__LR_std_C0.1__precision_at_10pct",
+        "metric__LR_std_C0.1__recall_at_10pct",
+        "metric__LR_std_C0.1__lift_at_10pct",
+        "metric__LR_std_C0.1__precision_at_20pct",
+        "metric__LR_std_C0.1__recall_at_20pct",
+        "metric__LR_std_C0.1__lift_at_20pct",
+        "metric__LR_std_C1__avg_precision",
+        "metric__LR_std_C1__roc_auc",
+        "metric__LR_std_C1__mcc",
+        "metric__LR_std_C1__f1",
+        "metric__LR_std_C1__balanced_accuracy",
+        "metric__LR_std_C1__precision",
+        "metric__LR_std_C1__recall",
+        "metric__LR_std_C1__brier",
+        "metric__LR_std_C1__precision_at_10pct",
+        "metric__LR_std_C1__recall_at_10pct",
+        "metric__LR_std_C1__lift_at_10pct",
+        "metric__LR_std_C1__precision_at_20pct",
+        "metric__LR_std_C1__recall_at_20pct",
+        "metric__LR_std_C1__lift_at_20pct",
+        "metric__DT_leaf5__avg_precision",
+        "metric__DT_leaf5__roc_auc",
+        "metric__DT_leaf5__mcc",
+        "metric__DT_leaf5__f1",
+        "metric__DT_leaf5__balanced_accuracy",
+        "metric__DT_leaf5__precision",
+        "metric__DT_leaf5__recall",
+        "metric__DT_leaf5__brier",
+        "metric__DT_leaf5__precision_at_10pct",
+        "metric__DT_leaf5__recall_at_10pct",
+        "metric__DT_leaf5__lift_at_10pct",
+        "metric__DT_leaf5__precision_at_20pct",
+        "metric__DT_leaf5__recall_at_20pct",
+        "metric__DT_leaf5__lift_at_20pct",
+        "metric__ET_leaf5__avg_precision",
+        "metric__ET_leaf5__roc_auc",
+        "metric__ET_leaf5__mcc",
+        "metric__ET_leaf5__f1",
+        "metric__ET_leaf5__balanced_accuracy",
+        "metric__ET_leaf5__precision",
+        "metric__ET_leaf5__recall",
+        "metric__ET_leaf5__brier",
+        "metric__ET_leaf5__precision_at_10pct",
+        "metric__ET_leaf5__recall_at_10pct",
+        "metric__ET_leaf5__lift_at_10pct",
+        "metric__ET_leaf5__precision_at_20pct",
+        "metric__ET_leaf5__recall_at_20pct",
+        "metric__ET_leaf5__lift_at_20pct",
+        "metric__soft_top3__avg_precision",
+        "metric__soft_top3__roc_auc",
+        "metric__soft_top3__mcc",
+        "metric__soft_top3__f1",
+        "metric__soft_top3__balanced_accuracy",
+        "metric__soft_top3__precision",
+        "metric__soft_top3__recall",
+        "metric__soft_top3__brier",
+        "metric__soft_top3__precision_at_10pct",
+        "metric__soft_top3__recall_at_10pct",
+        "metric__soft_top3__lift_at_10pct",
+        "metric__soft_top3__precision_at_20pct",
+        "metric__soft_top3__recall_at_20pct",
+        "metric__soft_top3__lift_at_20pct",
+        "metric__LR_std_C0.1_rank__avg_precision",
+        "metric__ET_leaf5_mcc__avg_precision",
+        "metric__LR_std_C0.1_rank__roc_auc",
+        "metric__ET_leaf5_mcc__roc_auc",
+        "metric__LR_std_C0.1_rank__mcc",
+        "metric__ET_leaf5_mcc__mcc",
+        "metric__LR_std_C0.1_rank__f1",
+        "metric__ET_leaf5_mcc__f1",
+        "metric__LR_std_C0.1_rank__balanced_accuracy",
+        "metric__ET_leaf5_mcc__balanced_accuracy",
+        "metric__LR_std_C0.1_rank__precision",
+        "metric__ET_leaf5_mcc__precision",
+        "metric__LR_std_C0.1_rank__recall",
+        "metric__ET_leaf5_mcc__recall",
+        "metric__LR_std_C0.1_rank__brier",
+        "metric__ET_leaf5_mcc__brier",
+        "metric__LR_std_C0.1_rank__precision_at_10pct",
+        "metric__ET_leaf5_mcc__precision_at_10pct",
+        "metric__LR_std_C0.1_rank__recall_at_10pct",
+        "metric__ET_leaf5_mcc__recall_at_10pct",
+        "metric__LR_std_C0.1_rank__lift_at_10pct",
+        "metric__ET_leaf5_mcc__lift_at_10pct",
+        "metric__LR_std_C0.1_rank__precision_at_20pct",
+        "metric__ET_leaf5_mcc__precision_at_20pct",
+        "metric__LR_std_C0.1_rank__recall_at_20pct",
+        "metric__ET_leaf5_mcc__recall_at_20pct",
+        "metric__LR_std_C0.1_rank__lift_at_20pct",
+        "metric__ET_leaf5_mcc__lift_at_20pct",
+        "metric__ET_leaf5_rank__avg_precision",
+        "metric__ET_leaf5_rank__roc_auc",
+        "metric__ET_leaf5_rank__mcc",
+        "metric__ET_leaf5_rank__f1",
+        "metric__ET_leaf5_rank__balanced_accuracy",
+        "metric__ET_leaf5_rank__precision",
+        "metric__ET_leaf5_rank__recall",
+        "metric__ET_leaf5_rank__brier",
+        "metric__ET_leaf5_rank__precision_at_10pct",
+        "metric__ET_leaf5_rank__recall_at_10pct",
+        "metric__ET_leaf5_rank__lift_at_10pct",
+        "metric__ET_leaf5_rank__precision_at_20pct",
+        "metric__ET_leaf5_rank__recall_at_20pct",
+        "metric__ET_leaf5_rank__lift_at_20pct",
+        "metric__LR_std_C0.1_mcc__avg_precision",
+        "metric__LR_std_C0.1_mcc__roc_auc",
+        "metric__LR_std_C0.1_mcc__mcc",
+        "metric__LR_std_C0.1_mcc__f1",
+        "metric__LR_std_C0.1_mcc__balanced_accuracy",
+        "metric__LR_std_C0.1_mcc__precision",
+        "metric__LR_std_C0.1_mcc__recall",
+        "metric__LR_std_C0.1_mcc__brier",
+        "metric__LR_std_C0.1_mcc__precision_at_10pct",
+        "metric__LR_std_C0.1_mcc__recall_at_10pct",
+        "metric__LR_std_C0.1_mcc__lift_at_10pct",
+        "metric__LR_std_C0.1_mcc__precision_at_20pct",
+        "metric__LR_std_C0.1_mcc__recall_at_20pct",
+        "metric__LR_std_C0.1_mcc__lift_at_20pct",
+        "metric__DT_leaf5_mcc__avg_precision",
+        "metric__DT_leaf5_mcc__roc_auc",
+        "metric__DT_leaf5_mcc__mcc",
+        "metric__DT_leaf5_mcc__f1",
+        "metric__DT_leaf5_mcc__balanced_accuracy",
+        "metric__DT_leaf5_mcc__precision",
+        "metric__DT_leaf5_mcc__recall",
+        "metric__DT_leaf5_mcc__brier",
+        "metric__DT_leaf5_mcc__precision_at_10pct",
+        "metric__DT_leaf5_mcc__recall_at_10pct",
+        "metric__DT_leaf5_mcc__lift_at_10pct",
+        "metric__DT_leaf5_mcc__precision_at_20pct",
+        "metric__DT_leaf5_mcc__recall_at_20pct",
+        "metric__DT_leaf5_mcc__lift_at_20pct",
+        "metric__LR_std_C1_mcc__avg_precision",
+        "metric__LR_std_C1_mcc__roc_auc",
+        "metric__LR_std_C1_mcc__mcc",
+        "metric__LR_std_C1_mcc__f1",
+        "metric__LR_std_C1_mcc__balanced_accuracy",
+        "metric__LR_std_C1_mcc__precision",
+        "metric__LR_std_C1_mcc__recall",
+        "metric__LR_std_C1_mcc__brier",
+        "metric__LR_std_C1_mcc__precision_at_10pct",
+        "metric__LR_std_C1_mcc__recall_at_10pct",
+        "metric__LR_std_C1_mcc__lift_at_10pct",
+        "metric__LR_std_C1_mcc__precision_at_20pct",
+        "metric__LR_std_C1_mcc__recall_at_20pct",
+        "metric__LR_std_C1_mcc__lift_at_20pct",
+        "metric__LR_std_C1_rank__avg_precision",
+        "metric__LR_std_C1_rank__roc_auc",
+        "metric__LR_std_C1_rank__mcc",
+        "metric__LR_std_C1_rank__f1",
+        "metric__LR_std_C1_rank__balanced_accuracy",
+        "metric__LR_std_C1_rank__precision",
+        "metric__LR_std_C1_rank__recall",
+        "metric__LR_std_C1_rank__brier",
+        "metric__LR_std_C1_rank__precision_at_10pct",
+        "metric__LR_std_C1_rank__recall_at_10pct",
+        "metric__LR_std_C1_rank__lift_at_10pct",
+        "metric__LR_std_C1_rank__precision_at_20pct",
+        "metric__LR_std_C1_rank__recall_at_20pct",
+        "metric__LR_std_C1_rank__lift_at_20pct"
       ],
-      "byte_size": 1356761,
-      "sha256": "52724f5194969ee5a44b9761f80508c5ef095f6f5df05eeaf1c0745f6ed8a071"
+      "byte_size": 2243828,
+      "sha256": "a2570699e87ed88b485298016dfa0395f3928a901c6b2877826fffb0c3501c6e"
     },
     {
       "relative_path": "results/part3b_prediction_ledger/prediction_ledger_cross.csv.gz",
       "format": "csv.gz",
       "compressed": true,
       "row_count": 174430,
-      "column_count": 14,
+      "column_count": 135,
       "columns": [
         "event_id",
         "experiment",
@@ -205563,12 +208129,133 @@
         "original_row_index",
         "y_true",
         "score__LR_std_C0.1",
+        "threshold_balanced__LR_std_C0.1",
+        "objective_balanced__LR_std_C0.1",
+        "objective_rank__LR_std_C0.1",
+        "threshold_mcc__LR_std_C0.1",
+        "objective_mcc__LR_std_C0.1",
         "score__LR_std_C1",
+        "threshold_balanced__LR_std_C1",
+        "objective_balanced__LR_std_C1",
+        "objective_rank__LR_std_C1",
+        "threshold_mcc__LR_std_C1",
+        "objective_mcc__LR_std_C1",
         "score__DT_leaf5",
-        "score__ET_leaf5"
+        "threshold_balanced__DT_leaf5",
+        "objective_balanced__DT_leaf5",
+        "objective_rank__DT_leaf5",
+        "threshold_mcc__DT_leaf5",
+        "objective_mcc__DT_leaf5",
+        "score__ET_leaf5",
+        "threshold_balanced__ET_leaf5",
+        "objective_balanced__ET_leaf5",
+        "objective_rank__ET_leaf5",
+        "threshold_mcc__ET_leaf5",
+        "objective_mcc__ET_leaf5",
+        "soft_top3_threshold",
+        "soft_top3_objective",
+        "soft_top3_candidates",
+        "metric__LR_std_C0.1__avg_precision",
+        "metric__LR_std_C0.1__roc_auc",
+        "metric__LR_std_C0.1__mcc",
+        "metric__LR_std_C0.1__f1",
+        "metric__LR_std_C0.1__balanced_accuracy",
+        "metric__LR_std_C0.1__precision",
+        "metric__LR_std_C0.1__recall",
+        "metric__LR_std_C0.1__brier",
+        "metric__LR_std_C0.1__precision_at_10pct",
+        "metric__LR_std_C0.1__recall_at_10pct",
+        "metric__LR_std_C0.1__lift_at_10pct",
+        "metric__LR_std_C0.1__precision_at_20pct",
+        "metric__LR_std_C0.1__recall_at_20pct",
+        "metric__LR_std_C0.1__lift_at_20pct",
+        "metric__LR_std_C1__avg_precision",
+        "metric__LR_std_C1__roc_auc",
+        "metric__LR_std_C1__mcc",
+        "metric__LR_std_C1__f1",
+        "metric__LR_std_C1__balanced_accuracy",
+        "metric__LR_std_C1__precision",
+        "metric__LR_std_C1__recall",
+        "metric__LR_std_C1__brier",
+        "metric__LR_std_C1__precision_at_10pct",
+        "metric__LR_std_C1__recall_at_10pct",
+        "metric__LR_std_C1__lift_at_10pct",
+        "metric__LR_std_C1__precision_at_20pct",
+        "metric__LR_std_C1__recall_at_20pct",
+        "metric__LR_std_C1__lift_at_20pct",
+        "metric__DT_leaf5__avg_precision",
+        "metric__DT_leaf5__roc_auc",
+        "metric__DT_leaf5__mcc",
+        "metric__DT_leaf5__f1",
+        "metric__DT_leaf5__balanced_accuracy",
+        "metric__DT_leaf5__precision",
+        "metric__DT_leaf5__recall",
+        "metric__DT_leaf5__brier",
+        "metric__DT_leaf5__precision_at_10pct",
+        "metric__DT_leaf5__recall_at_10pct",
+        "metric__DT_leaf5__lift_at_10pct",
+        "metric__DT_leaf5__precision_at_20pct",
+        "metric__DT_leaf5__recall_at_20pct",
+        "metric__DT_leaf5__lift_at_20pct",
+        "metric__ET_leaf5__avg_precision",
+        "metric__ET_leaf5__roc_auc",
+        "metric__ET_leaf5__mcc",
+        "metric__ET_leaf5__f1",
+        "metric__ET_leaf5__balanced_accuracy",
+        "metric__ET_leaf5__precision",
+        "metric__ET_leaf5__recall",
+        "metric__ET_leaf5__brier",
+        "metric__ET_leaf5__precision_at_10pct",
+        "metric__ET_leaf5__recall_at_10pct",
+        "metric__ET_leaf5__lift_at_10pct",
+        "metric__ET_leaf5__precision_at_20pct",
+        "metric__ET_leaf5__recall_at_20pct",
+        "metric__ET_leaf5__lift_at_20pct",
+        "metric__soft_top3__avg_precision",
+        "metric__soft_top3__roc_auc",
+        "metric__soft_top3__mcc",
+        "metric__soft_top3__f1",
+        "metric__soft_top3__balanced_accuracy",
+        "metric__soft_top3__precision",
+        "metric__soft_top3__recall",
+        "metric__soft_top3__brier",
+        "metric__soft_top3__precision_at_10pct",
+        "metric__soft_top3__recall_at_10pct",
+        "metric__soft_top3__lift_at_10pct",
+        "metric__soft_top3__precision_at_20pct",
+        "metric__soft_top3__recall_at_20pct",
+        "metric__soft_top3__lift_at_20pct",
+        "metric__ET_leaf5_rank__avg_precision",
+        "metric__ET_leaf5_mcc__avg_precision",
+        "metric__ET_leaf5_rank__roc_auc",
+        "metric__ET_leaf5_mcc__roc_auc",
+        "metric__ET_leaf5_rank__mcc",
+        "metric__ET_leaf5_mcc__mcc",
+        "metric__ET_leaf5_rank__f1",
+        "metric__ET_leaf5_mcc__f1",
+        "metric__ET_leaf5_rank__balanced_accuracy",
+        "metric__ET_leaf5_mcc__balanced_accuracy",
+        "metric__ET_leaf5_rank__precision",
+        "metric__ET_leaf5_mcc__precision",
+        "metric__ET_leaf5_rank__recall",
+        "metric__ET_leaf5_mcc__recall",
+        "metric__ET_leaf5_rank__brier",
+        "metric__ET_leaf5_mcc__brier",
+        "metric__ET_leaf5_rank__precision_at_10pct",
+        "metric__ET_leaf5_mcc__precision_at_10pct",
+        "metric__ET_leaf5_rank__recall_at_10pct",
+        "metric__ET_leaf5_mcc__recall_at_10pct",
+        "metric__ET_leaf5_rank__lift_at_10pct",
+        "metric__ET_leaf5_mcc__lift_at_10pct",
+        "metric__ET_leaf5_rank__precision_at_20pct",
+        "metric__ET_leaf5_mcc__precision_at_20pct",
+        "metric__ET_leaf5_rank__recall_at_20pct",
+        "metric__ET_leaf5_mcc__recall_at_20pct",
+        "metric__ET_leaf5_rank__lift_at_20pct",
+        "metric__ET_leaf5_mcc__lift_at_20pct"
       ],
-      "byte_size": 6587556,
-      "sha256": "1726f756c014ea2c75c023070679dd4d0b3b9ec50e7403879f29224ccbf780b5"
+      "byte_size": 10739177,
+      "sha256": "cd813462c469f09c0f87fd93293ff685df64300cfcd94b4d089d4edeed07f19f"
     },
     {
       "relative_path": "results/part3b_prediction_ledger/validation_reconstruction.csv",
@@ -205599,8 +208286,8 @@
         "val_recall_at_20pct",
         "val_lift_at_20pct"
       ],
-      "byte_size": 202733,
-      "sha256": "afc1c57c1e68cfd23b98bd20f2255e5984b187854aa883f27e8a986f6ab8a54f"
+      "byte_size": 202727,
+      "sha256": "f538dc65635ffc4c71835ace075b7f19dcaf00d2e77b751f2d8c354c9d8e8eb9"
     },
     {
       "relative_path": "results/part3b_prediction_ledger/canonical_result_reconstruction.csv",
@@ -205632,8 +208319,8 @@
         "recall_at_20pct",
         "lift_at_20pct"
       ],
-      "byte_size": 153640,
-      "sha256": "35e295d1b7b6b830c032a0924878cfd86e95926768c49b06b9f1e5b8ff59bd1e"
+      "byte_size": 153647,
+      "sha256": "91865baba778bb51b123f668227fb3c21ea8cca5df0fef32b1710b9dfc125be5"
     }
   ],
   "artifact_hashes": {
@@ -205641,10 +208328,10 @@
     "results/part3b_prediction_ledger/event_manifest.csv": "89f80b9045bae96b75a074caa5d2ccc4ad0cae59f72a4c84079ceae2e7a76431",
     "results/part3b_prediction_ledger/split_membership_within.csv.gz": "cc9e8c99a79a7c8b880531a50419fdc6c460089cd5e5d684cd7ef4c8f77ed01d",
     "results/part3b_prediction_ledger/split_membership_cross.csv.gz": "1478568991c0b9661fdbc80e7b7731cc984b1e418ca9bdba07910f41e8a869ad",
-    "results/part3b_prediction_ledger/prediction_ledger_within.csv.gz": "52724f5194969ee5a44b9761f80508c5ef095f6f5df05eeaf1c0745f6ed8a071",
-    "results/part3b_prediction_ledger/prediction_ledger_cross.csv.gz": "1726f756c014ea2c75c023070679dd4d0b3b9ec50e7403879f29224ccbf780b5",
-    "results/part3b_prediction_ledger/validation_reconstruction.csv": "afc1c57c1e68cfd23b98bd20f2255e5984b187854aa883f27e8a986f6ab8a54f",
-    "results/part3b_prediction_ledger/canonical_result_reconstruction.csv": "35e295d1b7b6b830c032a0924878cfd86e95926768c49b06b9f1e5b8ff59bd1e"
+    "results/part3b_prediction_ledger/prediction_ledger_within.csv.gz": "a2570699e87ed88b485298016dfa0395f3928a901c6b2877826fffb0c3501c6e",
+    "results/part3b_prediction_ledger/prediction_ledger_cross.csv.gz": "cd813462c469f09c0f87fd93293ff685df64300cfcd94b4d089d4edeed07f19f",
+    "results/part3b_prediction_ledger/validation_reconstruction.csv": "f538dc65635ffc4c71835ace075b7f19dcaf00d2e77b751f2d8c354c9d8e8eb9",
+    "results/part3b_prediction_ledger/canonical_result_reconstruction.csv": "91865baba778bb51b123f668227fb3c21ea8cca5df0fef32b1710b9dfc125be5"
   },
   "common_schema_uses_all_project_column_names": true,
   "common_schema_uses_target_feature_values": false,
