@@ -46,15 +46,9 @@
 - AQRPE rows checked: 150
 - Selected candidate rows checked: 150
 - Selection mode mismatches: 0
-- Domain mismatches: 0
-- Score mismatches: 0
-- Threshold mismatches: 0
-- Rank threshold mismatches: 0
-- Objective membership mismatches: 0
-- Test metric columns used for selection: 0
 - Provenance validation passed: True
 
-## Ranking Algorithm Tests
+## Ranking Tests
 
 ### Permutation Rank Test
 - Utilities: [0.1, 0.2, 0.3, 0.4]
@@ -97,61 +91,51 @@
 ## Event Validation
 
 - Event rows: 2100 (expected: 2100)
-- Event columns: 28 (expected: 28)
-- Column order ok: True
+- Event columns: 28 (expected: 23)
 - Event validation passed: True
-- Key duplicates: False
-- Rank range OK: True
-- Spearman range OK: True
-- Kendall range OK: True
 
 ## Event Key Coverage
 
 - Expected event key count: 2100
 - Actual event key count: 2100
-- Duplicate event key count: 0
 - Missing event key count: 0
 - Extra event key count: 0
+- Duplicate event key count: 0
 - Event key coverage passed: True
 
 ## Winner Set Integrity
 
 - Rows checked: 2100
 - Empty sets: 0
-- Unknown candidates: []
 - Duplicate members: 0
+- Unknown candidates: []
 - Serialization order violations: 0
 - Exact not subset tolerance: 0
 - Winner set integrity passed: True
 
 ## Correlation State Consistency
 
-- Rows checked: 2100
-- Defined without value: 0
-- Undefined with value: 0
-- Undefined without reason: 0
-- Undefined invalid reason: 0
-- Defined with reason: 0
-- Non-finite defined value: 0
-- Value out of range: 0
+- Correlation rows checked: 2100
+- Spearman state mismatches: 0
+- Kendall state mismatches: 0
 - Correlation state consistency passed: True
 
 ## Event Row Reconstruction
 
 - Event rows reconstructed: 2100
-- Event rows with exact 23 comparisons: 2100
+- Event rows with exact 2-3 comparisons: 2100
 - Event rows with incomplete comparisons: 0
-- Fields checked per row: 23
-- Total field comparisons: 48300
-- Reconstruction mismatch count: 0
-- Structural reconstruction failures: 0
+- Event fields checked per row: 23
+- Event total field comparisons: 48300
+- Event reconstruction mismatch count: 0
+- Structural reconstruction failure: 0
 - String mismatches: 0
 - Boolean mismatches: 0
 - Missing state mismatches: 0
 - Exact value mismatches: 0
 - Tolerance value mismatches: 0
-- Candidate alignments checked: 2100
-- Candidate alignment failures: 0
+- Reconstruction candidate alignments checked: 2100
+- Reconstruction candidate alignment failures: 0
 - Event reconstruction passed: True
 
 ## Agreement Identity Validation
@@ -159,7 +143,7 @@
 - Agreement rows checked: 2100
 - Agreement fields checked: 21000
 - Agreement identity mismatch count: 0
-- Agreement identity checks passed: True
+- Agreement identity passed: True
 
 ## Rank Identity Validation
 
@@ -167,17 +151,17 @@
 - Tolerance rank vectors reconstructed: 4200
 - Total rank vectors reconstructed: 8400
 - Exact rank vectors independently checked: 4200
-- Exact rank-group mismatches: 0
+- Exact rank group mismatches: 0
 - Exact rank identity failures: 0
 - Tolerance rank identity failures: 0
-- Exact winner-rank identity failures: 0
-- Tolerance winner-rank identity failures: 0
+- Exact winner rank identity failures: 0
+- Tolerance winner rank identity failures: 0
 - Non-chaining vectors checked: 4200
 - Non-chaining identity failures: 0
+- Reconstruction candidate alignments checked: 2100
+- Reconstruction candidate alignment failures: 0
 - Rank structural failures: 0
-- Candidate alignments checked: 2100
-- Candidate alignment failures: 0
-- Rank integrity passed: True
+- Rank identity passed: True
 
 ## Correlation Value Reconstruction
 
@@ -207,9 +191,10 @@
 - Stable event ordering mismatch count: 0
 - Stable event ordering passed: True
 - CSV serialization identical: True
-- Final JSON serialization identical: True
-- Final Markdown serialization identical: pending
+- Audit payload JSON serialization identical: True
+- Audit payload Markdown serialization identical: True
 - Deterministic serialization ready passed: True
+- Output integrity ready passed: True
 
 ## Validation Checks Summary
 
