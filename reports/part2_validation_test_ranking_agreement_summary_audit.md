@@ -1,5 +1,9 @@
 # Part 2 Section 4B.2B: Harden Summary Audit, Portability, and Computed Evidence
 
+## Audit Payload
+
+# Part 2 Section 4B.2B: Harden Summary Audit, Portability, and Computed Evidence
+
 ## Repository-Relative Execution
 
 - Base path: /Users/aliehpourdast/Desktop/springer/springer
@@ -8,8 +12,10 @@
 ## Input Verification
 
 - Event CSV SHA-256 verified: True
-- Event rows: 2100 (expected: 2100)
-- Event columns: 28 (expected: 28)
+- Event CSV SHA-256 (expected): 85314055415bbb3cca13d35c8dd65979f92c9c120e90c1c866cae722d0ad1f15
+- Event CSV SHA-256 (actual): 85314055415bbb3cca13d35c8dd65979f92c9c120e90c1c866cae722d0ad1f15
+- Event CSV rows: 2100
+- Event CSV columns: 28
 - Column order ok: True
 - Row count ok: True
 - Column count ok: True
@@ -20,6 +26,7 @@
 - Actual event key count: 2100
 - Missing event key count: 0
 - Extra event key count: 0
+- Key coverage ok: True
 - Input schema valid: True
 - Input key coverage passed: True
 
@@ -30,7 +37,7 @@
 - Input audit missing required check count: 0
 - Input audit checks passed: True
 
-## Summary Output Verification
+## Summary Counts
 
 - overall:
   - Expected rows: 1
@@ -110,18 +117,23 @@
 - Actual Spearman count: 18
 - Expected Kendall count: 18
 - Actual Kendall count: 18
-- Correlation domain ok: True
-- Row count ok: True
+- Defined rows with reason count: 0
+- Undefined rows without reason count: 0
+- Undefined reason duplicate row count: 0
+- Undefined reason missing row count: 0
+- Undefined reason extra row count: 0
+- Undefined reason value mismatch count: 0
 - Passed: True
 
 ## Independent Validation
 
 - Summary rows expected: 25
 - Summary rows reconstructed: 25
-- Complete validation rows: 25
-- Incomplete validation rows: 0
-- Actual field comparisons: 850
-- Mismatch count: 0
+- Summary rows with complete validation: 25
+- Summary rows with incomplete validation: 0
+- Summary field comparisons: 850
+- Summary mismatch count: 0
+- Summary structural mismatch count: 0
 
 ## Correlation Identity Validation
 
@@ -131,7 +143,7 @@
 
 ## Denominator Identities
 
-- All denominator identities passed: True
+- Passed: True
 - overall: True
 
 - by_experiment: True
@@ -144,64 +156,56 @@
 
 ## Range Checks
 
-- All range checks passed: True
+- Range checks passed: True
 - overall:
-  - Count range passed: True
-  - Rate range passed: True
-  - Jaccard range passed: True
-  - Correlation range passed: True
-  - Selected rank range passed: True
-  - Finite numeric values passed: True
+  - Non-finite count: 0
+  - Count range failure count: 0
+  - Rate range failure count: 0
+  - Jaccard range failure count: 0
+  - Correlation state failure count: 0
+  - Correlation range failure count: 0
+  - Selected rank range failure count: 0
   - Passed: True
 
 - by_experiment:
-  - Count range passed: True
-  - Rate range passed: True
-  - Jaccard range passed: True
-  - Correlation range passed: True
-  - Selected rank range passed: True
-  - Finite numeric values passed: True
+  - Non-finite count: 0
+  - Count range failure count: 0
+  - Rate range failure count: 0
+  - Jaccard range failure count: 0
+  - Correlation state failure count: 0
+  - Correlation range failure count: 0
+  - Selected rank range failure count: 0
   - Passed: True
 
 - by_mode:
-  - Count range passed: True
-  - Rate range passed: True
-  - Jaccard range passed: True
-  - Correlation range passed: True
-  - Selected rank range passed: True
-  - Finite numeric values passed: True
+  - Non-finite count: 0
+  - Count range failure count: 0
+  - Rate range failure count: 0
+  - Jaccard range failure count: 0
+  - Correlation state failure count: 0
+  - Correlation range failure count: 0
+  - Selected rank range failure count: 0
   - Passed: True
 
 - by_metric:
-  - Count range passed: True
-  - Rate range passed: True
-  - Jaccard range passed: True
-  - Correlation range passed: True
-  - Selected rank range passed: True
-  - Finite numeric values passed: True
+  - Non-finite count: 0
+  - Count range failure count: 0
+  - Rate range failure count: 0
+  - Jaccard range failure count: 0
+  - Correlation state failure count: 0
+  - Correlation range failure count: 0
+  - Selected rank range failure count: 0
   - Passed: True
 
 - by_project:
-  - Count range passed: True
-  - Rate range passed: True
-  - Jaccard range passed: True
-  - Correlation range passed: True
-  - Selected rank range passed: True
-  - Finite numeric values passed: True
+  - Non-finite count: 0
+  - Count range failure count: 0
+  - Rate range failure count: 0
+  - Jaccard range failure count: 0
+  - Correlation state failure count: 0
+  - Correlation range failure count: 0
+  - Selected rank range failure count: 0
   - Passed: True
-
-## Deterministic Serialization
-
-- Overall CSV identical: True
-- Experiment CSV identical: True
-- Mode CSV identical: True
-- Metric CSV identical: True
-- Project CSV identical: True
-- Undefined reasons CSV identical: True
-- Audit JSON identical: True
-- Audit Markdown identical: N/A
-- Stable output order passed: True
-- Deterministic output serialization passed: False
 
 ## Interpretation Limits
 
@@ -212,25 +216,40 @@
 - No significance claim: True
 - No causal claim: True
 - No superiority claim based only on agreement: True
-- Test data used only for post-selection evaluation: True
-- Interpretation limits present: True
+- Test data post-selection only: True
+- Present: True
 
-## Validation Checks Summary
+## Serialization Audit
 
-- input_sha_verified: True
-- input_schema_valid: True
-- input_key_coverage_passed: True
-- input_audit_checks_passed: True
-- summary_counts_correct: True
-- summary_schemas_valid: True
-- summary_group_domains_valid: True
-- summary_group_denominators_valid: True
-- correlation_undefined_counts_correct: True
-- correlation_defined_identities_passed: True
-- independent_validation_passed: True
-- denominator_identities_passed: True
-- range_checks_passed: True
-- undefined_reasons_validation_passed: True
-- interpretation_limits_present: True
-- all_checks_passed: True
+- Overall CSV serialization identical: True
+- Experiment CSV serialization identical: True
+- Mode CSV serialization identical: True
+- Metric CSV serialization identical: True
+- Project CSV serialization identical: True
+- Undefined reasons CSV serialization identical: True
+- Audit payload JSON serialization identical: True
+- Audit payload Markdown serialization identical: True
+- Stable output order passed: True
+- Deterministic output serialization passed: True
+
+## Validation Checks
+
+- input sha verified: True
+- input schema valid: True
+- input key coverage passed: True
+- input audit checks passed: True
+- summary counts correct: True
+- summary schemas valid: True
+- summary group domains valid: True
+- summary group denominators valid: True
+- correlation undefined counts correct: True
+- correlation defined identities passed: True
+- independent validation passed: True
+- denominator identities passed: True
+- range checks passed: True
+- undefined reasons validation passed: True
+- interpretation limits present: True
+- deterministic output serialization passed: True
+- output integrity ready passed: True
+- all checks passed: True
 

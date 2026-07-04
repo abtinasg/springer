@@ -1,316 +1,292 @@
 {
-  "correlation_identity_validation": {
-    "correlation_identity_failure_count": 0,
-    "correlation_identity_rows_checked": 25,
-    "passed": true
-  },
-  "correlation_undefined": {
-    "kendall_count": 18,
-    "spearman_count": 18
-  },
-  "denominator_identities": {
-    "details": {
-      "by_experiment": true,
-      "by_metric": true,
-      "by_mode": true,
-      "by_project": true,
-      "overall": true
+  "audit_payload": {
+    "correlation_identity_validation": {
+      "correlation_identity_failure_count": 0,
+      "correlation_identity_rows_checked": 25,
+      "passed": true
     },
-    "passed": true
-  },
-  "execution": {
-    "base_path": "/Users/aliehpourdast/Desktop/springer/springer",
-    "script_path": "/Users/aliehpourdast/Desktop/springer/springer/scripts/summarize_validation_test_ranking_agreement.py"
-  },
-  "input_audit_verification": {
-    "input_audit_check_count": 40,
-    "input_audit_checks_passed": true,
-    "input_audit_failed_check_count": 0,
-    "input_audit_missing_required_check_count": 0
-  },
-  "input_verification": {
-    "actual_event_key_count": 2100,
-    "boolean_valid": true,
-    "column_count_ok": true,
-    "column_order_ok": true,
-    "columns": 28,
-    "duplicate_key_count": 0,
-    "extra_event_key_count": 0,
-    "finite_numeric_valid": true,
-    "input_key_coverage_passed": true,
-    "input_schema_valid": true,
-    "key_coverage_ok": true,
-    "missing_event_key_count": 0,
-    "na_state_valid": true,
-    "row_count_ok": true,
-    "rows": 2100,
-    "sha256_verified": true
-  },
-  "interpretation_limits": {
-    "descriptive_summaries_only": true,
-    "no_causal_claim": true,
-    "no_iid_confidence_intervals": true,
-    "no_p_values": true,
-    "no_significance_claim": true,
-    "no_superiority_claim": true,
-    "present": true,
-    "seeds_repeated_non_independent": true,
-    "test_data_post_selection_only": true
-  },
-  "range_checks": {
-    "details": {
-      "by_experiment": {
-        "correlation_range_passed": true,
-        "count_range_passed": true,
-        "finite_numeric_values_passed": true,
-        "jaccard_range_passed": true,
-        "passed": true,
-        "rate_range_passed": true,
-        "selected_rank_range_passed": true
-      },
-      "by_metric": {
-        "correlation_range_passed": true,
-        "count_range_passed": true,
-        "finite_numeric_values_passed": true,
-        "jaccard_range_passed": true,
-        "passed": true,
-        "rate_range_passed": true,
-        "selected_rank_range_passed": true
-      },
-      "by_mode": {
-        "correlation_range_passed": true,
-        "count_range_passed": true,
-        "finite_numeric_values_passed": true,
-        "jaccard_range_passed": true,
-        "passed": true,
-        "rate_range_passed": true,
-        "selected_rank_range_passed": true
-      },
-      "by_project": {
-        "correlation_range_passed": true,
-        "count_range_passed": true,
-        "finite_numeric_values_passed": true,
-        "jaccard_range_passed": true,
-        "passed": true,
-        "rate_range_passed": true,
-        "selected_rank_range_passed": true
-      },
-      "overall": {
-        "correlation_range_passed": true,
-        "count_range_passed": true,
-        "finite_numeric_values_passed": true,
-        "jaccard_range_passed": true,
-        "passed": true,
-        "rate_range_passed": true,
-        "selected_rank_range_passed": true
-      }
+    "correlation_undefined": {
+      "kendall_count": 18,
+      "spearman_count": 18
     },
-    "passed": true
-  },
-  "summary_counts": {
-    "by_experiment": {
-      "actual_rows": 2,
-      "expected_rows": 2
-    },
-    "by_metric": {
-      "actual_rows": 14,
-      "expected_rows": 14
-    },
-    "by_mode": {
-      "actual_rows": 3,
-      "expected_rows": 3
-    },
-    "by_project": {
-      "actual_rows": 5,
-      "expected_rows": 5
-    },
-    "overall": {
-      "actual_rows": 1,
-      "expected_rows": 1
-    }
-  },
-  "summary_domain_validation": {
-    "details": {
+    "denominator_identities": {
       "details": {
-        "experiment_cross_project": {
-          "denominator_ok": true,
-          "passed": true
+        "by_experiment": true,
+        "by_metric": true,
+        "by_mode": true,
+        "by_project": true,
+        "overall": true
+      },
+      "passed": true
+    },
+    "execution": {
+      "base_path": "/Users/aliehpourdast/Desktop/springer/springer",
+      "script_path": "/Users/aliehpourdast/Desktop/springer/springer/scripts/summarize_validation_test_ranking_agreement.py"
+    },
+    "input_audit_verification": {
+      "input_audit_check_count": 40,
+      "input_audit_checks_passed": true,
+      "input_audit_failed_check_count": 0,
+      "input_audit_missing_required_check_count": 0
+    },
+    "input_verification": {
+      "actual_event_key_count": 2100,
+      "actual_sha256": "85314055415bbb3cca13d35c8dd65979f92c9c120e90c1c866cae722d0ad1f15",
+      "boolean_valid": true,
+      "column_count_ok": true,
+      "column_order_ok": true,
+      "columns": 28,
+      "duplicate_key_count": 0,
+      "expected_sha256": "85314055415bbb3cca13d35c8dd65979f92c9c120e90c1c866cae722d0ad1f15",
+      "extra_event_key_count": 0,
+      "finite_numeric_valid": true,
+      "input_key_coverage_passed": true,
+      "input_schema_valid": true,
+      "key_coverage_ok": true,
+      "missing_event_key_count": 0,
+      "na_state_valid": true,
+      "row_count_ok": true,
+      "rows": 2100,
+      "sha256_verified": true
+    },
+    "interpretation_limits": {
+      "descriptive_summaries_only": true,
+      "no_causal_claim": true,
+      "no_iid_confidence_intervals": true,
+      "no_p_values": true,
+      "no_significance_claim": true,
+      "no_superiority_claim": true,
+      "present": true,
+      "seeds_repeated_non_independent": true,
+      "test_data_post_selection_only": true
+    },
+    "range_checks": {
+      "details": {
+        "by_experiment": {
+          "correlation_range_failure_count": 0,
+          "correlation_state_failure_count": 0,
+          "count_range_failure_count": 0,
+          "jaccard_range_failure_count": 0,
+          "non_finite_count": 0,
+          "passed": true,
+          "rate_range_failure_count": 0,
+          "selected_rank_range_failure_count": 0
         },
-        "experiment_within_project": {
-          "denominator_ok": true,
-          "passed": true
+        "by_metric": {
+          "correlation_range_failure_count": 0,
+          "correlation_state_failure_count": 0,
+          "count_range_failure_count": 0,
+          "jaccard_range_failure_count": 0,
+          "non_finite_count": 0,
+          "passed": true,
+          "rate_range_failure_count": 0,
+          "selected_rank_range_failure_count": 0
         },
-        "metric_avg_precision": {
-          "denominator_ok": true,
-          "passed": true
+        "by_mode": {
+          "correlation_range_failure_count": 0,
+          "correlation_state_failure_count": 0,
+          "count_range_failure_count": 0,
+          "jaccard_range_failure_count": 0,
+          "non_finite_count": 0,
+          "passed": true,
+          "rate_range_failure_count": 0,
+          "selected_rank_range_failure_count": 0
         },
-        "metric_balanced_accuracy": {
-          "denominator_ok": true,
-          "passed": true
-        },
-        "metric_brier": {
-          "denominator_ok": true,
-          "passed": true
-        },
-        "metric_f1": {
-          "denominator_ok": true,
-          "passed": true
-        },
-        "metric_lift_at_10pct": {
-          "denominator_ok": true,
-          "passed": true
-        },
-        "metric_lift_at_20pct": {
-          "denominator_ok": true,
-          "passed": true
-        },
-        "metric_mcc": {
-          "denominator_ok": true,
-          "passed": true
-        },
-        "metric_precision": {
-          "denominator_ok": true,
-          "passed": true
-        },
-        "metric_precision_at_10pct": {
-          "denominator_ok": true,
-          "passed": true
-        },
-        "metric_precision_at_20pct": {
-          "denominator_ok": true,
-          "passed": true
-        },
-        "metric_recall": {
-          "denominator_ok": true,
-          "passed": true
-        },
-        "metric_recall_at_10pct": {
-          "denominator_ok": true,
-          "passed": true
-        },
-        "metric_recall_at_20pct": {
-          "denominator_ok": true,
-          "passed": true
-        },
-        "metric_roc_auc": {
-          "denominator_ok": true,
-          "passed": true
-        },
-        "mode_balanced": {
-          "denominator_ok": true,
-          "passed": true
-        },
-        "mode_mcc": {
-          "denominator_ok": true,
-          "passed": true
-        },
-        "mode_rank": {
-          "denominator_ok": true,
-          "passed": true
+        "by_project": {
+          "correlation_range_failure_count": 0,
+          "correlation_state_failure_count": 0,
+          "count_range_failure_count": 0,
+          "jaccard_range_failure_count": 0,
+          "non_finite_count": 0,
+          "passed": true,
+          "rate_range_failure_count": 0,
+          "selected_rank_range_failure_count": 0
         },
         "overall": {
-          "denominator_ok": true,
-          "group_name_ok": true,
-          "group_value_ok": true,
-          "passed": true
-        },
-        "project_CM1": {
-          "denominator_ok": true,
-          "passed": true
-        },
-        "project_JM1": {
-          "denominator_ok": true,
-          "passed": true
-        },
-        "project_KC1": {
-          "denominator_ok": true,
-          "passed": true
-        },
-        "project_KC2": {
-          "denominator_ok": true,
-          "passed": true
-        },
-        "project_PC1": {
-          "denominator_ok": true,
-          "passed": true
+          "correlation_range_failure_count": 0,
+          "correlation_state_failure_count": 0,
+          "count_range_failure_count": 0,
+          "jaccard_range_failure_count": 0,
+          "non_finite_count": 0,
+          "passed": true,
+          "rate_range_failure_count": 0,
+          "selected_rank_range_failure_count": 0
         }
       },
-      "group_denominator_mismatch_count": 0,
-      "group_domain_mismatch_count": 0
+      "passed": true
     },
-    "passed": true
-  },
-  "summary_schema_validation": {
-    "details": {
+    "summary_counts": {
       "by_experiment": {
-        "actual_column_count": 35,
-        "expected_column_count": 35,
-        "passed": true,
-        "schema_mismatch_count": 0
+        "actual_rows": 2,
+        "expected_rows": 2
       },
       "by_metric": {
-        "actual_column_count": 35,
-        "expected_column_count": 35,
-        "passed": true,
-        "schema_mismatch_count": 0
+        "actual_rows": 14,
+        "expected_rows": 14
       },
       "by_mode": {
-        "actual_column_count": 35,
-        "expected_column_count": 35,
-        "passed": true,
-        "schema_mismatch_count": 0
+        "actual_rows": 3,
+        "expected_rows": 3
       },
       "by_project": {
-        "actual_column_count": 35,
-        "expected_column_count": 35,
-        "passed": true,
-        "schema_mismatch_count": 0
+        "actual_rows": 5,
+        "expected_rows": 5
       },
       "overall": {
-        "actual_column_count": 35,
-        "expected_column_count": 35,
-        "passed": true,
-        "schema_mismatch_count": 0
-      },
-      "undefined_reasons": {
-        "actual_column_count": 3,
-        "expected_column_count": 3,
-        "passed": true,
-        "schema_mismatch_count": 0
+        "actual_rows": 1,
+        "expected_rows": 1
       }
     },
-    "passed": true
+    "summary_domain_validation": {
+      "details": {
+        "details": {
+          "by_experiment": {
+            "actual_group_count": 2,
+            "denominator_mismatch_count": 0,
+            "duplicate_group_row_count": 0,
+            "expected_group_count": 2,
+            "extra_group_count": 0,
+            "group_name_mismatch_count": 0,
+            "missing_group_count": 0,
+            "passed": true
+          },
+          "by_metric": {
+            "actual_group_count": 14,
+            "denominator_mismatch_count": 0,
+            "duplicate_group_row_count": 0,
+            "expected_group_count": 14,
+            "extra_group_count": 0,
+            "group_name_mismatch_count": 0,
+            "missing_group_count": 0,
+            "passed": true
+          },
+          "by_mode": {
+            "actual_group_count": 3,
+            "denominator_mismatch_count": 0,
+            "duplicate_group_row_count": 0,
+            "expected_group_count": 3,
+            "extra_group_count": 0,
+            "group_name_mismatch_count": 0,
+            "missing_group_count": 0,
+            "passed": true
+          },
+          "by_project": {
+            "actual_group_count": 5,
+            "denominator_mismatch_count": 0,
+            "duplicate_group_row_count": 0,
+            "expected_group_count": 5,
+            "extra_group_count": 0,
+            "group_name_mismatch_count": 0,
+            "missing_group_count": 0,
+            "passed": true
+          },
+          "overall": {
+            "actual_group_count": 1,
+            "denominator_mismatch_count": 0,
+            "duplicate_group_row_count": 0,
+            "expected_group_count": 1,
+            "extra_group_count": 0,
+            "group_name_mismatch_count": 0,
+            "missing_group_count": 0,
+            "passed": true
+          }
+        },
+        "group_denominator_mismatch_count": 0,
+        "group_domain_mismatch_count": 0
+      },
+      "passed": true
+    },
+    "summary_schema_validation": {
+      "details": {
+        "by_experiment": {
+          "actual_column_count": 35,
+          "expected_column_count": 35,
+          "passed": true,
+          "schema_mismatch_count": 0
+        },
+        "by_metric": {
+          "actual_column_count": 35,
+          "expected_column_count": 35,
+          "passed": true,
+          "schema_mismatch_count": 0
+        },
+        "by_mode": {
+          "actual_column_count": 35,
+          "expected_column_count": 35,
+          "passed": true,
+          "schema_mismatch_count": 0
+        },
+        "by_project": {
+          "actual_column_count": 35,
+          "expected_column_count": 35,
+          "passed": true,
+          "schema_mismatch_count": 0
+        },
+        "overall": {
+          "actual_column_count": 35,
+          "expected_column_count": 35,
+          "passed": true,
+          "schema_mismatch_count": 0
+        },
+        "undefined_reasons": {
+          "actual_column_count": 3,
+          "expected_column_count": 3,
+          "passed": true,
+          "schema_mismatch_count": 0
+        }
+      },
+      "passed": true
+    },
+    "undefined_reasons_validation": {
+      "actual_kendall_count": 18,
+      "actual_spearman_count": 18,
+      "defined_rows_with_reason_count": 0,
+      "expected_kendall_count": 18,
+      "expected_spearman_count": 18,
+      "passed": true,
+      "undefined_reason_actual_rows": 2,
+      "undefined_reason_duplicate_row_count": 0,
+      "undefined_reason_expected_rows": 2,
+      "undefined_reason_extra_row_count": 0,
+      "undefined_reason_missing_row_count": 0,
+      "undefined_reason_value_mismatch_count": 0,
+      "undefined_rows_without_reason_count": 0
+    },
+    "validation": {
+      "summary_field_comparisons": 850,
+      "summary_mismatch_count": 0,
+      "summary_rows_expected": 25,
+      "summary_rows_reconstructed": 25,
+      "summary_rows_with_complete_validation": 25,
+      "summary_rows_with_incomplete_validation": 0,
+      "summary_structural_mismatch_count": 0
+    }
   },
-  "undefined_reasons_validation": {
-    "actual_kendall_count": 18,
-    "actual_spearman_count": 18,
-    "correlation_domain_ok": true,
-    "expected_kendall_count": 18,
-    "expected_spearman_count": 18,
+  "serialization_audit": {
+    "audit_payload_json_serialization_identical": true,
+    "audit_payload_markdown_serialization_identical": true,
+    "experiment_csv_serialization_identical": true,
+    "metric_csv_serialization_identical": true,
+    "mode_csv_serialization_identical": true,
+    "overall_csv_serialization_identical": true,
     "passed": true,
-    "row_count_ok": true,
-    "undefined_reason_actual_rows": 2,
-    "undefined_reason_expected_rows": 2
-  },
-  "validation": {
-    "summary_field_comparisons": 850,
-    "summary_mismatch_count": 0,
-    "summary_rows_expected": 25,
-    "summary_rows_reconstructed": 25,
-    "summary_rows_with_complete_validation": 25,
-    "summary_rows_with_incomplete_validation": 0
+    "project_csv_serialization_identical": true,
+    "stable_output_order_passed": true,
+    "undefined_reasons_csv_serialization_identical": true
   },
   "validation_checks": {
     "all_checks_passed": true,
     "correlation_defined_identities_passed": true,
     "correlation_undefined_counts_correct": true,
     "denominator_identities_passed": true,
+    "deterministic_output_serialization_passed": true,
     "independent_validation_passed": true,
     "input_audit_checks_passed": true,
     "input_key_coverage_passed": true,
     "input_schema_valid": true,
     "input_sha_verified": true,
     "interpretation_limits_present": true,
+    "output_integrity_ready_passed": true,
     "range_checks_passed": true,
     "summary_counts_correct": true,
     "summary_group_denominators_valid": true,

@@ -179,6 +179,7 @@ def verify_input_audit(audit: Dict[str, Any]) -> Dict[str, Any]:
 def verify_event_csv(
     df: pd.DataFrame,
     actual_sha: str,
+    expected_sha: str,
     spec: Dict[str, Any],
 ) -> Dict[str, Any]:
     """Verify event CSV structure and content and return evidence."""
@@ -277,8 +278,12 @@ def verify_event_csv(
         extra_event_key_count == 0
     )
     
+    sha256_verified = actual_sha == expected_sha
+    
     return {
-        "sha256_verified": True,  # Already verified in main
+        "expected_sha256": expected_sha,
+        "actual_sha256": actual_sha,
+        "sha256_verified": sha256_verified,
         "rows": len(df),
         "columns": len(df.columns),
         "column_order_ok": column_order_ok,
@@ -449,7 +454,11 @@ def validate_summary_row(
     
     # Check n_event_rows
     if len(df_subset) != summary_row["n_event_rows"]:
-        return False, 0, {"error": "n_event_rows mismatch"}
+        return False, 0, {
+            "mismatches": 1,
+            "structural_mismatch_count": 1,
+            "error": "n_event_rows mismatch",
+        }
     
     # Recompute boolean counts
     field_comparisons = 0
@@ -619,7 +628,10 @@ def validate_summary_row(
     if actual_count != summary_row["selected_candidate_test_rank_one_n"]:
         mismatches += 1
     
-    return mismatches == 0, field_comparisons, {"mismatches": mismatches}
+    return mismatches == 0, field_comparisons, {
+        "mismatches": mismatches,
+        "structural_mismatch_count": 0,
+    }
 
 
 def check_denominator_identities(summary_dfs: Dict[str, pd.DataFrame]) -> Dict[str, Any]:
@@ -644,53 +656,74 @@ def check_range_constraints(summary_dfs: Dict[str, pd.DataFrame]) -> Dict[str, A
     
     for name, df in summary_dfs.items():
         table_evidence = {
-            "count_range_passed": True,
-            "rate_range_passed": True,
-            "jaccard_range_passed": True,
-            "correlation_range_passed": True,
-            "selected_rank_range_passed": True,
-            "finite_numeric_values_passed": True,
+            "non_finite_count": 0,
+            "count_range_failure_count": 0,
+            "rate_range_failure_count": 0,
+            "jaccard_range_failure_count": 0,
+            "correlation_state_failure_count": 0,
+            "correlation_range_failure_count": 0,
+            "selected_rank_range_failure_count": 0,
             "passed": True,
         }
         
-        # Check counts are between 0 and denominator
+        # Check n_event_rows is finite
+        if not df["n_event_rows"].apply(lambda x: np.isfinite(x) if pd.notna(x) else False).all():
+            table_evidence["non_finite_count"] += df["n_event_rows"].apply(lambda x: not np.isfinite(x) if pd.notna(x) else False).sum()
+        
+        # Check counts are between 0 and denominator and finite
         for col in df.columns:
             if col.endswith("_n") and col != "n_event_rows":
+                if not df[col].apply(lambda x: np.isfinite(x) if pd.notna(x) else False).all():
+                    table_evidence["non_finite_count"] += df[col].apply(lambda x: not np.isfinite(x) if pd.notna(x) else False).sum()
                 if (df[col] < 0).any() or (df[col] > df["n_event_rows"]).any():
-                    table_evidence["count_range_passed"] = False
+                    table_evidence["count_range_failure_count"] += 1
         
-        # Check rates are in [0, 1]
+        # Check rates are in [0, 1] and finite
         for col in df.columns:
             if col.endswith("_rate"):
+                if not df[col].apply(lambda x: np.isfinite(x) if pd.notna(x) else False).all():
+                    table_evidence["non_finite_count"] += df[col].apply(lambda x: not np.isfinite(x) if pd.notna(x) else False).sum()
                 if (df[col] < 0).any() or (df[col] > 1).any():
-                    table_evidence["rate_range_passed"] = False
+                    table_evidence["rate_range_failure_count"] += 1
         
-        # Check Jaccard in [0, 1]
+        # Check Jaccard in [0, 1] and finite
         for col in ["winner_set_jaccard_exact_mean", "winner_set_jaccard_exact_median",
                     "winner_set_jaccard_tolerance_mean", "winner_set_jaccard_tolerance_median"]:
             if col in df.columns:
+                if not df[col].apply(lambda x: np.isfinite(x) if pd.notna(x) else False).all():
+                    table_evidence["non_finite_count"] += df[col].apply(lambda x: not np.isfinite(x) if pd.notna(x) else False).sum()
                 if (df[col] < 0).any() or (df[col] > 1).any():
-                    table_evidence["jaccard_range_passed"] = False
+                    table_evidence["jaccard_range_failure_count"] += 1
         
-        # Check correlation mean/median in [-1, 1]
+        # Check correlation mean/median in [-1, 1] and finite
         for col in ["spearman_mean_defined", "spearman_median_defined",
                     "kendall_mean_defined", "kendall_median_defined"]:
             if col in df.columns:
                 # Check finite first
-                if not df[col].apply(lambda x: np.isfinite(x) if pd.notna(x) else True).all():
-                    table_evidence["finite_numeric_values_passed"] = False
+                if not df[col].apply(lambda x: np.isfinite(x) if pd.notna(x) else False).all():
+                    table_evidence["non_finite_count"] += df[col].apply(lambda x: not np.isfinite(x) if pd.notna(x) else False).sum()
+                    table_evidence["correlation_state_failure_count"] += 1
                 if (df[col] < -1).any() or (df[col] > 1).any():
-                    table_evidence["correlation_range_passed"] = False
+                    table_evidence["correlation_range_failure_count"] += 1
         
-        # Check selected test rank in [1, 4]
+        # Check selected test rank in [1, 4] and finite
         for col in ["selected_candidate_test_rank_mean", "selected_candidate_test_rank_median"]:
             if col in df.columns:
-                if not df[col].apply(lambda x: np.isfinite(x) if pd.notna(x) else True).all():
-                    table_evidence["finite_numeric_values_passed"] = False
+                # Check finite first
+                if not df[col].apply(lambda x: np.isfinite(x) if pd.notna(x) else False).all():
+                    table_evidence["non_finite_count"] += df[col].apply(lambda x: not np.isfinite(x) if pd.notna(x) else False).sum()
                 if (df[col] < 1).any() or (df[col] > 4).any():
-                    table_evidence["selected_rank_range_passed"] = False
+                    table_evidence["selected_rank_range_failure_count"] += 1
         
-        table_evidence["passed"] = all(table_evidence.values())
+        table_evidence["passed"] = (
+            table_evidence["non_finite_count"] == 0 and
+            table_evidence["count_range_failure_count"] == 0 and
+            table_evidence["rate_range_failure_count"] == 0 and
+            table_evidence["jaccard_range_failure_count"] == 0 and
+            table_evidence["correlation_state_failure_count"] == 0 and
+            table_evidence["correlation_range_failure_count"] == 0 and
+            table_evidence["selected_rank_range_failure_count"] == 0
+        )
         range_details[name] = table_evidence
     
     all_passed = all(e["passed"] for e in range_details.values())
@@ -740,66 +773,78 @@ def validate_summary_domains(summary_dfs: Dict[str, pd.DataFrame], spec: Dict[st
         "details": {},
     }
     
-    # Validate overall
-    overall_df = summary_dfs["overall"]
-    domain_evidence["details"]["overall"] = {
-        "group_name_ok": overall_df["group_name"].iloc[0] == "overall",
-        "group_value_ok": overall_df["group_value"].iloc[0] == "all",
-        "denominator_ok": overall_df["n_event_rows"].iloc[0] == EXPECTED_OVERALL_DENOMINATOR,
-        "passed": (
-            overall_df["group_name"].iloc[0] == "overall" and
-            overall_df["group_value"].iloc[0] == "all" and
-            overall_df["n_event_rows"].iloc[0] == EXPECTED_OVERALL_DENOMINATOR
-        ),
+    # Construct expected group sets
+    expected_groups = {
+        "overall": [("overall", "all")],
+        "by_experiment": [("experiment", exp) for exp in EXPECTED_EXPERIMENTS],
+        "by_mode": [("mode", mode) for mode in EXPECTED_MODES],
+        "by_metric": [("metric", metric) for metric in spec["metrics"]],
+        "by_project": [("target_project", project) for project in EXPECTED_PROJECTS],
     }
     
-    # Validate by experiment
-    experiment_df = summary_dfs["by_experiment"]
-    for exp in EXPECTED_EXPERIMENTS:
-        row = experiment_df[experiment_df["group_value"] == exp]
-        if not row.empty:
-            domain_evidence["details"][f"experiment_{exp}"] = {
-                "denominator_ok": row["n_event_rows"].iloc[0] == EXPECTED_EXPERIMENT_DENOMINATORS[exp],
-                "passed": row["n_event_rows"].iloc[0] == EXPECTED_EXPERIMENT_DENOMINATORS[exp],
-            }
-            if row["n_event_rows"].iloc[0] != EXPECTED_EXPERIMENT_DENOMINATORS[exp]:
-                domain_evidence["group_denominator_mismatch_count"] += 1
+    expected_denominators = {
+        "overall": EXPECTED_OVERALL_DENOMINATOR,
+        "by_experiment": EXPECTED_EXPERIMENT_DENOMINATORS,
+        "by_mode": EXPECTED_MODE_DENOMINATORS,
+        "by_metric": EXPECTED_METRIC_DENOMINATOR,
+        "by_project": EXPECTED_PROJECT_DENOMINATOR,
+    }
     
-    # Validate by mode
-    mode_df = summary_dfs["by_mode"]
-    for mode in EXPECTED_MODES:
-        row = mode_df[mode_df["group_value"] == mode]
-        if not row.empty:
-            domain_evidence["details"][f"mode_{mode}"] = {
-                "denominator_ok": row["n_event_rows"].iloc[0] == EXPECTED_MODE_DENOMINATORS[mode],
-                "passed": row["n_event_rows"].iloc[0] == EXPECTED_MODE_DENOMINATORS[mode],
-            }
-            if row["n_event_rows"].iloc[0] != EXPECTED_MODE_DENOMINATORS[mode]:
-                domain_evidence["group_denominator_mismatch_count"] += 1
-    
-    # Validate by metric
-    metric_df = summary_dfs["by_metric"]
-    for metric in spec["metrics"]:
-        row = metric_df[metric_df["group_value"] == metric]
-        if not row.empty:
-            domain_evidence["details"][f"metric_{metric}"] = {
-                "denominator_ok": row["n_event_rows"].iloc[0] == EXPECTED_METRIC_DENOMINATOR,
-                "passed": row["n_event_rows"].iloc[0] == EXPECTED_METRIC_DENOMINATOR,
-            }
-            if row["n_event_rows"].iloc[0] != EXPECTED_METRIC_DENOMINATOR:
-                domain_evidence["group_denominator_mismatch_count"] += 1
-    
-    # Validate by project
-    project_df = summary_dfs["by_project"]
-    for project in EXPECTED_PROJECTS:
-        row = project_df[project_df["group_value"] == project]
-        if not row.empty:
-            domain_evidence["details"][f"project_{project}"] = {
-                "denominator_ok": row["n_event_rows"].iloc[0] == EXPECTED_PROJECT_DENOMINATOR,
-                "passed": row["n_event_rows"].iloc[0] == EXPECTED_PROJECT_DENOMINATOR,
-            }
-            if row["n_event_rows"].iloc[0] != EXPECTED_PROJECT_DENOMINATOR:
-                domain_evidence["group_denominator_mismatch_count"] += 1
+    # Validate each table
+    for table_name, df in summary_dfs.items():
+        expected_set = set(expected_groups[table_name])
+        actual_set = set(zip(df["group_name"], df["group_value"]))
+        
+        duplicate_group_row_count = df.groupby(["group_name", "group_value"]).size().gt(1).sum()
+        missing_group_count = len(expected_set - actual_set)
+        extra_group_count = len(actual_set - expected_set)
+        group_name_mismatch_count = 0
+        denominator_mismatch_count = 0
+        
+        # Check group names and denominators
+        for _, row in df.iterrows():
+            group_tuple = (row["group_name"], row["group_value"])
+            if group_tuple not in expected_set:
+                group_name_mismatch_count += 1
+            else:
+                # Check denominator
+                if table_name == "overall":
+                    expected_denom = expected_denominators[table_name]
+                elif table_name == "by_experiment":
+                    expected_denom = expected_denominators[table_name][row["group_value"]]
+                elif table_name == "by_mode":
+                    expected_denom = expected_denominators[table_name][row["group_value"]]
+                elif table_name == "by_metric":
+                    expected_denom = expected_denominators[table_name]
+                elif table_name == "by_project":
+                    expected_denom = expected_denominators[table_name]
+                else:
+                    expected_denom = None
+                
+                if expected_denom is not None and row["n_event_rows"] != expected_denom:
+                    denominator_mismatch_count += 1
+        
+        domain_evidence["details"][table_name] = {
+            "expected_group_count": len(expected_set),
+            "actual_group_count": len(actual_set),
+            "duplicate_group_row_count": int(duplicate_group_row_count),
+            "missing_group_count": missing_group_count,
+            "extra_group_count": extra_group_count,
+            "group_name_mismatch_count": group_name_mismatch_count,
+            "denominator_mismatch_count": denominator_mismatch_count,
+            "passed": (
+                duplicate_group_row_count == 0 and
+                missing_group_count == 0 and
+                extra_group_count == 0 and
+                group_name_mismatch_count == 0 and
+                denominator_mismatch_count == 0
+            ),
+        }
+        
+        domain_evidence["group_domain_mismatch_count"] += (
+            duplicate_group_row_count + missing_group_count + extra_group_count + group_name_mismatch_count
+        )
+        domain_evidence["group_denominator_mismatch_count"] += denominator_mismatch_count
     
     all_passed = (
         domain_evidence["group_domain_mismatch_count"] == 0 and
@@ -835,52 +880,104 @@ def validate_correlation_identities(summary_dfs: Dict[str, pd.DataFrame]) -> Dic
 
 def validate_undefined_reasons(df: pd.DataFrame, undefined_reasons_df: pd.DataFrame) -> Dict[str, Any]:
     """Validate undefined-reasons CSV independently from event CSV."""
-    # Validate Spearman undefined counts
+    # Reconstruct expected undefined-reasons table from event CSV
+    expected_undefined_reasons = []
+    
+    # For Spearman
     spearman_undefined = df[df["spearman_defined"] == False]
-    expected_spearman_count = len(spearman_undefined)
+    if not spearman_undefined.empty:
+        spearman_reason_counts = spearman_undefined["spearman_undefined_reason"].value_counts()
+        for reason, count in spearman_reason_counts.items():
+            expected_undefined_reasons.append({
+                "correlation": "spearman",
+                "undefined_reason": reason,
+                "count": int(count),
+            })
     
-    # Validate Kendall undefined counts
+    # For Kendall
     kendall_undefined = df[df["kendall_defined"] == False]
-    expected_kendall_count = len(kendall_undefined)
+    if not kendall_undefined.empty:
+        kendall_reason_counts = kendall_undefined["kendall_undefined_reason"].value_counts()
+        for reason, count in kendall_reason_counts.items():
+            expected_undefined_reasons.append({
+                "correlation": "kendall",
+                "undefined_reason": reason,
+                "count": int(count),
+            })
     
-    # Validate undefined reasons CSV
-    actual_spearman_count = 0
-    actual_kendall_count = 0
+    expected_df = pd.DataFrame(expected_undefined_reasons)
     
-    if not undefined_reasons_df.empty:
-        actual_spearman_count = int(undefined_reasons_df[undefined_reasons_df["correlation"] == "spearman"]["count"].sum())
-        actual_kendall_count = int(undefined_reasons_df[undefined_reasons_df["correlation"] == "kendall"]["count"].sum())
+    # Validate defined rows have no undefined reason
+    defined_rows_with_reason_count = 0
+    spearman_defined = df[df["spearman_defined"] == True]
+    if not spearman_defined.empty and spearman_defined["spearman_undefined_reason"].notna().any():
+        defined_rows_with_reason_count += spearman_defined["spearman_undefined_reason"].notna().sum()
     
-    # Validate correlation domain
-    if not undefined_reasons_df.empty:
-        correlation_domains = set(undefined_reasons_df["correlation"].unique())
-        correlation_domain_ok = correlation_domains == {"spearman", "kendall"}
-    else:
-        correlation_domain_ok = False
+    kendall_defined = df[df["kendall_defined"] == True]
+    if not kendall_defined.empty and kendall_defined["kendall_undefined_reason"].notna().any():
+        defined_rows_with_reason_count += kendall_defined["kendall_undefined_reason"].notna().sum()
     
-    # Validate row count
-    row_count_ok = len(undefined_reasons_df) == EXPECTED_UNDEFINED_REASON_ROWS
+    # Validate undefined rows have a non-null reason
+    undefined_rows_without_reason_count = 0
+    if not spearman_undefined.empty and spearman_undefined["spearman_undefined_reason"].isna().any():
+        undefined_rows_without_reason_count += spearman_undefined["spearman_undefined_reason"].isna().sum()
+    
+    if not kendall_undefined.empty and kendall_undefined["kendall_undefined_reason"].isna().any():
+        undefined_rows_without_reason_count += kendall_undefined["kendall_undefined_reason"].isna().sum()
+    
+    # Validate actual CSV matches expected
+    undefined_reason_duplicate_row_count = 0
+    undefined_reason_missing_row_count = 0
+    undefined_reason_extra_row_count = 0
+    undefined_reason_value_mismatch_count = 0
+    
+    if not undefined_reasons_df.empty and not expected_df.empty:
+        # Check for duplicates
+        duplicate_mask = undefined_reasons_df.duplicated(subset=["correlation", "undefined_reason"], keep=False)
+        undefined_reason_duplicate_row_count = duplicate_mask.sum()
+        
+        # Check for missing rows
+        expected_set = set(zip(expected_df["correlation"], expected_df["undefined_reason"]))
+        actual_set = set(zip(undefined_reasons_df["correlation"], undefined_reasons_df["undefined_reason"]))
+        undefined_reason_missing_row_count = len(expected_set - actual_set)
+        undefined_reason_extra_row_count = len(actual_set - expected_set)
+        
+        # Check for value mismatches
+        for _, expected_row in expected_df.iterrows():
+            match = undefined_reasons_df[
+                (undefined_reasons_df["correlation"] == expected_row["correlation"]) &
+                (undefined_reasons_df["undefined_reason"] == expected_row["undefined_reason"])
+            ]
+            if not match.empty:
+                if match["count"].iloc[0] != expected_row["count"]:
+                    undefined_reason_value_mismatch_count += 1
     
     return {
-        "undefined_reason_expected_rows": EXPECTED_UNDEFINED_REASON_ROWS,
+        "undefined_reason_expected_rows": len(expected_df),
         "undefined_reason_actual_rows": len(undefined_reasons_df),
-        "expected_spearman_count": expected_spearman_count,
-        "actual_spearman_count": actual_spearman_count,
-        "expected_kendall_count": expected_kendall_count,
-        "actual_kendall_count": actual_kendall_count,
-        "correlation_domain_ok": correlation_domain_ok,
-        "row_count_ok": row_count_ok,
+        "expected_spearman_count": len(spearman_undefined),
+        "actual_spearman_count": int(undefined_reasons_df[undefined_reasons_df["correlation"] == "spearman"]["count"].sum()) if not undefined_reasons_df.empty else 0,
+        "expected_kendall_count": len(kendall_undefined),
+        "actual_kendall_count": int(undefined_reasons_df[undefined_reasons_df["correlation"] == "kendall"]["count"].sum()) if not undefined_reasons_df.empty else 0,
+        "defined_rows_with_reason_count": int(defined_rows_with_reason_count),
+        "undefined_rows_without_reason_count": int(undefined_rows_without_reason_count),
+        "undefined_reason_duplicate_row_count": int(undefined_reason_duplicate_row_count),
+        "undefined_reason_missing_row_count": undefined_reason_missing_row_count,
+        "undefined_reason_extra_row_count": undefined_reason_extra_row_count,
+        "undefined_reason_value_mismatch_count": undefined_reason_value_mismatch_count,
         "passed": (
-            row_count_ok and
-            correlation_domain_ok and
-            actual_spearman_count == expected_spearman_count and
-            actual_kendall_count == expected_kendall_count
+            defined_rows_with_reason_count == 0 and
+            undefined_rows_without_reason_count == 0 and
+            undefined_reason_duplicate_row_count == 0 and
+            undefined_reason_missing_row_count == 0 and
+            undefined_reason_extra_row_count == 0 and
+            undefined_reason_value_mismatch_count == 0
         ),
     }
 
 
 def build_audit_markdown(audit_state: Dict[str, Any]) -> str:
-    """Build Markdown audit report from audit state."""
+    """Build Markdown audit report from audit state (for audit_payload)."""
     lines = []
     lines.append("# Part 2 Section 4B.2B: Harden Summary Audit, Portability, and Computed Evidence\n\n")
     
@@ -891,8 +988,10 @@ def build_audit_markdown(audit_state: Dict[str, Any]) -> str:
     lines.append("## Input Verification\n\n")
     iv = audit_state['input_verification']
     lines.append(f"- Event CSV SHA-256 verified: {iv['sha256_verified']}\n")
-    lines.append(f"- Event rows: {iv['rows']} (expected: 2100)\n")
-    lines.append(f"- Event columns: {iv['columns']} (expected: 28)\n")
+    lines.append(f"- Event CSV SHA-256 (expected): {iv.get('expected_sha256', 'N/A')}\n")
+    lines.append(f"- Event CSV SHA-256 (actual): {iv.get('actual_sha256', 'N/A')}\n")
+    lines.append(f"- Event CSV rows: {iv['rows']}\n")
+    lines.append(f"- Event CSV columns: {iv['columns']}\n")
     lines.append(f"- Column order ok: {iv['column_order_ok']}\n")
     lines.append(f"- Row count ok: {iv['row_count_ok']}\n")
     lines.append(f"- Column count ok: {iv['column_count_ok']}\n")
@@ -903,18 +1002,20 @@ def build_audit_markdown(audit_state: Dict[str, Any]) -> str:
     lines.append(f"- Actual event key count: {iv['actual_event_key_count']}\n")
     lines.append(f"- Missing event key count: {iv['missing_event_key_count']}\n")
     lines.append(f"- Extra event key count: {iv['extra_event_key_count']}\n")
+    lines.append(f"- Key coverage ok: {iv['key_coverage_ok']}\n")
     lines.append(f"- Input schema valid: {iv['input_schema_valid']}\n")
     lines.append(f"- Input key coverage passed: {iv['input_key_coverage_passed']}\n\n")
     
     lines.append("## Input Audit Verification\n\n")
-    av = audit_state['input_audit_verification']
-    lines.append(f"- Input audit check count: {av['input_audit_check_count']}\n")
-    lines.append(f"- Input audit failed check count: {av['input_audit_failed_check_count']}\n")
-    lines.append(f"- Input audit missing required check count: {av['input_audit_missing_required_check_count']}\n")
-    lines.append(f"- Input audit checks passed: {av['input_audit_checks_passed']}\n\n")
+    iav = audit_state['input_audit_verification']
+    lines.append(f"- Input audit check count: {iav['input_audit_check_count']}\n")
+    lines.append(f"- Input audit failed check count: {iav['input_audit_failed_check_count']}\n")
+    lines.append(f"- Input audit missing required check count: {iav['input_audit_missing_required_check_count']}\n")
+    lines.append(f"- Input audit checks passed: {iav['input_audit_checks_passed']}\n\n")
     
-    lines.append("## Summary Output Verification\n\n")
-    for name, counts in audit_state['summary_counts'].items():
+    lines.append("## Summary Counts\n\n")
+    sc = audit_state['summary_counts']
+    for name, counts in sc.items():
         lines.append(f"- {name}:\n")
         lines.append(f"  - Expected rows: {counts['expected_rows']}\n")
         lines.append(f"  - Actual rows: {counts['actual_rows']}\n\n")
@@ -948,56 +1049,49 @@ def build_audit_markdown(audit_state: Dict[str, Any]) -> str:
     lines.append(f"- Actual Spearman count: {ur['actual_spearman_count']}\n")
     lines.append(f"- Expected Kendall count: {ur['expected_kendall_count']}\n")
     lines.append(f"- Actual Kendall count: {ur['actual_kendall_count']}\n")
-    lines.append(f"- Correlation domain ok: {ur['correlation_domain_ok']}\n")
-    lines.append(f"- Row count ok: {ur['row_count_ok']}\n")
+    lines.append(f"- Defined rows with reason count: {ur['defined_rows_with_reason_count']}\n")
+    lines.append(f"- Undefined rows without reason count: {ur['undefined_rows_without_reason_count']}\n")
+    lines.append(f"- Undefined reason duplicate row count: {ur['undefined_reason_duplicate_row_count']}\n")
+    lines.append(f"- Undefined reason missing row count: {ur['undefined_reason_missing_row_count']}\n")
+    lines.append(f"- Undefined reason extra row count: {ur['undefined_reason_extra_row_count']}\n")
+    lines.append(f"- Undefined reason value mismatch count: {ur['undefined_reason_value_mismatch_count']}\n")
     lines.append(f"- Passed: {ur['passed']}\n\n")
     
     lines.append("## Independent Validation\n\n")
     val = audit_state['validation']
     lines.append(f"- Summary rows expected: {val['summary_rows_expected']}\n")
     lines.append(f"- Summary rows reconstructed: {val['summary_rows_reconstructed']}\n")
-    lines.append(f"- Complete validation rows: {val['summary_rows_with_complete_validation']}\n")
-    lines.append(f"- Incomplete validation rows: {val['summary_rows_with_incomplete_validation']}\n")
-    lines.append(f"- Actual field comparisons: {val['summary_field_comparisons']}\n")
-    lines.append(f"- Mismatch count: {val['summary_mismatch_count']}\n\n")
+    lines.append(f"- Summary rows with complete validation: {val['summary_rows_with_complete_validation']}\n")
+    lines.append(f"- Summary rows with incomplete validation: {val['summary_rows_with_incomplete_validation']}\n")
+    lines.append(f"- Summary field comparisons: {val['summary_field_comparisons']}\n")
+    lines.append(f"- Summary mismatch count: {val['summary_mismatch_count']}\n")
+    lines.append(f"- Summary structural mismatch count: {val['summary_structural_mismatch_count']}\n\n")
     
     lines.append("## Correlation Identity Validation\n\n")
-    ci = audit_state['correlation_identity_validation']
-    lines.append(f"- Correlation identity rows checked: {ci['correlation_identity_rows_checked']}\n")
-    lines.append(f"- Correlation identity failure count: {ci['correlation_identity_failure_count']}\n")
-    lines.append(f"- Passed: {ci['passed']}\n\n")
+    civ = audit_state['correlation_identity_validation']
+    lines.append(f"- Correlation identity rows checked: {civ['correlation_identity_rows_checked']}\n")
+    lines.append(f"- Correlation identity failure count: {civ['correlation_identity_failure_count']}\n")
+    lines.append(f"- Passed: {civ['passed']}\n\n")
     
     lines.append("## Denominator Identities\n\n")
     di = audit_state['denominator_identities']
-    lines.append(f"- All denominator identities passed: {di['passed']}\n")
+    lines.append(f"- Passed: {di['passed']}\n")
     for name, passed in di['details'].items():
         lines.append(f"- {name}: {passed}\n\n")
     
     lines.append("## Range Checks\n\n")
     rc = audit_state['range_checks']
-    lines.append(f"- All range checks passed: {rc['passed']}\n")
+    lines.append(f"- Range checks passed: {rc['passed']}\n")
     for name, details in rc['details'].items():
         lines.append(f"- {name}:\n")
-        lines.append(f"  - Count range passed: {details['count_range_passed']}\n")
-        lines.append(f"  - Rate range passed: {details['rate_range_passed']}\n")
-        lines.append(f"  - Jaccard range passed: {details['jaccard_range_passed']}\n")
-        lines.append(f"  - Correlation range passed: {details['correlation_range_passed']}\n")
-        lines.append(f"  - Selected rank range passed: {details['selected_rank_range_passed']}\n")
-        lines.append(f"  - Finite numeric values passed: {details['finite_numeric_values_passed']}\n")
+        lines.append(f"  - Non-finite count: {details['non_finite_count']}\n")
+        lines.append(f"  - Count range failure count: {details['count_range_failure_count']}\n")
+        lines.append(f"  - Rate range failure count: {details['rate_range_failure_count']}\n")
+        lines.append(f"  - Jaccard range failure count: {details['jaccard_range_failure_count']}\n")
+        lines.append(f"  - Correlation state failure count: {details['correlation_state_failure_count']}\n")
+        lines.append(f"  - Correlation range failure count: {details['correlation_range_failure_count']}\n")
+        lines.append(f"  - Selected rank range failure count: {details['selected_rank_range_failure_count']}\n")
         lines.append(f"  - Passed: {details['passed']}\n\n")
-    
-    lines.append("## Deterministic Serialization\n\n")
-    ds = audit_state.get('deterministic_serialization', {})
-    lines.append(f"- Overall CSV identical: {ds.get('overall_csv_identical', 'N/A')}\n")
-    lines.append(f"- Experiment CSV identical: {ds.get('experiment_csv_identical', 'N/A')}\n")
-    lines.append(f"- Mode CSV identical: {ds.get('mode_csv_identical', 'N/A')}\n")
-    lines.append(f"- Metric CSV identical: {ds.get('metric_csv_identical', 'N/A')}\n")
-    lines.append(f"- Project CSV identical: {ds.get('project_csv_identical', 'N/A')}\n")
-    lines.append(f"- Undefined reasons CSV identical: {ds.get('undefined_reasons_csv_identical', 'N/A')}\n")
-    lines.append(f"- Audit JSON identical: {ds.get('audit_json_identical', 'N/A')}\n")
-    lines.append(f"- Audit Markdown identical: {ds.get('audit_markdown_identical', 'N/A')}\n")
-    lines.append(f"- Stable output order passed: {ds.get('stable_output_order_passed', 'N/A')}\n")
-    lines.append(f"- Deterministic output serialization passed: {ds.get('passed', 'N/A')}\n\n")
     
     lines.append("## Interpretation Limits\n\n")
     il = audit_state['interpretation_limits']
@@ -1008,12 +1102,42 @@ def build_audit_markdown(audit_state: Dict[str, Any]) -> str:
     lines.append(f"- No significance claim: {il['no_significance_claim']}\n")
     lines.append(f"- No causal claim: {il['no_causal_claim']}\n")
     lines.append(f"- No superiority claim based only on agreement: {il['no_superiority_claim']}\n")
-    lines.append(f"- Test data used only for post-selection evaluation: {il['test_data_post_selection_only']}\n")
-    lines.append(f"- Interpretation limits present: {il['present']}\n\n")
+    lines.append(f"- Test data post-selection only: {il['test_data_post_selection_only']}\n")
+    lines.append(f"- Present: {il['present']}\n\n")
     
-    lines.append("## Validation Checks Summary\n\n")
-    for check_name, check_passed in audit_state['validation_checks'].items():
-        lines.append(f"- {check_name}: {check_passed}\n")
+    return "".join(lines)
+
+
+def build_final_audit_markdown(final_audit_state: Dict[str, Any]) -> str:
+    """Build final Markdown audit report from final_audit_state."""
+    lines = []
+    lines.append("# Part 2 Section 4B.2B: Harden Summary Audit, Portability, and Computed Evidence\n\n")
+    
+    # Include audit_payload content
+    lines.append("## Audit Payload\n\n")
+    lines.append(build_audit_markdown(final_audit_state['audit_payload']))
+    
+    # Include serialization_audit
+    lines.append("## Serialization Audit\n\n")
+    sa = final_audit_state['serialization_audit']
+    lines.append(f"- Overall CSV serialization identical: {sa['overall_csv_serialization_identical']}\n")
+    lines.append(f"- Experiment CSV serialization identical: {sa['experiment_csv_serialization_identical']}\n")
+    lines.append(f"- Mode CSV serialization identical: {sa['mode_csv_serialization_identical']}\n")
+    lines.append(f"- Metric CSV serialization identical: {sa['metric_csv_serialization_identical']}\n")
+    lines.append(f"- Project CSV serialization identical: {sa['project_csv_serialization_identical']}\n")
+    lines.append(f"- Undefined reasons CSV serialization identical: {sa['undefined_reasons_csv_serialization_identical']}\n")
+    lines.append(f"- Audit payload JSON serialization identical: {sa['audit_payload_json_serialization_identical']}\n")
+    lines.append(f"- Audit payload Markdown serialization identical: {sa['audit_payload_markdown_serialization_identical']}\n")
+    lines.append(f"- Stable output order passed: {sa['stable_output_order_passed']}\n")
+    lines.append(f"- Deterministic output serialization passed: {sa['passed']}\n\n")
+    
+    # Include validation_checks
+    lines.append("## Validation Checks\n\n")
+    vc = final_audit_state['validation_checks']
+    for key, value in vc.items():
+        # Format key with spaces instead of underscores for display
+        display_key = key.replace("_", " ")
+        lines.append(f"- {display_key}: {value}\n")
     lines.append("\n")
     
     return "".join(lines)
@@ -1054,9 +1178,9 @@ def main():
     print("Step 3: Load and verify event CSV...")
     actual_sha = compute_sha256(event_csv_path)
     df = pd.read_csv(event_csv_path)
-    input_verification = verify_event_csv(df, actual_sha, spec)
+    input_verification = verify_event_csv(df, actual_sha, expected_sha, spec)
     
-    if not input_verification["sha256_verified"]:
+    if actual_sha != expected_sha:
         raise ValueError(f"SHA mismatch: expected {expected_sha}, got {actual_sha}")
     if not input_verification["input_schema_valid"]:
         raise ValueError(f"Input schema validation failed: {input_verification}")
@@ -1121,6 +1245,7 @@ def main():
     summary_rows_with_incomplete_validation = 0
     summary_field_comparisons = 0
     summary_mismatch_count = 0
+    summary_structural_mismatch_count = 0
     
     # Validate overall
     for _, row in overall_df.iterrows():
@@ -1132,6 +1257,7 @@ def main():
         else:
             summary_rows_with_incomplete_validation += 1
             summary_mismatch_count += evidence["mismatches"]
+            summary_structural_mismatch_count += evidence.get("structural_mismatch_count", 0)
     
     # Validate by experiment
     for _, row in experiment_df.iterrows():
@@ -1143,6 +1269,7 @@ def main():
         else:
             summary_rows_with_incomplete_validation += 1
             summary_mismatch_count += evidence["mismatches"]
+            summary_structural_mismatch_count += evidence.get("structural_mismatch_count", 0)
     
     # Validate by mode
     for _, row in mode_df.iterrows():
@@ -1154,6 +1281,7 @@ def main():
         else:
             summary_rows_with_incomplete_validation += 1
             summary_mismatch_count += evidence["mismatches"]
+            summary_structural_mismatch_count += evidence.get("structural_mismatch_count", 0)
     
     # Validate by metric
     for _, row in metric_df.iterrows():
@@ -1165,6 +1293,7 @@ def main():
         else:
             summary_rows_with_incomplete_validation += 1
             summary_mismatch_count += evidence["mismatches"]
+            summary_structural_mismatch_count += evidence.get("structural_mismatch_count", 0)
     
     # Validate by project
     for _, row in project_df.iterrows():
@@ -1176,6 +1305,7 @@ def main():
         else:
             summary_rows_with_incomplete_validation += 1
             summary_mismatch_count += evidence["mismatches"]
+            summary_structural_mismatch_count += evidence.get("structural_mismatch_count", 0)
     
     print("Step 11: Validate output schemas...")
     summary_schema_validation = validate_output_schemas(summary_dfs, undefined_reasons_df)
@@ -1195,7 +1325,7 @@ def main():
     print("Step 16: Check range constraints...")
     range_checks = check_range_constraints(summary_dfs)
     
-    print("Step 17: Build audit state...")
+    print("Step 17: Build immutable audit payload...")
     
     # Build execution evidence
     execution_evidence = {
@@ -1229,6 +1359,7 @@ def main():
         "summary_rows_with_incomplete_validation": summary_rows_with_incomplete_validation,
         "summary_field_comparisons": summary_field_comparisons,
         "summary_mismatch_count": summary_mismatch_count,
+        "summary_structural_mismatch_count": summary_structural_mismatch_count,
     }
     
     # Build interpretation limits
@@ -1244,34 +1375,8 @@ def main():
         "present": True,
     }
     
-    # Build validation checks (all computed, no literal True)
-    validation_checks = {
-        "input_sha_verified": input_verification["sha256_verified"],
-        "input_schema_valid": input_verification["input_schema_valid"],
-        "input_key_coverage_passed": input_verification["input_key_coverage_passed"],
-        "input_audit_checks_passed": input_audit_evidence["input_audit_checks_passed"],
-        "summary_counts_correct": all(v["actual_rows"] == v["expected_rows"] for v in summary_counts.values()),
-        "summary_schemas_valid": summary_schema_validation["passed"],
-        "summary_group_domains_valid": summary_domain_validation["passed"],
-        "summary_group_denominators_valid": summary_domain_validation["details"]["group_denominator_mismatch_count"] == 0,
-        "correlation_undefined_counts_correct": spearman_count == 18 and kendall_count == 18,
-        "correlation_defined_identities_passed": correlation_identity_validation["passed"],
-        "independent_validation_passed": all([
-            summary_rows_expected == 25,
-            summary_rows_reconstructed == 25,
-            summary_rows_with_complete_validation == 25,
-            summary_rows_with_incomplete_validation == 0,
-            summary_field_comparisons == 850,
-            summary_mismatch_count == 0,
-        ]),
-        "denominator_identities_passed": denominator_identities["passed"],
-        "range_checks_passed": range_checks["passed"],
-        "undefined_reasons_validation_passed": undefined_reasons_validation["passed"],
-        "interpretation_limits_present": interpretation_limits["present"],
-    }
-    
-    # Build final audit state
-    audit_state = {
+    # Build immutable audit payload (A: Complete all scientific and structural validation evidence)
+    audit_payload = {
         "execution": execution_evidence,
         "input_verification": input_verification,
         "input_audit_verification": input_audit_evidence,
@@ -1285,14 +1390,9 @@ def main():
         "denominator_identities": denominator_identities,
         "range_checks": range_checks,
         "interpretation_limits": interpretation_limits,
-        "validation_checks": validation_checks,
     }
     
-    # Add all_checks_passed to validation checks
-    validation_checks["all_checks_passed"] = all(validation_checks.values())
-    audit_state["validation_checks"] = validation_checks
-    
-    print("Step 18: Serialize outputs deterministically...")
+    print("Step 18: Serialize CSVs twice and compute equality flags...")
     
     # Sort dataframes by explicit domain order
     experiment_df = experiment_df.sort_values("group_value", key=lambda x: pd.Categorical(x, categories=experiments, ordered=True))
@@ -1326,21 +1426,27 @@ def main():
     undefined_csv_2 = undefined_reasons_df.to_csv(index=False, encoding="utf-8")
     undefined_reasons_csv_identical = undefined_csv_1 == undefined_csv_2
     
-    # Serialize JSON twice and record evidence
-    audit_state_python = convert_to_python_types(audit_state)
-    audit_json_1 = json.dumps(audit_state_python, indent=2, ensure_ascii=False, sort_keys=True) + "\n"
-    audit_json_2 = json.dumps(audit_state_python, indent=2, ensure_ascii=False, sort_keys=True) + "\n"
-    audit_json_identical = audit_json_1 == audit_json_2
+    # Serialize JSON twice and record evidence (D: Serialize audit_payload JSON twice)
+    audit_payload_python = convert_to_python_types(audit_payload)
+    audit_payload_json_1 = json.dumps(audit_payload_python, indent=2, ensure_ascii=False, sort_keys=True) + "\n"
+    audit_payload_json_2 = json.dumps(audit_payload_python, indent=2, ensure_ascii=False, sort_keys=True) + "\n"
+    audit_payload_json_identical = audit_payload_json_1 == audit_payload_json_2
     
-    # Build deterministic serialization evidence (without Markdown initially)
-    deterministic_serialization = {
-        "overall_csv_identical": overall_csv_identical,
-        "experiment_csv_identical": experiment_csv_identical,
-        "mode_csv_identical": mode_csv_identical,
-        "metric_csv_identical": metric_csv_identical,
-        "project_csv_identical": project_csv_identical,
-        "undefined_reasons_csv_identical": undefined_reasons_csv_identical,
-        "audit_json_identical": audit_json_identical,
+    # Render audit_payload Markdown twice using a pure function (E)
+    audit_payload_md_1 = build_audit_markdown(audit_payload)
+    audit_payload_md_2 = build_audit_markdown(audit_payload)
+    audit_payload_md_identical = audit_payload_md_1 == audit_payload_md_2
+    
+    # Build serialization_audit from the six CSV checks plus payload JSON/Markdown checks (F)
+    serialization_audit = {
+        "overall_csv_serialization_identical": overall_csv_identical,
+        "experiment_csv_serialization_identical": experiment_csv_identical,
+        "mode_csv_serialization_identical": mode_csv_identical,
+        "metric_csv_serialization_identical": metric_csv_identical,
+        "project_csv_serialization_identical": project_csv_identical,
+        "undefined_reasons_csv_serialization_identical": undefined_reasons_csv_identical,
+        "audit_payload_json_serialization_identical": audit_payload_json_identical,
+        "audit_payload_markdown_serialization_identical": audit_payload_md_identical,
         "stable_output_order_passed": all([
             overall_csv_identical,
             experiment_csv_identical,
@@ -1349,46 +1455,106 @@ def main():
             project_csv_identical,
             undefined_reasons_csv_identical,
         ]),
-        "passed": False,  # Will update after Markdown check
+        "passed": all([
+            overall_csv_identical,
+            experiment_csv_identical,
+            mode_csv_identical,
+            metric_csv_identical,
+            project_csv_identical,
+            undefined_reasons_csv_identical,
+            audit_payload_json_identical,
+            audit_payload_md_identical,
+        ]),
     }
     
-    # Add deterministic serialization to audit state
-    audit_state["deterministic_serialization"] = deterministic_serialization
+    # Compute deterministic_output_serialization_passed from all eight serialization checks (G)
+    deterministic_output_serialization_passed = serialization_audit["passed"]
     
-    # Serialize Markdown after adding deterministic serialization
-    audit_md_1 = build_audit_markdown(audit_state)
-    audit_md_2 = build_audit_markdown(audit_state)
-    audit_markdown_identical = audit_md_1 == audit_md_2
+    # Build validation checks (H: Compute output_integrity_ready_passed only after every other check)
+    validation_checks = {
+        "input_sha_verified": input_verification["sha256_verified"],
+        "input_schema_valid": input_verification["input_schema_valid"],
+        "input_key_coverage_passed": input_verification["input_key_coverage_passed"],
+        "input_audit_checks_passed": input_audit_evidence["input_audit_checks_passed"],
+        "summary_counts_correct": all(v["actual_rows"] == v["expected_rows"] for v in summary_counts.values()),
+        "summary_schemas_valid": summary_schema_validation["passed"],
+        "summary_group_domains_valid": summary_domain_validation["passed"],
+        "summary_group_denominators_valid": summary_domain_validation["details"]["group_denominator_mismatch_count"] == 0,
+        "correlation_undefined_counts_correct": spearman_count == 18 and kendall_count == 18,
+        "correlation_defined_identities_passed": correlation_identity_validation["passed"],
+        "independent_validation_passed": all([
+            summary_rows_expected == 25,
+            summary_rows_reconstructed == 25,
+            summary_rows_with_complete_validation == 25,
+            summary_rows_with_incomplete_validation == 0,
+            summary_field_comparisons == 850,
+            summary_mismatch_count == 0,
+            summary_structural_mismatch_count == 0,
+        ]),
+        "denominator_identities_passed": denominator_identities["passed"],
+        "range_checks_passed": range_checks["passed"],
+        "undefined_reasons_validation_passed": undefined_reasons_validation["passed"],
+        "interpretation_limits_present": interpretation_limits["present"],
+        "deterministic_output_serialization_passed": deterministic_output_serialization_passed,
+    }
     
-    # Update deterministic serialization evidence with Markdown check
-    deterministic_serialization["audit_markdown_identical"] = audit_markdown_identical
-    deterministic_serialization["passed"] = all([
-        overall_csv_identical,
-        experiment_csv_identical,
-        mode_csv_identical,
-        metric_csv_identical,
-        project_csv_identical,
-        undefined_reasons_csv_identical,
-        audit_json_identical,
-        audit_markdown_identical,
-    ])
-    audit_state["deterministic_serialization"] = deterministic_serialization
+    # Compute output_integrity_ready_passed only after every other check
+    output_integrity_ready_passed = all(validation_checks.values())
+    validation_checks["output_integrity_ready_passed"] = output_integrity_ready_passed
     
-    # Add deterministic output serialization passed to validation checks
-    validation_checks["deterministic_output_serialization_passed"] = deterministic_serialization["passed"]
-    validation_checks["output_integrity_ready_passed"] = all([
-        validation_checks["deterministic_output_serialization_passed"],
-        all(v for k, v in validation_checks.items() if k not in ["all_checks_passed", "deterministic_output_serialization_passed", "output_integrity_ready_passed"]),
-    ])
-    validation_checks["all_checks_passed"] = all(validation_checks.values())
-    audit_state["validation_checks"] = validation_checks
+    # Compute all_checks_passed only after output_integrity_ready_passed exists (I)
+    all_checks_passed = output_integrity_ready_passed
+    validation_checks["all_checks_passed"] = all_checks_passed
     
-    print("Step 19: Validate all checks passed before write...")
+    # Build one immutable final state (J)
+    final_audit_state = {
+        "audit_payload": audit_payload,
+        "serialization_audit": serialization_audit,
+        "validation_checks": validation_checks,
+    }
+    
+    print("Step 19: Serialize final_audit_state to JSON twice and require equality...")
+    
+    # Serialize final_audit_state to JSON twice (K)
+    final_audit_state_python = convert_to_python_types(final_audit_state)
+    final_audit_json_1 = json.dumps(final_audit_state_python, indent=2, ensure_ascii=False, sort_keys=True) + "\n"
+    final_audit_json_2 = json.dumps(final_audit_state_python, indent=2, ensure_ascii=False, sort_keys=True) + "\n"
+    final_audit_json_identical = final_audit_json_1 == final_audit_json_2
+    
+    if not final_audit_json_identical:
+        raise ValueError("Final audit state JSON serialization is not deterministic")
+    
+    # Build final Markdown from final_audit_state twice and require equality (L)
+    final_audit_md_1 = build_final_audit_markdown(final_audit_state)
+    final_audit_md_2 = build_final_audit_markdown(final_audit_state)
+    final_audit_md_identical = final_audit_md_1 == final_audit_md_2
+    
+    if not final_audit_md_identical:
+        raise ValueError("Final audit state Markdown rendering is not deterministic")
+    
+    print("Step 20: Validate all checks passed before write...")
     if not validation_checks["all_checks_passed"]:
         failed = [k for k, v in validation_checks.items() if not v and k != "all_checks_passed"]
         raise ValueError(f"Validation checks failed: {failed}")
     
-    print("Step 20: Write outputs...")
+    # Final JSON/Markdown consistency assertions (H)
+    assert final_audit_state["serialization_audit"]["passed"] is True
+    assert final_audit_state["validation_checks"]["deterministic_output_serialization_passed"] is True
+    assert final_audit_state["validation_checks"]["output_integrity_ready_passed"] is True
+    assert final_audit_state["validation_checks"]["all_checks_passed"] is True
+    
+    # Assert required True lines are present in final Markdown
+    assert "Audit payload JSON serialization identical: True" in final_audit_md_1
+    assert "Audit payload Markdown serialization identical: True" in final_audit_md_1
+    assert "Deterministic output serialization passed: True" in final_audit_md_1
+    assert "output integrity ready passed: True" in final_audit_md_1
+    assert "all checks passed: True" in final_audit_md_1
+    
+    # Assert final Markdown does not contain N/A or false deterministic status
+    assert "N/A" not in final_audit_md_1
+    assert "Deterministic output serialization passed: False" not in final_audit_md_1
+    
+    print("Step 21: Write outputs...")
     temp_files = []
     try:
         # Write CSVs
@@ -1406,13 +1572,13 @@ def main():
         
         # Write JSON
         temp_json = audit_output_json.parent / f"{audit_output_json.name}.tmp"
-        temp_json.write_text(audit_json_1, encoding="utf-8")
+        temp_json.write_text(final_audit_json_1, encoding="utf-8")
         temp_files.append(temp_json)
         
         # Write Markdown
         temp_md = audit_output_md.parent / f"{audit_output_md.name}.tmp"
         audit_output_md.parent.mkdir(parents=True, exist_ok=True)
-        temp_md.write_text(audit_md_1, encoding="utf-8")
+        temp_md.write_text(final_audit_md_1, encoding="utf-8")
         temp_files.append(temp_md)
         
         # Atomic rename
