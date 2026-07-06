@@ -215,6 +215,86 @@ PART3A_ARTIFACT_PATHS = [
 ]
 PRESERVATION_PATHS = RAW_DATA_PATHS + CANONICAL_OUTPUT_PATHS + PART3A_ARTIFACT_PATHS
 
+# ---------------------------------------------------------------------------
+# Frozen Part 3C constraint string
+# ---------------------------------------------------------------------------
+PART3C_CONSTRAINT = (
+    "Part 3C must consume the frozen Part 3B split and candidate-probability "
+    "ledgers. It may derive objective-matched candidate, adaptive, and soft-ensemble "
+    "results, but it must not alter raw data, split assignments, candidate "
+    "probabilities, the canonical 400 result rows, or the canonical 600 validation "
+    "rows."
+)
+
+# ---------------------------------------------------------------------------
+# Immutable ordered 41-check audit schema
+# ---------------------------------------------------------------------------
+REQUIRED_AUDIT_CHECK_NAMES = [
+    "source_commit_verified",
+    "imported_pipeline_sha_verified",
+    "dataset_profile_passed",
+    "sample_registry_passed",
+    "feature_schema_passed",
+    "event_manifest_count_passed",
+    "within_split_counts_passed",
+    "cross_split_counts_passed",
+    "split_membership_totals_passed",
+    "split_key_uniqueness_passed",
+    "split_identity_disjointness_passed",
+    "within_union_coverage_passed",
+    "cross_target_isolation_passed",
+    "cross_source_isolation_passed",
+    "split_determinism_passed",
+    "class_count_consistency_passed",
+    "preprocessing_train_only_passed",
+    "candidate_fit_count_passed",
+    "prediction_row_counts_passed",
+    "prediction_key_uniqueness_passed",
+    "prediction_candidate_schema_passed",
+    "prediction_scores_finite_passed",
+    "prediction_scores_range_passed",
+    "no_train_predictions_passed",
+    "validation_reconstruction_count_passed",
+    "validation_categorical_match_passed",
+    "validation_numeric_match_passed",
+    "result_reconstruction_count_passed",
+    "result_categorical_match_passed",
+    "result_numeric_match_passed",
+    "selection_validation_only_passed",
+    "test_not_used_for_selection_passed",
+    "tie_policy_passed",
+    "duplicate_content_audit_completed",
+    "schema_target_awareness_documented",
+    "pooled_source_validation_design_documented",
+    "raw_and_canonical_preservation_passed",
+    "deterministic_artifacts_passed",
+    "negative_tests_passed",
+    "stage_gate_passed",
+    "all_critical_checks_passed",
+]
+
+# ---------------------------------------------------------------------------
+# Immutable ordered 16-field stage-gate schema
+# ---------------------------------------------------------------------------
+REQUIRED_STAGE_GATE_FIELDS = [
+    "part3b_prediction_ledger_complete",
+    "raw_data_modified",
+    "canonical_outputs_modified",
+    "part3a_artifacts_modified",
+    "identity_leakage_detected",
+    "preprocessing_leakage_detected",
+    "selection_test_leakage_detected",
+    "canonical_validation_reconstruction_passed",
+    "canonical_result_reconstruction_passed",
+    "canonical_result_reconstruction_strictly_identical",
+    "canonical_result_reconstruction_scientifically_reconciled",
+    "canonical_nondeterminism_exception_detected",
+    "canonical_nondeterminism_exception_validated",
+    "semantic_reproducibility_passed",
+    "next_authorized_stage",
+    "part3c_constraint",
+]
+
 
 # ---------------------------------------------------------------------------
 # Repository and path helpers
@@ -1769,30 +1849,131 @@ def validate_preservation(state: Dict[str, Any]) -> Tuple[bool, Dict[str, Any]]:
     return passed, {"files": file_evidence, "files_changed": changed, "files_checked": len(file_evidence), "raw_data_changed": raw_changed, "canonical_outputs_changed": canonical_changed, "part3a_artifacts_changed": part3a_changed}
 
 
-def validate_stage_gate(gate: Dict[str, Any]) -> Tuple[bool, Dict[str, Any]]:
-    required = {
-        "part3b_prediction_ledger_complete": True,
-        "raw_data_modified": False,
-        "canonical_outputs_modified": False,
-        "part3a_artifacts_modified": False,
-        "identity_leakage_detected": False,
-        "preprocessing_leakage_detected": False,
-        "selection_test_leakage_detected": False,
-        "canonical_validation_reconstruction_passed": True,
-        "canonical_result_reconstruction_passed": True,
-        "canonical_result_reconstruction_scientifically_reconciled": True,
-        "canonical_nondeterminism_exception_detected": True,
-        "canonical_nondeterminism_exception_validated": True,
-        "semantic_reproducibility_passed": True,
-        "next_authorized_stage": "Part 3C",
-        "part3c_constraint": ("Part 3C must consume the frozen Part 3B split and candidate-probability " "ledgers. It may derive objective-matched candidate, adaptive, and soft-ensemble " "results, but it must not alter raw data, split assignments, candidate " "probabilities, the canonical 400 result rows, or the canonical 600 validation " "rows."),
+def validate_exact_audit_check_schema(
+    audit_checks: Dict[str, Any],
+) -> Tuple[bool, Dict[str, Any]]:
+    """Validate that *audit_checks* has exactly the 41 required names in order,
+    every value is an actual ``bool``, and no diagnostic keys are present."""
+    expected_names = REQUIRED_AUDIT_CHECK_NAMES
+    actual_keys = list(audit_checks.keys())
+    expected_set = set(expected_names)
+    actual_set = set(actual_keys)
+    missing_checks = sorted(expected_set - actual_set)
+    extra_checks = sorted(actual_set - expected_set)
+    order_exact = actual_keys == expected_names
+    non_boolean_checks: List[str] = []
+    for name in expected_names:
+        if name in audit_checks:
+            v = audit_checks[name]
+            if type(v) is not bool:
+                non_boolean_checks.append(name)
+    non_boolean_checks = list(dict.fromkeys(non_boolean_checks))
+    schema_passed = (
+        len(audit_checks) == 41
+        and len(missing_checks) == 0
+        and len(extra_checks) == 0
+        and order_exact
+        and len(non_boolean_checks) == 0
+    )
+    evidence = {
+        "checks_expected": len(expected_names),
+        "checks_present": len(actual_keys),
+        "missing_checks": missing_checks,
+        "extra_checks": extra_checks,
+        "order_exact": order_exact,
+        "non_boolean_checks": non_boolean_checks,
+        "schema_passed": schema_passed,
     }
-    passed = True
-    evidence = {}
-    for k, v in required.items():
-        ok = gate.get(k) == v
-        evidence[k] = {"expected": v, "actual": gate.get(k), "passed": ok}
-        passed = passed and ok
+    return schema_passed, evidence
+
+
+def compute_all_critical_checks_passed(
+    audit_checks: Dict[str, Any],
+) -> bool:
+    """Compute the logical AND of checks 1 through 40.
+
+    Requires the exact 41-check schema first.  Check 41
+    (``all_critical_checks_passed``) is not included in its own computation.
+    """
+    schema_passed, _ = validate_exact_audit_check_schema(audit_checks)
+    if not schema_passed:
+        return False
+    return all(audit_checks[name] for name in REQUIRED_AUDIT_CHECK_NAMES[:40])
+
+
+def validate_stage_gate(gate: Dict[str, Any]) -> Tuple[bool, Dict[str, Any]]:
+    """Validate the exact 16-field stage-gate schema and authorization conditions.
+
+    If the schema is not exact, validation fails immediately.
+    Returns ``True`` only for an exactly valid authorized gate.
+    """
+    expected_fields = REQUIRED_STAGE_GATE_FIELDS
+    actual_keys = list(gate.keys())
+    expected_set = set(expected_fields)
+    actual_set = set(actual_keys)
+    missing_fields = sorted(expected_set - actual_set)
+    extra_fields = sorted(actual_set - expected_set)
+    order_exact = actual_keys == expected_fields
+
+    type_errors: List[str] = []
+    bool_fields = expected_fields[:14]
+    for name in bool_fields:
+        if name in gate:
+            v = gate[name]
+            if type(v) is not bool:
+                type_errors.append(name)
+
+    schema_passed = (
+        len(gate) == 16
+        and len(missing_fields) == 0
+        and len(extra_fields) == 0
+        and order_exact
+        and len(type_errors) == 0
+    )
+
+    evidence: Dict[str, Any] = {
+        "fields_expected": len(expected_fields),
+        "fields_present": len(actual_keys),
+        "missing_fields": missing_fields,
+        "extra_fields": extra_fields,
+        "order_exact": order_exact,
+        "type_errors": type_errors,
+        "schema_passed": schema_passed,
+    }
+
+    if not schema_passed:
+        return False, evidence
+
+    authorization_conditions = {
+        "part3b_prediction_ledger_complete": gate["part3b_prediction_ledger_complete"] is True,
+        "raw_data_modified": gate["raw_data_modified"] is False,
+        "canonical_outputs_modified": gate["canonical_outputs_modified"] is False,
+        "part3a_artifacts_modified": gate["part3a_artifacts_modified"] is False,
+        "identity_leakage_detected": gate["identity_leakage_detected"] is False,
+        "preprocessing_leakage_detected": gate["preprocessing_leakage_detected"] is False,
+        "selection_test_leakage_detected": gate["selection_test_leakage_detected"] is False,
+        "canonical_validation_reconstruction_passed": gate["canonical_validation_reconstruction_passed"] is True,
+        "canonical_result_reconstruction_passed": gate["canonical_result_reconstruction_passed"] is True,
+        "canonical_result_reconstruction_strictly_identical": gate["canonical_result_reconstruction_strictly_identical"] is False,
+        "canonical_result_reconstruction_scientifically_reconciled": gate["canonical_result_reconstruction_scientifically_reconciled"] is True,
+        "canonical_nondeterminism_exception_detected": gate["canonical_nondeterminism_exception_detected"] is True,
+        "canonical_nondeterminism_exception_validated": gate["canonical_nondeterminism_exception_validated"] is True,
+        "semantic_reproducibility_passed": gate["semantic_reproducibility_passed"] is True,
+        "part3c_constraint": gate["part3c_constraint"] == PART3C_CONSTRAINT,
+    }
+
+    all_authorized = all(authorization_conditions.values())
+
+    next_stage_ok = (
+        gate["next_authorized_stage"] == "Part 3C"
+        if all_authorized
+        else gate["next_authorized_stage"] is None
+    )
+
+    evidence["authorization_conditions"] = authorization_conditions
+    evidence["next_authorized_stage_ok"] = next_stage_ok
+
+    passed = schema_passed and all_authorized and next_stage_ok
     return passed, evidence
 
 
@@ -2542,19 +2723,14 @@ def build_core_bundle(
     artifacts["results/part3b_prediction_ledger/ledger_manifest.json"] = manifest_path
 
     # Build audit checks and stage gate.
-    audit_checks = build_all_checks(
+    audit_checks, check_evidence = build_all_checks(
         validation_results, duplicate_audit, negative_tests, tie_tests, True, True, common_cols, fitted_count, pred_within, pred_cross, dataset_profile, event_manifest
     )
-    stage_gate = build_stage_gate(audit_checks, validation_results, preservation_state, duplicate_audit)
+    stage_gate = build_stage_gate(audit_checks, check_evidence, validation_results, preservation_state, duplicate_audit, False)
     stage_gate_passed, stage_gate_evidence = validate_stage_gate(stage_gate)
     audit_checks["stage_gate_passed"] = stage_gate_passed
-    # Strict identity is intentionally not required; scientific reconciliation is the gate.
-    # Only boolean checks are critical; numeric counters and artifact lists are diagnostics.
-    audit_checks["all_critical_checks_passed"] = all(
-        v for k, v in audit_checks.items()
-        if isinstance(v, bool)
-        and k not in {"all_critical_checks_passed", "stage_gate_passed", "canonical_result_reconstruction_strictly_identical"}
-    )
+    audit_checks["all_critical_checks_passed"] = compute_all_critical_checks_passed(audit_checks)
+    audit_schema_passed, audit_schema_evidence = validate_exact_audit_check_schema(audit_checks)
 
     # JSON report.
     json_report_path = out / "reports" / "part3b_split_leakage_audit.json"
@@ -2572,6 +2748,8 @@ def build_core_bundle(
         "artifacts": artifacts,
         "artifact_hashes": artifact_hashes,
         "audit_checks": audit_checks,
+        "check_evidence": check_evidence,
+        "audit_schema_evidence": audit_schema_evidence,
         "stage_gate": stage_gate,
         "stage_gate_evidence": stage_gate_evidence,
         "validation_results": validation_results,
@@ -2641,8 +2819,9 @@ def build_all_checks(
     pred_cross: pd.DataFrame,
     profile: Dict[str, Any],
     event_manifest: pd.DataFrame,
-) -> Dict[str, bool]:
+) -> Tuple[Dict[str, bool], Dict[str, Any]]:
     checks: Dict[str, bool] = {}
+    evidence: Dict[str, Any] = {}
 
     # Provenance / source verification
     checks["source_commit_verified"] = verify_source_commit(ACCEPTED_PART3A_COMMIT)
@@ -2685,27 +2864,26 @@ def build_all_checks(
     checks["result_reconstruction_count_passed"] = validation_results["result_reconstruction"][1]["row_count"] == EXPECTED_RESULT_RECONSTRUCTION_ROWS
     checks["result_categorical_match_passed"] = validation_results["result_reconstruction"][1]["categorical_match"]
     strict_numeric_match = validation_results["result_reconstruction"][1]["numeric_mismatches"] == 0
-    # Canonical nondeterminism exception accounting (strictly reconciled, not relaxed)
+    # Canonical nondeterminism exception accounting (evidence, not audit checks)
     exc_ev = validation_results["canonical_nondeterminism_exception"][1]
-    checks["canonical_nondeterminism_exception_detected"] = exc_ev.get("approved_exception_count", 0) > 0 or exc_ev.get("unapproved_mismatch_count", 0) > 0
-    checks["canonical_nondeterminism_exception_validated"] = bool(exc_ev.get("validated", False))
-    checks["strict_validation_mismatches"] = int(validation_results["validation_reconstruction"][1].get("numeric_mismatches", -1))
-    checks["strict_result_mismatches_before_exception"] = len(exc_ev.get("approved_exception_matches", [])) + len(exc_ev.get("unapproved_mismatches", []))
-    checks["approved_nondeterminism_exceptions"] = exc_ev.get("approved_exception_count", 0)
-    checks["unapproved_result_mismatches"] = exc_ev.get("unapproved_mismatch_count", 0)
-    checks["result_reconstruction_passed_after_validated_exception"] = bool(
+    evidence["canonical_nondeterminism_exception_detected"] = exc_ev.get("approved_exception_count", 0) > 0 or exc_ev.get("unapproved_mismatch_count", 0) > 0
+    evidence["canonical_nondeterminism_exception_validated"] = bool(exc_ev.get("validated", False))
+    evidence["strict_validation_mismatches"] = int(validation_results["validation_reconstruction"][1].get("numeric_mismatches", -1))
+    evidence["strict_result_mismatches_before_exception"] = len(exc_ev.get("approved_exception_matches", [])) + len(exc_ev.get("unapproved_mismatches", []))
+    evidence["approved_nondeterminism_exceptions"] = exc_ev.get("approved_exception_count", 0)
+    evidence["unapproved_result_mismatches"] = exc_ev.get("unapproved_mismatch_count", 0)
+    evidence["result_reconstruction_passed_after_validated_exception"] = bool(
         checks["result_categorical_match_passed"]
-        and checks["canonical_nondeterminism_exception_validated"]
-        and checks["unapproved_result_mismatches"] == 0
+        and evidence["canonical_nondeterminism_exception_validated"]
+        and evidence["unapproved_result_mismatches"] == 0
     )
-    # Strict numeric match is False when the approved exception manifests. The scientific
-    # reconciliation is True when the exception is validated and there are no unapproved mismatches.
+    evidence["canonical_result_reconstruction_strictly_identical"] = strict_numeric_match
+    evidence["canonical_result_reconstruction_scientifically_reconciled"] = evidence["result_reconstruction_passed_after_validated_exception"]
+
     checks["result_numeric_match_passed"] = strict_numeric_match or (
-        checks.get("canonical_nondeterminism_exception_validated", False)
-        and checks.get("unapproved_result_mismatches", 1) == 0
+        evidence["canonical_nondeterminism_exception_validated"]
+        and evidence["unapproved_result_mismatches"] == 0
     )
-    checks["canonical_result_reconstruction_strictly_identical"] = strict_numeric_match
-    checks["canonical_result_reconstruction_scientifically_reconciled"] = checks["result_reconstruction_passed_after_validated_exception"]
 
     # Selection/test isolation (derived from function signatures and runtime checks)
     sig_selection = inspect.signature(freeze_event_selection_policy)
@@ -2726,7 +2904,105 @@ def build_all_checks(
 
     checks["stage_gate_passed"] = False
     checks["all_critical_checks_passed"] = False
-    return checks
+    return checks, evidence
+
+
+# ---------------------------------------------------------------------------
+# Explicit ledger-completion helper (no truthy counters, no generic iteration)
+# ---------------------------------------------------------------------------
+def compute_part3b_prediction_ledger_complete(
+    checks: Dict[str, bool],
+    check_evidence: Dict[str, Any],
+    validation_results: Dict[str, Tuple[bool, Dict[str, Any]]],
+    preservation_passed: bool,
+    preservation_evidence: Dict[str, Any],
+    semantic_reproducibility_passed: bool,
+) -> bool:
+    """Return True only when every explicit condition for ledger completion is met.
+
+    Every required field is accessed explicitly.  No truthy counters or
+    generic dictionary iteration are used.  A missing field will raise
+    ``KeyError`` and fail.
+    """
+    c1 = checks["source_commit_verified"] is True
+    c2 = checks["imported_pipeline_sha_verified"] is True
+    c3 = checks["dataset_profile_passed"] is True
+    c4 = checks["sample_registry_passed"] is True
+    c5 = checks["feature_schema_passed"] is True
+    c6 = checks["event_manifest_count_passed"] is True
+    c7 = checks["within_split_counts_passed"] is True
+    c8 = checks["cross_split_counts_passed"] is True
+    c9 = checks["split_membership_totals_passed"] is True
+    c10 = checks["split_key_uniqueness_passed"] is True
+    c11 = checks["split_identity_disjointness_passed"] is True
+    c12 = checks["within_union_coverage_passed"] is True
+    c13 = checks["cross_target_isolation_passed"] is True
+    c14 = checks["cross_source_isolation_passed"] is True
+    c15 = checks["split_determinism_passed"] is True
+    c16 = checks["class_count_consistency_passed"] is True
+    c17 = checks["preprocessing_train_only_passed"] is True
+    c18 = checks["candidate_fit_count_passed"] is True
+    c19 = checks["prediction_row_counts_passed"] is True
+    c20 = checks["prediction_key_uniqueness_passed"] is True
+    c21 = checks["prediction_candidate_schema_passed"] is True
+    c22 = checks["prediction_scores_finite_passed"] is True
+    c23 = checks["prediction_scores_range_passed"] is True
+    c24 = checks["no_train_predictions_passed"] is True
+    c25 = checks["validation_reconstruction_count_passed"] is True
+    c26 = checks["validation_categorical_match_passed"] is True
+    c27 = checks["validation_numeric_match_passed"] is True
+    c28 = checks["result_reconstruction_count_passed"] is True
+    c29 = checks["result_categorical_match_passed"] is True
+    c30 = checks["result_numeric_match_passed"] is True
+    c31 = checks["selection_validation_only_passed"] is True
+    c32 = checks["test_not_used_for_selection_passed"] is True
+    c33 = checks["tie_policy_passed"] is True
+    c34 = checks["duplicate_content_audit_completed"] is True
+    c35 = checks["schema_target_awareness_documented"] is True
+    c36 = checks["pooled_source_validation_design_documented"] is True
+    c37 = checks["raw_and_canonical_preservation_passed"] is True
+    c38 = checks["deterministic_artifacts_passed"] is True
+    c39 = checks["negative_tests_passed"] is True
+
+    exc_validated = check_evidence["canonical_nondeterminism_exception_validated"] is True
+    unapproved = check_evidence["unapproved_result_mismatches"] == 0
+    strict_val_mismatches = check_evidence["strict_validation_mismatches"] == 0
+    strict_res_mismatches = check_evidence["strict_result_mismatches_before_exception"] == 1
+    approved_exc = check_evidence["approved_nondeterminism_exceptions"] == 1
+    result_reconciled = check_evidence["result_reconstruction_passed_after_validated_exception"] is True
+
+    validation_passed = (
+        validation_results["dataset_profile"][0] is True
+        and validation_results["sample_registry"][0] is True
+        and validation_results["event_manifest"][0] is True
+        and validation_results["split_membership"][0] is True
+        and validation_results["prediction_ledger"][0] is True
+        and validation_results["preprocessing_audit"][0] is True
+        and validation_results["validation_reconstruction"][0] is True
+        and validation_results["canonical_nondeterminism_exception"][0] is True
+        and validation_results["canonical_exception_validator_tests"][0] is True
+        and validation_results["tie_policy"][0] is True
+        and validation_results["negative_tests"][0] is True
+    )
+
+    preservation_ok = (
+        preservation_passed is True
+        and preservation_evidence["raw_data_changed"] == 0
+        and preservation_evidence["canonical_outputs_changed"] == 0
+        and preservation_evidence["part3a_artifacts_changed"] == 0
+    )
+
+    semantic_ok = semantic_reproducibility_passed is True
+
+    return bool(
+        c1 and c2 and c3 and c4 and c5 and c6 and c7 and c8 and c9 and c10
+        and c11 and c12 and c13 and c14 and c15 and c16 and c17 and c18 and c19 and c20
+        and c21 and c22 and c23 and c24 and c25 and c26 and c27 and c28 and c29 and c30
+        and c31 and c32 and c33 and c34 and c35 and c36 and c37 and c38 and c39
+        and exc_validated and unapproved and strict_val_mismatches
+        and strict_res_mismatches and approved_exc and result_reconciled
+        and validation_passed and preservation_ok and semantic_ok
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -2734,50 +3010,51 @@ def build_all_checks(
 # ---------------------------------------------------------------------------
 def build_stage_gate(
     checks: Dict[str, bool],
+    check_evidence: Dict[str, Any],
     validation_results: Dict[str, Tuple[bool, Dict[str, Any]]],
     preservation_state: Dict[str, Any],
     duplicate_audit: Dict[str, Any],
+    semantic_reproducibility_passed: bool,
 ) -> Dict[str, Any]:
-    all_critical = all(
-        v for k, v in checks.items()
-        if isinstance(v, bool)
-        and k not in {"all_critical_checks_passed", "stage_gate_passed", "canonical_result_reconstruction_strictly_identical"}
-    )
-    validation_passed = all(
-        v[0] for k, v in validation_results.items() if k != "result_reconstruction"
-    )
     root = repo_root()
     accepted_contract = load_accepted_preservation_contract(root, ACCEPTED_PART3A_COMMIT)
     preservation_ok, preservation_ev = compare_protected_state_to_accepted_contract(
         accepted_contract, preservation_state
     )
+
+    ledger_complete = compute_part3b_prediction_ledger_complete(
+        checks,
+        check_evidence,
+        validation_results,
+        preservation_ok,
+        preservation_ev,
+        semantic_reproducibility_passed,
+    )
+
     identity_leak = duplicate_audit["total_identity_overlap"] > 0
     preprocessing_leak = not validation_results["preprocessing_audit"][0]
     selection_test_leak = not (
         validation_results["validation_reconstruction"][0]
-        and checks.get("selection_validation_only_passed", False)
-        and checks.get("test_not_used_for_selection_passed", False)
+        and checks["selection_validation_only_passed"]
+        and checks["test_not_used_for_selection_passed"]
     )
     result_reconciled = bool(
-        checks.get("result_reconstruction_passed_after_validated_exception", False)
-        and checks.get("canonical_nondeterminism_exception_validated", False)
-        and checks.get("unapproved_result_mismatches", 1) == 0
+        check_evidence["result_reconstruction_passed_after_validated_exception"]
+        and check_evidence["canonical_nondeterminism_exception_validated"]
+        and check_evidence["unapproved_result_mismatches"] == 0
     )
-    semantic_ok = bool(checks.get("semantic_reproducibility_passed", False))
 
     authorized = bool(
-        all_critical
-        and validation_passed
-        and preservation_ok
+        ledger_complete
         and not identity_leak
         and not preprocessing_leak
         and not selection_test_leak
         and result_reconciled
-        and semantic_ok
+        and semantic_reproducibility_passed
     )
 
     gate = {
-        "part3b_prediction_ledger_complete": all_critical and validation_passed and preservation_ok,
+        "part3b_prediction_ledger_complete": ledger_complete,
         "raw_data_modified": preservation_ev["raw_data_modified"],
         "canonical_outputs_modified": preservation_ev["canonical_outputs_modified"],
         "part3a_artifacts_modified": preservation_ev["part3a_artifacts_modified"],
@@ -2786,13 +3063,13 @@ def build_stage_gate(
         "selection_test_leakage_detected": selection_test_leak,
         "canonical_validation_reconstruction_passed": validation_results["validation_reconstruction"][0],
         "canonical_result_reconstruction_passed": result_reconciled,
-        "canonical_result_reconstruction_strictly_identical": checks.get("canonical_result_reconstruction_strictly_identical", False),
-        "canonical_result_reconstruction_scientifically_reconciled": result_reconciled,
-        "canonical_nondeterminism_exception_detected": checks.get("canonical_nondeterminism_exception_detected", False),
-        "canonical_nondeterminism_exception_validated": checks.get("canonical_nondeterminism_exception_validated", False),
-        "semantic_reproducibility_passed": semantic_ok,
+        "canonical_result_reconstruction_strictly_identical": check_evidence["canonical_result_reconstruction_strictly_identical"],
+        "canonical_result_reconstruction_scientifically_reconciled": check_evidence["canonical_result_reconstruction_scientifically_reconciled"],
+        "canonical_nondeterminism_exception_detected": check_evidence["canonical_nondeterminism_exception_detected"],
+        "canonical_nondeterminism_exception_validated": check_evidence["canonical_nondeterminism_exception_validated"],
+        "semantic_reproducibility_passed": semantic_reproducibility_passed,
         "next_authorized_stage": "Part 3C" if authorized else None,
-        "part3c_constraint": ("Part 3C must consume the frozen Part 3B split and candidate-probability " "ledgers. It may derive objective-matched candidate, adaptive, and soft-ensemble " "results, but it must not alter raw data, split assignments, candidate " "probabilities, the canonical 400 result rows, or the canonical 600 validation " "rows."),
+        "part3c_constraint": PART3C_CONSTRAINT,
     }
     return gate
 
@@ -3843,6 +4120,109 @@ def run_preservation_self_tests() -> Tuple[List[Dict[str, Any]], bool]:
 
 
 # ---------------------------------------------------------------------------
+# Part D: Isolated audit-gate self-tests (synthetic dictionaries only)
+# ---------------------------------------------------------------------------
+def _make_synthetic_audit_checks_all_true() -> Dict[str, bool]:
+    return {name: True for name in REQUIRED_AUDIT_CHECK_NAMES}
+
+
+def _make_synthetic_stage_gate_authorized() -> Dict[str, Any]:
+    return {
+        "part3b_prediction_ledger_complete": True,
+        "raw_data_modified": False,
+        "canonical_outputs_modified": False,
+        "part3a_artifacts_modified": False,
+        "identity_leakage_detected": False,
+        "preprocessing_leakage_detected": False,
+        "selection_test_leakage_detected": False,
+        "canonical_validation_reconstruction_passed": True,
+        "canonical_result_reconstruction_passed": True,
+        "canonical_result_reconstruction_strictly_identical": False,
+        "canonical_result_reconstruction_scientifically_reconciled": True,
+        "canonical_nondeterminism_exception_detected": True,
+        "canonical_nondeterminism_exception_validated": True,
+        "semantic_reproducibility_passed": True,
+        "next_authorized_stage": "Part 3C",
+        "part3c_constraint": PART3C_CONSTRAINT,
+    }
+
+
+def run_audit_gate_self_tests() -> Tuple[List[Dict[str, Any]], bool]:
+    tests: List[Dict[str, Any]] = []
+    all_passed = True
+
+    def _record(case_name: str, result: bool, **extra: Any) -> None:
+        nonlocal all_passed
+        tests.append({"case_name": case_name, "passed": result, **extra})
+        all_passed = all_passed and result
+
+    # 1. Exact 41-check schema with all-True passes.
+    checks = _make_synthetic_audit_checks_all_true()
+    schema_ok, ev = validate_exact_audit_check_schema(checks)
+    _record("exact_41_check_schema_all_true_passes", schema_ok is True, schema_passed=ev["schema_passed"])
+
+    # 2. Missing one check fails.
+    checks = _make_synthetic_audit_checks_all_true()
+    del checks["negative_tests_passed"]
+    schema_ok, ev = validate_exact_audit_check_schema(checks)
+    _record("missing_one_check_fails", schema_ok is False, missing=ev["missing_checks"])
+
+    # 3. Extra check fails.
+    checks = _make_synthetic_audit_checks_all_true()
+    checks["extra_diagnostic"] = True
+    schema_ok, ev = validate_exact_audit_check_schema(checks)
+    _record("extra_check_fails", schema_ok is False, extra=ev["extra_checks"])
+
+    # 4. Reordered schema fails.
+    checks = _make_synthetic_audit_checks_all_true()
+    keys = list(checks.keys())
+    keys[0], keys[1] = keys[1], keys[0]
+    checks = {k: checks[k] for k in keys}
+    schema_ok, ev = validate_exact_audit_check_schema(checks)
+    _record("reordered_schema_fails", schema_ok is False, order_exact=ev["order_exact"])
+
+    # 5. Non-boolean value (int 1 instead of True) fails.
+    checks = _make_synthetic_audit_checks_all_true()
+    checks["source_commit_verified"] = 1
+    schema_ok, ev = validate_exact_audit_check_schema(checks)
+    _record("non_boolean_int_value_fails", schema_ok is False, non_boolean=ev["non_boolean_checks"])
+
+    # 6. all_critical_checks_passed is True when checks 1-40 are all True.
+    checks = _make_synthetic_audit_checks_all_true()
+    checks["stage_gate_passed"] = True
+    result = compute_all_critical_checks_passed(checks)
+    _record("all_critical_true_when_checks_1_to_40_true", result is True, computed=result)
+
+    # 7. all_critical_checks_passed is False when one of checks 1-40 is False.
+    checks = _make_synthetic_audit_checks_all_true()
+    checks["stage_gate_passed"] = True
+    checks["dataset_profile_passed"] = False
+    result = compute_all_critical_checks_passed(checks)
+    _record("all_critical_false_when_one_check_false", result is False, computed=result)
+
+    # 8. all_critical_checks_passed does not include check 41 in its own computation.
+    checks = _make_synthetic_audit_checks_all_true()
+    checks["stage_gate_passed"] = True
+    checks["all_critical_checks_passed"] = False
+    result = compute_all_critical_checks_passed(checks)
+    _record("all_critical_excludes_check_41_from_own_computation", result is True, computed=result)
+
+    # 9. Exact authorized stage gate passes.
+    gate = _make_synthetic_stage_gate_authorized()
+    gate_ok, ev = validate_stage_gate(gate)
+    _record("exact_authorized_stage_gate_passes", gate_ok is True, schema_passed=ev["schema_passed"])
+
+    # 10. Stage gate with one authorization condition wrong fails and next_authorized_stage is None.
+    gate = _make_synthetic_stage_gate_authorized()
+    gate["identity_leakage_detected"] = True
+    gate["next_authorized_stage"] = None
+    gate_ok, ev = validate_stage_gate(gate)
+    _record("stage_gate_with_wrong_authorization_fails", gate_ok is False, gate_passed=gate_ok)
+
+    return tests, all_passed
+
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 def main():
@@ -3850,6 +4230,7 @@ def main():
     parser.add_argument("--self-test-canonical-exception", action="store_true", default=False)
     parser.add_argument("--self-test-persisted-ledger", action="store_true", default=False)
     parser.add_argument("--self-test-preservation", action="store_true", default=False)
+    parser.add_argument("--self-test-audit-gate", action="store_true", default=False)
     known, _ = parser.parse_known_args()
     if known.self_test_persisted_ledger:
         root = repo_root()
@@ -4006,6 +4387,61 @@ def main():
         ) else 1
         return exit_code
 
+    if known.self_test_audit_gate:
+        tests, tests_all_passed = run_audit_gate_self_tests()
+        tests_expected = 10
+        tests_executed = len(tests)
+        tests_passed = sum(1 for t in tests if t.get("passed"))
+        tests_failed = sum(1 for t in tests if not t.get("passed"))
+
+        # Validate exact audit schema on a synthetic all-True dict.
+        synthetic_checks = _make_synthetic_audit_checks_all_true()
+        synthetic_checks["stage_gate_passed"] = True
+        synthetic_checks["all_critical_checks_passed"] = True
+        schema_ok, schema_ev = validate_exact_audit_check_schema(synthetic_checks)
+
+        # Validate exact stage-gate schema on a synthetic authorized gate.
+        synthetic_gate = _make_synthetic_stage_gate_authorized()
+        gate_ok, gate_ev = validate_stage_gate(synthetic_gate)
+
+        # Test all-critical computation.
+        all_critical = compute_all_critical_checks_passed(synthetic_checks)
+
+        summary = {
+            "part_d_audit_gate_tests": {
+                "tests_expected": tests_expected,
+                "tests_executed": tests_executed,
+                "tests_passed": tests_passed,
+                "tests_failed": tests_failed,
+                "test_details": tests,
+            },
+            "audit_schema_validation": {
+                "schema_passed": schema_ok,
+                "evidence": schema_ev,
+            },
+            "stage_gate_validation": {
+                "gate_passed": gate_ok,
+                "evidence": gate_ev,
+            },
+            "all_critical_checks_computed": all_critical,
+            "model_fits_executed": 0,
+            "prediction_calls_executed": 0,
+            "artifacts_written": 0,
+            "full_build_executed": False,
+            "part3b_complete": False,
+            "part3c_authorized": False,
+        }
+        print(_json_dumps(summary))
+        exit_code = 0 if (
+            tests_all_passed
+            and tests_executed == tests_expected
+            and tests_failed == 0
+            and schema_ok is True
+            and gate_ok is True
+            and all_critical is True
+        ) else 1
+        return exit_code
+
     root = repo_root()
     data_dir = root / "data" / "raw"
     canonical_dir = root / "results" / "part1_full_reproduction"
@@ -4080,35 +4516,35 @@ def main():
 
     # 10. Update preservation check in audit checks after repo write and recompute stage gate.
     audit_checks = bundle1["audit_checks"]
+    check_evidence = bundle1["check_evidence"]
     audit_checks["raw_and_canonical_preservation_passed"] = preservation_passed
     audit_checks["deterministic_artifacts_passed"] = deterministic_artifacts_passed
-    audit_checks["semantic_reproducibility_passed"] = semantic_reproducibility_passed
-    audit_checks["exact_structural_equality"] = semantic_evidence.get("exact_structural_equality", False)
-    audit_checks["identity_columns_exact"] = semantic_evidence.get("all_identity_columns_exact", False)
-    audit_checks["non_et_score_columns_exact"] = semantic_evidence.get("all_non_et_score_columns_exact", False)
-    audit_checks["maximum_et_score_difference"] = semantic_evidence.get("maximum_et_score_difference", float("nan"))
-    audit_checks["number_of_et_cells_differing"] = semantic_evidence.get("number_of_et_cells_differing", -1)
-    audit_checks["selection_decisions_exact"] = semantic_evidence.get("all_selection_decisions_exact", False)
-    audit_checks["thresholds_exact"] = semantic_evidence.get("all_thresholds_exact", False)
-    audit_checks["non_exempt_metrics_strictly_equal"] = semantic_evidence.get("all_non_exempt_metrics_strictly_equal", False)
-    audit_checks["byte_identical_artifacts"] = semantic_evidence.get("byte_identical_artifacts", [])
-    audit_checks["artifacts_with_approved_et_roundoff_only"] = semantic_evidence.get("artifacts_with_approved_et_roundoff_only", [])
-    audit_checks["unapproved_differing_artifacts"] = semantic_evidence.get("unapproved_differing_artifacts", [])
+
+    # Semantic reproducibility evidence (outside audit_checks)
+    semantic_reproducibility_evidence = {
+        "semantic_reproducibility_passed": semantic_reproducibility_passed,
+        "exact_structural_equality": semantic_evidence.get("exact_structural_equality", False),
+        "identity_columns_exact": semantic_evidence.get("all_identity_columns_exact", False),
+        "non_et_score_columns_exact": semantic_evidence.get("all_non_et_score_columns_exact", False),
+        "maximum_et_score_difference": semantic_evidence.get("maximum_et_score_difference", float("nan")),
+        "number_of_et_cells_differing": semantic_evidence.get("number_of_et_cells_differing", -1),
+        "selection_decisions_exact": semantic_evidence.get("all_selection_decisions_exact", False),
+        "thresholds_exact": semantic_evidence.get("all_thresholds_exact", False),
+        "non_exempt_metrics_strictly_equal": semantic_evidence.get("all_non_exempt_metrics_strictly_equal", False),
+        "byte_identical_artifacts": semantic_evidence.get("byte_identical_artifacts", []),
+        "artifacts_with_approved_et_roundoff_only": semantic_evidence.get("artifacts_with_approved_et_roundoff_only", []),
+        "unapproved_differing_artifacts": semantic_evidence.get("unapproved_differing_artifacts", []),
+    }
 
     # 11. Recompute stage gate with actual preservation state and final determinism.
     validation_results = bundle1["validation_results"]
     validation_results["preservation"] = (preservation_passed, preservation_evidence)
     duplicate_audit = bundle1["duplicate_audit"]
-    stage_gate = build_stage_gate(audit_checks, validation_results, preservation_after, duplicate_audit)
+    stage_gate = build_stage_gate(audit_checks, check_evidence, validation_results, preservation_after, duplicate_audit, semantic_reproducibility_passed)
     stage_gate_passed, stage_gate_evidence = validate_stage_gate(stage_gate)
     audit_checks["stage_gate_passed"] = stage_gate_passed
-    # Strict identity is intentionally not required; scientific reconciliation is the gate.
-    # Only boolean checks are critical; numeric counters and artifact lists are diagnostics.
-    audit_checks["all_critical_checks_passed"] = all(
-        v for k, v in audit_checks.items()
-        if isinstance(v, bool)
-        and k not in {"all_critical_checks_passed", "stage_gate_passed", "canonical_result_reconstruction_strictly_identical"}
-    )
+    audit_checks["all_critical_checks_passed"] = compute_all_critical_checks_passed(audit_checks)
+    audit_schema_passed, audit_schema_evidence = validate_exact_audit_check_schema(audit_checks)
 
     # 12. Regenerate reports with final preservation and determinism evidence.
     artifacts = bundle1["artifacts"]
@@ -4130,6 +4566,9 @@ def main():
         "mismatch_details": mismatch_details,
         "semantic_reproducibility_evidence": _evidence_for_json(semantic_evidence),
     }
+    json_report["check_evidence"] = _evidence_for_json(check_evidence)
+    json_report["audit_schema_evidence"] = _evidence_for_json(audit_schema_evidence)
+    json_report["semantic_reproducibility_evidence"] = _evidence_for_json(semantic_reproducibility_evidence)
     json_report["preservation_after_write"] = preservation_evidence
 
     json_report_path = root / "reports" / "part3b_split_leakage_audit.json"
