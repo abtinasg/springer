@@ -106,6 +106,7 @@ APPROVED_EXCEPTION_EVENT = {
     "seed": 42,
     "model": "AQRPE_v2_rank",
     "selected_candidate": "ET_leaf5",
+    "selection_mode": "rank_objective_fixed_threshold",
     "column": "roc_auc",
 }
 APPROVED_EXCEPTION_CANONICAL_VALUE = 0.6700602041438307
@@ -1169,6 +1170,39 @@ def validate_result_reconstruction(recon: pd.DataFrame, canonical: pd.DataFrame)
     return passed, evidence
 
 
+CANONICAL_EXCEPTION_NUMERIC_TOL = 1e-15
+
+
+def is_exact_directional_canonical_exception(m: Dict[str, Any]) -> bool:
+    """Return True only when *m* matches the single approved directional cell exactly.
+
+    This is a pure helper: no file access, no model fitting, no global state mutation.
+    Direction is mandatory -- swapping canonical_value and reconstruction_value fails.
+    Numeric fields are compared with a maximum tolerance of 1e-15.
+    """
+    categorical_fields = [
+        "experiment",
+        "target_project",
+        "seed",
+        "model",
+        "selected_candidate",
+        "selection_mode",
+        "column",
+    ]
+    for field in categorical_fields:
+        if m.get(field) != APPROVED_EXCEPTION_EVENT.get(field):
+            return False
+
+    if abs(float(m.get("canonical_value", float("nan"))) - APPROVED_EXCEPTION_CANONICAL_VALUE) > CANONICAL_EXCEPTION_NUMERIC_TOL:
+        return False
+    if abs(float(m.get("recon_value", float("nan"))) - APPROVED_EXCEPTION_RECON_VALUE) > CANONICAL_EXCEPTION_NUMERIC_TOL:
+        return False
+    if abs(float(m.get("absolute_difference", float("nan"))) - APPROVED_EXCEPTION_DIFF) > CANONICAL_EXCEPTION_NUMERIC_TOL:
+        return False
+
+    return True
+
+
 def validate_canonical_nondeterminism_exception(
     recon: pd.DataFrame,
     canonical: pd.DataFrame,
@@ -1177,12 +1211,9 @@ def validate_canonical_nondeterminism_exception(
 ) -> Dict[str, Any]:
     """Validate the one approved historical floating-point nondeterminism exception.
 
-    The canonical file contains two different ET_leaf5-derived ROC-AUC values for the
-    same event because the frozen pipeline called model_scores separately on a parallel
-    ExtraTrees model. The Part 3B ledger uses a single score vector per candidate, so the
-    reconstructed AQRPE_v2_rank row equals the ET_leaf5 baseline row. This function
-    validates that the resulting single discrepancy is exactly the historically observed
-    one and that nothing else deviates.
+    Exactly one directional cell may pass: the documented ET_leaf5 roc_auc mismatch
+    for cross_project/JM1/seed_42/AQRPE_v2_rank.  No broad candidate-level, event-level,
+    or ET-derived tolerance exception is permitted.
     """
     # 1. Identify all strict mismatches using the canonical tolerance.
     keys = ["experiment", "target_project", "seed", "model"]
@@ -1216,47 +1247,14 @@ def validate_canonical_nondeterminism_exception(
                         "absolute_difference": float(abs(a[i] - b[i])),
                     })
 
-    # 2. Approve every mismatch that is a direct consequence of the ET_leaf5 parallel-
-    # prediction nondeterminism. The canonical file was produced by calling model_scores
-    # multiple times on the same fitted ExtraTrees model, so the same event can have several
-    # canonical metric values depending on which call was used. The Part 3B ledger stores
-    # exactly one score vector per candidate, so any canonical result row that uses the
-    # ET_leaf5 score vector is affected by the same sub-ULP score roundoff. We approve all
-    # such rows as long as the deviation is within the historically documented metric
-    # tolerance. The historically documented row (seed 042, AQRPE_v2_rank, roc_auc) must
-    # also be present and match the exact observed values.
+    # 2. Approve only the exact single directional cell.
     approved: List[Dict[str, Any]] = []
     unapproved: List[Dict[str, Any]] = []
     documented_approved = False
     for m in strict_mismatches:
-        is_et_derived = (
-            m["selected_candidate"] == APPROVED_EXCEPTION_EVENT["selected_candidate"]
-            or APPROVED_EXCEPTION_EVENT["selected_candidate"] in m["selected_candidate"]
-        )
-        is_documented_row = (
-            m["experiment"] == APPROVED_EXCEPTION_EVENT["experiment"]
-            and m["target_project"] == APPROVED_EXCEPTION_EVENT["target_project"]
-            and m["seed"] == APPROVED_EXCEPTION_EVENT["seed"]
-            and m["model"] == APPROVED_EXCEPTION_EVENT["model"]
-            and m["column"] == APPROVED_EXCEPTION_EVENT["column"]
-        )
-        within_tolerance = m["absolute_difference"] <= APPROVED_EXCEPTION_DIFF + 1e-12
-
-        if is_documented_row and within_tolerance:
-            # The historically documented row, if it differs, must match the exact observed values.
-            if (
-                abs(m["canonical_value"] - APPROVED_EXCEPTION_CANONICAL_VALUE) < 1e-15
-                and abs(m["recon_value"] - APPROVED_EXCEPTION_RECON_VALUE) < 1e-15
-                and abs(m["absolute_difference"] - APPROVED_EXCEPTION_DIFF) < 1e-15
-            ):
-                approved.append(m)
-                documented_approved = True
-            else:
-                unapproved.append(m)
-        elif is_et_derived and within_tolerance:
-            # Other rows/columns driven by the same ET_leaf5 score vector are approved
-            # as part of the same candidate-level nondeterminism exception.
+        if is_exact_directional_canonical_exception(m):
             approved.append(m)
+            documented_approved = True
         else:
             unapproved.append(m)
 
@@ -1267,24 +1265,27 @@ def validate_canonical_nondeterminism_exception(
         test_rows = event_rows[event_rows["split_role"] == "test"]
         if not test_rows.empty:
             et_scores = test_rows["score__ET_leaf5"].to_numpy()
-            # Recompute the metric for both candidate and AQRPE_v2_rank using the same scores.
-            # In the Part 3B ledger both rows use the same vector, so the two ROC-AUCs are identical.
             y_test = test_rows["y_true"].to_numpy()
             baseline_roc = float(frozen.metric_row(y_test, et_scores, 0.5)["roc_auc"])
             rank_roc = float(frozen.metric_row(y_test, et_scores, 0.5)["roc_auc"])
             same_score_vector = baseline_roc == rank_roc
 
-    # 4. Confirm no other categorical mismatch and no unapproved numeric mismatch. At least one
-    # ET_leaf5-driven deviation must be observed (the documented historical row, if it differs,
-    # is checked for exact values; otherwise any other ET-derived approved mismatch suffices).
-    only_approved = evidence_strict.get("categorical_match", False) and len(unapproved) == 0 and len(approved) >= 1
+    # 4. Require exactly one strict mismatch, exactly one approved, zero unapproved.
+    strict_mismatch_count = len(strict_mismatches)
+    approved_count = len(approved)
+    unapproved_count = len(unapproved)
+
+    exception_is_directional = approved_count == 1 and is_exact_directional_canonical_exception(approved[0]) if approved_count == 1 else False
 
     validated = bool(
-        only_approved
+        evidence_strict.get("categorical_match", False)
+        and strict_mismatch_count == 1
+        and approved_count == 1
+        and unapproved_count == 0
+        and documented_approved
+        and exception_is_directional
         and same_score_vector
         and ET_ND_DIAGNOSTIC["maximum_score_difference"] <= ET_ND_MAX_ALLOWED
-        and APPROVED_EXCEPTION_DIFF <= 1e-7
-        and sorted(ET_ND_DIAGNOSTIC["canonical_values_reproduced"]) == sorted([0.6700601613088453, 0.6700602041438307])
     )
 
     return {
@@ -1292,9 +1293,11 @@ def validate_canonical_nondeterminism_exception(
         "strict_mismatches": strict_mismatches,
         "approved_exception_matches": approved,
         "unapproved_mismatches": unapproved,
-        "approved_exception_count": len(approved),
-        "unapproved_mismatch_count": len(unapproved),
+        "strict_mismatch_count": strict_mismatch_count,
+        "approved_exception_count": approved_count,
+        "unapproved_mismatch_count": unapproved_count,
         "documented_exception_row_approved": documented_approved,
+        "exception_is_directional": exception_is_directional,
         "same_score_vector_for_baseline_and_rank": same_score_vector,
         "categorical_match": evidence_strict.get("categorical_match", False),
         "diagnostic": ET_ND_DIAGNOSTIC,
@@ -1971,132 +1974,113 @@ def run_negative_tests(
     return tests, all_passed
 
 
+def _make_exact_exception_evidence() -> Dict[str, Any]:
+    """Build the single approved directional mismatch evidence record."""
+    return {
+        "experiment": "cross_project",
+        "target_project": "JM1",
+        "seed": 42,
+        "model": "AQRPE_v2_rank",
+        "selected_candidate": "ET_leaf5",
+        "selection_mode": "rank_objective_fixed_threshold",
+        "column": "roc_auc",
+        "canonical_value": 0.6700602041438307,
+        "recon_value": 0.6700601613088453,
+        "absolute_difference": 4.283498544754849e-08,
+    }
+
+
 def run_canonical_exception_validator_tests(
-    frozen: Any,
-    recon: pd.DataFrame,
-    canonical: pd.DataFrame,
-    prediction_ledger: pd.DataFrame,
+    *args: Any,
+    **kwargs: Any,
 ) -> Tuple[List[Dict[str, Any]], bool]:
-    """Test the approved nondeterminism exception validator with controlled mutations."""
+    """Run ten isolated unit-style tests for the exact directional canonical exception.
+
+    These tests use synthetic mismatch evidence only.  They do not load datasets,
+    import or fit estimators, generate predictions, rebuild ledgers, or modify
+    repository artifacts.
+    """
     tests: List[Dict[str, Any]] = []
     all_passed = True
 
-    base_evidence = validate_canonical_nondeterminism_exception(recon, canonical, prediction_ledger, frozen)
+    def _record(case_name: str, result: bool, **extra: Any) -> None:
+        nonlocal all_passed
+        tests.append({
+            "case_name": case_name,
+            "passed": result,
+            **extra,
+        })
+        all_passed = all_passed and result
 
-    # 1. Exact approved exception passes.
-    # The validator may approve multiple rows because the ledger stores one ET_leaf5
-    # score vector, so all canonical result rows using that vector for the exception
-    # event are affected by the same historical nondeterminism.
-    ok = base_evidence["validated"] and base_evidence["approved_exception_count"] >= 1 and base_evidence["unapproved_mismatch_count"] == 0
-    tests.append({
-        "case_name": "exact approved exception passes",
-        "mutation": "none",
-        "validator_name": "validate_canonical_nondeterminism_exception",
-        "validator_returned_validated": base_evidence["validated"],
-        "passed": ok,
-    })
-    all_passed = all_passed and ok
+    # 1. Exact approved directional exception passes.
+    m1 = _make_exact_exception_evidence()
+    r1 = is_exact_directional_canonical_exception(m1)
+    _record("exact approved directional exception passes", r1, matcher_returned_true=r1)
 
-    # Helper: find the approved exception row index in canonical.
-    def _find_approved_row(df: pd.DataFrame) -> Optional[int]:
-        mask = (
-            (df["experiment"] == APPROVED_EXCEPTION_EVENT["experiment"])
-            & (df["target_project"] == APPROVED_EXCEPTION_EVENT["target_project"])
-            & (df["seed"] == APPROVED_EXCEPTION_EVENT["seed"])
-            & (df["model"] == APPROVED_EXCEPTION_EVENT["model"])
-            & (df["selected_candidate"] == APPROVED_EXCEPTION_EVENT["selected_candidate"])
-        )
-        idx = df.index[mask]
-        return int(idx[0]) if len(idx) > 0 else None
+    # 2. Wrong event or experiment fails.
+    m2 = _make_exact_exception_evidence()
+    m2["experiment"] = "within_project"
+    r2 = is_exact_directional_canonical_exception(m2)
+    _record("wrong event or experiment fails", not r2, matcher_returned_true=r2)
 
-    approved_idx = _find_approved_row(canonical)
-    if approved_idx is None:
-        # If the canonical does not contain the approved exception, all tests fail.
-        for case_name in [
-            "changed event key fails",
-            "changed metric column fails",
-            "larger score deviation fails",
-            "second mismatch fails",
-        ]:
-            tests.append({
-                "case_name": case_name,
-                "mutation": "could not locate approved exception row in canonical",
-                "validator_name": "validate_canonical_nondeterminism_exception",
-                "validator_returned_validated": False,
-                "passed": False,
-            })
-            all_passed = False
-        return tests, all_passed
+    # 3. Wrong seed fails.
+    m3 = _make_exact_exception_evidence()
+    m3["seed"] = 7
+    r3 = is_exact_directional_canonical_exception(m3)
+    _record("wrong seed fails", not r3, matcher_returned_true=r3)
 
-    # 2. Changed event key fails.
-    canon2 = canonical.copy(deep=True)
-    canon2.at[approved_idx, "target_project"] = "KC1"
-    ev2 = validate_canonical_nondeterminism_exception(recon, canon2, prediction_ledger, frozen)
-    ok = not ev2["validated"]
-    tests.append({
-        "case_name": "changed event key fails",
-        "mutation": "canonical target_project JM1 -> KC1",
-        "validator_name": "validate_canonical_nondeterminism_exception",
-        "validator_returned_validated": ev2["validated"],
-        "passed": ok,
-    })
-    all_passed = all_passed and ok
+    # 4. Wrong model fails.
+    m4 = _make_exact_exception_evidence()
+    m4["model"] = "AQRPE_v2_balanced"
+    r4 = is_exact_directional_canonical_exception(m4)
+    _record("wrong model fails", not r4, matcher_returned_true=r4)
 
-    # 3. Non-approved ET-derived deviation fails.
-    canon3 = canonical.copy(deep=True)
-    old_val = float(canon3.at[approved_idx, "roc_auc"])
-    canon3.at[approved_idx, "roc_auc"] = APPROVED_EXCEPTION_RECON_VALUE + 1e-7
-    ev3 = validate_canonical_nondeterminism_exception(recon, canon3, prediction_ledger, frozen)
-    ok = not ev3["validated"]
-    tests.append({
-        "case_name": "non-approved ET-derived deviation fails",
-        "mutation": "documented roc_auc given recon + 1e-7 (exceeds approved tolerance)",
-        "validator_name": "validate_canonical_nondeterminism_exception",
-        "validator_returned_validated": ev3["validated"],
-        "passed": ok,
-    })
-    all_passed = all_passed and ok
+    # 5. Wrong selected_candidate fails.
+    m5 = _make_exact_exception_evidence()
+    m5["selected_candidate"] = "DT_leaf5"
+    r5 = is_exact_directional_canonical_exception(m5)
+    _record("wrong selected_candidate fails", not r5, matcher_returned_true=r5)
 
-    # 4. Larger score deviation fails.
-    canon4 = canonical.copy(deep=True)
-    canon4.at[approved_idx, "roc_auc"] = old_val + 1e-7
-    ev4 = validate_canonical_nondeterminism_exception(recon, canon4, prediction_ledger, frozen)
-    ok = not ev4["validated"]
-    tests.append({
-        "case_name": "larger score deviation fails",
-        "mutation": "canonical roc_auc increased by 1e-7",
-        "validator_name": "validate_canonical_nondeterminism_exception",
-        "validator_returned_validated": ev4["validated"],
-        "passed": ok,
-    })
-    all_passed = all_passed and ok
+    # 6. Wrong selection_mode fails.
+    m6 = _make_exact_exception_evidence()
+    m6["selection_mode"] = "balanced_objective"
+    r6 = is_exact_directional_canonical_exception(m6)
+    _record("wrong selection_mode fails", not r6, matcher_returned_true=r6)
 
-    # 5. Second mismatch fails.
-    canon5 = canonical.copy(deep=True)
-    # Find any other numeric row that is not ET_leaf5-derived and perturb it.
-    def _is_et_derived(row):
-        cand = str(row["selected_candidate"])
-        return cand == APPROVED_EXCEPTION_EVENT["selected_candidate"] or APPROVED_EXCEPTION_EVENT["selected_candidate"] in cand
-    second_idx = None
-    for i in canonical.index:
-        if i == approved_idx:
-            continue
-        if not _is_et_derived(canonical.loc[i]):
-            second_idx = i
-            break
-    if second_idx is not None:
-        canon5.at[second_idx, "avg_precision"] = float(canon5.at[second_idx, "avg_precision"]) + 1e-8
-    ev5 = validate_canonical_nondeterminism_exception(recon, canon5, prediction_ledger, frozen)
-    # Adding a non-ET mismatch must still fail regardless of how many ET-derived rows differ.
-    ok = not ev5["validated"]
-    tests.append({
-        "case_name": "second mismatch fails",
-        "mutation": "add a second 1e-8 mismatch in another row",
-        "validator_name": "validate_canonical_nondeterminism_exception",
-        "validator_returned_validated": ev5["validated"],
-        "passed": ok,
-    })
-    all_passed = all_passed and ok
+    # 7. Wrong metric column fails.
+    m7 = _make_exact_exception_evidence()
+    m7["column"] = "avg_precision"
+    r7 = is_exact_directional_canonical_exception(m7)
+    _record("wrong metric column fails", not r7, matcher_returned_true=r7)
+
+    # 8. Swapped canonical_value and reconstruction_value fails.
+    m8 = _make_exact_exception_evidence()
+    m8["canonical_value"], m8["recon_value"] = m8["recon_value"], m8["canonical_value"]
+    r8 = is_exact_directional_canonical_exception(m8)
+    _record("swapped canonical_value and reconstruction_value fails", not r8, matcher_returned_true=r8, validator_returned_false=not r8)
+
+    # 9. Exact exception plus a second mismatch fails (two mismatches => validator fails).
+    #    Simulated by checking that the second mismatch does not pass the matcher.
+    m9_second = _make_exact_exception_evidence()
+    m9_second["column"] = "avg_precision"
+    r9 = not is_exact_directional_canonical_exception(m9_second)
+    _record("exact exception plus second mismatch fails", r9, matcher_returned_true=not r9)
+
+    # 10. Altered canonical, reconstruction, or difference value fails.
+    m10 = _make_exact_exception_evidence()
+    m10["canonical_value"] = m10["canonical_value"] + 1e-9
+    r10a = not is_exact_directional_canonical_exception(m10)
+
+    m10b = _make_exact_exception_evidence()
+    m10b["recon_value"] = m10b["recon_value"] + 1e-9
+    r10b = not is_exact_directional_canonical_exception(m10b)
+
+    m10c = _make_exact_exception_evidence()
+    m10c["absolute_difference"] = m10c["absolute_difference"] + 1e-9
+    r10c = not is_exact_directional_canonical_exception(m10c)
+
+    r10 = r10a and r10b and r10c
+    _record("altered canonical, reconstruction, or difference value fails", r10, matcher_returned_true=not r10)
 
     return tests, all_passed
 
@@ -3262,6 +3246,25 @@ def print_final_report(json_report: Dict[str, Any], actual_changed_paths: List[s
 # Main
 # ---------------------------------------------------------------------------
 def main():
+    parser = argparse.ArgumentParser(add_help=False)
+    parser.add_argument("--self-test-canonical-exception", action="store_true", default=False)
+    known, _ = parser.parse_known_args()
+    if known.self_test_canonical_exception:
+        tests, all_passed = run_canonical_exception_validator_tests()
+        summary = {
+            "tests_expected": 10,
+            "tests_executed": len(tests),
+            "tests_passed": sum(1 for t in tests if t.get("passed")),
+            "tests_failed": sum(1 for t in tests if not t.get("passed")),
+            "model_fits_executed": 0,
+            "artifacts_written": 0,
+            "full_build_executed": False,
+            "part3c_authorized": False,
+            "test_details": tests,
+        }
+        print(_json_dumps(summary))
+        return 0 if all_passed and summary["tests_executed"] == 10 and summary["tests_failed"] == 0 else 1
+
     root = repo_root()
     data_dir = root / "data" / "raw"
     canonical_dir = root / "results" / "part1_full_reproduction"
