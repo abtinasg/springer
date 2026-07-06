@@ -96,6 +96,9 @@ RECON_ATOL = 1e-12
 
 NEGATIVE_TEST_MUTATION = 1e-8
 
+PERSISTED_RECON_RTOL = 1e-10
+PERSISTED_RECON_ATOL = 1e-12
+
 # ---------------------------------------------------------------------------
 # Historical canonical nondeterminism exception (validated, not broadened)
 # ---------------------------------------------------------------------------
@@ -274,6 +277,17 @@ def format_csv_float(v: Any) -> str:
             return ""
         return format(v, ".17g")
     return str(v)
+
+
+def read_float_csv_round_trip(
+    path: Path,
+    compression: Optional[str] = None,
+) -> pd.DataFrame:
+    return pd.read_csv(
+        path,
+        compression=compression,
+        float_precision="round_trip",
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -3243,12 +3257,396 @@ def print_final_report(json_report: Dict[str, Any], actual_changed_paths: List[s
 
 
 # ---------------------------------------------------------------------------
+# Strict persisted-ledger reread and reconstruction verification (Part B)
+# ---------------------------------------------------------------------------
+PERSISTED_PREDICTION_WITHIN_ROWS = 34900
+PERSISTED_PREDICTION_CROSS_ROWS = 174430
+PERSISTED_PREDICTION_TOTAL_ROWS = 209330
+PERSISTED_VALIDATION_PREDICTION_ROWS = 104670
+PERSISTED_TEST_PREDICTION_ROWS = 104660
+PERSISTED_TRAIN_PREDICTION_ROWS = 0
+PERSISTED_EVENT_MANIFEST_ROWS = 50
+PERSISTED_VALIDATION_RECON_ROWS = 600
+PERSISTED_RESULT_RECON_ROWS = 400
+
+PERSISTED_VALIDATION_CATEGORY_KEYS = ["experiment", "target_project", "seed", "candidate", "mode"]
+PERSISTED_RESULT_CATEGORY_KEYS = ["experiment", "target_project", "seed", "model", "selected_candidate", "selection_mode"]
+
+
+def _validate_persisted_prediction_schema(df: pd.DataFrame) -> bool:
+    return list(df.columns) == PREDICTION_LEDGER_COLUMNS
+
+
+def _validate_persisted_prediction_integrity(within: pd.DataFrame, cross: pd.DataFrame) -> Dict[str, Any]:
+    schema_exact = _validate_persisted_prediction_schema(within) and _validate_persisted_prediction_schema(cross)
+    within_rows = len(within)
+    cross_rows = len(cross)
+    total_rows = within_rows + cross_rows
+    combined = pd.concat([within, cross], ignore_index=True)
+    val_rows = int((combined["split_role"] == "validation").sum()) if "split_role" in combined.columns else -1
+    test_rows = int((combined["split_role"] == "test").sum()) if "split_role" in combined.columns else -1
+    train_rows = int((combined["split_role"] == "train").sum()) if "split_role" in combined.columns else -1
+    key_cols = ["event_id", "split_role", "sample_uid"]
+    if all(c in combined.columns for c in key_cols):
+        keys_unique = not combined.duplicated(subset=key_cols).any()
+    else:
+        keys_unique = False
+    score_cols = [c for c in PREDICTION_LEDGER_COLUMNS if c.startswith("score__")]
+    available_score_cols = [c for c in score_cols if c in combined.columns]
+    if available_score_cols:
+        all_scores = combined[available_score_cols].to_numpy(dtype=float)
+        scores_finite = bool(np.all(np.isfinite(all_scores)))
+        scores_in_range = bool(np.all((all_scores >= EPS) & (all_scores <= 1.0 - EPS)))
+    else:
+        scores_finite = False
+        scores_in_range = False
+    return {
+        "persisted_prediction_schema_exact": schema_exact,
+        "persisted_prediction_within_rows": within_rows,
+        "persisted_prediction_cross_rows": cross_rows,
+        "persisted_prediction_total_rows": total_rows,
+        "persisted_validation_prediction_rows": val_rows,
+        "persisted_test_prediction_rows": test_rows,
+        "persisted_train_prediction_rows": train_rows,
+        "persisted_prediction_keys_unique": keys_unique,
+        "persisted_prediction_scores_finite": scores_finite,
+        "persisted_prediction_scores_in_range": scores_in_range,
+        "_combined": combined,
+    }
+
+
+def _compare_persisted_reconstruction(
+    reread: pd.DataFrame,
+    persisted: pd.DataFrame,
+    category_keys: List[str],
+) -> Tuple[bool, Dict[str, Any]]:
+    reread = reread.reset_index(drop=True)
+    persisted = persisted.reset_index(drop=True)
+    row_count_match = len(reread) == len(persisted)
+    cat_match = row_count_match
+    if row_count_match:
+        for col in category_keys:
+            if not reread[col].astype(str).equals(persisted[col].astype(str)):
+                cat_match = False
+                break
+    numeric_cols = [c for c in persisted.columns if c not in category_keys]
+    mismatches = 0
+    max_abs_diff = 0.0
+    if cat_match:
+        for col in numeric_cols:
+            if col not in reread.columns:
+                continue
+            a = reread[col].to_numpy(dtype=float)
+            b = persisted[col].to_numpy(dtype=float)
+            close = np.isclose(a, b, rtol=PERSISTED_RECON_RTOL, atol=PERSISTED_RECON_ATOL, equal_nan=True)
+            col_mismatches = int((~close).sum())
+            mismatches += col_mismatches
+            diff = np.abs(a - b)
+            col_max = float(np.nanmax(diff)) if np.any(np.isfinite(diff)) else 0.0
+            max_abs_diff = max(max_abs_diff, col_max)
+    return cat_match and mismatches == 0, {
+        "category_match": cat_match,
+        "numeric_mismatches": mismatches,
+        "maximum_absolute_difference": max_abs_diff,
+    }
+
+
+def verify_persisted_ledger_reconstruction(
+    frozen: Any,
+    prediction_ledger_within_path: Path,
+    prediction_ledger_cross_path: Path,
+    event_manifest_path: Path,
+    persisted_validation_reconstruction_path: Path,
+    persisted_result_reconstruction_path: Path,
+) -> Dict[str, Any]:
+    within = read_float_csv_round_trip(prediction_ledger_within_path, compression="gzip")
+    cross = read_float_csv_round_trip(prediction_ledger_cross_path, compression="gzip")
+
+    integrity = _validate_persisted_prediction_integrity(within, cross)
+    combined = integrity.pop("_combined")
+
+    schema_ok = integrity["persisted_prediction_schema_exact"]
+    keys_ok = integrity["persisted_prediction_keys_unique"]
+
+    event_manifest = pd.read_csv(event_manifest_path)
+
+    persisted_val_recon = read_float_csv_round_trip(persisted_validation_reconstruction_path)
+    persisted_result_recon = read_float_csv_round_trip(persisted_result_reconstruction_path)
+
+    if schema_ok and keys_ok:
+        combined_sorted = _prediction_ledger_sorted(combined)
+        reread_val_recon = reconstruct_validation_from_ledger(frozen, combined_sorted)
+        reread_result_recon = reconstruct_results_from_ledger(frozen, combined_sorted, event_manifest)
+
+        val_ok, val_ev = _compare_persisted_reconstruction(
+            reread_val_recon, persisted_val_recon, PERSISTED_VALIDATION_CATEGORY_KEYS,
+        )
+        res_ok, res_ev = _compare_persisted_reconstruction(
+            reread_result_recon, persisted_result_recon, PERSISTED_RESULT_CATEGORY_KEYS,
+        )
+
+        reread_val_rows = len(reread_val_recon)
+        reread_res_rows = len(reread_result_recon)
+        val_cat_match = val_ev["category_match"]
+        res_cat_match = res_ev["category_match"]
+        val_mismatches = val_ev["numeric_mismatches"]
+        res_mismatches = res_ev["numeric_mismatches"]
+        val_max_abs = val_ev["maximum_absolute_difference"]
+        res_max_abs = res_ev["maximum_absolute_difference"]
+        val_matches = val_ok
+        res_matches = res_ok
+    else:
+        reread_val_rows = 0
+        reread_res_rows = 0
+        val_cat_match = False
+        res_cat_match = False
+        val_mismatches = -1
+        res_mismatches = -1
+        val_max_abs = float("nan")
+        res_max_abs = float("nan")
+        val_matches = False
+        res_matches = False
+
+    ledger_matches = val_matches and res_matches
+
+    evidence: Dict[str, Any] = {}
+    evidence.update(integrity)
+    evidence["persisted_event_manifest_rows"] = len(event_manifest)
+    evidence["reread_validation_reconstruction_rows"] = reread_val_rows
+    evidence["reread_result_reconstruction_rows"] = reread_res_rows
+    evidence["persisted_validation_reconstruction_rows"] = len(persisted_val_recon)
+    evidence["persisted_result_reconstruction_rows"] = len(persisted_result_recon)
+    evidence["persisted_validation_category_match"] = val_cat_match
+    evidence["persisted_result_category_match"] = res_cat_match
+    evidence["persisted_validation_numeric_mismatches"] = val_mismatches
+    evidence["persisted_result_numeric_mismatches"] = res_mismatches
+    evidence["persisted_validation_maximum_absolute_difference"] = val_max_abs
+    evidence["persisted_result_maximum_absolute_difference"] = res_max_abs
+    evidence["persisted_validation_reconstruction_matches_in_memory"] = val_matches
+    evidence["persisted_result_reconstruction_matches_in_memory"] = res_matches
+    evidence["persisted_ledger_reconstruction_matches_in_memory"] = ledger_matches
+    evidence["csv_float_precision"] = "round_trip"
+    return evidence
+
+
+# ---------------------------------------------------------------------------
+# Six focused negative tests for the persisted-ledger verifier (Part B)
+# ---------------------------------------------------------------------------
+def _run_persisted_ledger_negative_tests(
+    frozen: Any,
+    within_df: pd.DataFrame,
+    cross_df: pd.DataFrame,
+    event_manifest_df: pd.DataFrame,
+    persisted_val_recon_df: pd.DataFrame,
+    persisted_result_recon_df: pd.DataFrame,
+) -> Tuple[List[Dict[str, Any]], bool]:
+    tests: List[Dict[str, Any]] = []
+    all_passed = True
+
+    def _record(case_name: str, result: bool, **extra: Any) -> None:
+        nonlocal all_passed
+        tests.append({"case_name": case_name, "passed": result, **extra})
+        all_passed = all_passed and result
+
+    def _write_temp_ledger(df_within: pd.DataFrame, df_cross: pd.DataFrame, manifest: pd.DataFrame, val_recon: pd.DataFrame, res_recon: pd.DataFrame) -> Dict[str, Path]:
+        tmpdir = Path(tempfile.mkdtemp(prefix="part3b_persisted_test_"))
+        paths: Dict[str, Path] = {}
+        for name, df, comp in [
+            ("within", df_within, True),
+            ("cross", df_cross, True),
+        ]:
+            p = tmpdir / f"prediction_ledger_{name}.csv.gz"
+            buf = io.StringIO()
+            df.to_csv(buf, index=False, encoding="utf-8", lineterminator="\n", float_format="%.17g")
+            payload = buf.getvalue().encode("utf-8")
+            with gzip.GzipFile(fileobj=open(p, "wb"), mode="wb", compresslevel=9, mtime=0, filename=b"") as gz:
+                gz.write(payload)
+            paths[f"pred_{name}"] = p
+        mp = tmpdir / "event_manifest.csv"
+        manifest.to_csv(mp, index=False, encoding="utf-8", lineterminator="\n")
+        paths["manifest"] = mp
+        vp = tmpdir / "validation_reconstruction.csv"
+        val_recon.to_csv(vp, index=False, encoding="utf-8", lineterminator="\n", float_format="%.17g")
+        paths["val_recon"] = vp
+        rp = tmpdir / "canonical_result_reconstruction.csv"
+        res_recon.to_csv(rp, index=False, encoding="utf-8", lineterminator="\n", float_format="%.17g")
+        paths["res_recon"] = rp
+        return paths
+
+    # 1. Exact persisted reconstruction comparison passes.
+    paths = _write_temp_ledger(within_df, cross_df, event_manifest_df, persisted_val_recon_df, persisted_result_recon_df)
+    ev = verify_persisted_ledger_reconstruction(
+        frozen, paths["pred_within"], paths["pred_cross"], paths["manifest"],
+        paths["val_recon"], paths["res_recon"],
+    )
+    r1 = bool(ev["persisted_ledger_reconstruction_matches_in_memory"])
+    _record("exact persisted reconstruction comparison passes", r1, validator_returned_true=r1)
+
+    # 2. Prediction ledger with one required column removed fails.
+    within_missing = within_df.drop(columns=["score__ET_leaf5"])
+    paths2 = _write_temp_ledger(within_missing, cross_df, event_manifest_df, persisted_val_recon_df, persisted_result_recon_df)
+    ev2 = verify_persisted_ledger_reconstruction(
+        frozen, paths2["pred_within"], paths2["pred_cross"], paths2["manifest"],
+        paths2["val_recon"], paths2["res_recon"],
+    )
+    r2 = not ev2["persisted_prediction_schema_exact"]
+    _record("prediction ledger with one required column removed fails", r2, schema_exact=ev2["persisted_prediction_schema_exact"])
+
+    # 3. Prediction ledger with one extra column fails.
+    within_extra = within_df.copy()
+    within_extra["extra_column"] = 0.0
+    paths3 = _write_temp_ledger(within_extra, cross_df, event_manifest_df, persisted_val_recon_df, persisted_result_recon_df)
+    ev3 = verify_persisted_ledger_reconstruction(
+        frozen, paths3["pred_within"], paths3["pred_cross"], paths3["manifest"],
+        paths3["val_recon"], paths3["res_recon"],
+    )
+    r3 = not ev3["persisted_prediction_schema_exact"]
+    _record("prediction ledger with one extra column fails", r3, schema_exact=ev3["persisted_prediction_schema_exact"])
+
+    # 4. Prediction ledger with one duplicate event_id/split_role/sample_uid key fails.
+    within_dup = within_df.copy()
+    within_dup.loc[0, "event_id"] = within_dup.loc[1, "event_id"]
+    within_dup.loc[0, "split_role"] = within_dup.loc[1, "split_role"]
+    within_dup.loc[0, "sample_uid"] = within_dup.loc[1, "sample_uid"]
+    paths4 = _write_temp_ledger(within_dup, cross_df, event_manifest_df, persisted_val_recon_df, persisted_result_recon_df)
+    ev4 = verify_persisted_ledger_reconstruction(
+        frozen, paths4["pred_within"], paths4["pred_cross"], paths4["manifest"],
+        paths4["val_recon"], paths4["res_recon"],
+    )
+    r4 = not ev4["persisted_prediction_keys_unique"]
+    _record("prediction ledger with one duplicate key fails", r4, keys_unique=ev4["persisted_prediction_keys_unique"])
+
+    # 5. Persisted reconstruction with one categorical value changed fails.
+    val_recon_mutated_cat = persisted_val_recon_df.copy()
+    val_recon_mutated_cat.loc[0, "candidate"] = "DT_leaf5" if val_recon_mutated_cat.loc[0, "candidate"] != "DT_leaf5" else "LR_std_C0.1"
+    paths5 = _write_temp_ledger(within_df, cross_df, event_manifest_df, val_recon_mutated_cat, persisted_result_recon_df)
+    ev5 = verify_persisted_ledger_reconstruction(
+        frozen, paths5["pred_within"], paths5["pred_cross"], paths5["manifest"],
+        paths5["val_recon"], paths5["res_recon"],
+    )
+    r5 = not ev5["persisted_validation_category_match"]
+    _record("persisted reconstruction with one categorical value changed fails", r5, category_match=ev5["persisted_validation_category_match"])
+
+    # 6. Persisted reconstruction with one numeric value changed by exactly 1e-8 fails.
+    res_recon_mutated_num = persisted_result_recon_df.copy()
+    numeric_col = "roc_auc"
+    res_recon_mutated_num.loc[0, numeric_col] = float(res_recon_mutated_num.loc[0, numeric_col]) + 1e-8
+    paths6 = _write_temp_ledger(within_df, cross_df, event_manifest_df, persisted_val_recon_df, res_recon_mutated_num)
+    ev6 = verify_persisted_ledger_reconstruction(
+        frozen, paths6["pred_within"], paths6["pred_cross"], paths6["manifest"],
+        paths6["val_recon"], paths6["res_recon"],
+    )
+    r6 = not ev6["persisted_ledger_reconstruction_matches_in_memory"]
+    _record(
+        "persisted reconstruction with one numeric value changed by 1e-8 fails",
+        r6,
+        mutation=1e-8,
+        validator_returned_false=not ev6["persisted_ledger_reconstruction_matches_in_memory"],
+    )
+
+    return tests, all_passed
+
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 def main():
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument("--self-test-canonical-exception", action="store_true", default=False)
+    parser.add_argument("--self-test-persisted-ledger", action="store_true", default=False)
     known, _ = parser.parse_known_args()
+    if known.self_test_persisted_ledger:
+        root = repo_root()
+        frozen = import_frozen_pipeline(root)
+        ledger_dir = root / "results" / "part3b_prediction_ledger"
+        evidence = verify_persisted_ledger_reconstruction(
+            frozen,
+            ledger_dir / "prediction_ledger_within.csv.gz",
+            ledger_dir / "prediction_ledger_cross.csv.gz",
+            ledger_dir / "event_manifest.csv",
+            ledger_dir / "validation_reconstruction.csv",
+            ledger_dir / "canonical_result_reconstruction.csv",
+        )
+        within_df = read_float_csv_round_trip(ledger_dir / "prediction_ledger_within.csv.gz", compression="gzip")
+        cross_df = read_float_csv_round_trip(ledger_dir / "prediction_ledger_cross.csv.gz", compression="gzip")
+        event_manifest_df = pd.read_csv(ledger_dir / "event_manifest.csv")
+        persisted_val_recon_df = read_float_csv_round_trip(ledger_dir / "validation_reconstruction.csv")
+        persisted_result_recon_df = read_float_csv_round_trip(ledger_dir / "canonical_result_reconstruction.csv")
+        neg_tests, neg_all_passed = _run_persisted_ledger_negative_tests(
+            frozen, within_df, cross_df, event_manifest_df,
+            persisted_val_recon_df, persisted_result_recon_df,
+        )
+        part_a_tests, part_a_all_passed = run_canonical_exception_validator_tests()
+        part_a_expected = 10
+        part_a_executed = len(part_a_tests)
+        part_a_passed = sum(1 for t in part_a_tests if t.get("passed"))
+        part_a_failed = sum(1 for t in part_a_tests if not t.get("passed"))
+        tests_expected = 6
+        tests_executed = len(neg_tests)
+        tests_passed = sum(1 for t in neg_tests if t.get("passed"))
+        tests_failed = sum(1 for t in neg_tests if not t.get("passed"))
+        numeric_mutation_test = next((t for t in neg_tests if t.get("mutation") == 1e-8), None)
+        numeric_mutation_rejected = bool(numeric_mutation_test and numeric_mutation_test.get("validator_returned_false"))
+        all_evidence_ok = (
+            evidence.get("persisted_prediction_schema_exact") is True
+            and evidence.get("persisted_prediction_within_rows") == PERSISTED_PREDICTION_WITHIN_ROWS
+            and evidence.get("persisted_prediction_cross_rows") == PERSISTED_PREDICTION_CROSS_ROWS
+            and evidence.get("persisted_prediction_total_rows") == PERSISTED_PREDICTION_TOTAL_ROWS
+            and evidence.get("persisted_validation_prediction_rows") == PERSISTED_VALIDATION_PREDICTION_ROWS
+            and evidence.get("persisted_test_prediction_rows") == PERSISTED_TEST_PREDICTION_ROWS
+            and evidence.get("persisted_train_prediction_rows") == PERSISTED_TRAIN_PREDICTION_ROWS
+            and evidence.get("persisted_prediction_keys_unique") is True
+            and evidence.get("persisted_prediction_scores_finite") is True
+            and evidence.get("persisted_prediction_scores_in_range") is True
+            and evidence.get("persisted_event_manifest_rows") == PERSISTED_EVENT_MANIFEST_ROWS
+            and evidence.get("reread_validation_reconstruction_rows") == PERSISTED_VALIDATION_RECON_ROWS
+            and evidence.get("reread_result_reconstruction_rows") == PERSISTED_RESULT_RECON_ROWS
+            and evidence.get("persisted_validation_reconstruction_rows") == PERSISTED_VALIDATION_RECON_ROWS
+            and evidence.get("persisted_result_reconstruction_rows") == PERSISTED_RESULT_RECON_ROWS
+            and evidence.get("persisted_validation_category_match") is True
+            and evidence.get("persisted_result_category_match") is True
+            and evidence.get("persisted_validation_numeric_mismatches") == 0
+            and evidence.get("persisted_result_numeric_mismatches") == 0
+            and evidence.get("persisted_validation_reconstruction_matches_in_memory") is True
+            and evidence.get("persisted_result_reconstruction_matches_in_memory") is True
+            and evidence.get("persisted_ledger_reconstruction_matches_in_memory") is True
+        )
+        summary = {
+            "persisted_ledger_evidence": evidence,
+            "part_a_exception_tests": {
+                "tests_expected": part_a_expected,
+                "tests_executed": part_a_executed,
+                "tests_passed": part_a_passed,
+                "tests_failed": part_a_failed,
+            },
+            "part_b_persisted_tests": {
+                "tests_expected": tests_expected,
+                "tests_executed": tests_executed,
+                "tests_passed": tests_passed,
+                "tests_failed": tests_failed,
+                "test_details": neg_tests,
+            },
+            "numeric_1e8_mutation_rejected": numeric_mutation_rejected,
+            "model_fits_executed": 0,
+            "prediction_calls_executed": 0,
+            "artifacts_written": 0,
+            "full_build_executed": False,
+            "part3b_complete": False,
+            "part3c_authorized": False,
+        }
+        print(_json_dumps(summary))
+        exit_code = 0 if (
+            all_evidence_ok
+            and neg_all_passed
+            and tests_executed == tests_expected
+            and tests_failed == 0
+            and part_a_all_passed
+            and part_a_executed == part_a_expected
+            and part_a_failed == 0
+            and numeric_mutation_rejected
+        ) else 1
+        return exit_code
+
     if known.self_test_canonical_exception:
         tests, all_passed = run_canonical_exception_validator_tests()
         summary = {
