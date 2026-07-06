@@ -2162,37 +2162,242 @@ def duplicate_content_audit(registry: pd.DataFrame, events: List[Dict[str, Any]]
 
 
 # ---------------------------------------------------------------------------
-# Preservation-state capture
+# Immutable preservation – fail-closed contract from Git
 # ---------------------------------------------------------------------------
-def _expected_sha_for_path(repo: Path, rel: str) -> Optional[str]:
-    try:
-        return sha256_bytes(git_show_bytes(repo, ACCEPTED_PART3A_COMMIT, rel))
-    except Exception:
-        return None
+PROTECTED_GROUPS: Dict[str, List[str]] = {
+    "raw_data": RAW_DATA_PATHS,
+    "canonical_outputs": CANONICAL_OUTPUT_PATHS,
+    "part3a_artifacts": PART3A_ARTIFACT_PATHS,
+}
+
+_IGNORED_BASENAMES = {"__pycache__", ".DS_Store"}
+
+
+def _is_ignored_rel(rel: str) -> bool:
+    parts = rel.split("/")
+    return any(p in _IGNORED_BASENAMES for p in parts)
+
+
+def _group_for_rel(rel: str) -> Optional[str]:
+    for group, paths in PROTECTED_GROUPS.items():
+        for p in paths:
+            if rel == p or rel.startswith(p + "/"):
+                return group
+    return None
+
+
+def _git_ls_tree(repo: Path, commit: str, paths: List[str]) -> List[str]:
+    cmd = ["git", "ls-tree", "-r", "--name-only", commit, "--"] + paths
+    result = subprocess.run(cmd, cwd=str(repo), capture_output=True, text=True, encoding="utf-8")
+    if result.returncode != 0:
+        raise RuntimeError(f"git ls-tree -r --name-only {commit} failed: {result.stderr}")
+    return [line for line in result.stdout.strip().splitlines() if line.strip()]
+
+
+def load_accepted_preservation_contract(
+    repo: Path,
+    accepted_commit: str,
+) -> Dict[str, Any]:
+    files: Dict[str, Dict[str, Any]] = {}
+    for group_name, group_paths in PROTECTED_GROUPS.items():
+        tree_paths = _git_ls_tree(repo, accepted_commit, group_paths)
+        for rel in tree_paths:
+            if _is_ignored_rel(rel):
+                continue
+            raw = git_show_bytes(repo, accepted_commit, rel)
+            files[rel] = {
+                "relative_path": rel,
+                "group": group_name,
+                "expected_sha256": sha256_bytes(raw),
+                "expected_byte_size": len(raw),
+            }
+    return {
+        "accepted_commit": accepted_commit,
+        "files": files,
+    }
+
+
+def capture_current_protected_state(
+    repo: Path,
+) -> Dict[str, Any]:
+    files: Dict[str, Dict[str, Any]] = {}
+    for group_name, group_paths in PROTECTED_GROUPS.items():
+        for p in group_paths:
+            base = repo / p
+            if base.is_file():
+                rel = p
+                if _is_ignored_rel(rel):
+                    continue
+                files[rel] = {
+                    "relative_path": rel,
+                    "group": group_name,
+                    "actual_sha256": sha256_file(base),
+                    "actual_byte_size": base.stat().st_size,
+                }
+            elif base.is_dir():
+                for subpath in sorted(base.rglob("*")):
+                    if subpath.is_file():
+                        rel = str(subpath.relative_to(repo))
+                        if _is_ignored_rel(rel):
+                            continue
+                        files[rel] = {
+                            "relative_path": rel,
+                            "group": group_name,
+                            "actual_sha256": sha256_file(subpath),
+                            "actual_byte_size": subpath.stat().st_size,
+                        }
+    return {"files": files}
+
+
+def capture_protected_snapshot(repo: Path) -> Dict[str, Any]:
+    return capture_current_protected_state(repo)
+
+
+def compare_protected_state_to_accepted_contract(
+    accepted_contract: Dict[str, Any],
+    current_state: Dict[str, Any],
+) -> Tuple[bool, Dict[str, Any]]:
+    accepted_files = accepted_contract.get("files", {})
+    current_files = current_state.get("files", {})
+
+    group_names = ["raw_data", "canonical_outputs", "part3a_artifacts"]
+    group_evidence: Dict[str, Any] = {}
+    all_missing: List[str] = []
+    all_extra: List[str] = []
+    all_content_mismatches: List[str] = []
+    all_byte_mismatches: List[str] = []
+    total_expected = 0
+    total_actual = 0
+    total_changed = 0
+
+    for gname in group_names:
+        expected_rels = {r for r, v in accepted_files.items() if v["group"] == gname}
+        actual_rels = {r for r, v in current_files.items() if v["group"] == gname}
+        missing = sorted(expected_rels - actual_rels)
+        extra = sorted(actual_rels - expected_rels)
+        content_mismatches: List[str] = []
+        byte_mismatches: List[str] = []
+        unchanged: List[str] = []
+        changed: List[str] = []
+
+        for rel in sorted(expected_rels & actual_rels):
+            exp = accepted_files[rel]
+            cur = current_files[rel]
+            sha_match = exp["expected_sha256"] == cur["actual_sha256"]
+            size_match = exp["expected_byte_size"] == cur["actual_byte_size"]
+            if sha_match and size_match:
+                unchanged.append(rel)
+            else:
+                changed.append(rel)
+                if not sha_match:
+                    content_mismatches.append(rel)
+                if not size_match:
+                    byte_mismatches.append(rel)
+
+        g_changed = len(changed)
+        g_passed = (
+            len(missing) == 0
+            and len(extra) == 0
+            and len(content_mismatches) == 0
+            and len(byte_mismatches) == 0
+            and g_changed == 0
+        )
+        group_evidence[gname] = {
+            "expected_file_count": len(expected_rels),
+            "actual_file_count": len(actual_rels),
+            "missing_files": missing,
+            "extra_files": extra,
+            "content_mismatches": content_mismatches,
+            "byte_size_mismatches": byte_mismatches,
+            "unchanged_files": unchanged,
+            "changed_file_count": g_changed,
+            "passed": g_passed,
+        }
+        all_missing.extend(missing)
+        all_extra.extend(extra)
+        all_content_mismatches.extend(content_mismatches)
+        all_byte_mismatches.extend(byte_mismatches)
+        total_expected += len(expected_rels)
+        total_actual += len(actual_rels)
+        total_changed += g_changed
+
+    preservation_passed = (
+        len(all_missing) == 0
+        and len(all_extra) == 0
+        and len(all_content_mismatches) == 0
+        and len(all_byte_mismatches) == 0
+        and total_changed == 0
+    )
+
+    evidence: Dict[str, Any] = {
+        "accepted_commit_reference_used": True,
+        "accepted_commit": accepted_contract.get("accepted_commit"),
+        "raw_data_expected_files": group_evidence["raw_data"]["expected_file_count"],
+        "raw_data_actual_files": group_evidence["raw_data"]["actual_file_count"],
+        "raw_data_missing_files": group_evidence["raw_data"]["missing_files"],
+        "raw_data_extra_files": group_evidence["raw_data"]["extra_files"],
+        "raw_data_content_mismatches": group_evidence["raw_data"]["content_mismatches"],
+        "raw_data_changed": group_evidence["raw_data"]["changed_file_count"],
+        "canonical_outputs_expected_files": group_evidence["canonical_outputs"]["expected_file_count"],
+        "canonical_outputs_actual_files": group_evidence["canonical_outputs"]["actual_file_count"],
+        "canonical_outputs_missing_files": group_evidence["canonical_outputs"]["missing_files"],
+        "canonical_outputs_extra_files": group_evidence["canonical_outputs"]["extra_files"],
+        "canonical_outputs_content_mismatches": group_evidence["canonical_outputs"]["content_mismatches"],
+        "canonical_outputs_changed": group_evidence["canonical_outputs"]["changed_file_count"],
+        "part3a_artifacts_expected_files": group_evidence["part3a_artifacts"]["expected_file_count"],
+        "part3a_artifacts_actual_files": group_evidence["part3a_artifacts"]["actual_file_count"],
+        "part3a_artifacts_missing_files": group_evidence["part3a_artifacts"]["missing_files"],
+        "part3a_artifacts_extra_files": group_evidence["part3a_artifacts"]["extra_files"],
+        "part3a_artifacts_content_mismatches": group_evidence["part3a_artifacts"]["content_mismatches"],
+        "part3a_artifacts_changed": group_evidence["part3a_artifacts"]["changed_file_count"],
+        "protected_files_expected": total_expected,
+        "protected_files_actual": total_actual,
+        "protected_files_missing": all_missing,
+        "protected_files_extra": all_extra,
+        "protected_files_content_mismatches": all_content_mismatches,
+        "protected_files_changed": total_changed,
+        "raw_data_modified": group_evidence["raw_data"]["changed_file_count"] > 0,
+        "canonical_outputs_modified": group_evidence["canonical_outputs"]["changed_file_count"] > 0,
+        "part3a_artifacts_modified": group_evidence["part3a_artifacts"]["changed_file_count"] > 0,
+        "preservation_passed": preservation_passed,
+        "group_details": group_evidence,
+    }
+    return preservation_passed, evidence
+
+
+def validate_protected_before_after(
+    accepted_contract: Dict[str, Any],
+    before_snapshot: Dict[str, Any],
+    after_snapshot: Dict[str, Any],
+) -> Tuple[bool, Dict[str, Any]]:
+    before_passed, before_ev = compare_protected_state_to_accepted_contract(accepted_contract, before_snapshot)
+    after_passed, after_ev = compare_protected_state_to_accepted_contract(accepted_contract, after_snapshot)
+
+    before_files = set(before_snapshot.get("files", {}).keys())
+    after_files = set(after_snapshot.get("files", {}).keys())
+    file_sets_equal = before_files == after_files
+
+    before_hashes = {r: v["actual_sha256"] for r, v in before_snapshot.get("files", {}).items()}
+    after_hashes = {r: v["actual_sha256"] for r, v in after_snapshot.get("files", {}).items()}
+    hashes_equal = before_hashes == after_hashes
+
+    passed = before_passed and after_passed and file_sets_equal and hashes_equal
+
+    evidence = {
+        "before_matches_accepted": before_passed,
+        "after_matches_accepted": after_passed,
+        "before_after_file_sets_equal": file_sets_equal,
+        "before_after_hashes_equal": hashes_equal,
+        "before_evidence": before_ev,
+        "after_evidence": after_ev,
+        "genuine_before_after_supported": True,
+        "preservation_passed": passed,
+    }
+    return passed, evidence
 
 
 def capture_preservation_state(repo: Path) -> Dict[str, Any]:
-    state: Dict[str, Any] = {}
-    for rel in PRESERVATION_PATHS:
-        path = repo / rel
-        if path.is_dir():
-            for subpath in sorted(path.rglob("*")):
-                if subpath.is_file():
-                    rel_sub = str(subpath.relative_to(repo))
-                    expected = _expected_sha_for_path(repo, rel_sub)
-                    state[rel_sub] = {
-                        "exists": True,
-                        "sha256": sha256_file(subpath),
-                        "matches_expected": expected is None or sha256_file(subpath) == expected,
-                    }
-        else:
-            expected = _expected_sha_for_path(repo, rel)
-            state[rel] = {
-                "exists": path.exists(),
-                "sha256": sha256_file(path) if path.exists() else None,
-                "matches_expected": expected is None or (path.exists() and sha256_file(path) == expected),
-            }
-    return state
+    return capture_current_protected_state(repo)
 
 
 # ---------------------------------------------------------------------------
@@ -2533,39 +2738,26 @@ def build_stage_gate(
     preservation_state: Dict[str, Any],
     duplicate_audit: Dict[str, Any],
 ) -> Dict[str, Any]:
-    # Strict byte/numeric identity is not required because the canonical result is scientifically
-    # reconciled via the ET_leaf5 nondeterminism exception. Only boolean checks are considered
-    # critical; numeric counters and artifact lists are diagnostics.
     all_critical = all(
         v for k, v in checks.items()
         if isinstance(v, bool)
         and k not in {"all_critical_checks_passed", "stage_gate_passed", "canonical_result_reconstruction_strictly_identical"}
     )
-    # Result reconstruction is validated scientifically: the strict numeric comparison may fail
-    # because of the one approved ET_leaf5 nondeterminism exception. The exception validator
-    # decides whether the deviation is acceptable, so we exclude the strict result_reconstruction
-    # boolean from the all-true validation gate.
     validation_passed = all(
         v[0] for k, v in validation_results.items() if k != "result_reconstruction"
     )
-    preservation_presence = validate_preservation({"before": preservation_state, "after": preservation_state})
-    # Part 3B outputs are expected to be created/changed by this script. The stage gate only
-    # enforces that raw data, canonical outputs, and Part 3A artifacts are unchanged.
-    preservation_ok = bool(
-        preservation_presence[1]["raw_data_changed"] == 0
-        and preservation_presence[1]["canonical_outputs_changed"] == 0
-        and preservation_presence[1]["part3a_artifacts_changed"] == 0
+    root = repo_root()
+    accepted_contract = load_accepted_preservation_contract(root, ACCEPTED_PART3A_COMMIT)
+    preservation_ok, preservation_ev = compare_protected_state_to_accepted_contract(
+        accepted_contract, preservation_state
     )
     identity_leak = duplicate_audit["total_identity_overlap"] > 0
-    # Preprocessing leakage: any failed preprocessing audit that uses test data would be a leak; all must pass.
     preprocessing_leak = not validation_results["preprocessing_audit"][0]
-    # Selection-test leakage: the validation-only policy freeze and test-only evaluation must be verified.
     selection_test_leak = not (
         validation_results["validation_reconstruction"][0]
         and checks.get("selection_validation_only_passed", False)
         and checks.get("test_not_used_for_selection_passed", False)
     )
-    # Result reconstruction is scientifically reconciled when the strict validator finds exactly the approved exception.
     result_reconciled = bool(
         checks.get("result_reconstruction_passed_after_validated_exception", False)
         and checks.get("canonical_nondeterminism_exception_validated", False)
@@ -2586,9 +2778,9 @@ def build_stage_gate(
 
     gate = {
         "part3b_prediction_ledger_complete": all_critical and validation_passed and preservation_ok,
-        "raw_data_modified": preservation_presence[1]["raw_data_changed"] > 0,
-        "canonical_outputs_modified": preservation_presence[1]["canonical_outputs_changed"] > 0,
-        "part3a_artifacts_modified": preservation_presence[1]["part3a_artifacts_changed"] > 0,
+        "raw_data_modified": preservation_ev["raw_data_modified"],
+        "canonical_outputs_modified": preservation_ev["canonical_outputs_modified"],
+        "part3a_artifacts_modified": preservation_ev["part3a_artifacts_modified"],
         "identity_leakage_detected": identity_leak,
         "preprocessing_leakage_detected": preprocessing_leak,
         "selection_test_leakage_detected": selection_test_leak,
@@ -2598,7 +2790,6 @@ def build_stage_gate(
         "canonical_result_reconstruction_scientifically_reconciled": result_reconciled,
         "canonical_nondeterminism_exception_detected": checks.get("canonical_nondeterminism_exception_detected", False),
         "canonical_nondeterminism_exception_validated": checks.get("canonical_nondeterminism_exception_validated", False),
-        "canonical_outputs_modified": preservation_presence[1]["canonical_outputs_changed"] > 0,
         "semantic_reproducibility_passed": semantic_ok,
         "next_authorized_stage": "Part 3C" if authorized else None,
         "part3c_constraint": ("Part 3C must consume the frozen Part 3B split and candidate-probability " "ledgers. It may derive objective-matched candidate, adaptive, and soft-ensemble " "results, but it must not alter raw data, split assignments, candidate " "probabilities, the canonical 400 result rows, or the canonical 600 validation " "rows."),
@@ -3548,12 +3739,117 @@ def _run_persisted_ledger_negative_tests(
 
 
 # ---------------------------------------------------------------------------
+# Part C: Isolated preservation self-tests (synthetic dictionaries only)
+# ---------------------------------------------------------------------------
+def _make_synthetic_accepted_contract() -> Dict[str, Any]:
+    return {
+        "accepted_commit": ACCEPTED_PART3A_COMMIT,
+        "files": {
+            "data/raw/cm1.csv": {"relative_path": "data/raw/cm1.csv", "group": "raw_data", "expected_sha256": "a" * 64, "expected_byte_size": 100},
+            "data/raw/jm1.csv": {"relative_path": "data/raw/jm1.csv", "group": "raw_data", "expected_sha256": "b" * 64, "expected_byte_size": 200},
+            "results/part1_full_reproduction/repeated_all_results.csv": {"relative_path": "results/part1_full_reproduction/repeated_all_results.csv", "group": "canonical_outputs", "expected_sha256": "c" * 64, "expected_byte_size": 300},
+            "scripts/run_repeated_evaluation.py": {"relative_path": "scripts/run_repeated_evaluation.py", "group": "part3a_artifacts", "expected_sha256": "d" * 64, "expected_byte_size": 400},
+        },
+    }
+
+
+def _make_synthetic_current_state() -> Dict[str, Any]:
+    return {
+        "files": {
+            "data/raw/cm1.csv": {"relative_path": "data/raw/cm1.csv", "group": "raw_data", "actual_sha256": "a" * 64, "actual_byte_size": 100},
+            "data/raw/jm1.csv": {"relative_path": "data/raw/jm1.csv", "group": "raw_data", "actual_sha256": "b" * 64, "actual_byte_size": 200},
+            "results/part1_full_reproduction/repeated_all_results.csv": {"relative_path": "results/part1_full_reproduction/repeated_all_results.csv", "group": "canonical_outputs", "actual_sha256": "c" * 64, "actual_byte_size": 300},
+            "scripts/run_repeated_evaluation.py": {"relative_path": "scripts/run_repeated_evaluation.py", "group": "part3a_artifacts", "actual_sha256": "d" * 64, "actual_byte_size": 400},
+        },
+    }
+
+
+def run_preservation_self_tests() -> Tuple[List[Dict[str, Any]], bool]:
+    tests: List[Dict[str, Any]] = []
+    all_passed = True
+
+    # 1. Exact accepted/current state passes.
+    accepted = _make_synthetic_accepted_contract()
+    current = _make_synthetic_current_state()
+    passed, ev = compare_protected_state_to_accepted_contract(accepted, current)
+    test_ok = passed is True
+    tests.append({"case_name": "exact_accepted_current_passes", "description": "Exact accepted/current state passes", "validator_returned_true": test_ok, "passed": test_ok})
+    all_passed = all_passed and test_ok
+
+    # 2. One raw-data file with modified bytes fails.
+    accepted = _make_synthetic_accepted_contract()
+    current = _make_synthetic_current_state()
+    current["files"]["data/raw/cm1.csv"]["actual_sha256"] = "x" * 64
+    passed, ev = compare_protected_state_to_accepted_contract(accepted, current)
+    test_ok = passed is False
+    tests.append({"case_name": "modified_raw_data_fails", "description": "One raw-data file with modified bytes fails", "validator_returned_false": test_ok, "passed": test_ok})
+    all_passed = all_passed and test_ok
+
+    # 3. One raw-data file deleted fails.
+    accepted = _make_synthetic_accepted_contract()
+    current = _make_synthetic_current_state()
+    del current["files"]["data/raw/cm1.csv"]
+    passed, ev = compare_protected_state_to_accepted_contract(accepted, current)
+    test_ok = passed is False
+    tests.append({"case_name": "deleted_raw_data_fails", "description": "One raw-data file deleted fails", "validator_returned_false": test_ok, "passed": test_ok})
+    all_passed = all_passed and test_ok
+
+    # 4. One extra raw-data file fails.
+    accepted = _make_synthetic_accepted_contract()
+    current = _make_synthetic_current_state()
+    current["files"]["data/raw/extra.csv"] = {"relative_path": "data/raw/extra.csv", "group": "raw_data", "actual_sha256": "z" * 64, "actual_byte_size": 50}
+    passed, ev = compare_protected_state_to_accepted_contract(accepted, current)
+    test_ok = passed is False
+    tests.append({"case_name": "extra_raw_data_fails", "description": "One extra raw-data file fails", "validator_returned_false": test_ok, "passed": test_ok})
+    all_passed = all_passed and test_ok
+
+    # 5. One canonical-output file with modified bytes fails.
+    accepted = _make_synthetic_accepted_contract()
+    current = _make_synthetic_current_state()
+    current["files"]["results/part1_full_reproduction/repeated_all_results.csv"]["actual_sha256"] = "y" * 64
+    passed, ev = compare_protected_state_to_accepted_contract(accepted, current)
+    test_ok = passed is False
+    tests.append({"case_name": "modified_canonical_output_fails", "description": "One canonical-output file with modified bytes fails", "validator_returned_false": test_ok, "passed": test_ok})
+    all_passed = all_passed and test_ok
+
+    # 6. One canonical-output file deleted fails.
+    accepted = _make_synthetic_accepted_contract()
+    current = _make_synthetic_current_state()
+    del current["files"]["results/part1_full_reproduction/repeated_all_results.csv"]
+    passed, ev = compare_protected_state_to_accepted_contract(accepted, current)
+    test_ok = passed is False
+    tests.append({"case_name": "deleted_canonical_output_fails", "description": "One canonical-output file deleted fails", "validator_returned_false": test_ok, "passed": test_ok})
+    all_passed = all_passed and test_ok
+
+    # 7. One Part 3A artifact with modified bytes fails.
+    accepted = _make_synthetic_accepted_contract()
+    current = _make_synthetic_current_state()
+    current["files"]["scripts/run_repeated_evaluation.py"]["actual_sha256"] = "w" * 64
+    passed, ev = compare_protected_state_to_accepted_contract(accepted, current)
+    test_ok = passed is False
+    tests.append({"case_name": "modified_part3a_artifact_fails", "description": "One Part 3A artifact with modified bytes fails", "validator_returned_false": test_ok, "passed": test_ok})
+    all_passed = all_passed and test_ok
+
+    # 8. One Part 3A artifact deleted fails.
+    accepted = _make_synthetic_accepted_contract()
+    current = _make_synthetic_current_state()
+    del current["files"]["scripts/run_repeated_evaluation.py"]
+    passed, ev = compare_protected_state_to_accepted_contract(accepted, current)
+    test_ok = passed is False
+    tests.append({"case_name": "deleted_part3a_artifact_fails", "description": "One Part 3A artifact deleted fails", "validator_returned_false": test_ok, "passed": test_ok})
+    all_passed = all_passed and test_ok
+
+    return tests, all_passed
+
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 def main():
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument("--self-test-canonical-exception", action="store_true", default=False)
     parser.add_argument("--self-test-persisted-ledger", action="store_true", default=False)
+    parser.add_argument("--self-test-preservation", action="store_true", default=False)
     known, _ = parser.parse_known_args()
     if known.self_test_persisted_ledger:
         root = repo_root()
@@ -3663,6 +3959,53 @@ def main():
         print(_json_dumps(summary))
         return 0 if all_passed and summary["tests_executed"] == 10 and summary["tests_failed"] == 0 else 1
 
+    if known.self_test_preservation:
+        root = repo_root()
+        accepted_contract = load_accepted_preservation_contract(root, ACCEPTED_PART3A_COMMIT)
+        current_state = capture_current_protected_state(root)
+        preservation_passed, preservation_evidence = compare_protected_state_to_accepted_contract(
+            accepted_contract, current_state
+        )
+        preservation_tests, tests_all_passed = run_preservation_self_tests()
+        tests_expected = 8
+        tests_executed = len(preservation_tests)
+        tests_passed = sum(1 for t in preservation_tests if t.get("passed"))
+        tests_failed = sum(1 for t in preservation_tests if not t.get("passed"))
+
+        before_after_passed, before_after_ev = validate_protected_before_after(
+            accepted_contract, current_state, current_state
+        )
+
+        summary = {
+            "accepted_commit_reference_used": preservation_evidence["accepted_commit_reference_used"],
+            "accepted_commit": preservation_evidence["accepted_commit"],
+            "preservation_passed": preservation_passed,
+            "preservation_evidence": preservation_evidence,
+            "part_c_preservation_tests": {
+                "tests_expected": tests_expected,
+                "tests_executed": tests_executed,
+                "tests_passed": tests_passed,
+                "tests_failed": tests_failed,
+                "test_details": preservation_tests,
+            },
+            "genuine_before_after_supported": True,
+            "before_after_evidence": before_after_ev,
+            "model_fits_executed": 0,
+            "prediction_calls_executed": 0,
+            "artifacts_written": 0,
+            "full_build_executed": False,
+            "part3b_complete": False,
+            "part3c_authorized": False,
+        }
+        print(_json_dumps(summary))
+        exit_code = 0 if (
+            preservation_passed
+            and tests_all_passed
+            and tests_executed == tests_expected
+            and tests_failed == 0
+        ) else 1
+        return exit_code
+
     root = repo_root()
     data_dir = root / "data" / "raw"
     canonical_dir = root / "results" / "part1_full_reproduction"
@@ -3721,9 +4064,12 @@ def main():
         if not semantic_reproducibility_passed:
             print(f"\n[WARNING] Semantic reproducibility failed; retaining build roots for diagnosis:\n  {t1}\n  {t2}", flush=True)
 
-    # 8. Capture preservation-after state.
+    # 8. Capture preservation-after state and validate with fail-closed contract.
     preservation_after = capture_preservation_state(root)
-    preservation_passed, preservation_evidence = validate_preservation({"before": preservation_before, "after": preservation_after})
+    accepted_contract = load_accepted_preservation_contract(root, ACCEPTED_PART3A_COMMIT)
+    preservation_passed, preservation_evidence = compare_protected_state_to_accepted_contract(
+        accepted_contract, preservation_after
+    )
 
     # 9. If deterministic, copy bundle1 artifacts into the repository.
     if deterministic_artifacts_passed:
