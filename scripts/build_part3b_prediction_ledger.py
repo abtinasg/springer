@@ -41,7 +41,7 @@ warnings.filterwarnings("ignore")
 # ---------------------------------------------------------------------------
 # Frozen version and provenance constants
 # ---------------------------------------------------------------------------
-PART3B_VERSION = "Part-3B.2R.1-E.1.1-v1"
+PART3B_VERSION = "Part-3B.2R.1-E.1.2-v1"
 STARTING_COMMIT = "414b4ee260f972a3b9315402ce947693665497d8"
 ACCEPTED_PART3A_COMMIT = "d16e28488aa0936014f020c05466181eff219af6"
 assert ACCEPTED_PART3A_COMMIT == \
@@ -3954,11 +3954,12 @@ def _compare_prediction_ledger(
                 continue
             a = df1[col].to_numpy(dtype=np.float64)
             b = df2[col].to_numpy(dtype=np.float64)
-            if not np.array_equal(a, b, equal_nan=True):
+            bit_diff_mask = float64_bitwise_difference_mask(a, b)
+            bit_exact = not np.any(bit_diff_mask)
+            if not bit_exact:
                 lr_dt_exact = False
                 within = False
-                mask = float64_bitwise_difference_mask(a, b)
-                for i in np.where(mask)[0]:
+                for i in np.where(bit_diff_mask)[0]:
                     unapproved.append({
                         "artifact": rel,
                         "metric": col,
@@ -4945,6 +4946,119 @@ def run_part_e1_1_schema_provenance_tests() -> Tuple[List[Dict[str, Any]], bool,
     return tests, all_passed, summary
 
 
+def run_part_e1_2_signed_zero_tests() -> Tuple[List[Dict[str, Any]], bool, Dict[str, Any]]:
+    """Two focused signed-zero bit-difference tests for Part E.1.2."""
+    tests: List[Dict[str, Any]] = []
+    all_passed = True
+
+    def _record(case_name: str, passed: bool, **extra: Any) -> None:
+        nonlocal all_passed
+        tests.append({"case_name": case_name, "passed": passed, **extra})
+        all_passed = all_passed and passed
+
+    with tempfile.TemporaryDirectory(prefix="part3b2_e12_base_") as base_dir:
+        base_root = _make_synthetic_eight_artifact_dir(Path(base_dir))
+        base_paths = _artifact_paths_from_dir(base_root)
+
+        # 1. LR signed-zero bit difference fails.
+        with tempfile.TemporaryDirectory(prefix="part3b2_e12_lr_signed_zero_") as lr_sz_dir:
+            lr_sz_root = Path(lr_sz_dir)
+            for rel, src in base_paths.items():
+                dst = lr_sz_root / Path(rel).name
+                dst.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(str(src), str(dst))
+            df = _read_semantic_data_artifact(lr_sz_root / "prediction_ledger_within.csv.gz")
+            df.at[0, "score__LR_std_C0.1"] = 0.0
+            df.to_csv(
+                lr_sz_root / "prediction_ledger_within.csv.gz",
+                index=False, lineterminator="\n", compression="gzip", float_format="%.17e",
+            )
+            # Build the second copy with -0.0
+            with tempfile.TemporaryDirectory(prefix="part3b2_e12_lr_signed_zero_b2_") as lr_sz_b2_dir:
+                lr_sz_b2_root = Path(lr_sz_b2_dir)
+                for rel, src in base_paths.items():
+                    dst = lr_sz_b2_root / Path(rel).name
+                    dst.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copy2(str(src), str(dst))
+                df2 = _read_semantic_data_artifact(lr_sz_b2_root / "prediction_ledger_within.csv.gz")
+                df2.at[0, "score__LR_std_C0.1"] = -0.0
+                df2.to_csv(
+                    lr_sz_b2_root / "prediction_ledger_within.csv.gz",
+                    index=False, lineterminator="\n", compression="gzip", float_format="%.17e",
+                )
+                result = compare_eight_data_artifacts_semantically(
+                    _artifact_paths_from_dir(lr_sz_root), _artifact_paths_from_dir(lr_sz_b2_root))
+                comp = result["artifact_comparisons"].get(
+                    "results/part3b_prediction_ledger/prediction_ledger_within.csv.gz", {})
+                _record(
+                    "lr_signed_zero_bit_difference_fails",
+                    result["data_artifact_semantic_comparison_passed"] is False
+                    and comp.get("lr_dt_scores_exact") is False,
+                )
+
+        # 2. DT signed-zero bit difference fails.
+        with tempfile.TemporaryDirectory(prefix="part3b2_e12_dt_signed_zero_") as dt_sz_dir:
+            dt_sz_root = Path(dt_sz_dir)
+            for rel, src in base_paths.items():
+                dst = dt_sz_root / Path(rel).name
+                dst.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(str(src), str(dst))
+            df = _read_semantic_data_artifact(dt_sz_root / "prediction_ledger_within.csv.gz")
+            df.at[0, "score__DT_leaf5"] = 0.0
+            df.to_csv(
+                dt_sz_root / "prediction_ledger_within.csv.gz",
+                index=False, lineterminator="\n", compression="gzip", float_format="%.17e",
+            )
+            # Build the second copy with -0.0
+            with tempfile.TemporaryDirectory(prefix="part3b2_e12_dt_signed_zero_b2_") as dt_sz_b2_dir:
+                dt_sz_b2_root = Path(dt_sz_b2_dir)
+                for rel, src in base_paths.items():
+                    dst = dt_sz_b2_root / Path(rel).name
+                    dst.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copy2(str(src), str(dst))
+                df2 = _read_semantic_data_artifact(dt_sz_b2_root / "prediction_ledger_within.csv.gz")
+                df2.at[0, "score__DT_leaf5"] = -0.0
+                df2.to_csv(
+                    dt_sz_b2_root / "prediction_ledger_within.csv.gz",
+                    index=False, lineterminator="\n", compression="gzip", float_format="%.17e",
+                )
+                result = compare_eight_data_artifacts_semantically(
+                    _artifact_paths_from_dir(dt_sz_root), _artifact_paths_from_dir(dt_sz_b2_root))
+                comp = result["artifact_comparisons"].get(
+                    "results/part3b_prediction_ledger/prediction_ledger_within.csv.gz", {})
+                _record(
+                    "dt_signed_zero_bit_difference_fails",
+                    result["data_artifact_semantic_comparison_passed"] is False
+                    and comp.get("lr_dt_scores_exact") is False,
+                )
+
+    lr_signed_zero_rejected = any(
+        t["case_name"] == "lr_signed_zero_bit_difference_fails" and t["passed"]
+        for t in tests
+    )
+    dt_signed_zero_rejected = any(
+        t["case_name"] == "dt_signed_zero_bit_difference_fails" and t["passed"]
+        for t in tests
+    )
+
+    summary = {
+        "tests_expected": 2,
+        "tests_executed": len(tests),
+        "tests_passed": sum(1 for t in tests if t.get("passed")),
+        "tests_failed": sum(1 for t in tests if not t.get("passed")),
+        "test_details": tests,
+        "lr_signed_zero_rejected": lr_signed_zero_rejected,
+        "dt_signed_zero_rejected": dt_signed_zero_rejected,
+        "model_fits_executed": 0,
+        "prediction_calls_executed": 0,
+        "repository_artifacts_written": 0,
+        "full_build_executed": False,
+        "part3b_complete": False,
+        "part3c_authorized": False,
+    }
+    return tests, all_passed, summary
+
+
 # ---------------------------------------------------------------------------
 # Final printed report
 # ---------------------------------------------------------------------------
@@ -5682,6 +5796,7 @@ def main():
     if known.self_test_data_artifact_comparison:
         e1_tests, e1_all_passed, e1_summary = run_data_artifact_comparison_self_tests()
         e11_tests, e11_all_passed, e11_summary = run_part_e1_1_schema_provenance_tests()
+        e12_tests, e12_all_passed, e12_summary = run_part_e1_2_signed_zero_tests()
         combined = {
             "part_e1_tests": {
                 "tests_expected": e1_summary["tests_expected"],
@@ -5695,6 +5810,14 @@ def main():
                 "tests_passed": e11_summary["tests_passed"],
                 "tests_failed": e11_summary["tests_failed"],
             },
+            "part_e1_2_tests": {
+                "tests_expected": e12_summary["tests_expected"],
+                "tests_executed": e12_summary["tests_executed"],
+                "tests_passed": e12_summary["tests_passed"],
+                "tests_failed": e12_summary["tests_failed"],
+            },
+            "lr_signed_zero_rejected": e12_summary["lr_signed_zero_rejected"],
+            "dt_signed_zero_rejected": e12_summary["dt_signed_zero_rejected"],
             "accepted_part3a_commit": ACCEPTED_PART3A_COMMIT,
             "model_fits_executed": 0,
             "prediction_calls_executed": 0,
@@ -5711,6 +5834,11 @@ def main():
             and e11_all_passed
             and e11_summary["tests_executed"] == 6
             and e11_summary["tests_failed"] == 0
+            and e12_all_passed
+            and e12_summary["tests_executed"] == 2
+            and e12_summary["tests_failed"] == 0
+            and e12_summary["lr_signed_zero_rejected"] is True
+            and e12_summary["dt_signed_zero_rejected"] is True
         ) else 1
     if known.self_test_persisted_ledger:
         root = repo_root()
