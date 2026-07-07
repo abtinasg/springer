@@ -6,7 +6,7 @@ working directory; it locates the repository root from __file__ and references
 all other paths absolutely.
 
 Version: Part-3B.2R-v1
-Starting full commit: 653fcb3039804d91c60d19f2e0d3ad5c9bd57013
+Starting full commit: ada1ecfc0c4b4f7e696be24c36273e1dacff85c0
 Accepted Part 3A commit: d16e28488aa0936014f020c05466181eff219af6
 """
 from __future__ import annotations
@@ -41,7 +41,7 @@ warnings.filterwarnings("ignore")
 # Frozen version and provenance constants
 # ---------------------------------------------------------------------------
 PART3B_VERSION = "Part-3B.2R-v1"
-STARTING_COMMIT = "653fcb3039804d91c60d19f2e0d3ad5c9bd57013"
+STARTING_COMMIT = "ada1ecfc0c4b4f7e696be24c36273e1dacff85c0"
 ACCEPTED_PART3A_COMMIT = "d16e28488aa0936014f020c05466181eff219af6"
 REPOSITORY = "abtinasg/springer"
 BRANCH = "major-revision-analysis-v2"
@@ -4215,6 +4215,33 @@ def _make_synthetic_negative_test_evidence() -> Dict[str, Any]:
     }
 
 
+def collect_actual_negative_test_evidence(
+    original_negative_tests: List[Dict[str, Any]],
+    canonical_exception_tests: List[Dict[str, Any]],
+    persisted_ledger_tests: List[Dict[str, Any]],
+    preservation_tests: List[Dict[str, Any]],
+) -> Dict[str, Any]:
+    """Build negative-test evidence from actual test records.
+
+    Expected counts remain frozen; executed, passed, and failed are derived
+    from the supplied test lists.
+    """
+    def _summarize(expected: int, tests: List[Dict[str, Any]]) -> Dict[str, int]:
+        return {
+            "expected": expected,
+            "executed": len(tests),
+            "passed": sum(1 for t in tests if t.get("passed")),
+            "failed": sum(1 for t in tests if not t.get("passed")),
+        }
+
+    return {
+        "original_negative_tests": _summarize(12, original_negative_tests),
+        "canonical_exception_tests": _summarize(10, canonical_exception_tests),
+        "persisted_ledger_tests": _summarize(6, persisted_ledger_tests),
+        "preservation_tests": _summarize(8, preservation_tests),
+    }
+
+
 def run_audit_gate_self_tests() -> Tuple[List[Dict[str, Any]], bool]:
     tests: List[Dict[str, Any]] = []
     all_passed = True
@@ -4267,38 +4294,24 @@ def run_audit_gate_self_tests() -> Tuple[List[Dict[str, Any]], bool]:
     gate_ok, ev = validate_stage_gate(gate)
     _record("exact_authorized_stage_gate_passes", gate_ok is True, schema_passed=ev["schema_passed"])
 
-    # 8. Stage gate with one authorization condition wrong fails and next_authorized_stage is None.
+    # 8. Stage gate with one missing field fails.
+    gate = _make_synthetic_stage_gate_authorized()
+    del gate["identity_leakage_detected"]
+    gate_ok, ev = validate_stage_gate(gate)
+    _record("missing_stage_field_fails", gate_ok is False, missing_fields=ev["missing_fields"])
+
+    # 9. Stage gate with one extra field fails.
+    gate = _make_synthetic_stage_gate_authorized()
+    gate["extra_diagnostic"] = False
+    gate_ok, ev = validate_stage_gate(gate)
+    _record("extra_stage_field_fails", gate_ok is False, extra_fields=ev["extra_fields"])
+
+    # 10. Any failed authorization condition forces next_authorized_stage = None and stage-gate validation fails.
     gate = _make_synthetic_stage_gate_authorized()
     gate["identity_leakage_detected"] = True
     gate["next_authorized_stage"] = None
     gate_ok, ev = validate_stage_gate(gate)
-    _record("stage_gate_with_wrong_authorization_fails", gate_ok is False, gate_passed=gate_ok)
-
-    # 9. Completeness helper returns True when all five evidence groups are valid.
-    checks = _make_synthetic_audit_checks_all_true()
-    result = compute_part3b_prediction_ledger_complete(
-        checks,
-        _make_synthetic_canonical_reconciliation_evidence(),
-        _make_synthetic_persisted_ledger_evidence(),
-        _make_synthetic_preservation_evidence(),
-        _make_synthetic_semantic_reproducibility_evidence(),
-        _make_synthetic_negative_test_evidence(),
-    )
-    _record("completeness_helper_all_evidence_valid_returns_true", result is True, computed=result)
-
-    # 10. Completeness helper returns False when persisted verification fails.
-    checks = _make_synthetic_audit_checks_all_true()
-    bad_persisted = _make_synthetic_persisted_ledger_evidence()
-    bad_persisted["persisted_ledger_reconstruction_matches_in_memory"] = False
-    result = compute_part3b_prediction_ledger_complete(
-        checks,
-        _make_synthetic_canonical_reconciliation_evidence(),
-        bad_persisted,
-        _make_synthetic_preservation_evidence(),
-        _make_synthetic_semantic_reproducibility_evidence(),
-        _make_synthetic_negative_test_evidence(),
-    )
-    _record("completeness_helper_failed_persisted_returns_false", result is False, computed=result)
+    _record("failed_authorization_forces_none_stage", gate_ok is False, authorization_conditions=ev.get("authorization_conditions"))
 
     return tests, all_passed
 
@@ -4313,89 +4326,57 @@ def run_completeness_wiring_tests() -> Tuple[List[Dict[str, Any]], bool]:
         tests.append({"case_name": case_name, "passed": result, **extra})
         all_passed = all_passed and result
 
-    # 1. Completeness returns False when canonical reconciliation evidence has unapproved mismatches.
-    checks = _make_synthetic_audit_checks_all_true()
-    bad_canonical = _make_synthetic_canonical_reconciliation_evidence()
-    bad_canonical["unapproved_result_mismatches"] = 1
-    result = compute_part3b_prediction_ledger_complete(
-        checks, bad_canonical,
-        _make_synthetic_persisted_ledger_evidence(),
-        _make_synthetic_preservation_evidence(),
-        _make_synthetic_semantic_reproducibility_evidence(),
-        _make_synthetic_negative_test_evidence(),
-    )
-    _record("completeness_false_when_unapproved_result_mismatches", result is False, computed=result)
+    def _valid_negative_test_evidence() -> Dict[str, Any]:
+        return {
+            "original_negative_tests": {"expected": 12, "executed": 12, "passed": 12, "failed": 0},
+            "canonical_exception_tests": {"expected": 10, "executed": 10, "passed": 10, "failed": 0},
+            "persisted_ledger_tests": {"expected": 6, "executed": 6, "passed": 6, "failed": 0},
+            "preservation_tests": {"expected": 8, "executed": 8, "passed": 8, "failed": 0},
+        }
 
-    # 2. Completeness returns False when preservation evidence shows modified files.
-    checks = _make_synthetic_audit_checks_all_true()
-    bad_preservation = _make_synthetic_preservation_evidence()
-    bad_preservation["raw_data_changed"] = 1
-    result = compute_part3b_prediction_ledger_complete(
-        checks,
-        _make_synthetic_canonical_reconciliation_evidence(),
-        _make_synthetic_persisted_ledger_evidence(),
-        bad_preservation,
-        _make_synthetic_semantic_reproducibility_evidence(),
-        _make_synthetic_negative_test_evidence(),
-    )
-    _record("completeness_false_when_preservation_modified", result is False, computed=result)
+    def _valid_evidence() -> Tuple[Dict[str, bool], Dict[str, Any], Dict[str, Any], Dict[str, Any], Dict[str, Any], Dict[str, Any]]:
+        checks = _make_synthetic_audit_checks_all_true()
+        canonical = _make_synthetic_canonical_reconciliation_evidence()
+        persisted = _make_synthetic_persisted_ledger_evidence()
+        preservation = _make_synthetic_preservation_evidence()
+        semantic = _make_synthetic_semantic_reproducibility_evidence()
+        negative = _valid_negative_test_evidence()
+        return checks, canonical, persisted, preservation, semantic, negative
 
-    # 3. Completeness returns False when semantic reproducibility has unapproved differing artifacts.
-    checks = _make_synthetic_audit_checks_all_true()
-    bad_semantic = _make_synthetic_semantic_reproducibility_evidence()
-    bad_semantic["unapproved_differing_artifacts"] = ["some_artifact.csv"]
-    result = compute_part3b_prediction_ledger_complete(
-        checks,
-        _make_synthetic_canonical_reconciliation_evidence(),
-        _make_synthetic_persisted_ledger_evidence(),
-        _make_synthetic_preservation_evidence(),
-        bad_semantic,
-        _make_synthetic_negative_test_evidence(),
-    )
-    _record("completeness_false_when_unapproved_differing_artifacts", result is False, computed=result)
+    # 1. Exact complete evidence returns True.
+    checks, canonical, persisted, preservation, semantic, negative = _valid_evidence()
+    result = compute_part3b_prediction_ledger_complete(checks, canonical, persisted, preservation, semantic, negative)
+    _record("exact_complete_evidence_returns_true", result is True, computed=result)
 
-    # 4. Completeness returns False when negative test evidence shows failures.
-    checks = _make_synthetic_audit_checks_all_true()
-    bad_nt = _make_synthetic_negative_test_evidence()
-    bad_nt["original_negative_tests"]["failed"] = 1
-    bad_nt["original_negative_tests"]["passed"] = 11
-    result = compute_part3b_prediction_ledger_complete(
-        checks,
-        _make_synthetic_canonical_reconciliation_evidence(),
-        _make_synthetic_persisted_ledger_evidence(),
-        _make_synthetic_preservation_evidence(),
-        _make_synthetic_semantic_reproducibility_evidence(),
-        bad_nt,
-    )
-    _record("completeness_false_when_negative_tests_failed", result is False, computed=result)
+    # 2. persisted_ledger_reconstruction_matches_in_memory = False returns False.
+    checks, canonical, persisted, preservation, semantic, negative = _valid_evidence()
+    persisted["persisted_ledger_reconstruction_matches_in_memory"] = False
+    result = compute_part3b_prediction_ledger_complete(checks, canonical, persisted, preservation, semantic, negative)
+    _record("persisted_false_rejected", result is False, computed=result)
 
-    # 5. Completeness returns False when persisted ledger evidence has numeric mismatches.
-    checks = _make_synthetic_audit_checks_all_true()
-    bad_persisted = _make_synthetic_persisted_ledger_evidence()
-    bad_persisted["persisted_validation_numeric_mismatches"] = 3
-    result = compute_part3b_prediction_ledger_complete(
-        checks,
-        _make_synthetic_canonical_reconciliation_evidence(),
-        bad_persisted,
-        _make_synthetic_preservation_evidence(),
-        _make_synthetic_semantic_reproducibility_evidence(),
-        _make_synthetic_negative_test_evidence(),
-    )
-    _record("completeness_false_when_persisted_numeric_mismatches", result is False, computed=result)
+    # 3. persisted_validation_numeric_mismatches > 0 returns False.
+    checks, canonical, persisted, preservation, semantic, negative = _valid_evidence()
+    persisted["persisted_validation_numeric_mismatches"] = 3
+    result = compute_part3b_prediction_ledger_complete(checks, canonical, persisted, preservation, semantic, negative)
+    _record("persisted_numeric_mismatch_rejected", result is False, computed=result)
 
-    # 6. Completeness returns False when csv_float_precision is not round_trip.
-    checks = _make_synthetic_audit_checks_all_true()
-    bad_persisted = _make_synthetic_persisted_ledger_evidence()
-    bad_persisted["csv_float_precision"] = "float64"
-    result = compute_part3b_prediction_ledger_complete(
-        checks,
-        _make_synthetic_canonical_reconciliation_evidence(),
-        bad_persisted,
-        _make_synthetic_preservation_evidence(),
-        _make_synthetic_semantic_reproducibility_evidence(),
-        _make_synthetic_negative_test_evidence(),
-    )
-    _record("completeness_false_when_csv_float_precision_not_round_trip", result is False, computed=result)
+    # 4. nonempty unapproved_differing_artifacts returns False.
+    checks, canonical, persisted, preservation, semantic, negative = _valid_evidence()
+    semantic["unapproved_differing_artifacts"] = ["some_artifact.csv"]
+    result = compute_part3b_prediction_ledger_complete(checks, canonical, persisted, preservation, semantic, negative)
+    _record("unapproved_artifact_rejected", result is False, computed=result)
+
+    # 5. wrong Part B test count, expected=6, executed=5, passed=5, failed=0 returns False.
+    checks, canonical, persisted, preservation, semantic, negative = _valid_evidence()
+    negative["persisted_ledger_tests"] = {"expected": 6, "executed": 5, "passed": 5, "failed": 0}
+    result = compute_part3b_prediction_ledger_complete(checks, canonical, persisted, preservation, semantic, negative)
+    _record("wrong_part_b_test_count_rejected", result is False, computed=result)
+
+    # 6. Remove one mandatory evidence field entirely and verify fail-closed False.
+    checks, canonical, persisted, preservation, semantic, negative = _valid_evidence()
+    del persisted["persisted_ledger_reconstruction_matches_in_memory"]
+    result = compute_part3b_prediction_ledger_complete(checks, canonical, persisted, preservation, semantic, negative)
+    _record("missing_evidence_field_rejected", result is False, computed=result)
 
     return tests, all_passed
 
@@ -4578,6 +4559,15 @@ def main():
         completeness_passed = sum(1 for t in completeness_tests if t.get("passed"))
         completeness_failed = sum(1 for t in completeness_tests if not t.get("passed"))
 
+        missing_stage_test = next((t for t in part_d_tests if t.get("case_name") == "missing_stage_field_fails"), None)
+        extra_stage_test = next((t for t in part_d_tests if t.get("case_name") == "extra_stage_field_fails"), None)
+        wrong_b_test = next((t for t in completeness_tests if t.get("case_name") == "wrong_part_b_test_count_rejected"), None)
+        missing_evidence_test = next((t for t in completeness_tests if t.get("case_name") == "missing_evidence_field_rejected"), None)
+        print(f"missing_stage_field_test_passed = {bool(missing_stage_test and missing_stage_test.get('passed'))}")
+        print(f"extra_stage_field_test_passed = {bool(extra_stage_test and extra_stage_test.get('passed'))}")
+        print(f"wrong_part_b_test_count_rejected = {bool(wrong_b_test and wrong_b_test.get('passed'))}")
+        print(f"missing_evidence_field_rejected = {bool(missing_evidence_test and missing_evidence_test.get('passed'))}")
+
         # Validate exact audit schema on a synthetic all-True dict.
         synthetic_checks = _make_synthetic_audit_checks_all_true()
         synthetic_checks["stage_gate_passed"] = True
@@ -4724,6 +4714,19 @@ def main():
         root / "results" / "part3b_prediction_ledger" / "canonical_result_reconstruction.csv",
     )
 
+    # 10b. Run actual persisted-ledger negative tests and preservation self-tests.
+    ledger_dir = root / "results" / "part3b_prediction_ledger"
+    within_df = read_float_csv_round_trip(ledger_dir / "prediction_ledger_within.csv.gz", compression="gzip")
+    cross_df = read_float_csv_round_trip(ledger_dir / "prediction_ledger_cross.csv.gz", compression="gzip")
+    event_manifest_df = pd.read_csv(ledger_dir / "event_manifest.csv")
+    persisted_val_recon_df = read_float_csv_round_trip(ledger_dir / "validation_reconstruction.csv")
+    persisted_result_recon_df = read_float_csv_round_trip(ledger_dir / "canonical_result_reconstruction.csv")
+    persisted_ledger_tests, _ = _run_persisted_ledger_negative_tests(
+        frozen, within_df, cross_df, event_manifest_df,
+        persisted_val_recon_df, persisted_result_recon_df,
+    )
+    preservation_tests, _ = run_preservation_self_tests()
+
     # Semantic reproducibility evidence (outside audit_checks)
     semantic_reproducibility_evidence = {
         "semantic_reproducibility_passed": semantic_reproducibility_passed,
@@ -4751,32 +4754,12 @@ def main():
 
     neg_tests_list = bundle1["negative_tests"]
     exc_tests_list = bundle1["validation_results"]["canonical_exception_validator_tests"][1].get("tests", [])
-    negative_test_evidence = {
-        "original_negative_tests": {
-            "expected": 12,
-            "executed": len(neg_tests_list),
-            "passed": sum(1 for t in neg_tests_list if t.get("passed")),
-            "failed": sum(1 for t in neg_tests_list if not t.get("passed")),
-        },
-        "canonical_exception_tests": {
-            "expected": 10,
-            "executed": len(exc_tests_list),
-            "passed": sum(1 for t in exc_tests_list if t.get("passed")),
-            "failed": sum(1 for t in exc_tests_list if not t.get("passed")),
-        },
-        "persisted_ledger_tests": {
-            "expected": 6,
-            "executed": 6,
-            "passed": 6,
-            "failed": 0,
-        },
-        "preservation_tests": {
-            "expected": 8,
-            "executed": 8,
-            "passed": 8,
-            "failed": 0,
-        },
-    }
+    negative_test_evidence = collect_actual_negative_test_evidence(
+        neg_tests_list,
+        exc_tests_list,
+        persisted_ledger_tests,
+        preservation_tests,
+    )
 
     ledger_complete = compute_part3b_prediction_ledger_complete(
         audit_checks,
