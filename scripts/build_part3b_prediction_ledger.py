@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-"""Part 3B.2R: Build the Pure Score Prediction Ledger and Reconcile Frozen ET Nondeterminism.
+"""Part 3B.2R.1-E.1: Strict Semantic Comparator for the Eight Data Artifacts.
 
 This script is deterministic and self-contained. It may be invoked from any
 working directory; it locates the repository root from __file__ and references
 all other paths absolutely.
 
-Version: Part-3B.2R-v1
-Starting full commit: ada1ecfc0c4b4f7e696be24c36273e1dacff85c0
-Accepted Part 3A commit: d16e28488aa0936014f020c05466181eff219af6
+Version: Part-3B.2R.1-E.1-v1
+Starting full commit: 2ecc0600c2b283f9d0a33da91fbf44e31b12bd74
+Accepted Part 3A commit: d711ca3fa851bb2b7a5001a04cc73a63b690f620
 """
 from __future__ import annotations
 
@@ -40,9 +40,9 @@ warnings.filterwarnings("ignore")
 # ---------------------------------------------------------------------------
 # Frozen version and provenance constants
 # ---------------------------------------------------------------------------
-PART3B_VERSION = "Part-3B.2R-v1"
-STARTING_COMMIT = "ada1ecfc0c4b4f7e696be24c36273e1dacff85c0"
-ACCEPTED_PART3A_COMMIT = "d16e28488aa0936014f020c05466181eff219af6"
+PART3B_VERSION = "Part-3B.2R.1-E.1-v1"
+STARTING_COMMIT = "2ecc0600c2b283f9d0a33da91fbf44e31b12bd74"
+ACCEPTED_PART3A_COMMIT = "d711ca3fa851bb2b7a5001a04cc73a63b690f620"
 REPOSITORY = "abtinasg/springer"
 BRANCH = "major-revision-analysis-v2"
 
@@ -98,6 +98,11 @@ NEGATIVE_TEST_MUTATION = 1e-8
 
 PERSISTED_RECON_RTOL = 1e-10
 PERSISTED_RECON_ATOL = 1e-12
+
+SEMANTIC_RECON_RTOL = 1e-10
+SEMANTIC_RECON_ATOL = 1e-12
+ET_SCORE_ATOL = 1e-15
+ET_RANK_METRIC_ATOL = 1e-7
 
 # ---------------------------------------------------------------------------
 # Historical canonical nondeterminism exception (validated, not broadened)
@@ -3659,6 +3664,955 @@ def compare_two_builds_semantically(bundle1: Dict[str, Any], bundle2: Dict[str, 
 
 
 # ---------------------------------------------------------------------------
+# Part E.1: Strict semantic comparator for the eight data artifacts
+# ---------------------------------------------------------------------------
+SEMANTIC_DATA_ARTIFACTS = [
+    "results/part3b_prediction_ledger/sample_registry.csv",
+    "results/part3b_prediction_ledger/event_manifest.csv",
+    "results/part3b_prediction_ledger/split_membership_within.csv.gz",
+    "results/part3b_prediction_ledger/split_membership_cross.csv.gz",
+    "results/part3b_prediction_ledger/prediction_ledger_within.csv.gz",
+    "results/part3b_prediction_ledger/prediction_ledger_cross.csv.gz",
+    "results/part3b_prediction_ledger/validation_reconstruction.csv",
+    "results/part3b_prediction_ledger/canonical_result_reconstruction.csv",
+]
+
+SEMANTIC_STRUCTURAL_ARTIFACTS = {
+    "results/part3b_prediction_ledger/sample_registry.csv",
+    "results/part3b_prediction_ledger/event_manifest.csv",
+    "results/part3b_prediction_ledger/split_membership_within.csv.gz",
+    "results/part3b_prediction_ledger/split_membership_cross.csv.gz",
+}
+
+SEMANTIC_FLOAT_ROUND_TRIP_ARTIFACTS = {
+    "results/part3b_prediction_ledger/prediction_ledger_within.csv.gz",
+    "results/part3b_prediction_ledger/prediction_ledger_cross.csv.gz",
+    "results/part3b_prediction_ledger/validation_reconstruction.csv",
+    "results/part3b_prediction_ledger/canonical_result_reconstruction.csv",
+}
+
+LEDGER_IDENTITY_COLUMNS = [
+    "event_id",
+    "experiment",
+    "target_project",
+    "seed",
+    "split_role",
+    "split_position",
+    "sample_uid",
+    "sample_project",
+    "original_row_index",
+    "y_true",
+]
+
+LEDGER_EXACT_SCORE_COLUMNS = [
+    "score__LR_std_C0.1",
+    "score__LR_std_C1",
+    "score__DT_leaf5",
+]
+LEDGER_ET_SCORE_COLUMN = "score__ET_leaf5"
+
+VALIDATION_RECON_KEYS = ["experiment", "target_project", "seed", "candidate", "mode"]
+RESULT_RECON_KEYS = ["experiment", "target_project", "seed", "model"]
+RESULT_RECON_CAT_COLS = RESULT_RECON_KEYS + ["selected_candidate", "selection_mode"]
+
+RANK_METRIC_SUFFIXES = ("roc_auc", "avg_precision")
+
+
+def _is_rank_metric(column: str) -> bool:
+    """Return True only for rank metrics that may use ET_RANK_METRIC_ATOL."""
+    return column.endswith(RANK_METRIC_SUFFIXES)
+
+
+def _read_semantic_data_artifact(path: Path) -> pd.DataFrame:
+    """Read a float-bearing artifact with round-trip float parsing."""
+    if path.suffix == ".gz":
+        return read_float_csv_round_trip(path, compression="gzip")
+    return read_float_csv_round_trip(path)
+
+
+def _read_raw_decompressed_text(path: Path) -> str:
+    if path.suffix == ".gz":
+        with gzip.open(path, "rt", encoding="utf-8") as f:
+            return f.read()
+    with path.open("r", encoding="utf-8") as f:
+        return f.read()
+
+
+def _row_key_dict(row: pd.Series, keys: List[str]) -> Dict[str, Any]:
+    return {k: row[k] for k in keys}
+
+
+def is_et_score_dependent_reconstruction_row(artifact: str, row: pd.Series) -> bool:
+    """Determine whether a reconstruction row is driven by the ET_leaf5 score vector.
+
+    Validation rows are ET-dependent only when candidate == "ET_leaf5".
+    Result rows are ET-dependent when model == "ET_leaf5", selected_candidate ==
+    "ET_leaf5", or selected_candidate contains "ET_leaf5" as an explicit ensemble
+    member token (pipe-delimited).
+    """
+    if "validation_reconstruction.csv" in artifact:
+        return str(row.get("candidate", "")) == "ET_leaf5"
+    if "canonical_result_reconstruction.csv" in artifact:
+        if str(row.get("model", "")) == "ET_leaf5":
+            return True
+        selected = str(row.get("selected_candidate", ""))
+        if selected == "ET_leaf5":
+            return True
+        tokens = [t.strip() for t in selected.split("|") if t.strip()]
+        return "ET_leaf5" in tokens
+    return False
+
+
+def _bitwise_different(a: np.ndarray, b: np.ndarray) -> np.ndarray:
+    """Element-wise float64 bit-pattern inequality, treating NaN == NaN."""
+    return (a != b) & ~(np.isnan(a) & np.isnan(b))
+
+
+def _compare_structural_artifact(
+    rel: str,
+    p1: Optional[Path],
+    p2: Optional[Path],
+    unapproved: List[Dict[str, Any]],
+) -> Tuple[bool, Dict[str, Any]]:
+    """Compare identity-only artifacts with exact byte/decompressed equality."""
+    comp: Dict[str, Any] = {
+        "present_first": p1 is not None and p1.exists(),
+        "present_second": p2 is not None and p2.exists(),
+        "compressed_byte_equal": None,
+        "decompressed_byte_equal": None,
+        "schema_equal": None,
+        "row_count_equal": None,
+        "row_order_equal": None,
+        "cell_values_equal": None,
+        "identity_values_equal": None,
+        "within_policy": False,
+    }
+    if not (comp["present_first"] and comp["present_second"]):
+        unapproved.append({"artifact": rel, "reason": "missing_in_one_input"})
+        return False, comp
+
+    b1 = p1.read_bytes()
+    b2 = p2.read_bytes()
+    if rel.endswith(".gz"):
+        comp["compressed_byte_equal"] = b1 == b2
+    text1 = _read_raw_decompressed_text(p1)
+    text2 = _read_raw_decompressed_text(p2)
+    comp["decompressed_byte_equal"] = text1 == text2
+
+    df1 = pd.read_csv(io.StringIO(text1))
+    df2 = pd.read_csv(io.StringIO(text2))
+    comp["schema_equal"] = list(df1.columns) == list(df2.columns)
+    comp["row_count_equal"] = len(df1) == len(df2)
+    comp["row_order_equal"] = comp["decompressed_byte_equal"]
+    comp["cell_values_equal"] = comp["decompressed_byte_equal"]
+    comp["identity_values_equal"] = comp["decompressed_byte_equal"]
+    comp["within_policy"] = comp["decompressed_byte_equal"]
+
+    if not comp["within_policy"]:
+        unapproved.append({"artifact": rel, "reason": "structural_or_identity_difference"})
+    return comp["within_policy"], comp
+
+
+def _compare_prediction_ledger(
+    rel: str,
+    p1: Optional[Path],
+    p2: Optional[Path],
+    unapproved: List[Dict[str, Any]],
+    approved_et_rank: List[Dict[str, Any]],
+    stats: Dict[str, Any],
+) -> Tuple[bool, Dict[str, Any]]:
+    """Compare a prediction ledger under the Part E.1 score policy."""
+    comp: Dict[str, Any] = {
+        "present_first": p1 is not None and p1.exists(),
+        "present_second": p2 is not None and p2.exists(),
+        "schema_equal": None,
+        "row_count_equal": None,
+        "identity_columns_equal": None,
+        "lr_dt_scores_exact": None,
+        "et_score_maximum_absolute_difference": 0.0,
+        "et_exactly_different_cells": 0,
+        "et_out_of_policy_cells": 0,
+        "first_twenty_et_score_differences": [],
+        "within_policy": False,
+    }
+    if not (comp["present_first"] and comp["present_second"]):
+        unapproved.append({"artifact": rel, "reason": "missing_in_one_input"})
+        return False, comp
+
+    df1 = _read_semantic_data_artifact(p1)
+    df2 = _read_semantic_data_artifact(p2)
+    comp["schema_equal"] = list(df1.columns) == list(df2.columns)
+    comp["row_count_equal"] = len(df1) == len(df2)
+
+    identity_equal = False
+    if comp["schema_equal"] and comp["row_count_equal"]:
+        identity_equal = (
+            df1[LEDGER_IDENTITY_COLUMNS]
+            .reset_index(drop=True)
+            .equals(df2[LEDGER_IDENTITY_COLUMNS].reset_index(drop=True))
+        )
+    comp["identity_columns_equal"] = identity_equal
+    within = identity_equal
+
+    if comp["schema_equal"] and comp["row_count_equal"]:
+        lr_dt_exact = True
+        for col in LEDGER_EXACT_SCORE_COLUMNS:
+            if col not in df1.columns or col not in df2.columns:
+                continue
+            a = df1[col].to_numpy(dtype=np.float64)
+            b = df2[col].to_numpy(dtype=np.float64)
+            if not np.array_equal(a, b, equal_nan=True):
+                lr_dt_exact = False
+                within = False
+                mask = _bitwise_different(a, b)
+                for i in np.where(mask)[0]:
+                    unapproved.append({
+                        "artifact": rel,
+                        "metric": col,
+                        "event_id": str(df1.iloc[i]["event_id"]),
+                        "split_role": str(df1.iloc[i]["split_role"]),
+                        "sample_uid": str(df1.iloc[i]["sample_uid"]),
+                        "build_1_value": float(a[i]),
+                        "build_2_value": float(b[i]),
+                        "absolute_difference": float(abs(a[i] - b[i])),
+                    })
+        comp["lr_dt_scores_exact"] = lr_dt_exact
+
+        if LEDGER_ET_SCORE_COLUMN in df1.columns and LEDGER_ET_SCORE_COLUMN in df2.columns:
+            a = df1[LEDGER_ET_SCORE_COLUMN].to_numpy(dtype=np.float64)
+            b = df2[LEDGER_ET_SCORE_COLUMN].to_numpy(dtype=np.float64)
+            exact_diff = _bitwise_different(a, b)
+            out_policy = ~np.isclose(a, b, rtol=0.0, atol=ET_SCORE_ATOL, equal_nan=True)
+            n_exact = int(np.sum(exact_diff))
+            n_out = int(np.sum(out_policy))
+            comp["et_exactly_different_cells"] = n_exact
+            comp["et_out_of_policy_cells"] = n_out
+            stats["exactly_different_et_cells"] += n_exact
+            stats["out_of_policy_et_cells"] += n_out
+
+            if n_exact > 0:
+                diffs = np.abs(a - b)
+                maxdiff = float(np.nanmax(diffs[exact_diff]))
+                comp["et_score_maximum_absolute_difference"] = maxdiff
+                stats["maximum_et_score_difference"] = max(stats["maximum_et_score_difference"], maxdiff)
+                records = []
+                for i in np.where(exact_diff)[0][:20]:
+                    records.append({
+                        "artifact": rel,
+                        "event_id": str(df1.iloc[i]["event_id"]),
+                        "split_role": str(df1.iloc[i]["split_role"]),
+                        "sample_uid": str(df1.iloc[i]["sample_uid"]),
+                        "build_1_value": float(a[i]),
+                        "build_2_value": float(b[i]),
+                        "absolute_difference": float(diffs[i]),
+                    })
+                comp["first_twenty_et_score_differences"] = records
+                stats["first_twenty_et_score_differences"].extend(records)
+
+            if np.any(out_policy):
+                within = False
+                diffs = np.abs(a - b)
+                for i in np.where(out_policy)[0]:
+                    unapproved.append({
+                        "artifact": rel,
+                        "metric": LEDGER_ET_SCORE_COLUMN,
+                        "event_id": str(df1.iloc[i]["event_id"]),
+                        "split_role": str(df1.iloc[i]["split_role"]),
+                        "sample_uid": str(df1.iloc[i]["sample_uid"]),
+                        "build_1_value": float(a[i]),
+                        "build_2_value": float(b[i]),
+                        "absolute_difference": float(diffs[i]),
+                    })
+
+    comp["within_policy"] = within
+    return within, comp
+
+
+def _compare_reconstruction_artifact(
+    rel: str,
+    p1: Optional[Path],
+    p2: Optional[Path],
+    unapproved: List[Dict[str, Any]],
+    approved_et_rank: List[Dict[str, Any]],
+    stats: Dict[str, Any],
+) -> Tuple[bool, Dict[str, Any]]:
+    """Compare a reconstruction artifact under the Part E.1 metric policy."""
+    comp: Dict[str, Any] = {
+        "present_first": p1 is not None and p1.exists(),
+        "present_second": p2 is not None and p2.exists(),
+        "schema_equal": None,
+        "row_count_equal": None,
+        "categorical_keys_exact": None,
+        "selections_exact": None,
+        "thresholds_exact": None,
+        "non_et_metrics_strict": None,
+        "within_policy": False,
+    }
+    if not (comp["present_first"] and comp["present_second"]):
+        unapproved.append({"artifact": rel, "reason": "missing_in_one_input"})
+        return False, comp
+
+    df1 = _read_semantic_data_artifact(p1)
+    df2 = _read_semantic_data_artifact(p2)
+    comp["schema_equal"] = list(df1.columns) == list(df2.columns)
+    comp["row_count_equal"] = len(df1) == len(df2)
+
+    if "validation_reconstruction.csv" in rel:
+        keys = VALIDATION_RECON_KEYS
+    else:
+        keys = RESULT_RECON_CAT_COLS
+
+    cat_equal = False
+    if comp["schema_equal"] and comp["row_count_equal"]:
+        cat_equal = df1[keys].reset_index(drop=True).equals(df2[keys].reset_index(drop=True))
+    comp["categorical_keys_exact"] = cat_equal
+    comp["selections_exact"] = cat_equal
+    within = cat_equal
+
+    if comp["schema_equal"] and comp["row_count_equal"]:
+        non_key_numeric = [c for c in df1.columns if c not in keys]
+        threshold_col = None
+        if "threshold" in non_key_numeric:
+            threshold_col = "threshold"
+        elif "val_threshold" in non_key_numeric:
+            threshold_col = "val_threshold"
+
+        if threshold_col is not None:
+            a_thr = df1[threshold_col].to_numpy(dtype=np.float64)
+            b_thr = df2[threshold_col].to_numpy(dtype=np.float64)
+            thr_exact = np.array_equal(a_thr, b_thr, equal_nan=True)
+            comp["thresholds_exact"] = thr_exact
+            if not thr_exact:
+                within = False
+                mask = _bitwise_different(a_thr, b_thr)
+                for i in np.where(mask)[0]:
+                    unapproved.append({
+                        "artifact": rel,
+                        "metric": threshold_col,
+                        "row_key": _row_key_dict(df1.iloc[i], keys),
+                        "build_1_value": float(a_thr[i]),
+                        "build_2_value": float(b_thr[i]),
+                        "absolute_difference": float(abs(a_thr[i] - b_thr[i])),
+                    })
+
+        metric_cols = [c for c in non_key_numeric if c != threshold_col]
+        et_dep = [is_et_score_dependent_reconstruction_row(rel, row) for _, row in df1.iterrows()]
+        et_mask = np.array(et_dep, dtype=bool)
+        non_et_metrics_strict = True
+
+        for col in metric_cols:
+            a = df1[col].to_numpy(dtype=np.float64)
+            b = df2[col].to_numpy(dtype=np.float64)
+            diff = np.abs(a - b)
+            strict_allowed = SEMANTIC_RECON_ATOL + SEMANTIC_RECON_RTOL * np.maximum(np.abs(a), np.abs(b))
+            allowed = np.where(et_mask & _is_rank_metric(col), ET_RANK_METRIC_ATOL, strict_allowed)
+            finite = np.isfinite(diff)
+            within_col = bool(np.all(diff[finite] <= allowed[finite]))
+            nan_ok = bool(np.all(np.isnan(a) == np.isnan(b)))
+            if not (within_col and nan_ok):
+                within = False
+                non_et_metrics_strict = False
+                bad = np.where(finite & (diff > allowed))[0]
+                for i in bad:
+                    unapproved.append({
+                        "artifact": rel,
+                        "metric": col,
+                        "row_key": _row_key_dict(df1.iloc[i], keys),
+                        "build_1_value": float(a[i]),
+                        "build_2_value": float(b[i]),
+                        "absolute_difference": float(diff[i]),
+                    })
+            else:
+                if np.any(et_mask & _is_rank_metric(col)):
+                    idx = np.where(finite & et_mask & _is_rank_metric(col) & (diff > 0))[0]
+                    for i in idx:
+                        approved_et_rank.append({
+                            "artifact": rel,
+                            "row_key": _row_key_dict(df1.iloc[i], keys),
+                            "metric": col,
+                            "build_1_value": float(a[i]),
+                            "build_2_value": float(b[i]),
+                            "absolute_difference": float(diff[i]),
+                        })
+
+        comp["non_et_metrics_strict"] = non_et_metrics_strict
+    else:
+        comp["non_et_metrics_strict"] = False
+
+    comp["within_policy"] = within
+    return within, comp
+
+
+def compare_eight_data_artifacts_semantically(
+    first_artifacts: Dict[str, Path],
+    second_artifacts: Dict[str, Path],
+) -> Dict[str, Any]:
+    """Standalone strict semantic comparator for the eight Part 3B data artifacts.
+
+    The three non-data artifacts (ledger_manifest.json, audit JSON, audit MD) are
+    intentionally not compared here and are deferred to Part E.2.
+    """
+    present_first_set = {k for k, p in first_artifacts.items() if p is not None and p.exists()}
+    present_second_set = {k for k, p in second_artifacts.items() if p is not None and p.exists()}
+    expected = set(SEMANTIC_DATA_ARTIFACTS)
+
+    missing_from_first = sorted(expected - present_first_set)
+    missing_from_second = sorted(expected - present_second_set)
+    extra_first = sorted(present_first_set - expected)
+    extra_second = sorted(present_second_set - expected)
+    extra_data_artifacts = sorted(set(extra_first) | set(extra_second))
+
+    unapproved_metric_differences: List[Dict[str, Any]] = []
+    allowed_et_rank_metric_differences: List[Dict[str, Any]] = []
+    stats: Dict[str, Any] = {
+        "maximum_et_score_difference": 0.0,
+        "exactly_different_et_cells": 0,
+        "out_of_policy_et_cells": 0,
+        "first_twenty_et_score_differences": [],
+    }
+
+    artifact_comparisons: Dict[str, Any] = {}
+    unapproved_artifacts: set = set()
+
+    for rel in SEMANTIC_DATA_ARTIFACTS:
+        p1 = first_artifacts.get(rel)
+        p2 = second_artifacts.get(rel)
+        basename = Path(rel).name
+        if rel in SEMANTIC_STRUCTURAL_ARTIFACTS:
+            ok, comp = _compare_structural_artifact(rel, p1, p2, unapproved_metric_differences)
+        elif basename.startswith("prediction_ledger"):
+            ok, comp = _compare_prediction_ledger(
+                rel, p1, p2, unapproved_metric_differences, allowed_et_rank_metric_differences, stats
+            )
+        else:
+            ok, comp = _compare_reconstruction_artifact(
+                rel, p1, p2, unapproved_metric_differences, allowed_et_rank_metric_differences, stats
+            )
+        artifact_comparisons[rel] = comp
+        if not ok:
+            unapproved_artifacts.add(rel)
+
+    exact_structural_equality = all(
+        artifact_comparisons[rel].get("within_policy", False) for rel in SEMANTIC_STRUCTURAL_ARTIFACTS
+    )
+    all_identity_columns_exact = all(
+        artifact_comparisons[rel].get("identity_values_equal") is not False
+        and artifact_comparisons[rel].get("identity_columns_equal") is not False
+        and artifact_comparisons[rel].get("categorical_keys_exact") is not False
+        for rel in SEMANTIC_DATA_ARTIFACTS
+    )
+    all_non_et_score_columns_exact = all(
+        artifact_comparisons[rel].get("lr_dt_scores_exact", True)
+        and artifact_comparisons[rel].get("non_et_metrics_strict", True)
+        for rel in SEMANTIC_DATA_ARTIFACTS
+    )
+    all_selection_decisions_exact = all(
+        artifact_comparisons[rel].get("selections_exact", True) for rel in SEMANTIC_DATA_ARTIFACTS
+    )
+    all_thresholds_exact = all(
+        artifact_comparisons[rel].get("thresholds_exact", True) for rel in SEMANTIC_DATA_ARTIFACTS
+    )
+
+    unapproved_differing_data_artifacts = sorted(unapproved_artifacts)
+    data_artifacts_with_approved_et_roundoff_only = []
+    for rel in SEMANTIC_DATA_ARTIFACTS:
+        has_approved = (
+            artifact_comparisons[rel].get("et_exactly_different_cells", 0) > 0
+            or any(d.get("artifact") == rel for d in allowed_et_rank_metric_differences)
+        )
+        if has_approved and rel not in unapproved_artifacts:
+            data_artifacts_with_approved_et_roundoff_only.append(rel)
+
+    semantic_passed = bool(
+        len(missing_from_first) == 0
+        and len(missing_from_second) == 0
+        and len(extra_data_artifacts) == 0
+        and exact_structural_equality
+        and all_identity_columns_exact
+        and all_non_et_score_columns_exact
+        and all_selection_decisions_exact
+        and all_thresholds_exact
+        and stats["maximum_et_score_difference"] <= ET_SCORE_ATOL
+        and stats["out_of_policy_et_cells"] == 0
+        and len(unapproved_metric_differences) == 0
+        and len(unapproved_differing_data_artifacts) == 0
+    )
+
+    return {
+        "data_artifacts_expected": len(SEMANTIC_DATA_ARTIFACTS),
+        "data_artifacts_present_first": len(present_first_set),
+        "data_artifacts_present_second": len(present_second_set),
+        "missing_from_first": missing_from_first,
+        "missing_from_second": missing_from_second,
+        "extra_data_artifacts": extra_data_artifacts,
+        "artifact_comparisons": artifact_comparisons,
+        "exact_structural_equality": exact_structural_equality,
+        "all_identity_columns_exact": all_identity_columns_exact,
+        "all_non_et_score_columns_exact": all_non_et_score_columns_exact,
+        "maximum_et_score_difference": stats["maximum_et_score_difference"],
+        "exactly_different_et_cells": stats["exactly_different_et_cells"],
+        "out_of_policy_et_cells": stats["out_of_policy_et_cells"],
+        "first_twenty_et_score_differences": stats["first_twenty_et_score_differences"],
+        "all_selection_decisions_exact": all_selection_decisions_exact,
+        "all_thresholds_exact": all_thresholds_exact,
+        "allowed_et_rank_metric_differences": allowed_et_rank_metric_differences,
+        "unapproved_metric_differences": unapproved_metric_differences,
+        "data_artifacts_with_approved_et_roundoff_only": data_artifacts_with_approved_et_roundoff_only,
+        "unapproved_differing_data_artifacts": unapproved_differing_data_artifacts,
+        "data_artifact_semantic_comparison_passed": semantic_passed,
+    }
+
+
+def _make_synthetic_eight_artifact_dir(root: Path) -> Path:
+    """Create a minimal valid set of the eight data artifacts for isolated tests."""
+    root.mkdir(parents=True, exist_ok=True)
+
+    sample_registry = pd.DataFrame([
+        {
+            "sample_uid": "CM1:000000",
+            "project": "CM1",
+            "original_row_index": 0,
+            "raw_csv_row_number": 2,
+            "y_true": 0,
+            "feature_sha256": "a" * 64,
+            "content_sha256": "b" * 64,
+        },
+        {
+            "sample_uid": "CM1:000001",
+            "project": "CM1",
+            "original_row_index": 1,
+            "raw_csv_row_number": 3,
+            "y_true": 1,
+            "feature_sha256": "c" * 64,
+            "content_sha256": "d" * 64,
+        },
+    ])
+
+    event_manifest = pd.DataFrame([
+        {
+            "event_id": "within_project__CM1__seed_007",
+            "experiment": "within_project",
+            "target_project": "CM1",
+            "seed": 7,
+            "source_projects": "CM1",
+            "n_membership": 2,
+            "n_train": 1,
+            "n_validation": 1,
+            "n_test": 0,
+            "train_positive": 0,
+            "train_negative": 1,
+            "validation_positive": 1,
+            "validation_negative": 0,
+            "test_positive": 0,
+            "test_negative": 0,
+            "train_uid_sha256": "t" * 64,
+            "validation_uid_sha256": "v" * 64,
+            "test_uid_sha256": "x" * 64,
+            "feature_count": 20,
+            "feature_schema_sha256": "f" * 64,
+            "train_source_projects": "CM1",
+            "validation_source_projects": "CM1",
+            "test_projects": "CM1",
+            "identity_overlap_count": 0,
+            "target_in_train_count": 1,
+            "target_in_validation_count": 1,
+            "source_in_test_count": 0,
+            "preprocessing_train_only_passed": True,
+        }
+    ])
+
+    split_row = {
+        "event_id": "within_project__CM1__seed_007",
+        "experiment": "within_project",
+        "target_project": "CM1",
+        "seed": 7,
+        "sample_uid": "CM1:000000",
+        "sample_project": "CM1",
+        "original_row_index": 0,
+        "split_role": "train",
+        "split_position": 0,
+        "y_true": 0,
+    }
+    split_row2 = {
+        "event_id": "within_project__CM1__seed_007",
+        "experiment": "within_project",
+        "target_project": "CM1",
+        "seed": 7,
+        "sample_uid": "CM1:000001",
+        "sample_project": "CM1",
+        "original_row_index": 1,
+        "split_role": "validation",
+        "split_position": 1,
+        "y_true": 1,
+    }
+    split_within = pd.DataFrame([split_row, split_row2])
+    split_cross = pd.DataFrame([split_row, split_row2])
+
+    pred_row = {
+        "event_id": "within_project__CM1__seed_007",
+        "experiment": "within_project",
+        "target_project": "CM1",
+        "seed": 7,
+        "split_role": "validation",
+        "split_position": 1,
+        "sample_uid": "CM1:000001",
+        "sample_project": "CM1",
+        "original_row_index": 1,
+        "y_true": 1,
+        "score__LR_std_C0.1": 0.5,
+        "score__LR_std_C1": 0.625,
+        "score__DT_leaf5": 0.75,
+        "score__ET_leaf5": 0.875,
+    }
+    pred_within = pd.DataFrame([pred_row])
+    pred_cross = pd.DataFrame([pred_row])
+
+    val_rows = []
+    for candidate in CANDIDATES:
+        val_rows.append({
+            "experiment": "within_project",
+            "target_project": "CM1",
+            "seed": 7,
+            "candidate": candidate,
+            "mode": "balanced",
+            "val_threshold": 0.5,
+            "val_selection_score": 0.5,
+            "val_avg_precision": 0.625,
+            "val_roc_auc": 0.75,
+            "val_mcc": 0.25,
+            "val_f1": 0.5,
+            "val_balanced_accuracy": 0.5,
+            "val_precision": 0.5,
+            "val_recall": 0.5,
+            "val_brier": 0.25,
+            "val_precision_at_10pct": 0.5,
+            "val_recall_at_10pct": 0.5,
+            "val_lift_at_10pct": 1.0,
+            "val_precision_at_20pct": 0.5,
+            "val_recall_at_20pct": 0.5,
+            "val_lift_at_20pct": 1.0,
+        })
+    val_recon = pd.DataFrame(val_rows)
+
+    result_rows = []
+    for model in ["LR_std_C0.1", "AQRPE_v2_soft_top3"]:
+        selected = model if model != "AQRPE_v2_soft_top3" else "LR_std_C0.1|DT_leaf5|ET_leaf5"
+        result_rows.append({
+            "experiment": "within_project",
+            "target_project": "CM1",
+            "seed": 7,
+            "model": model,
+            "selected_candidate": selected,
+            "selection_mode": "balanced_objective",
+            "threshold": 0.5,
+            "selection_score": 0.5,
+            "avg_precision": 0.625,
+            "roc_auc": 0.75,
+            "mcc": 0.25,
+            "f1": 0.5,
+            "balanced_accuracy": 0.5,
+            "precision": 0.5,
+            "recall": 0.5,
+            "brier": 0.25,
+            "precision_at_10pct": 0.5,
+            "recall_at_10pct": 0.5,
+            "lift_at_10pct": 1.0,
+            "precision_at_20pct": 0.5,
+            "recall_at_20pct": 0.5,
+            "lift_at_20pct": 1.0,
+        })
+    result_recon = pd.DataFrame(result_rows)
+
+    sample_registry.to_csv(root / "sample_registry.csv", index=False, lineterminator="\n")
+    event_manifest.to_csv(root / "event_manifest.csv", index=False, lineterminator="\n")
+    split_within.to_csv(root / "split_membership_within.csv.gz", index=False, lineterminator="\n", compression="gzip")
+    split_cross.to_csv(root / "split_membership_cross.csv.gz", index=False, lineterminator="\n", compression="gzip")
+    pred_within.to_csv(
+        root / "prediction_ledger_within.csv.gz", index=False, lineterminator="\n", compression="gzip", float_format="%.17g"
+    )
+    pred_cross.to_csv(
+        root / "prediction_ledger_cross.csv.gz", index=False, lineterminator="\n", compression="gzip", float_format="%.17g"
+    )
+    val_recon.to_csv(root / "validation_reconstruction.csv", index=False, lineterminator="\n", float_format="%.17g")
+    result_recon.to_csv(root / "canonical_result_reconstruction.csv", index=False, lineterminator="\n", float_format="%.17g")
+
+    return root
+
+
+def _artifact_paths_from_dir(root: Path) -> Dict[str, Path]:
+    return {rel: root / Path(rel).name for rel in SEMANTIC_DATA_ARTIFACTS}
+
+
+def run_data_artifact_comparison_self_tests() -> Tuple[List[Dict[str, Any]], bool, Dict[str, Any]]:
+    """Thirteen isolated tests for the strict eight-artifact semantic comparator."""
+    tests: List[Dict[str, Any]] = []
+    all_passed = True
+
+    def _record(case_name: str, passed: bool, **extra: Any) -> None:
+        nonlocal all_passed
+        tests.append({"case_name": case_name, "passed": passed, **extra})
+        all_passed = all_passed and passed
+
+    with tempfile.TemporaryDirectory(prefix="part3b2_e1_base_") as base_dir:
+        base_root = _make_synthetic_eight_artifact_dir(Path(base_dir))
+        base_paths = _artifact_paths_from_dir(base_root)
+
+        # 1. Exact fixture passes.
+        with tempfile.TemporaryDirectory(prefix="part3b2_e1_copy_") as copy_dir:
+            copy_root = Path(copy_dir)
+            for rel, src in base_paths.items():
+                dst = copy_root / Path(rel).name
+                dst.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(str(src), str(dst))
+            result = compare_eight_data_artifacts_semantically(base_paths, _artifact_paths_from_dir(copy_root))
+            _record(
+                "exact_eight_artifact_fixture_passes",
+                result["data_artifact_semantic_comparison_passed"] is True,
+                maximum_et_score_difference=result["maximum_et_score_difference"],
+            )
+
+        # 2. One required data artifact missing fails.
+        with tempfile.TemporaryDirectory(prefix="part3b2_e1_missing_") as miss_dir:
+            miss_root = Path(miss_dir)
+            for rel, src in base_paths.items():
+                if "sample_registry.csv" in rel:
+                    continue
+                dst = miss_root / Path(rel).name
+                dst.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(str(src), str(dst))
+            result = compare_eight_data_artifacts_semantically(base_paths, _artifact_paths_from_dir(miss_root))
+            _record(
+                "one_required_artifact_missing_fails",
+                result["data_artifact_semantic_comparison_passed"] is False
+                and "results/part3b_prediction_ledger/sample_registry.csv" in result["missing_from_second"],
+            )
+
+        # 3. One schema difference fails.
+        with tempfile.TemporaryDirectory(prefix="part3b2_e1_schema_") as schema_dir:
+            schema_root = Path(schema_dir)
+            for rel, src in base_paths.items():
+                dst = schema_root / Path(rel).name
+                dst.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(str(src), str(dst))
+            ev = pd.read_csv(schema_root / "event_manifest.csv")
+            ev.rename(columns={"event_id": "event_id_renamed"}, inplace=True)
+            ev.to_csv(schema_root / "event_manifest.csv", index=False, lineterminator="\n")
+            result = compare_eight_data_artifacts_semantically(base_paths, _artifact_paths_from_dir(schema_root))
+            comp = result["artifact_comparisons"].get("results/part3b_prediction_ledger/event_manifest.csv", {})
+            _record(
+                "one_schema_difference_fails",
+                result["data_artifact_semantic_comparison_passed"] is False and comp.get("schema_equal") is False,
+            )
+
+        # 4. One row-order difference fails.
+        with tempfile.TemporaryDirectory(prefix="part3b2_e1_order_") as order_dir:
+            order_root = Path(order_dir)
+            for rel, src in base_paths.items():
+                dst = order_root / Path(rel).name
+                dst.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(str(src), str(dst))
+            reg = pd.read_csv(order_root / "sample_registry.csv")
+            reg = reg.iloc[::-1].reset_index(drop=True)
+            reg.to_csv(order_root / "sample_registry.csv", index=False, lineterminator="\n")
+            result = compare_eight_data_artifacts_semantically(base_paths, _artifact_paths_from_dir(order_root))
+            comp = result["artifact_comparisons"].get("results/part3b_prediction_ledger/sample_registry.csv", {})
+            _record(
+                "one_row_order_difference_fails",
+                result["data_artifact_semantic_comparison_passed"] is False
+                and comp.get("decompressed_byte_equal") is False,
+            )
+
+        # 5. One identity-cell difference fails.
+        with tempfile.TemporaryDirectory(prefix="part3b2_e1_identity_") as id_dir:
+            id_root = Path(id_dir)
+            for rel, src in base_paths.items():
+                dst = id_root / Path(rel).name
+                dst.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(str(src), str(dst))
+            reg = pd.read_csv(id_root / "sample_registry.csv")
+            reg.at[0, "sample_uid"] = "CM1:999999"
+            reg.to_csv(id_root / "sample_registry.csv", index=False, lineterminator="\n")
+            result = compare_eight_data_artifacts_semantically(base_paths, _artifact_paths_from_dir(id_root))
+            _record(
+                "one_identity_cell_difference_fails",
+                result["data_artifact_semantic_comparison_passed"] is False
+                and result["all_identity_columns_exact"] is False,
+            )
+
+        # 6. LR score changed by one ULP fails.
+        with tempfile.TemporaryDirectory(prefix="part3b2_e1_lr_") as lr_dir:
+            lr_root = Path(lr_dir)
+            for rel, src in base_paths.items():
+                dst = lr_root / Path(rel).name
+                dst.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(str(src), str(dst))
+            df = _read_semantic_data_artifact(lr_root / "prediction_ledger_within.csv.gz")
+            df.at[0, "score__LR_std_C0.1"] = np.nextafter(float(df.at[0, "score__LR_std_C0.1"]), np.inf)
+            df.to_csv(
+                lr_root / "prediction_ledger_within.csv.gz", index=False, lineterminator="\n", compression="gzip", float_format="%.17g"
+            )
+            result = compare_eight_data_artifacts_semantically(base_paths, _artifact_paths_from_dir(lr_root))
+            comp = result["artifact_comparisons"].get("results/part3b_prediction_ledger/prediction_ledger_within.csv.gz", {})
+            _record(
+                "lr_score_one_ulp_difference_fails",
+                result["data_artifact_semantic_comparison_passed"] is False and comp.get("lr_dt_scores_exact") is False,
+            )
+
+        # 7. DT score changed by one ULP fails.
+        with tempfile.TemporaryDirectory(prefix="part3b2_e1_dt_") as dt_dir:
+            dt_root = Path(dt_dir)
+            for rel, src in base_paths.items():
+                dst = dt_root / Path(rel).name
+                dst.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(str(src), str(dst))
+            df = _read_semantic_data_artifact(dt_root / "prediction_ledger_within.csv.gz")
+            df.at[0, "score__DT_leaf5"] = np.nextafter(float(df.at[0, "score__DT_leaf5"]), np.inf)
+            df.to_csv(
+                dt_root / "prediction_ledger_within.csv.gz", index=False, lineterminator="\n", compression="gzip", float_format="%.17g"
+            )
+            result = compare_eight_data_artifacts_semantically(base_paths, _artifact_paths_from_dir(dt_root))
+            comp = result["artifact_comparisons"].get("results/part3b_prediction_ledger/prediction_ledger_within.csv.gz", {})
+            _record(
+                "dt_score_one_ulp_difference_fails",
+                result["data_artifact_semantic_comparison_passed"] is False and comp.get("lr_dt_scores_exact") is False,
+            )
+
+        # 8. ET score changed by 5e-16 passes and is counted as exactly different.
+        with tempfile.TemporaryDirectory(prefix="part3b2_e1_et5e16_") as et_dir:
+            et_root = Path(et_dir)
+            for rel, src in base_paths.items():
+                dst = et_root / Path(rel).name
+                dst.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(str(src), str(dst))
+            df = _read_semantic_data_artifact(et_root / "prediction_ledger_within.csv.gz")
+            df.at[0, "score__ET_leaf5"] = float(df.at[0, "score__ET_leaf5"]) + 5e-16
+            df.to_csv(
+                et_root / "prediction_ledger_within.csv.gz", index=False, lineterminator="\n", compression="gzip", float_format="%.17g"
+            )
+            result = compare_eight_data_artifacts_semantically(base_paths, _artifact_paths_from_dir(et_root))
+            comp = result["artifact_comparisons"].get("results/part3b_prediction_ledger/prediction_ledger_within.csv.gz", {})
+            _record(
+                "et_score_5e16_roundoff_passes_and_counted",
+                result["data_artifact_semantic_comparison_passed"] is True
+                and comp.get("et_exactly_different_cells") == 1
+                and comp.get("et_out_of_policy_cells") == 0
+                and result["exactly_different_et_cells"] == 1
+                and result["out_of_policy_et_cells"] == 0,
+                maximum_et_score_difference=result["maximum_et_score_difference"],
+            )
+
+        # 9. ET score changed by 2e-15 fails.
+        with tempfile.TemporaryDirectory(prefix="part3b2_e1_et2e15_") as et2_dir:
+            et2_root = Path(et2_dir)
+            for rel, src in base_paths.items():
+                dst = et2_root / Path(rel).name
+                dst.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(str(src), str(dst))
+            df = _read_semantic_data_artifact(et2_root / "prediction_ledger_within.csv.gz")
+            df.at[0, "score__ET_leaf5"] = float(df.at[0, "score__ET_leaf5"]) + 2e-15
+            df.to_csv(
+                et2_root / "prediction_ledger_within.csv.gz", index=False, lineterminator="\n", compression="gzip", float_format="%.17g"
+            )
+            result = compare_eight_data_artifacts_semantically(base_paths, _artifact_paths_from_dir(et2_root))
+            _record(
+                "et_score_2e15_difference_fails",
+                result["data_artifact_semantic_comparison_passed"] is False
+                and result["out_of_policy_et_cells"] > 0,
+            )
+
+        # 10. One reconstruction threshold difference fails.
+        with tempfile.TemporaryDirectory(prefix="part3b2_e1_threshold_") as th_dir:
+            th_root = Path(th_dir)
+            for rel, src in base_paths.items():
+                dst = th_root / Path(rel).name
+                dst.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(str(src), str(dst))
+            res = pd.read_csv(th_root / "canonical_result_reconstruction.csv")
+            res.at[0, "threshold"] = float(res.at[0, "threshold"]) + 1e-8
+            res.to_csv(th_root / "canonical_result_reconstruction.csv", index=False, lineterminator="\n", float_format="%.17g")
+            result = compare_eight_data_artifacts_semantically(base_paths, _artifact_paths_from_dir(th_root))
+            comp = result["artifact_comparisons"].get("results/part3b_prediction_ledger/canonical_result_reconstruction.csv", {})
+            _record(
+                "one_reconstruction_threshold_difference_fails",
+                result["data_artifact_semantic_comparison_passed"] is False and comp.get("thresholds_exact") is False,
+            )
+
+        # 11. Non-ET reconstruction metric changed by 1e-8 fails.
+        with tempfile.TemporaryDirectory(prefix="part3b2_e1_nonet_") as nonet_dir:
+            nonet_root = Path(nonet_dir)
+            for rel, src in base_paths.items():
+                dst = nonet_root / Path(rel).name
+                dst.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(str(src), str(dst))
+            val = pd.read_csv(nonet_root / "validation_reconstruction.csv")
+            non_et_idx = val.index[val["candidate"] != "ET_leaf5"][0]
+            val.at[non_et_idx, "val_brier"] = float(val.at[non_et_idx, "val_brier"]) + 1e-8
+            val.to_csv(nonet_root / "validation_reconstruction.csv", index=False, lineterminator="\n", float_format="%.17g")
+            result = compare_eight_data_artifacts_semantically(base_paths, _artifact_paths_from_dir(nonet_root))
+            _record(
+                "non_et_reconstruction_metric_1e8_difference_fails",
+                result["data_artifact_semantic_comparison_passed"] is False
+                and result["all_non_et_score_columns_exact"] is False,
+            )
+
+        # 12. ET-dependent roc_auc changed by 5e-8 passes as approved rank roundoff.
+        with tempfile.TemporaryDirectory(prefix="part3b2_e1_etrank_") as etr_dir:
+            etr_root = Path(etr_dir)
+            for rel, src in base_paths.items():
+                dst = etr_root / Path(rel).name
+                dst.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(str(src), str(dst))
+            val = pd.read_csv(etr_root / "validation_reconstruction.csv")
+            et_idx = val.index[val["candidate"] == "ET_leaf5"][0]
+            val.at[et_idx, "val_roc_auc"] = float(val.at[et_idx, "val_roc_auc"]) + 5e-8
+            val.to_csv(etr_root / "validation_reconstruction.csv", index=False, lineterminator="\n", float_format="%.17g")
+            result = compare_eight_data_artifacts_semantically(base_paths, _artifact_paths_from_dir(etr_root))
+            approved = result["allowed_et_rank_metric_differences"]
+            _record(
+                "et_dependent_roc_auc_5e8_rank_roundoff_passes",
+                result["data_artifact_semantic_comparison_passed"] is True
+                and len(approved) == 1
+                and approved[0]["metric"] == "val_roc_auc",
+            )
+
+        # 13. ET-dependent non-rank metric changed by 5e-8 fails.
+        with tempfile.TemporaryDirectory(prefix="part3b2_e1_etnonrank_") as etnr_dir:
+            etnr_root = Path(etnr_dir)
+            for rel, src in base_paths.items():
+                dst = etnr_root / Path(rel).name
+                dst.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(str(src), str(dst))
+            val = pd.read_csv(etnr_root / "validation_reconstruction.csv")
+            et_idx = val.index[val["candidate"] == "ET_leaf5"][0]
+            val.at[et_idx, "val_brier"] = float(val.at[et_idx, "val_brier"]) + 5e-8
+            val.to_csv(etnr_root / "validation_reconstruction.csv", index=False, lineterminator="\n", float_format="%.17g")
+            result = compare_eight_data_artifacts_semantically(base_paths, _artifact_paths_from_dir(etnr_root))
+            _record(
+                "et_dependent_non_rank_metric_5e8_difference_fails",
+                result["data_artifact_semantic_comparison_passed"] is False
+                and result["all_non_et_score_columns_exact"] is False,
+            )
+
+    summary = {
+        "tests_expected": 13,
+        "tests_executed": len(tests),
+        "tests_passed": sum(1 for t in tests if t.get("passed")),
+        "tests_failed": sum(1 for t in tests if not t.get("passed")),
+        "test_details": tests,
+        "model_fits_executed": 0,
+        "prediction_calls_executed": 0,
+        "repository_artifacts_written": 0,
+        "full_build_executed": False,
+        "part3b_complete": False,
+        "part3c_authorized": False,
+        "round_trip_parsing_used": True,
+        "et_score_tolerance": ET_SCORE_ATOL,
+        "et_rank_metric_tolerance": ET_RANK_METRIC_ATOL,
+    }
+    return tests, all_passed, summary
+
+
+# ---------------------------------------------------------------------------
 # Final printed report
 # ---------------------------------------------------------------------------
 def print_final_report(json_report: Dict[str, Any], actual_changed_paths: List[str], new_commit: Optional[str] = None, remote_head: Optional[str] = None, git_status: Optional[str] = None) -> None:
@@ -4390,7 +5344,13 @@ def main():
     parser.add_argument("--self-test-persisted-ledger", action="store_true", default=False)
     parser.add_argument("--self-test-preservation", action="store_true", default=False)
     parser.add_argument("--self-test-audit-gate", action="store_true", default=False)
+    parser.add_argument("--self-test-data-artifact-comparison", action="store_true", default=False)
     known, _ = parser.parse_known_args()
+    if known.self_test_data_artifact_comparison:
+        tests, all_passed, summary = run_data_artifact_comparison_self_tests()
+        summary["data_artifacts_expected"] = 8
+        print(_json_dumps(summary))
+        return 0 if (all_passed and summary["tests_executed"] == 13 and summary["tests_failed"] == 0) else 1
     if known.self_test_persisted_ledger:
         root = repo_root()
         frozen = import_frozen_pipeline(root)
