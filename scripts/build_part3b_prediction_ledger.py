@@ -5,9 +5,10 @@ This script is deterministic and self-contained. It may be invoked from any
 working directory; it locates the repository root from __file__ and references
 all other paths absolutely.
 
-Version: Part-3B.2R.1-E.1-v1
-Starting full commit: 2ecc0600c2b283f9d0a33da91fbf44e31b12bd74
-Accepted Part 3A commit: d711ca3fa851bb2b7a5001a04cc73a63b690f620
+Version: Part-3B.2R.1-E.1.1-v1
+Starting full commit: 414b4ee260f972a3b9315402ce947693665497d8
+Accepted Part 3A commit:
+d16e28488aa0936014f020c05466181eff219af6
 """
 from __future__ import annotations
 
@@ -40,9 +41,11 @@ warnings.filterwarnings("ignore")
 # ---------------------------------------------------------------------------
 # Frozen version and provenance constants
 # ---------------------------------------------------------------------------
-PART3B_VERSION = "Part-3B.2R.1-E.1-v1"
-STARTING_COMMIT = "2ecc0600c2b283f9d0a33da91fbf44e31b12bd74"
-ACCEPTED_PART3A_COMMIT = "d711ca3fa851bb2b7a5001a04cc73a63b690f620"
+PART3B_VERSION = "Part-3B.2R.1-E.1.1-v1"
+STARTING_COMMIT = "414b4ee260f972a3b9315402ce947693665497d8"
+ACCEPTED_PART3A_COMMIT = "d16e28488aa0936014f020c05466181eff219af6"
+assert ACCEPTED_PART3A_COMMIT == \
+    "d16e28488aa0936014f020c05466181eff219af6"
 REPOSITORY = "abtinasg/springer"
 BRANCH = "major-revision-analysis-v2"
 
@@ -205,6 +208,35 @@ RESULT_RECONSTRUCTION_COLUMNS = [
     "precision", "recall", "brier", "precision_at_10pct", "recall_at_10pct", "lift_at_10pct",
     "precision_at_20pct", "recall_at_20pct", "lift_at_20pct",
 ]
+
+# ---------------------------------------------------------------------------
+# Frozen schema mapping for all eight data artifacts (Part E.1.1)
+# ---------------------------------------------------------------------------
+EXPECTED_DATA_ARTIFACT_SCHEMAS = {
+    "results/part3b_prediction_ledger/sample_registry.csv":
+        REGISTRY_COLUMNS,
+
+    "results/part3b_prediction_ledger/event_manifest.csv":
+        EVENT_MANIFEST_COLUMNS,
+
+    "results/part3b_prediction_ledger/split_membership_within.csv.gz":
+        SPLIT_MEMBERSHIP_COLUMNS,
+
+    "results/part3b_prediction_ledger/split_membership_cross.csv.gz":
+        SPLIT_MEMBERSHIP_COLUMNS,
+
+    "results/part3b_prediction_ledger/prediction_ledger_within.csv.gz":
+        PREDICTION_LEDGER_COLUMNS,
+
+    "results/part3b_prediction_ledger/prediction_ledger_cross.csv.gz":
+        PREDICTION_LEDGER_COLUMNS,
+
+    "results/part3b_prediction_ledger/validation_reconstruction.csv":
+        VALIDATION_RECONSTRUCTION_COLUMNS,
+
+    "results/part3b_prediction_ledger/canonical_result_reconstruction.csv":
+        RESULT_RECONSTRUCTION_COLUMNS,
+}
 
 # ---------------------------------------------------------------------------
 # Preservation path groups
@@ -3763,9 +3795,36 @@ def is_et_score_dependent_reconstruction_row(artifact: str, row: pd.Series) -> b
     return False
 
 
-def _bitwise_different(a: np.ndarray, b: np.ndarray) -> np.ndarray:
-    """Element-wise float64 bit-pattern inequality, treating NaN == NaN."""
-    return (a != b) & ~(np.isnan(a) & np.isnan(b))
+def float64_bitwise_difference_mask(a: np.ndarray, b: np.ndarray) -> np.ndarray:
+    """True finite-float64 bit-pattern comparison, treating NaN == NaN."""
+    a64 = np.asarray(a, dtype=np.float64)
+    b64 = np.asarray(b, dtype=np.float64)
+    nan_equal = np.isnan(a64) & np.isnan(b64)
+    bits_a = a64.view(np.uint64)
+    bits_b = b64.view(np.uint64)
+    return (bits_a != bits_b) & ~nan_equal
+
+
+def _compute_schema_contract(
+    rel: str, first_columns: List[str], second_columns: List[str],
+) -> Dict[str, Any]:
+    """Compute frozen-schema contract evidence for a single artifact."""
+    expected_schema = list(EXPECTED_DATA_ARTIFACT_SCHEMAS.get(rel, []))
+    first_schema = list(first_columns)
+    second_schema = list(second_columns)
+    first_schema_contract_exact = first_schema == expected_schema
+    second_schema_contract_exact = second_schema == expected_schema
+    schemas_equal_to_each_other = first_schema == second_schema
+    schema_contract_passed = first_schema_contract_exact and second_schema_contract_exact
+    return {
+        "expected_schema": expected_schema,
+        "first_schema": first_schema,
+        "second_schema": second_schema,
+        "first_schema_contract_exact": first_schema_contract_exact,
+        "second_schema_contract_exact": second_schema_contract_exact,
+        "schemas_equal_to_each_other": schemas_equal_to_each_other,
+        "schema_contract_passed": schema_contract_passed,
+    }
 
 
 def _compare_structural_artifact(
@@ -3785,6 +3844,13 @@ def _compare_structural_artifact(
         "row_order_equal": None,
         "cell_values_equal": None,
         "identity_values_equal": None,
+        "expected_schema": None,
+        "first_schema": None,
+        "second_schema": None,
+        "first_schema_contract_exact": None,
+        "second_schema_contract_exact": None,
+        "schemas_equal_to_each_other": None,
+        "schema_contract_passed": None,
         "within_policy": False,
     }
     if not (comp["present_first"] and comp["present_second"]):
@@ -3806,7 +3872,11 @@ def _compare_structural_artifact(
     comp["row_order_equal"] = comp["decompressed_byte_equal"]
     comp["cell_values_equal"] = comp["decompressed_byte_equal"]
     comp["identity_values_equal"] = comp["decompressed_byte_equal"]
-    comp["within_policy"] = comp["decompressed_byte_equal"]
+
+    sc = _compute_schema_contract(rel, list(df1.columns), list(df2.columns))
+    comp.update(sc)
+
+    comp["within_policy"] = comp["decompressed_byte_equal"] and comp["schema_contract_passed"]
 
     if not comp["within_policy"]:
         unapproved.append({"artifact": rel, "reason": "structural_or_identity_difference"})
@@ -3833,6 +3903,13 @@ def _compare_prediction_ledger(
         "et_exactly_different_cells": 0,
         "et_out_of_policy_cells": 0,
         "first_twenty_et_score_differences": [],
+        "expected_schema": None,
+        "first_schema": None,
+        "second_schema": None,
+        "first_schema_contract_exact": None,
+        "second_schema_contract_exact": None,
+        "schemas_equal_to_each_other": None,
+        "schema_contract_passed": None,
         "within_policy": False,
     }
     if not (comp["present_first"] and comp["present_second"]):
@@ -3844,27 +3921,43 @@ def _compare_prediction_ledger(
     comp["schema_equal"] = list(df1.columns) == list(df2.columns)
     comp["row_count_equal"] = len(df1) == len(df2)
 
-    identity_equal = False
-    if comp["schema_equal"] and comp["row_count_equal"]:
+    sc = _compute_schema_contract(rel, list(df1.columns), list(df2.columns))
+    comp.update(sc)
+
+    schema_contract_passed = comp["schema_contract_passed"]
+    within = schema_contract_passed
+
+    if schema_contract_passed and comp["row_count_equal"]:
         identity_equal = (
             df1[LEDGER_IDENTITY_COLUMNS]
             .reset_index(drop=True)
             .equals(df2[LEDGER_IDENTITY_COLUMNS].reset_index(drop=True))
         )
+    else:
+        identity_equal = False
     comp["identity_columns_equal"] = identity_equal
-    within = identity_equal
+    within = within and identity_equal
 
-    if comp["schema_equal"] and comp["row_count_equal"]:
+    if schema_contract_passed and comp["row_count_equal"]:
         lr_dt_exact = True
         for col in LEDGER_EXACT_SCORE_COLUMNS:
-            if col not in df1.columns or col not in df2.columns:
+            missing_in_first = col not in df1.columns
+            missing_in_second = col not in df2.columns
+            if missing_in_first or missing_in_second:
+                lr_dt_exact = False
+                within = False
+                unapproved.append({
+                    "artifact": rel,
+                    "metric": col,
+                    "reason": "missing_required_score_column",
+                })
                 continue
             a = df1[col].to_numpy(dtype=np.float64)
             b = df2[col].to_numpy(dtype=np.float64)
             if not np.array_equal(a, b, equal_nan=True):
                 lr_dt_exact = False
                 within = False
-                mask = _bitwise_different(a, b)
+                mask = float64_bitwise_difference_mask(a, b)
                 for i in np.where(mask)[0]:
                     unapproved.append({
                         "artifact": rel,
@@ -3881,7 +3974,7 @@ def _compare_prediction_ledger(
         if LEDGER_ET_SCORE_COLUMN in df1.columns and LEDGER_ET_SCORE_COLUMN in df2.columns:
             a = df1[LEDGER_ET_SCORE_COLUMN].to_numpy(dtype=np.float64)
             b = df2[LEDGER_ET_SCORE_COLUMN].to_numpy(dtype=np.float64)
-            exact_diff = _bitwise_different(a, b)
+            exact_diff = float64_bitwise_difference_mask(a, b)
             out_policy = ~np.isclose(a, b, rtol=0.0, atol=ET_SCORE_ATOL, equal_nan=True)
             n_exact = int(np.sum(exact_diff))
             n_out = int(np.sum(out_policy))
@@ -3896,16 +3989,18 @@ def _compare_prediction_ledger(
                 comp["et_score_maximum_absolute_difference"] = maxdiff
                 stats["maximum_et_score_difference"] = max(stats["maximum_et_score_difference"], maxdiff)
                 records = []
-                for i in np.where(exact_diff)[0][:20]:
-                    records.append({
-                        "artifact": rel,
-                        "event_id": str(df1.iloc[i]["event_id"]),
-                        "split_role": str(df1.iloc[i]["split_role"]),
-                        "sample_uid": str(df1.iloc[i]["sample_uid"]),
-                        "build_1_value": float(a[i]),
-                        "build_2_value": float(b[i]),
-                        "absolute_difference": float(diffs[i]),
-                    })
+                remaining = 20 - len(stats["first_twenty_et_score_differences"])
+                if remaining > 0:
+                    for i in np.where(exact_diff)[0][:remaining]:
+                        records.append({
+                            "artifact": rel,
+                            "event_id": str(df1.iloc[i]["event_id"]),
+                            "split_role": str(df1.iloc[i]["split_role"]),
+                            "sample_uid": str(df1.iloc[i]["sample_uid"]),
+                            "build_1_value": float(a[i]),
+                            "build_2_value": float(b[i]),
+                            "absolute_difference": float(diffs[i]),
+                        })
                 comp["first_twenty_et_score_differences"] = records
                 stats["first_twenty_et_score_differences"].extend(records)
 
@@ -3923,6 +4018,17 @@ def _compare_prediction_ledger(
                         "build_2_value": float(b[i]),
                         "absolute_difference": float(diffs[i]),
                     })
+        else:
+            lr_dt_exact = False
+            within = False
+            comp["lr_dt_scores_exact"] = lr_dt_exact
+            unapproved.append({
+                "artifact": rel,
+                "metric": LEDGER_ET_SCORE_COLUMN,
+                "reason": "missing_required_score_column",
+            })
+    else:
+        comp["lr_dt_scores_exact"] = False
 
     comp["within_policy"] = within
     return within, comp
@@ -3946,6 +4052,13 @@ def _compare_reconstruction_artifact(
         "selections_exact": None,
         "thresholds_exact": None,
         "non_et_metrics_strict": None,
+        "expected_schema": None,
+        "first_schema": None,
+        "second_schema": None,
+        "first_schema_contract_exact": None,
+        "second_schema_contract_exact": None,
+        "schemas_equal_to_each_other": None,
+        "schema_contract_passed": None,
         "within_policy": False,
     }
     if not (comp["present_first"] and comp["present_second"]):
@@ -3957,19 +4070,40 @@ def _compare_reconstruction_artifact(
     comp["schema_equal"] = list(df1.columns) == list(df2.columns)
     comp["row_count_equal"] = len(df1) == len(df2)
 
+    sc = _compute_schema_contract(rel, list(df1.columns), list(df2.columns))
+    comp.update(sc)
+
+    schema_contract_passed = comp["schema_contract_passed"]
+
     if "validation_reconstruction.csv" in rel:
         keys = VALIDATION_RECON_KEYS
     else:
         keys = RESULT_RECON_CAT_COLS
 
+    missing_keys = [k for k in keys if k not in df1.columns or k not in df2.columns]
+    if missing_keys:
+        within = False
+        comp["categorical_keys_exact"] = False
+        comp["selections_exact"] = False
+        comp["thresholds_exact"] = False
+        comp["non_et_metrics_strict"] = False
+        for k in missing_keys:
+            unapproved.append({
+                "artifact": rel,
+                "metric": k,
+                "reason": "missing_required_key",
+            })
+        comp["within_policy"] = within
+        return within, comp
+
     cat_equal = False
-    if comp["schema_equal"] and comp["row_count_equal"]:
+    if schema_contract_passed and comp["row_count_equal"]:
         cat_equal = df1[keys].reset_index(drop=True).equals(df2[keys].reset_index(drop=True))
     comp["categorical_keys_exact"] = cat_equal
     comp["selections_exact"] = cat_equal
-    within = cat_equal
+    within = schema_contract_passed and cat_equal
 
-    if comp["schema_equal"] and comp["row_count_equal"]:
+    if schema_contract_passed and comp["row_count_equal"]:
         non_key_numeric = [c for c in df1.columns if c not in keys]
         threshold_col = None
         if "threshold" in non_key_numeric:
@@ -3984,7 +4118,7 @@ def _compare_reconstruction_artifact(
             comp["thresholds_exact"] = thr_exact
             if not thr_exact:
                 within = False
-                mask = _bitwise_different(a_thr, b_thr)
+                mask = float64_bitwise_difference_mask(a_thr, b_thr)
                 for i in np.where(mask)[0]:
                     unapproved.append({
                         "artifact": rel,
@@ -4001,6 +4135,15 @@ def _compare_reconstruction_artifact(
         non_et_metrics_strict = True
 
         for col in metric_cols:
+            if col not in df2.columns:
+                within = False
+                non_et_metrics_strict = False
+                unapproved.append({
+                    "artifact": rel,
+                    "metric": col,
+                    "reason": "missing_required_metric_column",
+                })
+                continue
             a = df1[col].to_numpy(dtype=np.float64)
             b = df2[col].to_numpy(dtype=np.float64)
             diff = np.abs(a - b)
@@ -4112,6 +4255,10 @@ def compare_eight_data_artifacts_semantically(
     all_thresholds_exact = all(
         artifact_comparisons[rel].get("thresholds_exact", True) for rel in SEMANTIC_DATA_ARTIFACTS
     )
+    all_schema_contracts_passed = all(
+        artifact_comparisons[rel].get("schema_contract_passed", False) is True
+        for rel in SEMANTIC_DATA_ARTIFACTS
+    )
 
     unapproved_differing_data_artifacts = sorted(unapproved_artifacts)
     data_artifacts_with_approved_et_roundoff_only = []
@@ -4127,6 +4274,7 @@ def compare_eight_data_artifacts_semantically(
         len(missing_from_first) == 0
         and len(missing_from_second) == 0
         and len(extra_data_artifacts) == 0
+        and all_schema_contracts_passed
         and exact_structural_equality
         and all_identity_columns_exact
         and all_non_et_score_columns_exact
@@ -4146,6 +4294,7 @@ def compare_eight_data_artifacts_semantically(
         "missing_from_second": missing_from_second,
         "extra_data_artifacts": extra_data_artifacts,
         "artifact_comparisons": artifact_comparisons,
+        "all_schema_contracts_passed": all_schema_contracts_passed,
         "exact_structural_equality": exact_structural_equality,
         "all_identity_columns_exact": all_identity_columns_exact,
         "all_non_et_score_columns_exact": all_non_et_score_columns_exact,
@@ -4608,6 +4757,190 @@ def run_data_artifact_comparison_self_tests() -> Tuple[List[Dict[str, Any]], boo
         "round_trip_parsing_used": True,
         "et_score_tolerance": ET_SCORE_ATOL,
         "et_rank_metric_tolerance": ET_RANK_METRIC_ATOL,
+    }
+    return tests, all_passed, summary
+
+
+def run_part_e1_1_schema_provenance_tests() -> Tuple[List[Dict[str, Any]], bool, Dict[str, Any]]:
+    """Six focused schema/provenance tests for Part E.1.1."""
+    tests: List[Dict[str, Any]] = []
+    all_passed = True
+
+    def _record(case_name: str, passed: bool, **extra: Any) -> None:
+        nonlocal all_passed
+        tests.append({"case_name": case_name, "passed": passed, **extra})
+        all_passed = all_passed and passed
+
+    # 1. Accepted Part 3A constant equals d16e28488aa0936014f020c05466181eff219af6
+    _record(
+        "accepted_part3a_commit_constant",
+        ACCEPTED_PART3A_COMMIT == "d16e28488aa0936014f020c05466181eff219af6",
+        accepted_part3a_commit=ACCEPTED_PART3A_COMMIT,
+    )
+
+    with tempfile.TemporaryDirectory(prefix="part3b2_e11_base_") as base_dir:
+        base_root = _make_synthetic_eight_artifact_dir(Path(base_dir))
+        base_paths = _artifact_paths_from_dir(base_root)
+
+        # 2. Both prediction ledgers identically missing score__ET_leaf5 fail.
+        with tempfile.TemporaryDirectory(prefix="part3b2_e11_missing_et_") as miss_et_dir:
+            miss_et_root = Path(miss_et_dir)
+            for rel, src in base_paths.items():
+                dst = miss_et_root / Path(rel).name
+                dst.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(str(src), str(dst))
+            for ledger_name in ["prediction_ledger_within.csv.gz", "prediction_ledger_cross.csv.gz"]:
+                p = miss_et_root / ledger_name
+                df = _read_semantic_data_artifact(p)
+                df.drop(columns=[LEDGER_ET_SCORE_COLUMN], inplace=True)
+                df.to_csv(p, index=False, lineterminator="\n", compression="gzip", float_format="%.17g")
+            result = compare_eight_data_artifacts_semantically(base_paths, _artifact_paths_from_dir(miss_et_root))
+            comp_w = result["artifact_comparisons"].get(
+                "results/part3b_prediction_ledger/prediction_ledger_within.csv.gz", {})
+            _record(
+                "both_ledgers_missing_et_score_fail",
+                result["data_artifact_semantic_comparison_passed"] is False
+                and comp_w.get("schema_contract_passed") is False
+                and comp_w.get("within_policy") is False,
+            )
+
+        # 3. Both prediction ledgers containing the same extra column fail.
+        with tempfile.TemporaryDirectory(prefix="part3b2_e11_extra_col_") as extra_dir:
+            extra_root = Path(extra_dir)
+            for rel, src in base_paths.items():
+                dst = extra_root / Path(rel).name
+                dst.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(str(src), str(dst))
+            for ledger_name in ["prediction_ledger_within.csv.gz", "prediction_ledger_cross.csv.gz"]:
+                p = extra_root / ledger_name
+                df = _read_semantic_data_artifact(p)
+                df["extra_bogus_column"] = 0.0
+                df.to_csv(p, index=False, lineterminator="\n", compression="gzip", float_format="%.17g")
+            result = compare_eight_data_artifacts_semantically(
+                _artifact_paths_from_dir(extra_root), _artifact_paths_from_dir(extra_root))
+            comp_w = result["artifact_comparisons"].get(
+                "results/part3b_prediction_ledger/prediction_ledger_within.csv.gz", {})
+            _record(
+                "both_ledgers_same_extra_column_fail",
+                result["data_artifact_semantic_comparison_passed"] is False
+                and comp_w.get("schema_contract_passed") is False
+                and comp_w.get("first_schema") == comp_w.get("second_schema")
+                and comp_w.get("schemas_equal_to_each_other") is True,
+            )
+
+        # 4. Both validation reconstruction files identically missing val_avg_precision fail.
+        with tempfile.TemporaryDirectory(prefix="part3b2_e11_missing_valap_") as miss_valap_dir:
+            miss_valap_root = Path(miss_valap_dir)
+            for rel, src in base_paths.items():
+                dst = miss_valap_root / Path(rel).name
+                dst.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(str(src), str(dst))
+            p = miss_valap_root / "validation_reconstruction.csv"
+            df = pd.read_csv(p)
+            df.drop(columns=["val_avg_precision"], inplace=True)
+            df.to_csv(p, index=False, lineterminator="\n", float_format="%.17g")
+            result = compare_eight_data_artifacts_semantically(base_paths, _artifact_paths_from_dir(miss_valap_root))
+            comp = result["artifact_comparisons"].get(
+                "results/part3b_prediction_ledger/validation_reconstruction.csv", {})
+            _record(
+                "both_val_recon_missing_val_avg_precision_fail",
+                result["data_artifact_semantic_comparison_passed"] is False
+                and comp.get("schema_contract_passed") is False
+                and comp.get("within_policy") is False,
+            )
+
+        # 5. Both structural sample-registry files identically missing sample_uid fail.
+        with tempfile.TemporaryDirectory(prefix="part3b2_e11_missing_uid_") as miss_uid_dir:
+            miss_uid_root = Path(miss_uid_dir)
+            for rel, src in base_paths.items():
+                dst = miss_uid_root / Path(rel).name
+                dst.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(str(src), str(dst))
+            p1 = miss_uid_root / "sample_registry.csv"
+            p2 = miss_uid_root / "sample_registry.csv"
+            df = pd.read_csv(p1)
+            df.drop(columns=["sample_uid"], inplace=True)
+            df.to_csv(p1, index=False, lineterminator="\n")
+            # Also drop from the base to make both identical
+            base_reg = base_root / "sample_registry.csv"
+            base_df = pd.read_csv(base_reg)
+            base_df2 = base_df.drop(columns=["sample_uid"])
+            # We need both first and second to be missing sample_uid
+            # Use the modified copy as both first and second
+            result = compare_eight_data_artifacts_semantically(
+                _artifact_paths_from_dir(miss_uid_root), _artifact_paths_from_dir(miss_uid_root))
+            comp = result["artifact_comparisons"].get(
+                "results/part3b_prediction_ledger/sample_registry.csv", {})
+            _record(
+                "both_sample_registry_missing_sample_uid_fail",
+                result["data_artifact_semantic_comparison_passed"] is False
+                and comp.get("schema_contract_passed") is False
+                and comp.get("within_policy") is False,
+            )
+
+        # 6. More than twenty in-policy ET bit differences produce:
+        #    exactly_different_et_cells > 20 but len(first_twenty_et_score_differences) == 20
+        with tempfile.TemporaryDirectory(prefix="part3b2_e11_et20_") as et20_dir:
+            et20_root = Path(et20_dir)
+            for rel, src in base_paths.items():
+                dst = et20_root / Path(rel).name
+                dst.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(str(src), str(dst))
+            # Create 25 rows with in-policy ET bit differences in both ledgers
+            for ledger_name in ["prediction_ledger_within.csv.gz", "prediction_ledger_cross.csv.gz"]:
+                p = et20_root / ledger_name
+                df = _read_semantic_data_artifact(p)
+                rows = []
+                for i in range(25):
+                    row = df.iloc[0].to_dict()
+                    row["sample_uid"] = f"CM1:{i:06d}"
+                    row["original_row_index"] = i
+                    row["score__ET_leaf5"] = 0.875 + i * 5e-16
+                    rows.append(row)
+                df_new = pd.DataFrame(rows)
+                df_new.to_csv(p, index=False, lineterminator="\n", compression="gzip", float_format="%.17g")
+            # Also update the base to have the same 25 rows but with different ET values
+            # so that there are 25 in-policy bit differences
+            with tempfile.TemporaryDirectory(prefix="part3b2_e11_et20_base_") as et20_base_dir:
+                et20_base_root = Path(et20_base_dir)
+                for rel, src in base_paths.items():
+                    dst = et20_base_root / Path(rel).name
+                    dst.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copy2(str(src), str(dst))
+                for ledger_name in ["prediction_ledger_within.csv.gz", "prediction_ledger_cross.csv.gz"]:
+                    p = et20_base_root / ledger_name
+                    df = _read_semantic_data_artifact(p)
+                    rows = []
+                    for i in range(25):
+                        row = df.iloc[0].to_dict()
+                        row["sample_uid"] = f"CM1:{i:06d}"
+                        row["original_row_index"] = i
+                        row["score__ET_leaf5"] = 0.875
+                        rows.append(row)
+                    df_new = pd.DataFrame(rows)
+                    df_new.to_csv(p, index=False, lineterminator="\n", compression="gzip", float_format="%.17g")
+                result = compare_eight_data_artifacts_semantically(
+                    _artifact_paths_from_dir(et20_base_root), _artifact_paths_from_dir(et20_root))
+                _record(
+                    "global_first_twenty_cap",
+                    result["exactly_different_et_cells"] > 20
+                    and len(result["first_twenty_et_score_differences"]) == 20,
+                    exactly_different_et_cells=result["exactly_different_et_cells"],
+                    first_twenty_count=len(result["first_twenty_et_score_differences"]),
+                )
+
+    summary = {
+        "tests_expected": 6,
+        "tests_executed": len(tests),
+        "tests_passed": sum(1 for t in tests if t.get("passed")),
+        "tests_failed": sum(1 for t in tests if not t.get("passed")),
+        "test_details": tests,
+        "model_fits_executed": 0,
+        "prediction_calls_executed": 0,
+        "repository_artifacts_written": 0,
+        "full_build_executed": False,
+        "part3b_complete": False,
+        "part3c_authorized": False,
     }
     return tests, all_passed, summary
 
@@ -5347,10 +5680,38 @@ def main():
     parser.add_argument("--self-test-data-artifact-comparison", action="store_true", default=False)
     known, _ = parser.parse_known_args()
     if known.self_test_data_artifact_comparison:
-        tests, all_passed, summary = run_data_artifact_comparison_self_tests()
-        summary["data_artifacts_expected"] = 8
-        print(_json_dumps(summary))
-        return 0 if (all_passed and summary["tests_executed"] == 13 and summary["tests_failed"] == 0) else 1
+        e1_tests, e1_all_passed, e1_summary = run_data_artifact_comparison_self_tests()
+        e11_tests, e11_all_passed, e11_summary = run_part_e1_1_schema_provenance_tests()
+        combined = {
+            "part_e1_tests": {
+                "tests_expected": e1_summary["tests_expected"],
+                "tests_executed": e1_summary["tests_executed"],
+                "tests_passed": e1_summary["tests_passed"],
+                "tests_failed": e1_summary["tests_failed"],
+            },
+            "part_e1_1_tests": {
+                "tests_expected": e11_summary["tests_expected"],
+                "tests_executed": e11_summary["tests_executed"],
+                "tests_passed": e11_summary["tests_passed"],
+                "tests_failed": e11_summary["tests_failed"],
+            },
+            "accepted_part3a_commit": ACCEPTED_PART3A_COMMIT,
+            "model_fits_executed": 0,
+            "prediction_calls_executed": 0,
+            "repository_artifacts_written": 0,
+            "full_build_executed": False,
+            "part3b_complete": False,
+            "part3c_authorized": False,
+        }
+        print(_json_dumps(combined))
+        return 0 if (
+            e1_all_passed
+            and e1_summary["tests_executed"] == 13
+            and e1_summary["tests_failed"] == 0
+            and e11_all_passed
+            and e11_summary["tests_executed"] == 6
+            and e11_summary["tests_failed"] == 0
+        ) else 1
     if known.self_test_persisted_ledger:
         root = repo_root()
         frozen = import_frozen_pipeline(root)
