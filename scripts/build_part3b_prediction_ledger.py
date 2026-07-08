@@ -6516,19 +6516,39 @@ def run_part_e2_eleven_artifact_tests() -> Tuple[List[Dict[str, Any]], bool, Dic
                 )
                 result = compare_eleven_artifacts_semantically(b1_all_full, b2_all_full)
                 md_cmp = result["metadata_artifact_comparisons"].get("audit_markdown", {})
-                approved_et_changed_artifacts = list(result.get("approved_cross_build_byte_difference_artifacts", set()))
+                within_rel = "results/part3b_prediction_ledger/prediction_ledger_within.csv.gz"
+                cross_rel = "results/part3b_prediction_ledger/prediction_ledger_cross.csv.gz"
+                within_comp = result["data_artifact_comparison"]["artifact_comparisons"].get(within_rel, {})
+                prediction_within_comparison_contains_decompressed_byte_equal = (
+                    "decompressed_byte_equal" in within_comp
+                )
+                prediction_cross_bytes_identical = (
+                    b1_all_full[cross_rel].read_bytes() == b2_all_full[cross_rel].read_bytes()
+                )
+                approved_et_changed_artifacts = sorted(
+                    result.get("approved_cross_build_byte_difference_artifacts", set())
+                )
+                approved_byte_diff_set_exact = (
+                    approved_et_changed_artifacts
+                    == ["results/part3b_prediction_ledger/prediction_ledger_within.csv.gz"]
+                )
                 _record(
                     "approved_et_markdown_and_full_gate_pass",
                     result["semantic_reproducibility_passed"] is True
                     and result["data_artifact_comparison"]["data_artifact_semantic_comparison_passed"] is True
                     and result["metadata_artifact_comparison_passed"] is True
                     and md_cmp.get("audit_md_comparison_passed") is True
-                    and result["approved_cross_build_byte_difference_artifacts"] == {
-                        "results/part3b_prediction_ledger/prediction_ledger_within.csv.gz"
-                    }
+                    and approved_byte_diff_set_exact is True
+                    and prediction_within_comparison_contains_decompressed_byte_equal is False
+                    and prediction_cross_bytes_identical is True
                     and len(result["unapproved_metadata_differences"]) == 0
                     and len(result["unapproved_differing_artifacts"]) == 0,
                     approved_et_changed_artifacts=approved_et_changed_artifacts,
+                    prediction_within_comparison_contains_decompressed_byte_equal=(
+                        prediction_within_comparison_contains_decompressed_byte_equal
+                    ),
+                    prediction_cross_bytes_identical=prediction_cross_bytes_identical,
+                    approved_byte_diff_set_exact=approved_byte_diff_set_exact,
                 )
 
     actual_case_names = [t.get("case_name", "") for t in tests]
@@ -6642,10 +6662,9 @@ def run_part_e2_1_fail_closed_tests() -> Tuple[List[Dict[str, Any]], bool, Dict[
                 for root in [r1, r2]:
                     with (root / "part3b_split_leakage_audit.json").open("r") as f:
                         audit = json.load(f)
-                    first_check = REQUIRED_AUDIT_CHECK_NAMES[0]
-                    audit["audit_checks"][first_check] = 1
-                    assert type(audit["audit_checks"][first_check]) is int
-                    assert type(audit["audit_checks"][first_check]) is not bool
+                    audit["audit_checks"]["source_commit_verified"] = 1
+                    assert type(audit["audit_checks"]["source_commit_verified"]) is int
+                    assert type(audit["audit_checks"]["source_commit_verified"]) is not bool
                     write_text_atomic(root / "part3b_split_leakage_audit.json", _json_dumps(audit))
                 p1 = _all_artifact_paths_from_dir(r1)
                 p2 = _all_artifact_paths_from_dir(r2)
@@ -6655,6 +6674,7 @@ def run_part_e2_1_fail_closed_tests() -> Tuple[List[Dict[str, Any]], bool, Dict[
                     "same_non_boolean_audit_check_rejected",
                     aj_cmp.get("audit_json_first_valid") is False
                     and aj_cmp.get("audit_json_second_valid") is False
+                    and aj_cmp.get("audit_json_audit_schema_exact") is False
                     and aj_cmp.get("audit_json_comparison_passed") is False
                     and result["semantic_reproducibility_passed"] is False,
                 )
@@ -7460,6 +7480,50 @@ def run_completeness_wiring_tests() -> Tuple[List[Dict[str, Any]], bool]:
     return tests, all_passed
 
 
+SUPPORTED_SELF_TEST_FLAGS = {
+    "--self-test-canonical-exception",
+    "--self-test-persisted-ledger",
+    "--self-test-preservation",
+    "--self-test-audit-gate",
+    "--self-test-data-artifact-comparison",
+    "--self-test-eleven-artifact-comparison",
+}
+
+
+def validate_self_test_arguments(args: List[str]) -> Dict[str, Any]:
+    """Pure helper: validate self-test CLI arguments without production side effects."""
+    base_evidence = {
+        "model_fits_executed": 0,
+        "prediction_calls_executed": 0,
+        "repository_artifacts_written": 0,
+        "full_build_executed": False,
+        "part3b_complete": False,
+        "part3c_authorized": False,
+    }
+    unknown_self_test_flag = None
+    for arg in args:
+        if arg.startswith("--self-test-") and arg not in SUPPORTED_SELF_TEST_FLAGS:
+            unknown_self_test_flag = arg
+            break
+
+    if unknown_self_test_flag is not None:
+        return {
+            "accepted": False,
+            "unknown_self_test_flag": unknown_self_test_flag,
+            "supported_self_test_flags": sorted(SUPPORTED_SELF_TEST_FLAGS),
+            "exit_code": 2,
+            **base_evidence,
+        }
+
+    return {
+        "accepted": True,
+        "unknown_self_test_flag": None,
+        "supported_self_test_flags": sorted(SUPPORTED_SELF_TEST_FLAGS),
+        "exit_code": 0,
+        **base_evidence,
+    }
+
+
 def run_cli_guard_tests() -> Tuple[List[Dict[str, Any]], bool, Dict[str, Any]]:
     """Two lightweight CLI-guard tests for self-test flag validation."""
     tests: List[Dict[str, Any]] = []
@@ -7471,28 +7535,37 @@ def run_cli_guard_tests() -> Tuple[List[Dict[str, Any]], bool, Dict[str, Any]]:
         all_passed = all_passed and passed
 
     # 1. supported_self_test_flag_accepted
-    supported_flag = "--self-test-canonical-exception"
-    accepted = supported_flag in SUPPORTED_SELF_TEST_FLAGS
+    supported_evidence = validate_self_test_arguments(["--self-test-canonical-exception"])
     _record(
         "supported_self_test_flag_accepted",
-        accepted is True,
-        tested_flag=supported_flag,
-        accepted=accepted,
+        supported_evidence["accepted"] is True
+        and supported_evidence["exit_code"] == 0,
+        tested_flag="--self-test-canonical-exception",
+        validation_evidence=supported_evidence,
     )
 
     # 2. unknown_self_test_flag_rejected_before_production
-    unknown_flag = "--self-test-tie-policy"
-    accepted = unknown_flag in SUPPORTED_SELF_TEST_FLAGS
+    tie_policy_evidence = validate_self_test_arguments(["--self-test-tie-policy"])
+    static_verification_evidence = validate_self_test_arguments(
+        ["--self-test-static-verification"]
+    )
+
+    def _unknown_flag_rejected(evidence: Dict[str, Any]) -> bool:
+        return (
+            evidence["accepted"] is False
+            and evidence["exit_code"] == 2
+            and evidence["model_fits_executed"] == 0
+            and evidence["prediction_calls_executed"] == 0
+            and evidence["repository_artifacts_written"] == 0
+            and evidence["full_build_executed"] is False
+        )
+
     _record(
         "unknown_self_test_flag_rejected_before_production",
-        accepted is False,
-        tested_flag=unknown_flag,
-        accepted=accepted,
-        exit_code=2,
-        model_fits_executed=0,
-        prediction_calls_executed=0,
-        repository_artifacts_written=0,
-        full_build_executed=False,
+        _unknown_flag_rejected(tie_policy_evidence)
+        and _unknown_flag_rejected(static_verification_evidence),
+        tie_policy_evidence=tie_policy_evidence,
+        static_verification_evidence=static_verification_evidence,
     )
 
     summary = {
@@ -7514,32 +7587,13 @@ def run_cli_guard_tests() -> Tuple[List[Dict[str, Any]], bool, Dict[str, Any]]:
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
-SUPPORTED_SELF_TEST_FLAGS = {
-    "--self-test-canonical-exception",
-    "--self-test-persisted-ledger",
-    "--self-test-preservation",
-    "--self-test-audit-gate",
-    "--self-test-data-artifact-comparison",
-    "--self-test-eleven-artifact-comparison",
-}
 
 def main():
-    # Fail-closed check for unknown self-test flags before any production execution
     import sys
-    for arg in sys.argv[1:]:
-        if arg.startswith("--self-test-") and arg not in SUPPORTED_SELF_TEST_FLAGS:
-            error_report = {
-                "unknown_self_test_flag": arg,
-                "supported_self_test_flags": sorted(SUPPORTED_SELF_TEST_FLAGS),
-                "model_fits_executed": 0,
-                "prediction_calls_executed": 0,
-                "repository_artifacts_written": 0,
-                "full_build_executed": False,
-                "part3b_complete": False,
-                "part3c_authorized": False,
-            }
-            print(_json_dumps(error_report))
-            return 2
+    validation = validate_self_test_arguments(sys.argv[1:])
+    if not validation["accepted"]:
+        print(_json_dumps(validation))
+        return validation["exit_code"]
 
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument("--self-test-canonical-exception", action="store_true", default=False)
@@ -7599,6 +7653,21 @@ def main():
         # Extract approved-ET changed artifacts from test record
         approved_et_changed_artifacts = approved_et_test.get("approved_et_changed_artifacts", [])
         approved_et_changed_artifact_count = len(approved_et_changed_artifacts)
+        approved_byte_diff_set_exact = approved_et_test.get("approved_byte_diff_set_exact", False)
+        approved_byte_diff_set_explicit = approved_byte_diff_set_exact
+        prediction_within_comparison_contains_decompressed_byte_equal = approved_et_test.get(
+            "prediction_within_comparison_contains_decompressed_byte_equal", True
+        )
+        prediction_cross_bytes_identical = approved_et_test.get("prediction_cross_bytes_identical", False)
+        decompressed_byte_equal_not_used_in_markdown_normalization = (
+            approved_et_full_eleven_artifact_gate_passed
+            and prediction_within_comparison_contains_decompressed_byte_equal is False
+        )
+        approved_et_fixture_modifies_within_only = (
+            approved_et_changed_artifacts
+            == ["results/part3b_prediction_ledger/prediction_ledger_within.csv.gz"]
+            and prediction_cross_bytes_identical is True
+        )
 
         combined = {
             "part_e2_tests": {
@@ -7634,10 +7703,12 @@ def main():
             "audit_json_valid_enforced": audit_json_valid_enforced,
             "audit_md_valid_enforced": audit_md_valid_enforced,
             "fail_closed_metadata_gate": fail_closed_metadata_gate,
-            "approved_byte_diff_set_explicit": True,
-            "decompressed_byte_equal_not_used_in_markdown_normalization": True,
+            "approved_byte_diff_set_explicit": approved_byte_diff_set_explicit,
+            "decompressed_byte_equal_not_used_in_markdown_normalization": (
+                decompressed_byte_equal_not_used_in_markdown_normalization
+            ),
             "approved_et_fixture_used": approved_et_test.get("passed", False),
-            "approved_et_fixture_modifies_within_only": True,
+            "approved_et_fixture_modifies_within_only": approved_et_fixture_modifies_within_only,
             "e2_case_count_exact_14": len(e2_case_names) == len(EXPECTED_PART_E2_TEST_NAMES),
             "e2_1_case_count_exact_5": len(e21_case_names) == len(EXPECTED_PART_E2_1_TEST_NAMES),
             "missing_manifest_rejected": missing_manifest_test.get("passed", False),
@@ -7654,6 +7725,11 @@ def main():
             "same_stale_markdown_hash_rejected": same_stale_markdown_hash_test.get("passed", False),
             "approved_et_changed_artifacts": approved_et_changed_artifacts,
             "approved_et_changed_artifact_count": approved_et_changed_artifact_count,
+            "prediction_within_comparison_contains_decompressed_byte_equal": (
+                prediction_within_comparison_contains_decompressed_byte_equal
+            ),
+            "prediction_cross_bytes_identical": prediction_cross_bytes_identical,
+            "approved_byte_diff_set_exact": approved_byte_diff_set_exact,
             "model_fits_executed": 0,
             "prediction_calls_executed": 0,
             "repository_artifacts_written": 0,
@@ -7674,6 +7750,12 @@ def main():
             and cli_guard_all_passed
             and cli_guard_summary["tests_executed"] == 2
             and cli_guard_summary["tests_failed"] == 0
+            and approved_et_changed_artifacts
+            == ["results/part3b_prediction_ledger/prediction_ledger_within.csv.gz"]
+            and approved_byte_diff_set_explicit is True
+            and decompressed_byte_equal_not_used_in_markdown_normalization is True
+            and approved_et_fixture_modifies_within_only is True
+            and same_non_boolean_audit_check_test.get("passed", False)
         ) else 1
     if known.self_test_data_artifact_comparison:
         e1_tests, e1_all_passed, e1_summary = run_data_artifact_comparison_self_tests()
