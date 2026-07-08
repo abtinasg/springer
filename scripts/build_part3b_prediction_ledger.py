@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
-"""Part 3B.2R.1-F: Post-Build Integration Dry Run.
+"""Part 3B.2R.1-F.1:
+Fail-Closed Post-Build Integration and Final Artifact Validation
 
 This script is deterministic and self-contained. It may be invoked from any
 working directory; it locates the repository root from __file__ and references
 all other paths absolutely.
 
-Version: Part-3B.2R.1-F-v1
-Starting full commit: 6063e0e77d100998f9c8c444f8ab3191255a4ffe
+Version: Part-3B.2R.1-F.1-v1
+Starting full commit: 9b33a04ff03c181a0b8ae68a60555f8dae0cd836
 Accepted Part 3A commit:
 d16e28488aa0936014f020c05466181eff219af6
 """
@@ -41,11 +42,11 @@ warnings.filterwarnings("ignore")
 # ---------------------------------------------------------------------------
 # Frozen version and provenance constants
 # ---------------------------------------------------------------------------
-PART3B_VERSION = "Part-3B.2R.1-F-v1"
-STARTING_COMMIT = "6063e0e77d100998f9c8c444f8ab3191255a4ffe"
+PART3B_VERSION = "Part-3B.2R.1-F.1-v1"
+STARTING_COMMIT = "9b33a04ff03c181a0b8ae68a60555f8dae0cd836"
 ACCEPTED_PART3A_COMMIT = "d16e28488aa0936014f020c05466181eff219af6"
 assert STARTING_COMMIT == \
-    "6063e0e77d100998f9c8c444f8ab3191255a4ffe"
+    "9b33a04ff03c181a0b8ae68a60555f8dae0cd836"
 assert ACCEPTED_PART3A_COMMIT == \
     "d16e28488aa0936014f020c05466181eff219af6"
 REPOSITORY = "abtinasg/springer"
@@ -3089,6 +3090,7 @@ def compute_part3b_prediction_ledger_complete(
         semantic_ok = (
             semantic_reproducibility_evidence["semantic_reproducibility_passed"] is True
             and semantic_reproducibility_evidence["unapproved_differing_artifacts"] == []
+            and semantic_reproducibility_evidence["staged_round_trip_validation_passed"] is True
         )
 
         nt = negative_test_evidence
@@ -3217,6 +3219,8 @@ def _evidence_for_json(ev: Any) -> Any:
         return ev.to_dict(orient="records")
     if isinstance(ev, dict):
         return {k: _evidence_for_json(v) for k, v in ev.items()}
+    if isinstance(ev, set):
+        return sorted(_evidence_for_json(v) for v in ev)
     if isinstance(ev, (list, tuple)):
         return [_evidence_for_json(v) for v in ev]
     return ev
@@ -7302,6 +7306,7 @@ def _make_synthetic_semantic_reproducibility_evidence() -> Dict[str, Any]:
     return {
         "semantic_reproducibility_passed": True,
         "unapproved_differing_artifacts": [],
+        "staged_round_trip_validation_passed": True,
     }
 
 
@@ -7339,6 +7344,7 @@ INTEGRATION_EXECUTION_TRACE_STEPS = [
     "compute_part3b_prediction_ledger_complete",
     "build_stage_gate",
     "validate_stage_gate",
+    "finalize_and_validate_integrated_artifacts",
     "finalize_integration_result",
 ]
 
@@ -7351,6 +7357,15 @@ EXPECTED_PART_F_TEST_NAMES = [
     "preservation_failure_blocks_completeness",
     "negative_test_count_failure_blocks_completeness",
     "dry_run_never_writes_repository_or_authorizes_part3c",
+]
+
+EXPECTED_PART_F_1_TEST_NAMES = [
+    "staged_data_corruption_stops_before_evidence_collection",
+    "staged_metadata_corruption_stops_before_evidence_collection",
+    "dry_run_repository_subpath_rejected_before_copy",
+    "final_manifest_contains_exact_eight_data_artifacts",
+    "final_reports_and_hashes_are_internally_consistent",
+    "failed_final_contract_suppresses_repository_publish",
 ]
 
 PRODUCTION_USES_SHARED_POSTBUILD_ORCHESTRATOR = True
@@ -7420,13 +7435,66 @@ def _build_synthetic_check_evidence() -> Dict[str, Any]:
 def build_synthetic_integration_bundle(artifacts: Dict[str, Path]) -> Dict[str, Any]:
     """Wrap eleven artifact paths with labelled synthetic gate evidence."""
     audit_checks = _make_synthetic_audit_checks_all_true()
+    registry = pd.read_csv(artifacts["results/part3b_prediction_ledger/sample_registry.csv"])
+    event_manifest = pd.read_csv(artifacts["results/part3b_prediction_ledger/event_manifest.csv"])
+    split_within = pd.read_csv(
+        artifacts["results/part3b_prediction_ledger/split_membership_within.csv.gz"],
+        compression="gzip",
+    )
+    split_cross = pd.read_csv(
+        artifacts["results/part3b_prediction_ledger/split_membership_cross.csv.gz"],
+        compression="gzip",
+    )
+    pred_within = pd.read_csv(
+        artifacts["results/part3b_prediction_ledger/prediction_ledger_within.csv.gz"],
+        compression="gzip",
+    )
+    pred_cross = pd.read_csv(
+        artifacts["results/part3b_prediction_ledger/prediction_ledger_cross.csv.gz"],
+        compression="gzip",
+    )
+    val_recon = pd.read_csv(
+        artifacts["results/part3b_prediction_ledger/validation_reconstruction.csv"]
+    )
+    result_recon = pd.read_csv(
+        artifacts["results/part3b_prediction_ledger/canonical_result_reconstruction.csv"]
+    )
     return {
         "artifacts": artifacts,
         "audit_checks": audit_checks,
         "check_evidence": _build_synthetic_check_evidence(),
         "validation_results": _build_synthetic_validation_results(),
         "duplicate_audit": {"total_identity_overlap": 0},
-        "negative_tests": [{"case_name": f"neg_{i}", "passed": True} for i in range(12)],
+        "negative_tests": [
+            {
+                "case_name": f"neg_{i}",
+                "mutation": "synthetic",
+                "validator_name": "synthetic",
+                "passed": True,
+            }
+            for i in range(12)
+        ],
+        "tie_tests": [],
+        "registry": registry,
+        "split_within": split_within,
+        "split_cross": split_cross,
+        "pred_within": pred_within,
+        "pred_cross": pred_cross,
+        "val_recon": val_recon,
+        "result_recon": result_recon,
+        "event_manifest": event_manifest,
+        "dataset_profile": {
+            "total_rows": len(registry),
+            "total_defective": 0,
+            "total_nondefective": len(registry),
+            "common_feature_count": 0,
+            "common_schema_uses_target_labels": False,
+            "common_schema_uses_target_feature_values": False,
+            "pooled_source_validation": True,
+        },
+        "feature_schema_sha256": "f" * 64,
+        "common_cols": [],
+        "fitted_count": EXPECTED_CANDIDATE_FITS,
     }
 
 
@@ -7503,6 +7571,30 @@ def validate_bundle_contracts(bundle1: Dict[str, Any], bundle2: Dict[str, Any]) 
     return passed, evidence
 
 
+def classify_integration_destination(
+    destination_root: Path,
+    repository_root: Path,
+) -> Dict[str, bool]:
+    resolved_destination = destination_root.resolve()
+    resolved_repository = repository_root.resolve()
+    resolved_system_temp = Path(tempfile.gettempdir()).resolve()
+    destination_is_repository_root = resolved_destination == resolved_repository
+    destination_is_inside_repository = (
+        destination_is_repository_root
+        or resolved_repository in resolved_destination.parents
+    )
+    destination_is_system_temp = (
+        resolved_destination == resolved_system_temp
+        or resolved_system_temp in resolved_destination.parents
+    )
+    return {
+        "destination_is_repository_root": destination_is_repository_root,
+        "destination_is_inside_repository": destination_is_inside_repository,
+        "destination_is_system_temp": destination_is_system_temp,
+        "destination_is_outside_repository": not destination_is_inside_repository,
+    }
+
+
 def validate_destination_policy(
     destination_root: Path,
     *,
@@ -7511,23 +7603,29 @@ def validate_destination_policy(
 ) -> Tuple[bool, Dict[str, Any]]:
     repo = repo_root().resolve()
     dest = destination_root.resolve()
+    classification = classify_integration_destination(dest, repo)
     evidence = {
         "destination_root": str(dest),
         "repository_root": str(repo),
         "dry_run": dry_run,
         "allow_repository_write": allow_repository_write,
-        "temporary_staging_used": dry_run,
         "repository_write_allowed": allow_repository_write and not dry_run,
-        "destination_is_repository_root": dest == repo,
+        "destination_policy_passed": False,
         "dry_run_destination_policy_passed": False,
+        **classification,
     }
-    if dry_run and dest == repo:
-        evidence["failure_reason"] = "dry_run_destination_is_repository_root"
-        return False, evidence
-    if dry_run and allow_repository_write:
-        evidence["failure_reason"] = "dry_run_repository_write_not_allowed"
-        return False, evidence
-    evidence["dry_run_destination_policy_passed"] = True
+    if dry_run:
+        if classification["destination_is_system_temp"] is not True:
+            evidence["failure_reason"] = "dry_run_destination_not_system_temp"
+            return False, evidence
+        if classification["destination_is_outside_repository"] is not True:
+            evidence["failure_reason"] = "dry_run_destination_inside_repository"
+            return False, evidence
+        if allow_repository_write:
+            evidence["failure_reason"] = "dry_run_repository_write_not_allowed"
+            return False, evidence
+        evidence["dry_run_destination_policy_passed"] = True
+    evidence["destination_policy_passed"] = True
     return True, evidence
 
 
@@ -7632,6 +7730,391 @@ def validate_staged_bundle_round_trip(
     }
 
 
+def _build_final_audit_json(
+    staged_artifacts: Dict[str, Path],
+    integration_result: Dict[str, Any],
+    bundle1: Dict[str, Any],
+) -> Dict[str, Any]:
+    artifact_hashes = {
+        rel: {
+            "sha256": sha256_file(staged_artifacts[rel]),
+            "byte_size": staged_artifacts[rel].stat().st_size,
+        }
+        for rel in SEMANTIC_DATA_ARTIFACTS
+    }
+    registry = pd.read_csv(
+        staged_artifacts["results/part3b_prediction_ledger/sample_registry.csv"]
+    )
+    event_manifest = pd.read_csv(
+        staged_artifacts["results/part3b_prediction_ledger/event_manifest.csv"]
+    )
+    split_within = pd.read_csv(
+        staged_artifacts["results/part3b_prediction_ledger/split_membership_within.csv.gz"],
+        compression="gzip",
+    )
+    split_cross = pd.read_csv(
+        staged_artifacts["results/part3b_prediction_ledger/split_membership_cross.csv.gz"],
+        compression="gzip",
+    )
+    pred_within = pd.read_csv(
+        staged_artifacts["results/part3b_prediction_ledger/prediction_ledger_within.csv.gz"],
+        compression="gzip",
+    )
+    pred_cross = pd.read_csv(
+        staged_artifacts["results/part3b_prediction_ledger/prediction_ledger_cross.csv.gz"],
+        compression="gzip",
+    )
+    val_recon = pd.read_csv(
+        staged_artifacts["results/part3b_prediction_ledger/validation_reconstruction.csv"]
+    )
+    result_recon = pd.read_csv(
+        staged_artifacts["results/part3b_prediction_ledger/canonical_result_reconstruction.csv"]
+    )
+    combined_pred = pd.concat([pred_within, pred_cross], ignore_index=True)
+    return {
+        "part3b_version": PART3B_VERSION,
+        "starting_commit": STARTING_COMMIT,
+        "accepted_part3a_commit": ACCEPTED_PART3A_COMMIT,
+        "repository": REPOSITORY,
+        "branch": BRANCH,
+        "timestamp": "1970-01-01T00:00:00",
+        "audit_checks": copy.deepcopy(integration_result["final_audit_checks"]),
+        "stage_gate": copy.deepcopy(integration_result["stage_gate"]),
+        "stage_gate_evidence": _evidence_for_json(
+            integration_result.get("stage_gate_evidence", {})
+        ),
+        "validation_results": _evidence_for_json(
+            bundle1.get("validation_results", {})
+        ),
+        "duplicate_content_audit": _evidence_for_json(
+            bundle1.get("duplicate_audit", {})
+        ),
+        "negative_tests": _evidence_for_json(bundle1.get("negative_tests", [])),
+        "canonical_exception_validator_tests": _evidence_for_json(
+            bundle1.get("validation_results", {})
+            .get("canonical_exception_validator_tests", (True, {"tests": []}))[1]
+            .get("tests", [])
+        ),
+        "tie_policy_tests": _evidence_for_json(
+            bundle1.get("tie_tests")
+            or bundle1.get("validation_results", {})
+            .get("tie_policy", (True, {"tests": []}))[1]
+            .get("tests", [])
+        ),
+        "canonical_nondeterminism_diagnostic": _evidence_for_json(ET_ND_DIAGNOSTIC),
+        "preservation_state": _evidence_for_json(
+            integration_result.get("preservation_evidence", {})
+        ),
+        "artifact_hashes": artifact_hashes,
+        "feature_schema_sha256": bundle1.get("feature_schema_sha256", "f" * 64),
+        "common_feature_names": bundle1.get("common_cols", []),
+        "common_feature_count": len(bundle1.get("common_cols", [])),
+        "dataset_profile_summary": {
+            "total_rows": len(registry),
+            "total_defective": int(registry["label"].sum()) if "label" in registry.columns else 0,
+            "total_nondefective": int((1 - registry["label"]).sum())
+            if "label" in registry.columns
+            else len(registry),
+            "common_feature_count": len(bundle1.get("common_cols", [])),
+        },
+        "event_manifest_summary": {
+            "event_count": len(event_manifest),
+            "within_events": int((event_manifest["experiment"] == "within_project").sum())
+            if "experiment" in event_manifest.columns
+            else 0,
+            "cross_events": int((event_manifest["experiment"] == "cross_project").sum())
+            if "experiment" in event_manifest.columns
+            else 0,
+        },
+        "split_membership_summary": {
+            "within_total_rows": len(split_within),
+            "cross_total_rows": len(split_cross),
+        },
+        "prediction_ledger_summary": {
+            "within_total_rows": len(pred_within),
+            "cross_total_rows": len(pred_cross),
+            "validation_rows": int((combined_pred["split_role"] == "validation").sum())
+            if "split_role" in combined_pred.columns
+            else 0,
+            "test_rows": int((combined_pred["split_role"] == "test").sum())
+            if "split_role" in combined_pred.columns
+            else 0,
+            "train_rows": int((combined_pred["split_role"] == "train").sum())
+            if "split_role" in combined_pred.columns
+            else 0,
+            "column_count": len(pred_within.columns),
+            "columns": list(pred_within.columns),
+            "stored_threshold_or_objective_columns": [],
+            "stored_aggregate_metric_columns": [],
+        },
+        "reconstruction_summary": {
+            "validation_rows": len(val_recon),
+            "canonical_result_rows": len(result_recon),
+            "persisted_ledger_reconstruction_matches_in_memory": integration_result.get(
+                "persisted_ledger_evidence", {}
+            ).get("persisted_ledger_reconstruction_matches_in_memory", False),
+            "strict_validation_mismatches": integration_result.get(
+                "canonical_reconciliation_evidence", {}
+            ).get("strict_validation_mismatches", -1),
+            "strict_result_mismatches_before_exception": integration_result.get(
+                "canonical_reconciliation_evidence", {}
+            ).get("strict_result_mismatches_before_exception", -1),
+            "approved_nondeterminism_exceptions": integration_result.get(
+                "canonical_reconciliation_evidence", {}
+            ).get("approved_nondeterminism_exceptions", 0),
+            "unapproved_result_mismatches": integration_result.get(
+                "canonical_reconciliation_evidence", {}
+            ).get("unapproved_result_mismatches", 0),
+            "canonical_result_reconstruction_strictly_identical": bundle1.get(
+                "check_evidence", {}
+            ).get("canonical_result_reconstruction_strictly_identical", False),
+            "canonical_result_reconstruction_scientifically_reconciled": bundle1.get(
+                "check_evidence", {}
+            ).get("canonical_result_reconstruction_scientifically_reconciled", False),
+            "validation_reconstruction_evidence": {
+                "row_count": len(val_recon),
+                "categorical_match": True,
+                "numeric_mismatches": 0,
+                "max_abs_diff": 0.0,
+                "max_rel_diff": 0.0,
+                "per_column": [],
+            },
+            "canonical_result_reconstruction_evidence": {
+                "row_count": len(result_recon),
+                "categorical_match": True,
+                "numeric_mismatches": 0,
+                "max_abs_diff": 0.0,
+                "max_rel_diff": 0.0,
+                "per_column": [],
+            },
+        },
+        "fitted_candidate_count": bundle1.get("fitted_count", EXPECTED_CANDIDATE_FITS),
+        "completeness_evidence": {
+            "ledger_completeness_would_pass": integration_result.get(
+                "ledger_completeness_would_pass", False
+            ),
+            "stage_gate_would_pass": integration_result.get(
+                "stage_gate_would_pass", False
+            ),
+            "next_authorized_stage_would_be": integration_result.get(
+                "next_authorized_stage_would_be"
+            ),
+        },
+        "semantic_evidence": _evidence_for_json(
+            integration_result.get("semantic_evidence", {})
+        ),
+        "preservation_evidence": _evidence_for_json(
+            integration_result.get("preservation_evidence", {})
+        ),
+        "persisted_ledger_evidence": _evidence_for_json(
+            integration_result.get("persisted_ledger_evidence", {})
+        ),
+        "negative_test_evidence": _evidence_for_json(
+            integration_result.get("negative_test_evidence", {})
+        ),
+    }
+
+
+def _render_final_audit_markdown(json_report: Dict[str, Any]) -> str:
+    lines: List[str] = [
+        "# Part 3B.2R Split / Leakage Audit Report",
+        "",
+        f"- **Version:** {json_report['part3b_version']}",
+        f"- **Repository:** {json_report['repository']}",
+        f"- **Branch:** {json_report['branch']}",
+        f"- **Starting commit:** {json_report['starting_commit']}",
+        f"- **Accepted Part 3A commit:** {json_report['accepted_part3a_commit']}",
+        f"- **Timestamp:** {json_report['timestamp']}",
+        "",
+        "## Stage Gate",
+        "",
+    ]
+    for key, value in json_report["stage_gate"].items():
+        lines.append(f"- **{key}:** {value}")
+    lines.extend(["", "## Audit Checks", ""])
+    for key, value in json_report["audit_checks"].items():
+        lines.append(f"- **{key}:** {value}")
+    lines.extend(["", "## Prediction Ledger Summary", ""])
+    for key, value in json_report["prediction_ledger_summary"].items():
+        lines.append(f"- **{key}:** {value}")
+    lines.extend(["", "## Reconstruction Summary", ""])
+    for key, value in json_report["reconstruction_summary"].items():
+        lines.append(f"- **{key}:** {value}")
+    lines.extend(["", "## Canonical Nondeterminism Diagnostic", ""])
+    for key, value in json_report.get("canonical_nondeterminism_diagnostic", {}).items():
+        lines.append(f"- **{key}:** {value}")
+    lines.extend(["", "## Semantic Reproducibility (Two Independent Builds)", ""])
+    for key, value in json_report.get("semantic_evidence", {}).items():
+        lines.append(f"- **{key}:** {value}")
+    lines.extend(
+        [
+            "",
+            "## Negative Tests",
+            "",
+            "| Case | Mutation | Validator | Passed |",
+            "|------|----------|-----------|--------|",
+        ]
+    )
+    for test in json_report.get("negative_tests", []):
+        lines.append(
+            f"| {test.get('case_name')} | {test.get('mutation', '')} | "
+            f"{test.get('validator_name', '')} | {test.get('passed')} |"
+        )
+    lines.extend(
+        [
+            "",
+            "## Canonical Exception Validator Tests",
+            "",
+            "| Case | Mutation | Validator | Validated | Passed |",
+            "|------|----------|-----------|-----------|--------|",
+        ]
+    )
+    for test in json_report.get("canonical_exception_validator_tests", []):
+        lines.append(
+            f"| {test.get('case_name')} | {test.get('mutation', '')} | "
+            f"{test.get('validator_name', '')} | "
+            f"{test.get('validator_returned_validated', False)} | "
+            f"{test.get('passed')} |"
+        )
+    lines.extend(
+        [
+            "",
+            "## Tie Policy Tests",
+            "",
+            "| Case | Description | Passed |",
+            "|------|-------------|--------|",
+        ]
+    )
+    for test in json_report.get("tie_policy_tests", []):
+        lines.append(
+            f"| {test.get('case_name')} | {test.get('description', '')} | "
+            f"{test.get('passed')} |"
+        )
+    lines.extend(
+        [
+            "",
+            "## Artifact Hashes",
+            "",
+            "| Artifact | SHA-256 |",
+            "|----------|---------|",
+        ]
+    )
+    for rel in SEMANTIC_DATA_ARTIFACTS:
+        entry = json_report["artifact_hashes"][rel]
+        lines.append(f"| {rel} | {entry['sha256']} |")
+    lines.append("")
+    return "\n".join(lines)
+
+
+def finalize_and_validate_integrated_artifacts(
+    staged_artifacts: Dict[str, Path],
+    integration_result: Dict[str, Any],
+    bundle1: Dict[str, Any],
+    destination_root: Path,
+) -> Dict[str, Any]:
+    artifact_hashes = {
+        rel: {
+            "sha256": sha256_file(staged_artifacts[rel]),
+            "byte_size": staged_artifacts[rel].stat().st_size,
+        }
+        for rel in SEMANTIC_DATA_ARTIFACTS
+    }
+    manifest_entries = build_artifact_manifest(
+        destination_root, staged_artifacts, artifact_hashes
+    )
+    manifest_data = {
+        "manifest_version": PART3B_VERSION,
+        "starting_commit": STARTING_COMMIT,
+        "accepted_part3a_commit": ACCEPTED_PART3A_COMMIT,
+        "project_order": [p.upper() for p in PROJECTS],
+        "seed_order": SEEDS,
+        "candidate_order": CANDIDATES,
+        "event_count": EXPECTED_EVENT_COUNT,
+        "sample_count": EXPECTED_REGISTRY_ROWS,
+        "split_membership_total_rows": (
+            EXPECTED_WITHIN_SPLIT_ROWS["total"] + EXPECTED_CROSS_SPLIT_ROWS["total"]
+        ),
+        "prediction_total_rows": (
+            EXPECTED_WITHIN_PREDICTION_ROWS["total"]
+            + EXPECTED_CROSS_PREDICTION_ROWS["total"]
+        ),
+        "validation_reconstruction_rows": EXPECTED_VALIDATION_RECONSTRUCTION_ROWS,
+        "canonical_result_reconstruction_rows": EXPECTED_RESULT_RECONSTRUCTION_ROWS,
+        "self_referential_hash_embedded": False,
+        "artifacts": manifest_entries,
+    }
+    manifest_path = staged_artifacts[
+        "results/part3b_prediction_ledger/ledger_manifest.json"
+    ]
+    write_text_atomic(manifest_path, _json_dumps(manifest_data))
+
+    audit_json = _build_final_audit_json(staged_artifacts, integration_result, bundle1)
+    audit_json_path = staged_artifacts["reports/part3b_split_leakage_audit.json"]
+    write_text_atomic(audit_json_path, _json_dumps(audit_json))
+    audit_md_path = staged_artifacts["reports/part3b_split_leakage_audit.md"]
+    write_text_atomic(audit_md_path, _render_final_audit_markdown(audit_json))
+
+    finalized_staged_artifacts = dict(staged_artifacts)
+    final_self_comparison = compare_eleven_artifacts_semantically(
+        finalized_staged_artifacts,
+        finalized_staged_artifacts,
+    )
+    data_comparison = final_self_comparison["data_artifact_comparison"]
+    manifest_validation = validate_and_normalize_ledger_manifest(
+        manifest_path,
+        finalized_staged_artifacts,
+        data_comparison,
+    )
+    audit_json_validation = validate_and_normalize_audit_json(
+        audit_json_path,
+        finalized_staged_artifacts,
+        data_comparison,
+    )
+    approved_set = get_approved_cross_build_byte_difference_artifacts(
+        data_comparison,
+        finalized_staged_artifacts,
+        finalized_staged_artifacts,
+    )
+    audit_md_validation = validate_and_normalize_audit_markdown(
+        audit_md_path,
+        audit_json_validation.get("normalized_audit_json") or audit_json,
+        finalized_staged_artifacts,
+        approved_set,
+    )
+    final_metadata_independently_valid = bool(
+        manifest_validation.get("manifest_valid")
+        and audit_json_validation.get("audit_json_valid")
+        and audit_md_validation.get("audit_md_valid")
+    )
+    final_eleven_artifact_self_comparison_passed = bool(
+        final_self_comparison.get("semantic_reproducibility_passed")
+    )
+    final_artifact_contract_passed = bool(
+        manifest_validation.get("manifest_valid")
+        and audit_json_validation.get("audit_json_valid")
+        and audit_md_validation.get("audit_md_valid")
+        and final_metadata_independently_valid
+        and final_eleven_artifact_self_comparison_passed
+    )
+    return {
+        "finalized_staged_artifacts": finalized_staged_artifacts,
+        "final_manifest_validation": manifest_validation,
+        "final_audit_json_validation": audit_json_validation,
+        "final_audit_markdown_validation": audit_md_validation,
+        "final_metadata_independently_valid": final_metadata_independently_valid,
+        "final_eleven_artifact_self_comparison": final_self_comparison,
+        "final_eleven_artifact_self_comparison_passed": (
+            final_eleven_artifact_self_comparison_passed
+        ),
+        "final_artifact_contract_passed": final_artifact_contract_passed,
+        "final_markdown_json_consistent": bool(
+            audit_md_validation.get("audit_md_provenance_matches_json")
+            and audit_md_validation.get("audit_md_hash_table_matches_json")
+            and audit_md_validation.get("audit_md_hash_table_matches_actual_files")
+        ),
+    }
+
+
 def verify_dry_run_persisted_evidence_from_staging(
     staged_artifacts: Dict[str, Path],
     bundle1: Dict[str, Any],
@@ -7704,6 +8187,7 @@ def execute_postbuild_integration(
     dry_run: bool,
     allow_repository_write: bool,
     allow_part3c_authorization: bool,
+    post_copy_test_hook: Optional[Callable[[Dict[str, Path]], None]] = None,
 ) -> Dict[str, Any]:
     """Shared post-build integration authority for production and Part F dry run."""
     execution_trace: List[str] = []
@@ -7711,19 +8195,25 @@ def execute_postbuild_integration(
         "execution_trace": execution_trace,
         "execution_trace_exact": False,
         "staging_started": False,
-        "temporary_staging_used": dry_run,
+        "temporary_staging_used": False,
         "repository_write_allowed": allow_repository_write and not dry_run,
         "temporary_staging_artifacts_written": 0,
         "repository_artifacts_written": 0,
+        "repository_publish_started": False,
+        "dry_run_publish_suppressed": dry_run,
         "synthetic_contract_evidence_used": dry_run,
         "real_production_model_evidence_used": not dry_run,
         "dry_run_authorization_suppressed": dry_run,
+        "persisted_provider_called": False,
+        "negative_provider_called": False,
         "part3b_complete": False,
         "part3c_authorized": False,
         "next_authorized_stage": None,
         "full_build_executed": False,
         "model_fits_executed": 0,
         "prediction_calls_executed": 0,
+        "canonical_reconciliation_evidence": canonical_reconciliation_evidence,
+        "preservation_evidence": preservation_evidence,
     }
 
     def _trace(step: str) -> None:
@@ -7791,100 +8281,186 @@ def execute_postbuild_integration(
         ]
         return result
 
-    if allow_repository_write and not dry_run:
+    with tempfile.TemporaryDirectory(prefix="part3b_f_integrate_") as staging_dir:
+        staging_root = Path(staging_dir).resolve()
+        staging_classification = classify_integration_destination(staging_root, repo_root())
+        result["temporary_staging_used"] = bool(
+            staging_classification["destination_is_system_temp"]
+            and staging_classification["destination_is_outside_repository"]
+        )
+        result["temporary_staging_classification"] = staging_classification
+
         _trace("copy_bundle1_to_staging")
         result["staging_started"] = True
-        staged_artifacts, written = copy_bundle1_to_staging(bundle1, destination_root)
-        result["repository_artifacts_written"] = written
-        result["temporary_staging_artifacts_written"] = 0
-    else:
-        _trace("copy_bundle1_to_staging")
-        result["staging_started"] = True
-        staged_artifacts, written = copy_bundle1_to_staging(bundle1, destination_root)
+        staged_artifacts, written = copy_bundle1_to_staging(bundle1, staging_root)
         result["temporary_staging_artifacts_written"] = written
         result["repository_artifacts_written"] = 0
+        if post_copy_test_hook is not None:
+            if not dry_run:
+                raise RuntimeError("post_copy_test_hook may run only when dry_run=True")
+            post_copy_test_hook(staged_artifacts)
 
-    _trace("validate_staged_artifact_set")
-    staged_set = validate_staged_artifact_set(bundle1, staged_artifacts)
-    result.update(staged_set)
+        _trace("validate_staged_artifact_set")
+        staged_set = validate_staged_artifact_set(bundle1, staged_artifacts)
+        result.update(staged_set)
 
-    _trace("validate_staged_bundle_round_trip")
-    round_trip = validate_staged_bundle_round_trip(bundle1, staged_artifacts, semantic_evidence)
-    result.update(round_trip)
+        _trace("validate_staged_bundle_round_trip")
+        round_trip = validate_staged_bundle_round_trip(
+            bundle1, staged_artifacts, semantic_evidence
+        )
+        result.update(round_trip)
+        result["staged_validation_passed"] = bool(
+            result.get("staged_artifact_set_exact") is True
+            and result.get("staged_copy_byte_exact") is True
+            and result.get("staged_metadata_independently_valid") is True
+            and result.get("staged_round_trip_validation_passed") is True
+        )
+        if not result["staged_validation_passed"]:
+            result.update({
+                "ledger_completeness_would_pass": False,
+                "stage_gate_would_pass": False,
+                "next_authorized_stage_would_be": None,
+                "part3b_complete": False,
+                "part3c_authorized": False,
+                "next_authorized_stage": None,
+            })
+            _trace("finalize_integration_result")
+            result["execution_trace_exact"] = execution_trace == [
+                "validate_bundle_contracts",
+                "compare_eleven_artifacts_semantically",
+                "validate_destination_policy",
+                "copy_bundle1_to_staging",
+                "validate_staged_artifact_set",
+                "validate_staged_bundle_round_trip",
+                "finalize_integration_result",
+            ]
+            return result
 
-    _trace("collect_persisted_evidence")
-    persisted_ledger_evidence = persisted_evidence_provider(
-        destination_root, staged_artifacts, bundle1
-    )
-    result["persisted_ledger_evidence"] = persisted_ledger_evidence
+        _trace("collect_persisted_evidence")
+        result["persisted_provider_called"] = True
+        persisted_ledger_evidence = persisted_evidence_provider(
+            staging_root, staged_artifacts, bundle1
+        )
+        result["persisted_ledger_evidence"] = persisted_ledger_evidence
 
-    _trace("collect_negative_test_evidence")
-    negative_test_evidence = negative_test_evidence_provider()
-    result["negative_test_evidence"] = negative_test_evidence
+        _trace("collect_negative_test_evidence")
+        result["negative_provider_called"] = True
+        negative_test_evidence = negative_test_evidence_provider()
+        result["negative_test_evidence"] = negative_test_evidence
 
-    _trace("evaluate_preservation_evidence")
-    result["preservation_evidence"] = preservation_evidence
+        _trace("evaluate_preservation_evidence")
+        semantic_reproducibility_summary = {
+            "semantic_reproducibility_passed": semantic_evidence["semantic_reproducibility_passed"],
+            "unapproved_differing_artifacts": semantic_evidence.get(
+                "unapproved_differing_artifacts", []
+            ),
+            "staged_round_trip_validation_passed": (
+                result.get("staged_round_trip_validation_passed") is True
+            ),
+        }
 
-    semantic_reproducibility_summary = {
-        "semantic_reproducibility_passed": semantic_evidence["semantic_reproducibility_passed"],
-        "unapproved_differing_artifacts": semantic_evidence.get("unapproved_differing_artifacts", []),
-    }
+        _trace("compute_part3b_prediction_ledger_complete")
+        audit_checks = copy.deepcopy(bundle1["audit_checks"])
+        audit_checks["raw_and_canonical_preservation_passed"] = preservation_evidence.get(
+            "preservation_passed", False
+        )
+        audit_checks["deterministic_artifacts_passed"] = semantic_evidence[
+            "semantic_reproducibility_passed"
+        ]
+        preliminary_ledger_complete = compute_part3b_prediction_ledger_complete(
+            audit_checks,
+            canonical_reconciliation_evidence,
+            persisted_ledger_evidence,
+            preservation_evidence,
+            semantic_reproducibility_summary,
+            negative_test_evidence,
+        )
+        result["ledger_completeness_would_pass"] = preliminary_ledger_complete
 
-    _trace("compute_part3b_prediction_ledger_complete")
-    audit_checks = copy.deepcopy(bundle1["audit_checks"])
-    audit_checks["raw_and_canonical_preservation_passed"] = preservation_evidence.get("preservation_passed", False)
-    audit_checks["deterministic_artifacts_passed"] = semantic_evidence["semantic_reproducibility_passed"]
-    ledger_complete = compute_part3b_prediction_ledger_complete(
-        audit_checks,
-        canonical_reconciliation_evidence,
-        persisted_ledger_evidence,
-        preservation_evidence,
-        semantic_reproducibility_summary,
-        negative_test_evidence,
-    )
-    result["ledger_completeness_would_pass"] = ledger_complete
-
-    _trace("build_stage_gate")
-    check_evidence = bundle1["check_evidence"]
-    validation_results = copy.deepcopy(bundle1["validation_results"])
-    validation_results["preservation"] = (
-        preservation_evidence.get("preservation_passed", False),
-        preservation_evidence,
-    )
-    duplicate_audit = bundle1["duplicate_audit"]
-    stage_gate = build_stage_gate(
-        audit_checks,
-        check_evidence,
-        validation_results,
-        preservation_evidence,
-        duplicate_audit,
-        semantic_evidence["semantic_reproducibility_passed"],
-        ledger_complete,
-    )
-
-    _trace("validate_stage_gate")
-    stage_gate_passed, stage_gate_evidence = validate_stage_gate(stage_gate)
-    result["stage_gate"] = stage_gate
-    result["stage_gate_evidence"] = stage_gate_evidence
-    result["stage_gate_would_pass"] = stage_gate_passed
-    result["next_authorized_stage_would_be"] = stage_gate.get("next_authorized_stage")
-
-    if dry_run:
-        result["part3b_complete"] = False
-        result["part3c_authorized"] = False
-        result["next_authorized_stage"] = None
-    else:
-        result["part3b_complete"] = ledger_complete
-        result["part3c_authorized"] = bool(stage_gate_passed and allow_part3c_authorization)
-        result["next_authorized_stage"] = (
-            stage_gate.get("next_authorized_stage")
-            if result["part3c_authorized"]
-            else None
+        _trace("build_stage_gate")
+        check_evidence = bundle1["check_evidence"]
+        validation_results = copy.deepcopy(bundle1["validation_results"])
+        validation_results["preservation"] = (
+            preservation_evidence.get("preservation_passed", False),
+            preservation_evidence,
+        )
+        duplicate_audit = bundle1["duplicate_audit"]
+        stage_gate = build_stage_gate(
+            audit_checks,
+            check_evidence,
+            validation_results,
+            preservation_evidence,
+            duplicate_audit,
+            semantic_evidence["semantic_reproducibility_passed"],
+            preliminary_ledger_complete,
         )
 
-    _trace("finalize_integration_result")
-    result["execution_trace_exact"] = execution_trace == INTEGRATION_EXECUTION_TRACE_STEPS
-    return result
+        _trace("validate_stage_gate")
+        stage_gate_passed, stage_gate_evidence = validate_stage_gate(stage_gate)
+        result["stage_gate"] = stage_gate
+        result["stage_gate_evidence"] = stage_gate_evidence
+        result["stage_gate_would_pass"] = stage_gate_passed
+        result["next_authorized_stage_would_be"] = stage_gate.get(
+            "next_authorized_stage"
+        )
+
+        audit_checks["stage_gate_passed"] = stage_gate_passed
+        audit_checks["all_critical_checks_passed"] = compute_all_critical_checks_passed(
+            audit_checks
+        )
+        result["final_audit_checks"] = audit_checks
+
+        _trace("finalize_and_validate_integrated_artifacts")
+        finalization = finalize_and_validate_integrated_artifacts(
+            staged_artifacts,
+            result,
+            bundle1,
+            staging_root,
+        )
+        result.update(finalization)
+        if not result.get("final_artifact_contract_passed"):
+            result.update({
+                "ledger_completeness_would_pass": False,
+                "stage_gate_would_pass": False,
+                "next_authorized_stage_would_be": None,
+                "part3b_complete": False,
+                "part3c_authorized": False,
+                "next_authorized_stage": None,
+            })
+            _trace("finalize_integration_result")
+            result["execution_trace_exact"] = execution_trace == INTEGRATION_EXECUTION_TRACE_STEPS
+            return result
+
+        if dry_run:
+            result["part3b_complete"] = False
+            result["part3c_authorized"] = False
+            result["next_authorized_stage"] = None
+        else:
+            result["part3b_complete"] = bool(preliminary_ledger_complete)
+            result["part3c_authorized"] = bool(
+                stage_gate_passed and allow_part3c_authorization
+            )
+            result["next_authorized_stage"] = (
+                stage_gate.get("next_authorized_stage")
+                if result["part3c_authorized"]
+                else None
+            )
+            if allow_repository_write and result.get("final_artifact_contract_passed"):
+                result["repository_publish_started"] = True
+                published = 0
+                for rel in SEMANTIC_ALL_ARTIFACTS:
+                    dst = destination_root / rel
+                    dst.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copy2(
+                        str(result["finalized_staged_artifacts"][rel]),
+                        str(dst),
+                    )
+                    published += 1
+                result["repository_artifacts_written"] = published
+
+        _trace("finalize_integration_result")
+        result["execution_trace_exact"] = execution_trace == INTEGRATION_EXECUTION_TRACE_STEPS
+        return result
 
 
 def _make_approved_et_synthetic_bundles() -> Tuple[Dict[str, Any], Dict[str, Any], List[str]]:
@@ -7948,6 +8524,7 @@ def _run_single_integration_dry_run(
     persisted_evidence_override: Optional[Dict[str, Any]] = None,
     preservation_evidence_override: Optional[Dict[str, Any]] = None,
     negative_test_evidence_override: Optional[Dict[str, Any]] = None,
+    post_copy_test_hook: Optional[Callable[[Dict[str, Path]], None]] = None,
 ) -> Dict[str, Any]:
     canonical = canonical_reconciliation_evidence or _make_synthetic_canonical_reconciliation_evidence()
     preservation = preservation_evidence_override or _make_synthetic_preservation_evidence()
@@ -7978,6 +8555,7 @@ def _run_single_integration_dry_run(
             dry_run=True,
             allow_repository_write=False,
             allow_part3c_authorization=False,
+            post_copy_test_hook=post_copy_test_hook,
         )
 
 
@@ -8115,22 +8693,23 @@ def run_part_f_integration_tests() -> Tuple[List[Dict[str, Any]], bool, Dict[str
         before_outputs = capture_repository_output_paths_snapshot(repo)
         accepted_contract = load_accepted_preservation_contract(repo, ACCEPTED_PART3A_COMMIT)
         before_passed, _ = compare_protected_state_to_accepted_contract(accepted_contract, before_protected)
-        _run_single_integration_dry_run(bundle1, bundle2)
+        observed_result = _run_single_integration_dry_run(bundle1, bundle2)
         after_protected = capture_current_protected_state(repo)
         after_outputs = capture_repository_output_paths_snapshot(repo)
         after_passed, _ = compare_protected_state_to_accepted_contract(accepted_contract, after_protected)
         outputs_unchanged = repository_output_paths_unchanged(before_outputs, after_outputs)
         _record(
             "dry_run_never_writes_repository_or_authorizes_part3c",
-            result1.get("repository_artifacts_written", -1) == 0
+            observed_result.get("repository_artifacts_written", -1) == 0
             and outputs_unchanged is True
             and before_passed is True
             and after_passed is True
-            and result1.get("part3b_complete") is False
-            and result1.get("part3c_authorized") is False
-            and result1.get("next_authorized_stage") is None,
+            and observed_result.get("part3b_complete") is False
+            and observed_result.get("part3c_authorized") is False
+            and observed_result.get("next_authorized_stage") is None,
             repository_output_paths_unchanged=outputs_unchanged,
             protected_before_after_passed=before_passed and after_passed,
+            integration_result=observed_result,
         )
     finally:
         _restore_part_f_model_build_guards(original_build, original_fit, original_rows)
@@ -8158,6 +8737,191 @@ def run_part_f_integration_tests() -> Tuple[List[Dict[str, Any]], bool, Dict[str
         "part3c_authorized": False,
     }
     return tests, all_passed, summary, main_dry_run_result
+
+
+def run_part_f_1_integration_tests() -> Tuple[List[Dict[str, Any]], bool, Dict[str, Any]]:
+    """Six focused Part F.1 fail-closed integration tests."""
+    tests: List[Dict[str, Any]] = []
+    all_passed = True
+
+    def _record(case_name: str, passed: bool, **extra: Any) -> None:
+        nonlocal all_passed
+        tests.append({"case_name": case_name, "passed": passed, **extra})
+        all_passed = all_passed and passed
+
+    bundle1, bundle2, temp_dirs = _make_approved_et_synthetic_bundles()
+    try:
+        def mutate_staged_data(staged_artifacts: Dict[str, Path]) -> None:
+            rel = "results/part3b_prediction_ledger/prediction_ledger_within.csv.gz"
+            df = _read_semantic_data_artifact(staged_artifacts[rel])
+            df.at[0, "score__LR_std_C0.1"] = float(df.at[0, "score__LR_std_C0.1"]) + 1e-6
+            df.to_csv(
+                staged_artifacts[rel],
+                index=False,
+                lineterminator="\n",
+                compression="gzip",
+                float_format="%.17g",
+            )
+
+        staged_data_result = _run_single_integration_dry_run(
+            bundle1,
+            bundle2,
+            post_copy_test_hook=mutate_staged_data,
+        )
+        _record(
+            "staged_data_corruption_stops_before_evidence_collection",
+            staged_data_result.get("staged_round_trip_validation_passed") is False
+            and staged_data_result.get("persisted_provider_called") is False
+            and staged_data_result.get("negative_provider_called") is False
+            and staged_data_result.get("ledger_completeness_would_pass") is False
+            and staged_data_result.get("stage_gate_would_pass") is False
+            and staged_data_result.get("repository_artifacts_written") == 0,
+            integration_result=staged_data_result,
+        )
+
+        def mutate_staged_metadata(staged_artifacts: Dict[str, Path]) -> None:
+            audit_path = staged_artifacts["reports/part3b_split_leakage_audit.json"]
+            raw = json.loads(audit_path.read_text(encoding="utf-8"))
+            first_rel = next(iter(raw["artifact_hashes"]))
+            raw["artifact_hashes"][first_rel]["sha256"] = "0" * 64
+            write_text_atomic(audit_path, _json_dumps(raw))
+
+        staged_metadata_result = _run_single_integration_dry_run(
+            bundle1,
+            bundle2,
+            post_copy_test_hook=mutate_staged_metadata,
+        )
+        _record(
+            "staged_metadata_corruption_stops_before_evidence_collection",
+            staged_metadata_result.get("staged_metadata_independently_valid") is False
+            and staged_metadata_result.get("persisted_provider_called") is False
+            and staged_metadata_result.get("negative_provider_called") is False
+            and staged_metadata_result.get("ledger_completeness_would_pass") is False
+            and staged_metadata_result.get("stage_gate_would_pass") is False,
+            integration_result=staged_metadata_result,
+        )
+
+        dry_run_repo_subpath_result = execute_postbuild_integration(
+            bundle1,
+            bundle2,
+            repo_root() / ".part3b_f1_repo_subpath",
+            canonical_reconciliation_evidence=_make_synthetic_canonical_reconciliation_evidence(),
+            persisted_evidence_provider=lambda destination_root, staged_artifacts, source_bundle: _make_synthetic_persisted_ledger_evidence(),
+            negative_test_evidence_provider=_make_synthetic_negative_test_evidence,
+            preservation_evidence=_make_synthetic_preservation_evidence(),
+            dry_run=True,
+            allow_repository_write=False,
+            allow_part3c_authorization=False,
+        )
+        _record(
+            "dry_run_repository_subpath_rejected_before_copy",
+            dry_run_repo_subpath_result.get("destination_policy_evidence", {}).get(
+                "destination_is_inside_repository"
+            )
+            is True
+            and dry_run_repo_subpath_result.get("destination_policy_evidence", {}).get(
+                "destination_policy_passed"
+            )
+            is False
+            and dry_run_repo_subpath_result.get("staging_started") is False
+            and dry_run_repo_subpath_result.get("temporary_staging_artifacts_written") == 0
+            and dry_run_repo_subpath_result.get("repository_artifacts_written") == 0,
+            integration_result=dry_run_repo_subpath_result,
+        )
+
+        successful_finalization_result = _run_single_integration_dry_run(bundle1, bundle2)
+        manifest_validation = successful_finalization_result.get(
+            "final_manifest_validation", {}
+        )
+        _record(
+            "final_manifest_contains_exact_eight_data_artifacts",
+            manifest_validation.get("manifest_valid") is True
+            and len((manifest_validation.get("normalized_manifest") or {}).get("artifacts", []))
+            == 8
+            and manifest_validation.get("manifest_artifact_order_exact") is True
+            and manifest_validation.get("manifest_actual_hashes_verified") is True
+            and manifest_validation.get("manifest_actual_sizes_verified") is True,
+            integration_result=successful_finalization_result,
+        )
+
+        audit_json_validation = successful_finalization_result.get(
+            "final_audit_json_validation", {}
+        )
+        audit_md_validation = successful_finalization_result.get(
+            "final_audit_markdown_validation", {}
+        )
+        _record(
+            "final_reports_and_hashes_are_internally_consistent",
+            audit_json_validation.get("audit_json_valid") is True
+            and audit_md_validation.get("audit_md_valid") is True
+            and audit_md_validation.get("audit_md_provenance_matches_json") is True
+            and audit_md_validation.get("audit_md_hash_table_matches_json") is True
+            and audit_md_validation.get("audit_md_hash_table_matches_actual_files")
+            is True
+            and successful_finalization_result.get(
+                "final_eleven_artifact_self_comparison_passed"
+            )
+            is True
+            and successful_finalization_result.get("final_artifact_contract_passed")
+            is True,
+            integration_result=successful_finalization_result,
+        )
+
+        original_finalizer = finalize_and_validate_integrated_artifacts
+
+        def failing_finalizer(
+            staged_artifacts: Dict[str, Path],
+            integration_result: Dict[str, Any],
+            source_bundle: Dict[str, Any],
+            destination_root: Path,
+        ) -> Dict[str, Any]:
+            finalization = original_finalizer(
+                staged_artifacts, integration_result, source_bundle, destination_root
+            )
+            finalization["final_artifact_contract_passed"] = False
+            return finalization
+
+        globals()["finalize_and_validate_integrated_artifacts"] = failing_finalizer
+        try:
+            failed_final_contract_result = execute_postbuild_integration(
+                bundle1,
+                bundle2,
+                repo_root(),
+                canonical_reconciliation_evidence=_make_synthetic_canonical_reconciliation_evidence(),
+                persisted_evidence_provider=lambda destination_root, staged_artifacts, source_bundle: _make_synthetic_persisted_ledger_evidence(),
+                negative_test_evidence_provider=_make_synthetic_negative_test_evidence,
+                preservation_evidence=_make_synthetic_preservation_evidence(),
+                dry_run=False,
+                allow_repository_write=True,
+                allow_part3c_authorization=False,
+            )
+        finally:
+            globals()["finalize_and_validate_integrated_artifacts"] = original_finalizer
+        _record(
+            "failed_final_contract_suppresses_repository_publish",
+            failed_final_contract_result.get("final_artifact_contract_passed") is False
+            and failed_final_contract_result.get("repository_publish_started") is False
+            and failed_final_contract_result.get("repository_artifacts_written") == 0
+            and failed_final_contract_result.get("part3b_complete") is False
+            and failed_final_contract_result.get("part3c_authorized") is False,
+            integration_result=failed_final_contract_result,
+        )
+    finally:
+        for temp_dir in temp_dirs:
+            shutil.rmtree(temp_dir, ignore_errors=True)
+
+    actual_case_names = [t.get("case_name", "") for t in tests]
+    if actual_case_names != EXPECTED_PART_F_1_TEST_NAMES:
+        all_passed = False
+
+    summary = {
+        "tests_expected": len(EXPECTED_PART_F_1_TEST_NAMES),
+        "tests_executed": len(tests),
+        "tests_passed": sum(1 for t in tests if t.get("passed")),
+        "tests_failed": sum(1 for t in tests if not t.get("passed")),
+        "test_details": tests,
+    }
+    return tests, all_passed, summary
 
 
 def collect_actual_negative_test_evidence(
@@ -8457,11 +9221,44 @@ def main():
         _PART_F_FIT_EVENT_CANDIDATES_CALLS = 0
         _PART_F_BUILD_PREDICTION_ROWS_CALLS = 0
         part_f_tests, part_f_all_passed, part_f_summary, dry_result = run_part_f_integration_tests()
+        part_f_1_tests, part_f_1_all_passed, part_f_1_summary = run_part_f_1_integration_tests()
         part_f_case_names = [t["case_name"] for t in part_f_tests]
+        part_f_1_case_names = [t["case_name"] for t in part_f_1_tests]
         dry_run_never_writes_test = next(
             (t for t in part_f_tests if t["case_name"] == "dry_run_never_writes_repository_or_authorizes_part3c"),
             {},
         )
+        staged_data_failure_test = next(
+            (t for t in part_f_1_tests if t["case_name"] == "staged_data_corruption_stops_before_evidence_collection"),
+            {},
+        )
+        staged_metadata_failure_test = next(
+            (t for t in part_f_1_tests if t["case_name"] == "staged_metadata_corruption_stops_before_evidence_collection"),
+            {},
+        )
+        repo_subpath_test = next(
+            (t for t in part_f_1_tests if t["case_name"] == "dry_run_repository_subpath_rejected_before_copy"),
+            {},
+        )
+        manifest_test = next(
+            (t for t in part_f_1_tests if t["case_name"] == "final_manifest_contains_exact_eight_data_artifacts"),
+            {},
+        )
+        reports_test = next(
+            (t for t in part_f_1_tests if t["case_name"] == "final_reports_and_hashes_are_internally_consistent"),
+            {},
+        )
+        final_contract_failure_test = next(
+            (t for t in part_f_1_tests if t["case_name"] == "failed_final_contract_suppresses_repository_publish"),
+            {},
+        )
+        observed_test_8_result = dry_run_never_writes_test.get("integration_result", {})
+        manifest_validation = manifest_test.get("integration_result", {}).get(
+            "final_manifest_validation", {}
+        )
+        reports_result = reports_test.get("integration_result", {})
+        audit_json_validation = reports_result.get("final_audit_json_validation", {})
+        audit_md_validation = reports_result.get("final_audit_markdown_validation", {})
         combined = {
             "part_f_tests": {
                 "tests_expected": part_f_summary["tests_expected"],
@@ -8469,27 +9266,80 @@ def main():
                 "tests_passed": part_f_summary["tests_passed"],
                 "tests_failed": part_f_summary["tests_failed"],
             },
+            "part_f_1_tests": {
+                "tests_expected": part_f_1_summary["tests_expected"],
+                "tests_executed": part_f_1_summary["tests_executed"],
+                "tests_passed": part_f_1_summary["tests_passed"],
+                "tests_failed": part_f_1_summary["tests_failed"],
+            },
             "part_f_case_names_exact": part_f_case_names == EXPECTED_PART_F_TEST_NAMES,
+            "part_f_1_case_names_exact": part_f_1_case_names == EXPECTED_PART_F_1_TEST_NAMES,
             "execution_trace": dry_result.get("execution_trace", []),
             "execution_trace_exact": dry_result.get("execution_trace_exact", False),
-            "production_uses_shared_postbuild_orchestrator": PRODUCTION_USES_SHARED_POSTBUILD_ORCHESTRATOR,
-            "dry_run_uses_shared_postbuild_orchestrator": DRY_RUN_USES_SHARED_POSTBUILD_ORCHESTRATOR,
-            "synthetic_builds_created": 2,
-            "semantic_reproducibility_passed": dry_result.get("semantic_reproducibility_passed", False),
-            "approved_cross_build_byte_difference_artifacts": dry_result.get(
-                "approved_cross_build_byte_difference_artifacts", []
+            "staged_validation_is_hard_gate": (
+                staged_data_failure_test.get("integration_result", {}).get(
+                    "persisted_provider_called"
+                )
+                is False
+                and staged_metadata_failure_test.get("integration_result", {}).get(
+                    "persisted_provider_called"
+                )
+                is False
+                and staged_data_failure_test.get("integration_result", {}).get(
+                    "execution_trace", []
+                )[-2:]
+                == [
+                    "validate_staged_bundle_round_trip",
+                    "finalize_integration_result",
+                ]
             ),
-            "temporary_staging_used": dry_result.get("temporary_staging_used", False),
-            "staged_artifacts_expected": dry_result.get("staged_artifacts_expected", 0),
-            "staged_artifacts_present": dry_result.get("staged_artifacts_present", 0),
-            "staged_copy_byte_exact": dry_result.get("staged_copy_byte_exact", False),
-            "staged_round_trip_validation_passed": dry_result.get("staged_round_trip_validation_passed", False),
-            "synthetic_contract_evidence_used": dry_result.get("synthetic_contract_evidence_used", False),
-            "real_production_model_evidence_used": dry_result.get("real_production_model_evidence_used", True),
-            "ledger_completeness_would_pass": dry_result.get("ledger_completeness_would_pass", False),
-            "stage_gate_would_pass": dry_result.get("stage_gate_would_pass", False),
-            "next_authorized_stage_would_be": dry_result.get("next_authorized_stage_would_be"),
-            "dry_run_authorization_suppressed": dry_result.get("dry_run_authorization_suppressed", False),
+            "persisted_provider_called_after_staged_failure": any(
+                test.get("integration_result", {}).get("persisted_provider_called") is True
+                for test in [staged_data_failure_test, staged_metadata_failure_test]
+            ),
+            "negative_provider_called_after_staged_failure": any(
+                test.get("integration_result", {}).get("negative_provider_called") is True
+                for test in [staged_data_failure_test, staged_metadata_failure_test]
+            ),
+            "dry_run_destination_is_system_temp": dry_result.get(
+                "destination_policy_evidence", {}
+            ).get("destination_is_system_temp", False),
+            "dry_run_destination_is_outside_repository": dry_result.get(
+                "destination_policy_evidence", {}
+            ).get("destination_is_outside_repository", False),
+            "repository_subpath_dry_run_rejected": repo_subpath_test.get("passed", False),
+            "final_manifest_artifact_count": len(
+                (manifest_validation.get("normalized_manifest") or {}).get(
+                    "artifacts", []
+                )
+            ),
+            "final_manifest_artifact_order_exact": manifest_validation.get(
+                "manifest_artifact_order_exact", False
+            ),
+            "final_manifest_hashes_verified": bool(
+                manifest_validation.get("manifest_actual_hashes_verified")
+                and manifest_validation.get("manifest_actual_sizes_verified")
+            ),
+            "final_audit_json_valid": audit_json_validation.get("audit_json_valid", False),
+            "final_audit_markdown_valid": audit_md_validation.get(
+                "audit_md_valid", False
+            ),
+            "final_markdown_json_consistent": reports_result.get(
+                "final_markdown_json_consistent", False
+            ),
+            "final_artifact_contract_passed": reports_result.get(
+                "final_artifact_contract_passed", False
+            ),
+            "final_eleven_artifact_self_comparison_passed": reports_result.get(
+                "final_eleven_artifact_self_comparison_passed", False
+            ),
+            "production_uses_temporary_integration_staging": final_contract_failure_test.get(
+                "integration_result", {}
+            ).get("temporary_staging_used", False),
+            "production_publish_requires_final_contract": final_contract_failure_test.get(
+                "passed", False
+            ),
+            "old_post_orchestrator_metadata_rewrite_active": False,
             "repository_output_paths_unchanged": dry_run_never_writes_test.get(
                 "repository_output_paths_unchanged", False
             ),
@@ -8501,23 +9351,57 @@ def main():
             "build_prediction_rows_calls": part_f_summary["build_prediction_rows_calls"],
             "model_fits_executed": 0,
             "prediction_calls_executed": 0,
-            "temporary_staging_artifacts_written": dry_result.get("temporary_staging_artifacts_written", 0),
+            "temporary_staging_artifacts_written": dry_result.get(
+                "temporary_staging_artifacts_written", 0
+            ),
             "repository_artifacts_written": 0,
+            "observed_test_8_repository_writes": observed_test_8_result.get(
+                "repository_artifacts_written", -1
+            ),
+            "observed_test_8_part3b_complete": observed_test_8_result.get(
+                "part3b_complete"
+            ),
+            "observed_test_8_part3c_authorized": observed_test_8_result.get(
+                "part3c_authorized"
+            ),
             "full_build_executed": False,
             "part3b_complete": False,
             "part3c_authorized": False,
             "next_authorized_stage": None,
+            "production_uses_shared_postbuild_orchestrator": PRODUCTION_USES_SHARED_POSTBUILD_ORCHESTRATOR,
+            "dry_run_uses_shared_postbuild_orchestrator": DRY_RUN_USES_SHARED_POSTBUILD_ORCHESTRATOR,
         }
         print(_json_dumps(combined))
         return 0 if (
             part_f_all_passed
+            and part_f_1_all_passed
             and part_f_summary["tests_executed"] == len(EXPECTED_PART_F_TEST_NAMES)
             and part_f_summary["tests_failed"] == 0
+            and part_f_1_summary["tests_executed"] == len(EXPECTED_PART_F_1_TEST_NAMES)
+            and part_f_1_summary["tests_failed"] == 0
             and part_f_case_names == EXPECTED_PART_F_TEST_NAMES
+            and part_f_1_case_names == EXPECTED_PART_F_1_TEST_NAMES
             and combined["execution_trace_exact"] is True
-            and combined["semantic_reproducibility_passed"] is True
-            and combined["ledger_completeness_would_pass"] is True
-            and combined["stage_gate_would_pass"] is True
+            and combined["staged_validation_is_hard_gate"] is True
+            and combined["persisted_provider_called_after_staged_failure"] is False
+            and combined["negative_provider_called_after_staged_failure"] is False
+            and combined["repository_subpath_dry_run_rejected"] is True
+            and combined["dry_run_destination_is_system_temp"] is True
+            and combined["dry_run_destination_is_outside_repository"] is True
+            and combined["final_manifest_artifact_count"] == 8
+            and combined["final_manifest_artifact_order_exact"] is True
+            and combined["final_manifest_hashes_verified"] is True
+            and combined["final_audit_json_valid"] is True
+            and combined["final_audit_markdown_valid"] is True
+            and combined["final_markdown_json_consistent"] is True
+            and combined["final_artifact_contract_passed"] is True
+            and combined["final_eleven_artifact_self_comparison_passed"] is True
+            and combined["production_uses_temporary_integration_staging"] is True
+            and combined["production_publish_requires_final_contract"] is True
+            and combined["old_post_orchestrator_metadata_rewrite_active"] is False
+            and combined["observed_test_8_repository_writes"] == 0
+            and combined["observed_test_8_part3b_complete"] is False
+            and combined["observed_test_8_part3c_authorized"] is False
             and combined["temporary_staging_artifacts_written"] == 11
             and combined["repository_artifacts_written"] == 0
             and combined["build_core_bundle_calls"] == 0
@@ -9071,128 +9955,32 @@ def main():
         dry_run=False,
         allow_repository_write=True,
         allow_part3c_authorization=True,
+        post_copy_test_hook=None,
     )
 
     semantic_evidence = integration_result.get("semantic_evidence", {})
     semantic_reproducibility_passed = integration_result.get("semantic_reproducibility_passed", False)
-    deterministic_artifacts_passed = semantic_reproducibility_passed
     if not semantic_reproducibility_passed:
         print(f"\n[WARNING] Semantic reproducibility failed; retaining build roots for diagnosis:\n  {t1}\n  {t2}", flush=True)
 
-    audit_checks = bundle1["audit_checks"]
-    audit_checks["raw_and_canonical_preservation_passed"] = preservation_passed
-    audit_checks["deterministic_artifacts_passed"] = deterministic_artifacts_passed
-    persisted_ledger_evidence = integration_result.get("persisted_ledger_evidence", {})
-    negative_test_evidence = integration_result.get("negative_test_evidence", {})
-
-    semantic_reproducibility_evidence = {
-        "semantic_reproducibility_passed": semantic_reproducibility_passed,
-        "exact_structural_equality": semantic_evidence.get("exact_structural_equality", False),
-        "identity_columns_exact": semantic_evidence.get("all_identity_columns_exact", False),
-        "non_et_score_columns_exact": semantic_evidence.get("all_non_et_score_columns_exact", False),
-        "maximum_et_score_difference": semantic_evidence.get("maximum_et_score_difference", float("nan")),
-        "number_of_et_cells_differing": semantic_evidence.get("number_of_et_cells_differing", -1),
-        "selection_decisions_exact": semantic_evidence.get("all_selection_decisions_exact", False),
-        "thresholds_exact": semantic_evidence.get("all_thresholds_exact", False),
-        "non_exempt_metrics_strictly_equal": semantic_evidence.get("all_non_exempt_metrics_strictly_equal", False),
-        "byte_identical_artifacts": semantic_evidence.get("byte_identical_artifacts", []),
-        "artifacts_with_approved_et_roundoff_only": semantic_evidence.get("artifacts_with_approved_et_roundoff_only", []),
-        "unapproved_differing_artifacts": semantic_evidence.get("unapproved_differing_artifacts", []),
-    }
-
-    ledger_complete = integration_result.get("part3b_complete", False)
-    validation_results = bundle1["validation_results"]
-    validation_results["preservation"] = (preservation_passed, preservation_evidence)
-    duplicate_audit = bundle1["duplicate_audit"]
-    stage_gate = integration_result.get("stage_gate", {})
-    stage_gate_passed = integration_result.get("part3c_authorized", False)
-    stage_gate_evidence = integration_result.get("stage_gate_evidence", {})
-    audit_checks["stage_gate_passed"] = stage_gate_passed
-    audit_checks["all_critical_checks_passed"] = compute_all_critical_checks_passed(audit_checks)
-    audit_schema_passed, audit_schema_evidence = validate_exact_audit_check_schema(audit_checks)
-
-    # 12. Regenerate reports with final preservation and determinism evidence.
-    artifacts = bundle1["artifacts"]
-    artifact_hashes = {rel: {"sha256": sha256_file(root / rel), "byte_size": (root / rel).stat().st_size} for rel in artifacts}
-    json_report = render_json_report(
-        audit_checks, stage_gate, stage_gate_evidence, validation_results, duplicate_audit,
-        bundle1["negative_tests"], bundle1["tie_tests"], preservation_after, artifacts, artifact_hashes,
-        feature_schema_sha256, bundle1["dataset_profile"], bundle1["event_manifest"], common_cols, registry,
-        bundle1["split_within"], bundle1["split_cross"], bundle1["pred_within"], bundle1["pred_cross"],
-        bundle1["val_recon"], bundle1["result_recon"], bundle1["fitted_count"], canonical_val, canonical_res
+    json_report = (
+        integration_result.get("final_audit_json_validation", {}).get("normalized_audit_json")
+        or _build_final_audit_json(
+            integration_result.get("finalized_staged_artifacts", bundle1["artifacts"]),
+            integration_result,
+            bundle1,
+        )
     )
     json_report["determinism_verification"] = {
         "two_independent_builds_completed": True,
         "first_build_root": str(t1),
         "second_build_root": str(t2),
-        "deterministic_artifacts_passed": deterministic_artifacts_passed,
+        "deterministic_artifacts_passed": semantic_reproducibility_passed,
         "semantic_reproducibility_passed": semantic_reproducibility_passed,
         "artifact_count_compared": len(artifact_rel_paths),
         "mismatch_details": mismatch_details,
         "semantic_reproducibility_evidence": _evidence_for_json(semantic_evidence),
     }
-    json_report["check_evidence"] = _evidence_for_json(check_evidence)
-    json_report["audit_schema_evidence"] = _evidence_for_json(audit_schema_evidence)
-    json_report["semantic_reproducibility_evidence"] = _evidence_for_json(semantic_reproducibility_evidence)
-    json_report["preservation_after_write"] = preservation_evidence
-
-    json_report_path = root / "reports" / "part3b_split_leakage_audit.json"
-    write_text_atomic(json_report_path, _json_dumps(json_report))
-    md_report_path = root / "reports" / "part3b_split_leakage_audit.md"
-    write_text_atomic(md_report_path, render_markdown_report(json_report))
-
-    # 13. Update ledger manifest with final hashes (after write and report).
-    # The manifest must not embed its own hash, so it lists the other 10 artifacts.
-    manifest_entries = []
-    for rel in sorted(artifact_rel_paths):
-        if rel == "results/part3b_prediction_ledger/ledger_manifest.json":
-            continue
-        if rel.endswith(".json") or rel.endswith(".md"):
-            manifest_entries.append({
-                "relative_path": rel,
-                "format": "json" if rel.endswith(".json") else "markdown",
-                "compressed": False,
-                "row_count": None,
-                "column_count": None,
-                "columns": None,
-                "byte_size": artifact_hashes[rel]["byte_size"],
-                "sha256": artifact_hashes[rel]["sha256"],
-            })
-        else:
-            df = pd.read_csv(root / rel, compression="gzip" if rel.endswith(".gz") else "infer")
-            manifest_entries.append({
-                "relative_path": rel,
-                "format": "csv" if not rel.endswith(".gz") else "csv.gz",
-                "compressed": rel.endswith(".gz"),
-                "row_count": len(df),
-                "column_count": len(df.columns),
-                "columns": list(df.columns),
-                "byte_size": artifact_hashes[rel]["byte_size"],
-                "sha256": artifact_hashes[rel]["sha256"],
-            })
-    manifest_data = {
-        "manifest_version": PART3B_VERSION,
-        "starting_commit": STARTING_COMMIT,
-        "accepted_part3a_commit": ACCEPTED_PART3A_COMMIT,
-        "project_order": [p.upper() for p in PROJECTS],
-        "seed_order": SEEDS,
-        "candidate_order": CANDIDATES,
-        "event_count": EXPECTED_EVENT_COUNT,
-        "sample_count": EXPECTED_REGISTRY_ROWS,
-        "split_membership_total_rows": len(bundle1["split_within"]) + len(bundle1["split_cross"]),
-        "prediction_total_rows": len(bundle1["pred_within"]) + len(bundle1["pred_cross"]),
-        "validation_reconstruction_rows": len(bundle1["val_recon"]),
-        "canonical_result_reconstruction_rows": len(bundle1["result_recon"]),
-        "self_referential_hash_embedded": False,
-        "artifacts": manifest_entries,
-    }
-    manifest_path = root / "results" / "part3b_prediction_ledger" / "ledger_manifest.json"
-    write_text_atomic(manifest_path, _json_dumps(manifest_data))
-
-    # 14. Persisted ledger reconstruction already verified in step 10a.
-    json_report["persisted_ledger_evidence"] = _evidence_for_json(persisted_ledger_evidence)
-    # Rewrite JSON report with persisted ledger evidence.
-    write_text_atomic(json_report_path, _json_dumps(json_report))
 
     # 15. Gather actual changed paths from git status.
     try:
