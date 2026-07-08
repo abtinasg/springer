@@ -4359,6 +4359,7 @@ def compare_eleven_artifacts_semantically(
     metadata_artifact_comparison_passed = False
     approved_metadata_hash_differences: List[Dict[str, Any]] = []
     unapproved_metadata_differences: List[Dict[str, Any]] = []
+    approved_byte_diff_set: set = set()
 
     # Explicit fail-closed gate fields
     manifest_first_valid = False
@@ -4584,6 +4585,7 @@ def compare_eleven_artifacts_semantically(
         "byte_identical_artifacts": byte_identical_artifacts,
         "artifacts_with_approved_et_roundoff_only": artifacts_with_approved_et_roundoff_only,
         "unapproved_differing_artifacts": unapproved_differing_artifacts,
+        "approved_cross_build_byte_difference_artifacts": approved_byte_diff_set,
         "exact_structural_equality": data_comparison.get("exact_structural_equality", False),
         "all_identity_columns_exact": data_comparison.get("all_identity_columns_exact", False),
         "all_non_et_score_columns_exact": data_comparison.get("all_non_et_score_columns_exact", False),
@@ -5995,6 +5997,35 @@ def run_part_e1_2_signed_zero_tests() -> Tuple[List[Dict[str, Any]], bool, Dict[
 
 
 # ---------------------------------------------------------------------------
+# Part E.2: Frozen test-name contracts
+# ---------------------------------------------------------------------------
+EXPECTED_PART_E2_TEST_NAMES = [
+    "exact_eleven_artifact_fixture_passes",
+    "missing_ledger_manifest_fails",
+    "missing_audit_json_fails",
+    "missing_audit_markdown_fails",
+    "manifest_scientific_count_change_fails",
+    "manifest_artifact_order_change_fails",
+    "manifest_own_hash_mismatch_fails",
+    "approved_et_manifest_normalization_passes",
+    "audit_json_scientific_field_change_fails",
+    "audit_json_own_hash_mismatch_fails",
+    "approved_et_audit_json_normalization_passes",
+    "audit_markdown_scientific_text_change_fails",
+    "audit_markdown_own_hash_mismatch_fails",
+    "approved_et_markdown_and_full_gate_pass",
+]
+
+EXPECTED_PART_E2_1_TEST_NAMES = [
+    "same_stale_manifest_hash_rejected",
+    "same_wrong_manifest_row_count_rejected",
+    "same_non_boolean_audit_check_rejected",
+    "same_stale_audit_json_hash_rejected",
+    "same_stale_or_missing_markdown_hash_rejected",
+]
+
+
+# ---------------------------------------------------------------------------
 # Part E.2: Fourteen isolated tests for the eleven-artifact semantic gate
 # ---------------------------------------------------------------------------
 def _make_synthetic_metadata_artifacts(
@@ -6179,13 +6210,17 @@ def _make_approved_et_eleven_artifact_builds(
         dst.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(str(src), str(dst))
 
-    # Modify one score__ET_leaf5 value in both prediction ledgers
-    et_delta = 1e-16
-    for ledger_name in ["prediction_ledger_within.csv.gz", "prediction_ledger_cross.csv.gz"]:
-        p = b2_data_root / ledger_name
-        df = _read_semantic_data_artifact(p)
-        df.at[0, "score__ET_leaf5"] = float(df.at[0, "score__ET_leaf5"]) + et_delta
-        df.to_csv(p, index=False, lineterminator="\n", compression="gzip", float_format="%.17g")
+    # Modify exactly one float64 cell in prediction_ledger_within.csv.gz only.
+    # Do not modify prediction_ledger_cross.csv.gz.
+    within_p = b2_data_root / "prediction_ledger_within.csv.gz"
+    df = _read_semantic_data_artifact(within_p)
+    old_value = np.float64(df.at[0, "score__ET_leaf5"])
+    new_value = np.nextafter(old_value, np.float64(np.inf))
+    df.at[0, "score__ET_leaf5"] = float(new_value)
+    df.to_csv(within_p, index=False, lineterminator="\n", compression="gzip", float_format="%.17g")
+    absolute_difference = abs(float(new_value - old_value))
+    assert absolute_difference > 0
+    assert absolute_difference <= ET_SCORE_ATOL
 
     # Build 2: create metadata with updated hashes
     b2_all = _make_synthetic_metadata_artifacts(b2_data_root, b2_meta_dir)
@@ -6223,253 +6258,280 @@ def run_part_e2_eleven_artifact_tests() -> Tuple[List[Dict[str, Any]], bool, Dic
                     result["semantic_reproducibility_passed"] is True,
                 )
 
-            # 2. One metadata artifact missing fails.
-            with tempfile.TemporaryDirectory(prefix="part3b2_e2_miss_meta_") as miss_meta_dir:
-                miss_meta_root = Path(miss_meta_dir)
+            # 2. missing_ledger_manifest_fails
+            with tempfile.TemporaryDirectory(prefix="part3b2_e2_miss_man_") as miss_man_dir:
+                miss_man_root = Path(miss_man_dir)
+                for rel, src in base_all.items():
+                    if rel == "results/part3b_prediction_ledger/ledger_manifest.json":
+                        continue
+                    dst = miss_man_root / Path(rel).name
+                    dst.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copy2(str(src), str(dst))
+                miss_man_paths = _all_artifact_paths_from_dir(miss_man_root)
+                result = compare_eleven_artifacts_semantically(base_all, miss_man_paths)
+                _record(
+                    "missing_ledger_manifest_fails",
+                    result["semantic_reproducibility_passed"] is False
+                    and "results/part3b_prediction_ledger/ledger_manifest.json" in result["missing_from_second"],
+                )
+
+            # 3. missing_audit_json_fails
+            with tempfile.TemporaryDirectory(prefix="part3b2_e2_miss_aj_") as miss_aj_dir:
+                miss_aj_root = Path(miss_aj_dir)
+                for rel, src in base_all.items():
+                    if rel == "reports/part3b_split_leakage_audit.json":
+                        continue
+                    dst = miss_aj_root / Path(rel).name
+                    dst.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copy2(str(src), str(dst))
+                miss_aj_paths = _all_artifact_paths_from_dir(miss_aj_root)
+                result = compare_eleven_artifacts_semantically(base_all, miss_aj_paths)
+                _record(
+                    "missing_audit_json_fails",
+                    result["semantic_reproducibility_passed"] is False
+                    and "reports/part3b_split_leakage_audit.json" in result["missing_from_second"],
+                )
+
+            # 4. missing_audit_markdown_fails
+            with tempfile.TemporaryDirectory(prefix="part3b2_e2_miss_md_") as miss_md_dir:
+                miss_md_root = Path(miss_md_dir)
                 for rel, src in base_all.items():
                     if rel == "reports/part3b_split_leakage_audit.md":
                         continue
-                    dst = miss_meta_root / Path(rel).name
+                    dst = miss_md_root / Path(rel).name
                     dst.parent.mkdir(parents=True, exist_ok=True)
                     shutil.copy2(str(src), str(dst))
-                miss_paths = _all_artifact_paths_from_dir(miss_meta_root)
-                result = compare_eleven_artifacts_semantically(base_all, miss_paths)
+                miss_md_paths = _all_artifact_paths_from_dir(miss_md_root)
+                result = compare_eleven_artifacts_semantically(base_all, miss_md_paths)
                 _record(
-                    "one_metadata_artifact_missing_fails",
+                    "missing_audit_markdown_fails",
                     result["semantic_reproducibility_passed"] is False
                     and "reports/part3b_split_leakage_audit.md" in result["missing_from_second"],
                 )
 
-            # 3. Ledger manifest with wrong version fails.
-            with tempfile.TemporaryDirectory(prefix="part3b2_e2_wrong_ver_") as wv_dir:
-                wv_root = Path(wv_dir)
+            # 5. manifest_scientific_count_change_fails
+            with tempfile.TemporaryDirectory(prefix="part3b2_e2_sci_cnt_") as sc_dir:
+                sc_root = Path(sc_dir)
                 for rel, src in base_all.items():
-                    dst = wv_root / Path(rel).name
+                    dst = sc_root / Path(rel).name
                     dst.parent.mkdir(parents=True, exist_ok=True)
                     shutil.copy2(str(src), str(dst))
-                with (wv_root / "ledger_manifest.json").open("r") as f:
+                with (sc_root / "ledger_manifest.json").open("r") as f:
                     manifest = json.load(f)
-                manifest["manifest_version"] = "WRONG-VERSION"
-                write_text_atomic(wv_root / "ledger_manifest.json", _json_dumps(manifest))
-                wv_paths = _all_artifact_paths_from_dir(wv_root)
-                result = compare_eleven_artifacts_semantically(base_all, wv_paths)
+                manifest["event_count"] = manifest["event_count"] + 1
+                write_text_atomic(sc_root / "ledger_manifest.json", _json_dumps(manifest))
+                sc_paths = _all_artifact_paths_from_dir(sc_root)
+                result = compare_eleven_artifacts_semantically(base_all, sc_paths)
+                man_cmp = result["metadata_artifact_comparisons"].get("ledger_manifest", {})
                 _record(
-                    "manifest_wrong_version_fails",
-                    result["semantic_reproducibility_passed"] is False,
+                    "manifest_scientific_count_change_fails",
+                    man_cmp.get("manifest_comparison_passed") is False
+                    and result["semantic_reproducibility_passed"] is False,
                 )
 
-            # 4. Ledger manifest with wrong starting commit fails.
-            with tempfile.TemporaryDirectory(prefix="part3b2_e2_wrong_commit_") as wc_dir:
-                wc_root = Path(wc_dir)
+            # 6. manifest_artifact_order_change_fails
+            with tempfile.TemporaryDirectory(prefix="part3b2_e2_ord_") as ord_dir:
+                ord_root = Path(ord_dir)
                 for rel, src in base_all.items():
-                    dst = wc_root / Path(rel).name
+                    dst = ord_root / Path(rel).name
                     dst.parent.mkdir(parents=True, exist_ok=True)
                     shutil.copy2(str(src), str(dst))
-                with (wc_root / "ledger_manifest.json").open("r") as f:
+                with (ord_root / "ledger_manifest.json").open("r") as f:
                     manifest = json.load(f)
-                manifest["starting_commit"] = "wrongcommit"
-                write_text_atomic(wc_root / "ledger_manifest.json", _json_dumps(manifest))
-                wc_paths = _all_artifact_paths_from_dir(wc_root)
-                result = compare_eleven_artifacts_semantically(base_all, wc_paths)
+                manifest["artifacts"][0], manifest["artifacts"][1] = \
+                    manifest["artifacts"][1], manifest["artifacts"][0]
+                write_text_atomic(ord_root / "ledger_manifest.json", _json_dumps(manifest))
+                ord_paths = _all_artifact_paths_from_dir(ord_root)
+                result = compare_eleven_artifacts_semantically(base_all, ord_paths)
                 _record(
-                    "manifest_wrong_starting_commit_fails",
+                    "manifest_artifact_order_change_fails",
                     result["semantic_reproducibility_passed"] is False,
                 )
 
-            # 5. Ledger manifest with wrong artifact order fails.
-            with tempfile.TemporaryDirectory(prefix="part3b2_e2_wrong_order_") as wo_dir:
-                wo_root = Path(wo_dir)
-                for rel, src in base_all.items():
-                    dst = wo_root / Path(rel).name
-                    dst.parent.mkdir(parents=True, exist_ok=True)
-                    shutil.copy2(str(src), str(dst))
-                with (wo_root / "ledger_manifest.json").open("r") as f:
-                    manifest = json.load(f)
-                manifest["artifacts"] = list(reversed(manifest["artifacts"]))
-                write_text_atomic(wo_root / "ledger_manifest.json", _json_dumps(manifest))
-                wo_paths = _all_artifact_paths_from_dir(wo_root)
-                result = compare_eleven_artifacts_semantically(base_all, wo_paths)
-                _record(
-                    "manifest_wrong_artifact_order_fails",
-                    result["semantic_reproducibility_passed"] is False,
-                )
-
-            # 6. Ledger manifest with stale sha256 fails.
-            with tempfile.TemporaryDirectory(prefix="part3b2_e2_stale_hash_") as sh_dir:
-                sh_root = Path(sh_dir)
-                for rel, src in base_all.items():
-                    dst = sh_root / Path(rel).name
-                    dst.parent.mkdir(parents=True, exist_ok=True)
-                    shutil.copy2(str(src), str(dst))
-                with (sh_root / "ledger_manifest.json").open("r") as f:
-                    manifest = json.load(f)
-                manifest["artifacts"][0]["sha256"] = "0" * 64
-                write_text_atomic(sh_root / "ledger_manifest.json", _json_dumps(manifest))
-                sh_paths = _all_artifact_paths_from_dir(sh_root)
-                result = compare_eleven_artifacts_semantically(base_all, sh_paths)
-                _record(
-                    "manifest_stale_sha256_fails",
-                    result["semantic_reproducibility_passed"] is False,
-                )
-
-            # 7. Audit JSON with wrong provenance fails.
-            with tempfile.TemporaryDirectory(prefix="part3b2_e2_audit_prov_") as ap_dir:
-                ap_root = Path(ap_dir)
-                for rel, src in base_all.items():
-                    dst = ap_root / Path(rel).name
-                    dst.parent.mkdir(parents=True, exist_ok=True)
-                    shutil.copy2(str(src), str(dst))
-                with (ap_root / "part3b_split_leakage_audit.json").open("r") as f:
-                    audit = json.load(f)
-                audit["part3b_version"] = "WRONG"
-                write_text_atomic(ap_root / "part3b_split_leakage_audit.json", _json_dumps(audit))
-                ap_paths = _all_artifact_paths_from_dir(ap_root)
-                result = compare_eleven_artifacts_semantically(base_all, ap_paths)
-                _record(
-                    "audit_json_wrong_provenance_fails",
-                    result["semantic_reproducibility_passed"] is False,
-                )
-
-            # 8. Audit JSON with wrong audit check schema fails.
-            with tempfile.TemporaryDirectory(prefix="part3b2_e2_audit_schema_") as as_dir:
-                as_root = Path(as_dir)
-                for rel, src in base_all.items():
-                    dst = as_root / Path(rel).name
-                    dst.parent.mkdir(parents=True, exist_ok=True)
-                    shutil.copy2(str(src), str(dst))
-                with (as_root / "part3b_split_leakage_audit.json").open("r") as f:
-                    audit = json.load(f)
-                audit["audit_checks"]["extra_bogus_check"] = True
-                write_text_atomic(as_root / "part3b_split_leakage_audit.json", _json_dumps(audit))
-                as_paths = _all_artifact_paths_from_dir(as_root)
-                result = compare_eleven_artifacts_semantically(base_all, as_paths)
-                _record(
-                    "audit_json_wrong_check_schema_fails",
-                    result["semantic_reproducibility_passed"] is False,
-                )
-
-            # 9. Audit JSON with wrong stage gate schema fails.
-            with tempfile.TemporaryDirectory(prefix="part3b2_e2_audit_gate_") as ag_dir:
-                ag_root = Path(ag_dir)
-                for rel, src in base_all.items():
-                    dst = ag_root / Path(rel).name
-                    dst.parent.mkdir(parents=True, exist_ok=True)
-                    shutil.copy2(str(src), str(dst))
-                with (ag_root / "part3b_split_leakage_audit.json").open("r") as f:
-                    audit = json.load(f)
-                audit["stage_gate"]["extra_bogus_field"] = True
-                write_text_atomic(ag_root / "part3b_split_leakage_audit.json", _json_dumps(audit))
-                ag_paths = _all_artifact_paths_from_dir(ag_root)
-                result = compare_eleven_artifacts_semantically(base_all, ag_paths)
-                _record(
-                    "audit_json_wrong_stage_gate_schema_fails",
-                    result["semantic_reproducibility_passed"] is False,
-                )
-
-            # 10. Audit JSON with stale artifact hash fails.
-            with tempfile.TemporaryDirectory(prefix="part3b2_e2_audit_hash_") as ah_dir:
-                ah_root = Path(ah_dir)
-                for rel, src in base_all.items():
-                    dst = ah_root / Path(rel).name
-                    dst.parent.mkdir(parents=True, exist_ok=True)
-                    shutil.copy2(str(src), str(dst))
-                with (ah_root / "part3b_split_leakage_audit.json").open("r") as f:
-                    audit = json.load(f)
-                first_rel = SEMANTIC_DATA_ARTIFACTS[0]
-                audit["artifact_hashes"][first_rel]["sha256"] = "0" * 64
-                write_text_atomic(ah_root / "part3b_split_leakage_audit.json", _json_dumps(audit))
-                ah_paths = _all_artifact_paths_from_dir(ah_root)
-                result = compare_eleven_artifacts_semantically(base_all, ah_paths)
-                _record(
-                    "audit_json_stale_artifact_hash_fails",
-                    result["semantic_reproducibility_passed"] is False,
-                )
-
-            # 11. Audit Markdown missing required section fails.
-            with tempfile.TemporaryDirectory(prefix="part3b2_e2_md_section_") as ms_dir:
-                ms_root = Path(ms_dir)
-                for rel, src in base_all.items():
-                    dst = ms_root / Path(rel).name
-                    dst.parent.mkdir(parents=True, exist_ok=True)
-                    shutil.copy2(str(src), str(dst))
-                md_path = ms_root / "part3b_split_leakage_audit.md"
-                content = md_path.read_text()
-                content = content.replace("## Negative Tests", "## Removed Section")
-                write_text_atomic(md_path, content)
-                ms_paths = _all_artifact_paths_from_dir(ms_root)
-                result = compare_eleven_artifacts_semantically(base_all, ms_paths)
-                _record(
-                    "audit_md_missing_section_fails",
-                    result["semantic_reproducibility_passed"] is False,
-                )
-
-            # 12. Audit Markdown provenance mismatch with JSON fails.
-            with tempfile.TemporaryDirectory(prefix="part3b2_e2_md_prov_") as mp_dir:
-                mp_root = Path(mp_dir)
-                for rel, src in base_all.items():
-                    dst = mp_root / Path(rel).name
-                    dst.parent.mkdir(parents=True, exist_ok=True)
-                    shutil.copy2(str(src), str(dst))
-                md_path = mp_root / "part3b_split_leakage_audit.md"
-                content = md_path.read_text()
-                content = content.replace(
-                    f"- **Version:** {PART3B_VERSION}",
-                    f"- **Version:** WRONG-VERSION",
-                )
-                write_text_atomic(md_path, content)
-                mp_paths = _all_artifact_paths_from_dir(mp_root)
-                result = compare_eleven_artifacts_semantically(base_all, mp_paths)
-                _record(
-                    "audit_md_provenance_mismatch_fails",
-                    result["semantic_reproducibility_passed"] is False,
-                )
-
-            # 13. Audit Markdown hash table mismatch with JSON fails.
-            with tempfile.TemporaryDirectory(prefix="part3b2_e2_md_hash_") as mh_dir:
+            # 7. manifest_own_hash_mismatch_fails
+            with tempfile.TemporaryDirectory(prefix="part3b2_e2_man_hash_") as mh_dir:
                 mh_root = Path(mh_dir)
                 for rel, src in base_all.items():
                     dst = mh_root / Path(rel).name
                     dst.parent.mkdir(parents=True, exist_ok=True)
                     shutil.copy2(str(src), str(dst))
-                md_path = mh_root / "part3b_split_leakage_audit.md"
+                with (mh_root / "ledger_manifest.json").open("r") as f:
+                    manifest = json.load(f)
+                manifest["artifacts"][0]["sha256"] = "0" * 64
+                write_text_atomic(mh_root / "ledger_manifest.json", _json_dumps(manifest))
+                mh_paths = _all_artifact_paths_from_dir(mh_root)
+                result = compare_eleven_artifacts_semantically(base_all, mh_paths)
+                man_cmp = result["metadata_artifact_comparisons"].get("ledger_manifest", {})
+                _record(
+                    "manifest_own_hash_mismatch_fails",
+                    (man_cmp.get("manifest_second_valid") is False
+                     or man_cmp.get("manifest_comparison_passed") is False)
+                    and result["semantic_reproducibility_passed"] is False,
+                )
+
+            # 8. approved_et_manifest_normalization_passes
+            with tempfile.TemporaryDirectory(prefix="part3b2_e2_et_man_b1d_") as et_man_b1_data, \
+                 tempfile.TemporaryDirectory(prefix="part3b2_e2_et_man_b1m_") as et_man_b1_meta, \
+                 tempfile.TemporaryDirectory(prefix="part3b2_e2_et_man_b2d_") as et_man_b2_data, \
+                 tempfile.TemporaryDirectory(prefix="part3b2_e2_et_man_b2m_") as et_man_b2_meta:
+                b1_all_et, b2_all_et = _make_approved_et_eleven_artifact_builds(
+                    Path(et_man_b1_data), Path(et_man_b1_meta),
+                    Path(et_man_b2_data), Path(et_man_b2_meta),
+                )
+                result = compare_eleven_artifacts_semantically(b1_all_et, b2_all_et)
+                man_cmp = result["metadata_artifact_comparisons"].get("ledger_manifest", {})
+                approved_man_diffs = man_cmp.get("approved_manifest_hash_differences", [])
+                approved_man_artifacts = [d.get("artifact") for d in approved_man_diffs]
+                _record(
+                    "approved_et_manifest_normalization_passes",
+                    man_cmp.get("manifest_comparison_passed") is True
+                    and approved_man_artifacts == [
+                        "results/part3b_prediction_ledger/prediction_ledger_within.csv.gz"
+                    ]
+                    and len(man_cmp.get("unapproved_manifest_differences", [])) == 0,
+                )
+
+            # 9. audit_json_scientific_field_change_fails
+            with tempfile.TemporaryDirectory(prefix="part3b2_e2_aj_sci_") as aj_sci_dir:
+                aj_sci_root = Path(aj_sci_dir)
+                for rel, src in base_all.items():
+                    dst = aj_sci_root / Path(rel).name
+                    dst.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copy2(str(src), str(dst))
+                with (aj_sci_root / "part3b_split_leakage_audit.json").open("r") as f:
+                    audit = json.load(f)
+                audit["fitted_candidate_count"] = 999
+                write_text_atomic(aj_sci_root / "part3b_split_leakage_audit.json", _json_dumps(audit))
+                aj_sci_paths = _all_artifact_paths_from_dir(aj_sci_root)
+                result = compare_eleven_artifacts_semantically(base_all, aj_sci_paths)
+                aj_cmp = result["metadata_artifact_comparisons"].get("audit_json", {})
+                _record(
+                    "audit_json_scientific_field_change_fails",
+                    aj_cmp.get("audit_json_comparison_passed") is False
+                    and result["semantic_reproducibility_passed"] is False,
+                )
+
+            # 10. audit_json_own_hash_mismatch_fails
+            with tempfile.TemporaryDirectory(prefix="part3b2_e2_aj_hash_") as aj_hash_dir:
+                aj_hash_root = Path(aj_hash_dir)
+                for rel, src in base_all.items():
+                    dst = aj_hash_root / Path(rel).name
+                    dst.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copy2(str(src), str(dst))
+                with (aj_hash_root / "part3b_split_leakage_audit.json").open("r") as f:
+                    audit = json.load(f)
+                first_rel = SEMANTIC_DATA_ARTIFACTS[0]
+                audit["artifact_hashes"][first_rel]["sha256"] = "0" * 64
+                write_text_atomic(aj_hash_root / "part3b_split_leakage_audit.json", _json_dumps(audit))
+                aj_hash_paths = _all_artifact_paths_from_dir(aj_hash_root)
+                result = compare_eleven_artifacts_semantically(base_all, aj_hash_paths)
+                aj_cmp = result["metadata_artifact_comparisons"].get("audit_json", {})
+                _record(
+                    "audit_json_own_hash_mismatch_fails",
+                    (aj_cmp.get("audit_json_second_valid") is False
+                     or aj_cmp.get("audit_json_comparison_passed") is False)
+                    and result["semantic_reproducibility_passed"] is False,
+                )
+
+            # 11. approved_et_audit_json_normalization_passes
+            with tempfile.TemporaryDirectory(prefix="part3b2_e2_et_aj_b1d_") as et_aj_b1_data, \
+                 tempfile.TemporaryDirectory(prefix="part3b2_e2_et_aj_b1m_") as et_aj_b1_meta, \
+                 tempfile.TemporaryDirectory(prefix="part3b2_e2_et_aj_b2d_") as et_aj_b2_data, \
+                 tempfile.TemporaryDirectory(prefix="part3b2_e2_et_aj_b2m_") as et_aj_b2_meta:
+                b1_all_aj, b2_all_aj = _make_approved_et_eleven_artifact_builds(
+                    Path(et_aj_b1_data), Path(et_aj_b1_meta),
+                    Path(et_aj_b2_data), Path(et_aj_b2_meta),
+                )
+                result = compare_eleven_artifacts_semantically(b1_all_aj, b2_all_aj)
+                aj_cmp = result["metadata_artifact_comparisons"].get("audit_json", {})
+                approved_aj_diffs = aj_cmp.get("approved_audit_json_hash_differences", [])
+                approved_aj_artifacts = [d.get("artifact") for d in approved_aj_diffs]
+                _record(
+                    "approved_et_audit_json_normalization_passes",
+                    aj_cmp.get("audit_json_comparison_passed") is True
+                    and approved_aj_artifacts == [
+                        "results/part3b_prediction_ledger/prediction_ledger_within.csv.gz"
+                    ]
+                    and len(aj_cmp.get("unapproved_audit_json_differences", [])) == 0,
+                )
+
+            # 12. audit_markdown_scientific_text_change_fails
+            with tempfile.TemporaryDirectory(prefix="part3b2_e2_md_sci_") as md_sci_dir:
+                md_sci_root = Path(md_sci_dir)
+                for rel, src in base_all.items():
+                    dst = md_sci_root / Path(rel).name
+                    dst.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copy2(str(src), str(dst))
+                md_path = md_sci_root / "part3b_split_leakage_audit.md"
+                content = md_path.read_text()
+                content = content.replace("## Prediction Ledger Summary", "## Prediction Ledger Summary (MODIFIED)")
+                write_text_atomic(md_path, content)
+                md_sci_paths = _all_artifact_paths_from_dir(md_sci_root)
+                result = compare_eleven_artifacts_semantically(base_all, md_sci_paths)
+                md_cmp = result["metadata_artifact_comparisons"].get("audit_markdown", {})
+                _record(
+                    "audit_markdown_scientific_text_change_fails",
+                    md_cmp.get("audit_md_comparison_passed") is False
+                    and result["semantic_reproducibility_passed"] is False,
+                )
+
+            # 13. audit_markdown_own_hash_mismatch_fails
+            with tempfile.TemporaryDirectory(prefix="part3b2_e2_md_hash_") as md_hash_dir:
+                md_hash_root = Path(md_hash_dir)
+                for rel, src in base_all.items():
+                    dst = md_hash_root / Path(rel).name
+                    dst.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copy2(str(src), str(dst))
+                md_path = md_hash_root / "part3b_split_leakage_audit.md"
                 content = md_path.read_text()
                 first_rel = SEMANTIC_DATA_ARTIFACTS[0]
-                # Replace the hash in the markdown table with a wrong hash
                 lines = content.split("\n")
                 for i, line in enumerate(lines):
                     if line.startswith(f"| {first_rel} |"):
                         lines[i] = f"| {first_rel} | {'0' * 64} |"
                         break
                 write_text_atomic(md_path, "\n".join(lines))
-                mh_paths = _all_artifact_paths_from_dir(mh_root)
-                result = compare_eleven_artifacts_semantically(base_all, mh_paths)
+                md_hash_paths = _all_artifact_paths_from_dir(md_hash_root)
+                result = compare_eleven_artifacts_semantically(base_all, md_hash_paths)
+                md_cmp = result["metadata_artifact_comparisons"].get("audit_markdown", {})
                 _record(
-                    "audit_md_hash_table_mismatch_fails",
-                    result["semantic_reproducibility_passed"] is False,
+                    "audit_markdown_own_hash_mismatch_fails",
+                    (md_cmp.get("audit_md_second_valid") is False
+                     or md_cmp.get("audit_md_comparison_passed") is False)
+                    and result["semantic_reproducibility_passed"] is False,
                 )
 
-            # 14. Approved ET score difference passes with normalization.
-            with tempfile.TemporaryDirectory(prefix="part3b2_e2_et_b1_data_") as et_b1_data_dir, \
-                 tempfile.TemporaryDirectory(prefix="part3b2_e2_et_b1_meta_") as et_b1_meta_dir, \
-                 tempfile.TemporaryDirectory(prefix="part3b2_e2_et_b2_data_") as et_b2_data_dir, \
-                 tempfile.TemporaryDirectory(prefix="part3b2_e2_et_b2_meta_") as et_b2_meta_dir:
-                b1_all, b2_all = _make_approved_et_eleven_artifact_builds(
-                    Path(et_b1_data_dir), Path(et_b1_meta_dir),
-                    Path(et_b2_data_dir), Path(et_b2_meta_dir),
+            # 14. approved_et_markdown_and_full_gate_pass
+            with tempfile.TemporaryDirectory(prefix="part3b2_e2_et_full_b1d_") as et_full_b1_data, \
+                 tempfile.TemporaryDirectory(prefix="part3b2_e2_et_full_b1m_") as et_full_b1_meta, \
+                 tempfile.TemporaryDirectory(prefix="part3b2_e2_et_full_b2d_") as et_full_b2_data, \
+                 tempfile.TemporaryDirectory(prefix="part3b2_e2_et_full_b2m_") as et_full_b2_meta:
+                b1_all_full, b2_all_full = _make_approved_et_eleven_artifact_builds(
+                    Path(et_full_b1_data), Path(et_full_b1_meta),
+                    Path(et_full_b2_data), Path(et_full_b2_meta),
                 )
-                result = compare_eleven_artifacts_semantically(b1_all, b2_all)
+                result = compare_eleven_artifacts_semantically(b1_all_full, b2_all_full)
+                md_cmp = result["metadata_artifact_comparisons"].get("audit_markdown", {})
                 _record(
-                    "approved_et_score_difference_passes",
+                    "approved_et_markdown_and_full_gate_pass",
                     result["semantic_reproducibility_passed"] is True
                     and result["data_artifact_comparison"]["data_artifact_semantic_comparison_passed"] is True
                     and result["metadata_artifact_comparison_passed"] is True
-                    and len(result["artifacts_with_approved_et_roundoff_only"]) == 2,
-                    maximum_et_score_difference=result.get("maximum_et_score_difference", 0.0),
-                    approved_artifacts=result.get("artifacts_with_approved_et_roundoff_only", []),
+                    and md_cmp.get("audit_md_comparison_passed") is True
+                    and result["approved_cross_build_byte_difference_artifacts"] == {
+                        "results/part3b_prediction_ledger/prediction_ledger_within.csv.gz"
+                    }
+                    and len(result["unapproved_metadata_differences"]) == 0
+                    and len(result["unapproved_differing_artifacts"]) == 0,
                 )
 
+    actual_case_names = [t.get("case_name", "") for t in tests]
+    expected_case_names = EXPECTED_PART_E2_TEST_NAMES
+    if actual_case_names != expected_case_names:
+        all_passed = False
+
     summary = {
-        "tests_expected": 14,
+        "tests_expected": len(EXPECTED_PART_E2_TEST_NAMES),
         "tests_executed": len(tests),
         "tests_passed": sum(1 for t in tests if t.get("passed")),
         "tests_failed": sum(1 for t in tests if not t.get("passed")),
@@ -6487,7 +6549,7 @@ def run_part_e2_eleven_artifact_tests() -> Tuple[List[Dict[str, Any]], bool, Dic
 
 
 def run_part_e2_1_fail_closed_tests() -> Tuple[List[Dict[str, Any]], bool, Dict[str, Any]]:
-    """Five fail-closed regression tests for metadata validation.
+    """Five frozen fail-closed regression tests for metadata validation.
 
     Each test creates two byte-identical builds with the same invalid metadata
     and verifies that semantic_reproducibility_passed is False even though
@@ -6507,108 +6569,105 @@ def run_part_e2_1_fail_closed_tests() -> Tuple[List[Dict[str, Any]], bool, Dict[
         with tempfile.TemporaryDirectory(prefix="part3b2_e21_base_meta_") as base_meta_dir:
             base_all = _make_synthetic_metadata_artifacts(base_data_root, Path(base_meta_dir))
 
-            # 1. Two byte-identical manifests with wrong version fail.
-            with tempfile.TemporaryDirectory(prefix="part3b2_e21_wv1_") as wv1_dir, \
-                 tempfile.TemporaryDirectory(prefix="part3b2_e21_wv2_") as wv2_dir:
-                wv1_root = Path(wv1_dir)
-                wv2_root = Path(wv2_dir)
-                for root in [wv1_root, wv2_root]:
+            # Helper: copy all artifacts to two identical dirs
+            def _copy_to_two(prefix: str) -> Tuple[Path, Path]:
+                d1 = tempfile.TemporaryDirectory(prefix=f"part3b2_e21_{prefix}1_")
+                d2 = tempfile.TemporaryDirectory(prefix=f"part3b2_e21_{prefix}2_")
+                r1 = Path(d1.name)
+                r2 = Path(d2.name)
+                for root in [r1, r2]:
                     for rel, src in base_all.items():
                         dst = root / Path(rel).name
                         dst.parent.mkdir(parents=True, exist_ok=True)
                         shutil.copy2(str(src), str(dst))
-                    with (root / "ledger_manifest.json").open("r") as f:
-                        manifest = json.load(f)
-                    manifest["manifest_version"] = "WRONG-VERSION"
-                    write_text_atomic(root / "ledger_manifest.json", _json_dumps(manifest))
-                wv1_paths = _all_artifact_paths_from_dir(wv1_root)
-                wv2_paths = _all_artifact_paths_from_dir(wv2_root)
-                result = compare_eleven_artifacts_semantically(wv1_paths, wv2_paths)
-                _record(
-                    "identical_malformed_manifests_wrong_version_fail",
-                    result["semantic_reproducibility_passed"] is False
-                    and result["metadata_artifact_comparison_passed"] is False,
-                )
+                return r1, r2, d1, d2
 
-            # 2. Two byte-identical manifests with same stale sha256 fail.
-            with tempfile.TemporaryDirectory(prefix="part3b2_e21_sh1_") as sh1_dir, \
-                 tempfile.TemporaryDirectory(prefix="part3b2_e21_sh2_") as sh2_dir:
-                sh1_root = Path(sh1_dir)
-                sh2_root = Path(sh2_dir)
-                for root in [sh1_root, sh2_root]:
-                    for rel, src in base_all.items():
-                        dst = root / Path(rel).name
-                        dst.parent.mkdir(parents=True, exist_ok=True)
-                        shutil.copy2(str(src), str(dst))
+            # 1. same_stale_manifest_hash_rejected
+            r1, r2, td1, td2 = _copy_to_two("smh")
+            try:
+                for root in [r1, r2]:
                     with (root / "ledger_manifest.json").open("r") as f:
                         manifest = json.load(f)
                     manifest["artifacts"][0]["sha256"] = "0" * 64
                     write_text_atomic(root / "ledger_manifest.json", _json_dumps(manifest))
-                sh1_paths = _all_artifact_paths_from_dir(sh1_root)
-                sh2_paths = _all_artifact_paths_from_dir(sh2_root)
-                result = compare_eleven_artifacts_semantically(sh1_paths, sh2_paths)
+                p1 = _all_artifact_paths_from_dir(r1)
+                p2 = _all_artifact_paths_from_dir(r2)
+                result = compare_eleven_artifacts_semantically(p1, p2)
                 _record(
-                    "identical_malformed_manifests_stale_hash_fail",
+                    "same_stale_manifest_hash_rejected",
                     result["semantic_reproducibility_passed"] is False
                     and result["metadata_artifact_comparison_passed"] is False,
                 )
+            finally:
+                td1.cleanup()
+                td2.cleanup()
 
-            # 3. Two byte-identical manifests with wrong row_count fail.
-            with tempfile.TemporaryDirectory(prefix="part3b2_e21_rc1_") as rc1_dir, \
-                 tempfile.TemporaryDirectory(prefix="part3b2_e21_rc2_") as rc2_dir:
-                rc1_root = Path(rc1_dir)
-                rc2_root = Path(rc2_dir)
-                for root in [rc1_root, rc2_root]:
-                    for rel, src in base_all.items():
-                        dst = root / Path(rel).name
-                        dst.parent.mkdir(parents=True, exist_ok=True)
-                        shutil.copy2(str(src), str(dst))
+            # 2. same_wrong_manifest_row_count_rejected
+            r1, r2, td1, td2 = _copy_to_two("wrc")
+            try:
+                for root in [r1, r2]:
                     with (root / "ledger_manifest.json").open("r") as f:
                         manifest = json.load(f)
                     manifest["artifacts"][0]["row_count"] = 99999
                     write_text_atomic(root / "ledger_manifest.json", _json_dumps(manifest))
-                rc1_paths = _all_artifact_paths_from_dir(rc1_root)
-                rc2_paths = _all_artifact_paths_from_dir(rc2_root)
-                result = compare_eleven_artifacts_semantically(rc1_paths, rc2_paths)
+                p1 = _all_artifact_paths_from_dir(r1)
+                p2 = _all_artifact_paths_from_dir(r2)
+                result = compare_eleven_artifacts_semantically(p1, p2)
                 _record(
-                    "identical_malformed_manifests_wrong_row_count_fail",
+                    "same_wrong_manifest_row_count_rejected",
                     result["semantic_reproducibility_passed"] is False
                     and result["metadata_artifact_comparison_passed"] is False,
                 )
+            finally:
+                td1.cleanup()
+                td2.cleanup()
 
-            # 4. Two byte-identical audit JSONs with wrong provenance fail.
-            with tempfile.TemporaryDirectory(prefix="part3b2_e21_aj1_") as aj1_dir, \
-                 tempfile.TemporaryDirectory(prefix="part3b2_e21_aj2_") as aj2_dir:
-                aj1_root = Path(aj1_dir)
-                aj2_root = Path(aj2_dir)
-                for root in [aj1_root, aj2_root]:
-                    for rel, src in base_all.items():
-                        dst = root / Path(rel).name
-                        dst.parent.mkdir(parents=True, exist_ok=True)
-                        shutil.copy2(str(src), str(dst))
+            # 3. same_non_boolean_audit_check_rejected
+            r1, r2, td1, td2 = _copy_to_two("nba")
+            try:
+                for root in [r1, r2]:
                     with (root / "part3b_split_leakage_audit.json").open("r") as f:
                         audit = json.load(f)
-                    audit["part3b_version"] = "WRONG"
+                    first_check = REQUIRED_AUDIT_CHECK_NAMES[0]
+                    audit["audit_checks"][first_check] = "not_a_bool"
                     write_text_atomic(root / "part3b_split_leakage_audit.json", _json_dumps(audit))
-                aj1_paths = _all_artifact_paths_from_dir(aj1_root)
-                aj2_paths = _all_artifact_paths_from_dir(aj2_root)
-                result = compare_eleven_artifacts_semantically(aj1_paths, aj2_paths)
+                p1 = _all_artifact_paths_from_dir(r1)
+                p2 = _all_artifact_paths_from_dir(r2)
+                result = compare_eleven_artifacts_semantically(p1, p2)
                 _record(
-                    "identical_malformed_audit_jsons_wrong_provenance_fail",
+                    "same_non_boolean_audit_check_rejected",
                     result["semantic_reproducibility_passed"] is False
                     and result["metadata_artifact_comparison_passed"] is False,
                 )
+            finally:
+                td1.cleanup()
+                td2.cleanup()
 
-            # 5. Two byte-identical audit Markdowns with wrong hash fail.
-            with tempfile.TemporaryDirectory(prefix="part3b2_e21_am1_") as am1_dir, \
-                 tempfile.TemporaryDirectory(prefix="part3b2_e21_am2_") as am2_dir:
-                am1_root = Path(am1_dir)
-                am2_root = Path(am2_dir)
-                for root in [am1_root, am2_root]:
-                    for rel, src in base_all.items():
-                        dst = root / Path(rel).name
-                        dst.parent.mkdir(parents=True, exist_ok=True)
-                        shutil.copy2(str(src), str(dst))
+            # 4. same_stale_audit_json_hash_rejected
+            r1, r2, td1, td2 = _copy_to_two("saj")
+            try:
+                for root in [r1, r2]:
+                    with (root / "part3b_split_leakage_audit.json").open("r") as f:
+                        audit = json.load(f)
+                    first_rel = SEMANTIC_DATA_ARTIFACTS[0]
+                    audit["artifact_hashes"][first_rel]["sha256"] = "0" * 64
+                    write_text_atomic(root / "part3b_split_leakage_audit.json", _json_dumps(audit))
+                p1 = _all_artifact_paths_from_dir(r1)
+                p2 = _all_artifact_paths_from_dir(r2)
+                result = compare_eleven_artifacts_semantically(p1, p2)
+                _record(
+                    "same_stale_audit_json_hash_rejected",
+                    result["semantic_reproducibility_passed"] is False
+                    and result["metadata_artifact_comparison_passed"] is False,
+                )
+            finally:
+                td1.cleanup()
+                td2.cleanup()
+
+            # 5. same_stale_or_missing_markdown_hash_rejected
+            r1, r2, td1, td2 = _copy_to_two("smh_md")
+            try:
+                for root in [r1, r2]:
                     md_path = root / "part3b_split_leakage_audit.md"
                     content = md_path.read_text()
                     first_rel = SEMANTIC_DATA_ARTIFACTS[0]
@@ -6618,17 +6677,25 @@ def run_part_e2_1_fail_closed_tests() -> Tuple[List[Dict[str, Any]], bool, Dict[
                             lines[i] = f"| {first_rel} | {'0' * 64} |"
                             break
                     write_text_atomic(md_path, "\n".join(lines))
-                am1_paths = _all_artifact_paths_from_dir(am1_root)
-                am2_paths = _all_artifact_paths_from_dir(am2_root)
-                result = compare_eleven_artifacts_semantically(am1_paths, am2_paths)
+                p1 = _all_artifact_paths_from_dir(r1)
+                p2 = _all_artifact_paths_from_dir(r2)
+                result = compare_eleven_artifacts_semantically(p1, p2)
                 _record(
-                    "identical_malformed_audit_markdowns_wrong_hash_fail",
+                    "same_stale_or_missing_markdown_hash_rejected",
                     result["semantic_reproducibility_passed"] is False
                     and result["metadata_artifact_comparison_passed"] is False,
                 )
+            finally:
+                td1.cleanup()
+                td2.cleanup()
+
+    actual_case_names = [t.get("case_name", "") for t in tests]
+    expected_case_names = EXPECTED_PART_E2_1_TEST_NAMES
+    if actual_case_names != expected_case_names:
+        all_passed = False
 
     summary = {
-        "tests_expected": 5,
+        "tests_expected": len(EXPECTED_PART_E2_1_TEST_NAMES),
         "tests_executed": len(tests),
         "tests_passed": sum(1 for t in tests if t.get("passed")),
         "tests_failed": sum(1 for t in tests if not t.get("passed")),
@@ -7386,7 +7453,7 @@ def main():
         e21_case_names = [t["case_name"] for t in e21_tests]
 
         approved_et_test = next(
-            (t for t in e2_tests if t["case_name"] == "approved_et_score_difference_passes"), {}
+            (t for t in e2_tests if t["case_name"] == "approved_et_markdown_and_full_gate_pass"), {}
         )
 
         combined = {
@@ -7396,6 +7463,8 @@ def main():
                 "tests_passed": e2_summary["tests_passed"],
                 "tests_failed": e2_summary["tests_failed"],
                 "case_names": e2_case_names,
+                "expected_case_names": EXPECTED_PART_E2_TEST_NAMES,
+                "case_names_match_frozen_contract": e2_case_names == EXPECTED_PART_E2_TEST_NAMES,
             },
             "part_e2_1_fail_closed_tests": {
                 "tests_expected": e21_summary["tests_expected"],
@@ -7403,6 +7472,8 @@ def main():
                 "tests_passed": e21_summary["tests_passed"],
                 "tests_failed": e21_summary["tests_failed"],
                 "case_names": e21_case_names,
+                "expected_case_names": EXPECTED_PART_E2_1_TEST_NAMES,
+                "case_names_match_frozen_contract": e21_case_names == EXPECTED_PART_E2_1_TEST_NAMES,
             },
             "et_score_tolerance": e2_summary["et_score_tolerance"],
             "et_rank_metric_tolerance": e2_summary["et_rank_metric_tolerance"],
@@ -7416,11 +7487,9 @@ def main():
             "approved_byte_diff_set_explicit": True,
             "decompressed_byte_equal_not_used_in_markdown_normalization": True,
             "approved_et_fixture_used": approved_et_test.get("passed", False),
-            "approved_et_maximum_score_difference": approved_et_test.get("maximum_et_score_difference", None),
-            "approved_et_artifacts_count": len(approved_et_test.get("approved_artifacts", [])),
-            "approved_et_artifacts": approved_et_test.get("approved_artifacts", []),
-            "e2_case_count_exact_14": len(e2_case_names) == 14,
-            "e2_1_case_count_exact_5": len(e21_case_names) == 5,
+            "approved_et_fixture_modifies_within_only": True,
+            "e2_case_count_exact_14": len(e2_case_names) == len(EXPECTED_PART_E2_TEST_NAMES),
+            "e2_1_case_count_exact_5": len(e21_case_names) == len(EXPECTED_PART_E2_1_TEST_NAMES),
             "model_fits_executed": 0,
             "prediction_calls_executed": 0,
             "repository_artifacts_written": 0,
@@ -7431,11 +7500,13 @@ def main():
         print(_json_dumps(combined))
         return 0 if (
             e2_all_passed
-            and e2_summary["tests_executed"] == 14
+            and e2_summary["tests_executed"] == len(EXPECTED_PART_E2_TEST_NAMES)
             and e2_summary["tests_failed"] == 0
+            and e2_case_names == EXPECTED_PART_E2_TEST_NAMES
             and e21_all_passed
-            and e21_summary["tests_executed"] == 5
+            and e21_summary["tests_executed"] == len(EXPECTED_PART_E2_1_TEST_NAMES)
             and e21_summary["tests_failed"] == 0
+            and e21_case_names == EXPECTED_PART_E2_1_TEST_NAMES
         ) else 1
     if known.self_test_data_artifact_comparison:
         e1_tests, e1_all_passed, e1_summary = run_data_artifact_comparison_self_tests()
@@ -7754,6 +7825,7 @@ def main():
     # 6. Run two independent builds in named temporary roots that persist for diagnosis.
     t1 = tempfile.mkdtemp(prefix="part3b2_build1_")
     t2 = tempfile.mkdtemp(prefix="part3b2_build2_")
+    semantic_reproducibility_passed = False
     try:
         bundle1 = build_core_bundle(Path(t1), frozen, projects, common_cols, registry, canonical_val, canonical_res, preservation_before)
         bundle2 = build_core_bundle(Path(t2), frozen, projects, common_cols, registry, canonical_val, canonical_res, preservation_before)
