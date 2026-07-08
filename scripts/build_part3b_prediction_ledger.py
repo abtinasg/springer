@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-"""Part 3B.2R.1-F.1:
-Fail-Closed Post-Build Integration and Final Artifact Validation
+"""Part 3B.2R.1-F.2:
+Production-Staging Evidence and Final Audit Integrity
 
 This script is deterministic and self-contained. It may be invoked from any
 working directory; it locates the repository root from __file__ and references
 all other paths absolutely.
 
-Version: Part-3B.2R.1-F.1-v1
-Starting full commit: 9b33a04ff03c181a0b8ae68a60555f8dae0cd836
+Version: Part-3B.2R.1-F.2-v1
+Starting full commit: e50233c31b4b97921612cd68e1b4cdda9c1dabcb
 Accepted Part 3A commit:
 d16e28488aa0936014f020c05466181eff219af6
 """
@@ -42,13 +42,14 @@ warnings.filterwarnings("ignore")
 # ---------------------------------------------------------------------------
 # Frozen version and provenance constants
 # ---------------------------------------------------------------------------
-PART3B_VERSION = "Part-3B.2R.1-F.1-v1"
-STARTING_COMMIT = "9b33a04ff03c181a0b8ae68a60555f8dae0cd836"
+PART3B_VERSION = "Part-3B.2R.1-F.2-v1"
+STARTING_COMMIT = "e50233c31b4b97921612cd68e1b4cdda9c1dabcb"
 ACCEPTED_PART3A_COMMIT = "d16e28488aa0936014f020c05466181eff219af6"
 assert STARTING_COMMIT == \
-    "9b33a04ff03c181a0b8ae68a60555f8dae0cd836"
+    "e50233c31b4b97921612cd68e1b4cdda9c1dabcb"
 assert ACCEPTED_PART3A_COMMIT == \
     "d16e28488aa0936014f020c05466181eff219af6"
+assert PART3B_VERSION == "Part-3B.2R.1-F.2-v1"
 REPOSITORY = "abtinasg/springer"
 BRANCH = "major-revision-analysis-v2"
 
@@ -7316,6 +7317,9 @@ def _make_synthetic_negative_test_evidence() -> Dict[str, Any]:
         "canonical_exception_tests": {"expected": 10, "executed": 10, "passed": 10, "failed": 0},
         "persisted_ledger_tests": {"expected": 6, "executed": 6, "passed": 6, "failed": 0},
         "preservation_tests": {"expected": 8, "executed": 8, "passed": 8, "failed": 0},
+        "negative_evidence_source_is_staging": True,
+        "negative_evidence_source_root": "synthetic://staging",
+        "negative_evidence_repository_files_used": False,
     }
 
 
@@ -7368,6 +7372,15 @@ EXPECTED_PART_F_1_TEST_NAMES = [
     "failed_final_contract_suppresses_repository_publish",
 ]
 
+EXPECTED_PART_F_2_TEST_NAMES = [
+    "production_negative_provider_reads_staged_artifacts",
+    "production_negative_provider_does_not_read_repository_outputs",
+    "production_outcome_uses_integration_result",
+    "production_outcome_missing_final_evidence_fails_closed",
+    "final_dataset_profile_matches_y_true_registry",
+    "final_reconstruction_evidence_matches_actual_validator_evidence",
+]
+
 PRODUCTION_USES_SHARED_POSTBUILD_ORCHESTRATOR = True
 DRY_RUN_USES_SHARED_POSTBUILD_ORCHESTRATOR = True
 
@@ -7408,8 +7421,28 @@ def _build_synthetic_validation_results() -> Dict[str, Tuple[bool, Dict[str, Any
             },
         ),
         "preprocessing_audit": (True, {}),
-        "validation_reconstruction": (True, {"numeric_mismatches": 0, "categorical_match": True, "row_count": EXPECTED_VALIDATION_RECONSTRUCTION_ROWS}),
-        "result_reconstruction": (True, {"numeric_mismatches": 0, "categorical_match": True, "row_count": EXPECTED_RESULT_RECONSTRUCTION_ROWS}),
+        "validation_reconstruction": (
+            True,
+            {
+                "row_count": EXPECTED_VALIDATION_RECONSTRUCTION_ROWS,
+                "categorical_match": True,
+                "numeric_mismatches": 0,
+                "max_abs_diff": 0.0,
+                "max_rel_diff": 0.0,
+                "per_column": [],
+            },
+        ),
+        "result_reconstruction": (
+            True,
+            {
+                "row_count": EXPECTED_RESULT_RECONSTRUCTION_ROWS,
+                "categorical_match": True,
+                "numeric_mismatches": 0,
+                "max_abs_diff": 0.0,
+                "max_rel_diff": 0.0,
+                "per_column": [],
+            },
+        ),
         "canonical_nondeterminism_exception": (True, {"validated": True, "approved_exception_count": 1, "unapproved_mismatch_count": 0, "approved_exception_matches": [{}], "unapproved_mismatches": []}),
         "canonical_exception_validator_tests": (True, {"tests": [{"case_name": f"exc_{i}", "passed": True} for i in range(10)]}),
         "tie_policy": (True, {"tests": []}),
@@ -7459,6 +7492,9 @@ def build_synthetic_integration_bundle(artifacts: Dict[str, Path]) -> Dict[str, 
     result_recon = pd.read_csv(
         artifacts["results/part3b_prediction_ledger/canonical_result_reconstruction.csv"]
     )
+    y_true = pd.to_numeric(registry["y_true"], errors="raise")
+    total_defective = int(y_true.sum())
+    total_nondefective = int(len(registry) - total_defective)
     return {
         "artifacts": artifacts,
         "audit_checks": audit_checks,
@@ -7485,8 +7521,8 @@ def build_synthetic_integration_bundle(artifacts: Dict[str, Path]) -> Dict[str, 
         "event_manifest": event_manifest,
         "dataset_profile": {
             "total_rows": len(registry),
-            "total_defective": 0,
-            "total_nondefective": len(registry),
+            "total_defective": total_defective,
+            "total_nondefective": total_nondefective,
             "common_feature_count": 0,
             "common_schema_uses_target_labels": False,
             "common_schema_uses_target_feature_values": False,
@@ -7495,6 +7531,7 @@ def build_synthetic_integration_bundle(artifacts: Dict[str, Path]) -> Dict[str, 
         "feature_schema_sha256": "f" * 64,
         "common_cols": [],
         "fitted_count": EXPECTED_CANDIDATE_FITS,
+        "synthetic_contract_evidence_used": True,
     }
 
 
@@ -7730,6 +7767,62 @@ def validate_staged_bundle_round_trip(
     }
 
 
+def _dataset_profile_from_staged_registry(
+    registry: pd.DataFrame,
+    bundle1: Dict[str, Any],
+) -> Dict[str, Any]:
+    y_true = pd.to_numeric(registry["y_true"], errors="raise")
+    total_rows = len(registry)
+    total_defective = int(y_true.sum())
+    total_nondefective = int(total_rows - total_defective)
+    bundle_profile = copy.deepcopy(bundle1.get("dataset_profile", {}))
+    require_expected_rows = not bool(bundle1.get("synthetic_contract_evidence_used"))
+    profile_matches = (
+        (total_rows == EXPECTED_REGISTRY_ROWS if require_expected_rows else True)
+        and bundle_profile.get("total_rows") == total_rows
+        and bundle_profile.get("total_defective") == total_defective
+        and bundle_profile.get("total_nondefective") == total_nondefective
+    )
+    return {
+        "dataset_profile_matches_staged_registry": profile_matches,
+        "dataset_profile_total_rows": total_rows,
+        "dataset_profile_total_defective": total_defective,
+        "dataset_profile_total_nondefective": total_nondefective,
+        "bundle_dataset_profile": bundle_profile,
+    }
+
+
+def _actual_reconstruction_evidence(bundle1: Dict[str, Any]) -> Dict[str, Any]:
+    validation_evidence = copy.deepcopy(
+        bundle1["validation_results"]["validation_reconstruction"][1]
+    )
+    result_evidence = copy.deepcopy(
+        bundle1["validation_results"]["result_reconstruction"][1]
+    )
+    check_evidence = copy.deepcopy(bundle1["check_evidence"])
+    return {
+        "validation_reconstruction_evidence": validation_evidence,
+        "canonical_result_reconstruction_evidence": result_evidence,
+        "strict_result_mismatches_before_exception": check_evidence[
+            "strict_result_mismatches_before_exception"
+        ],
+        "approved_nondeterminism_exceptions": check_evidence[
+            "approved_nondeterminism_exceptions"
+        ],
+        "unapproved_result_mismatches": check_evidence["unapproved_result_mismatches"],
+        "canonical_nondeterminism_exception_validated": check_evidence[
+            "canonical_nondeterminism_exception_validated"
+        ],
+        "canonical_result_reconstruction_strictly_identical": check_evidence[
+            "canonical_result_reconstruction_strictly_identical"
+        ],
+        "canonical_result_reconstruction_scientifically_reconciled": check_evidence[
+            "canonical_result_reconstruction_scientifically_reconciled"
+        ],
+        "final_audit_reconstruction_evidence_is_actual": True,
+    }
+
+
 def _build_final_audit_json(
     staged_artifacts: Dict[str, Path],
     integration_result: Dict[str, Any],
@@ -7771,6 +7864,9 @@ def _build_final_audit_json(
         staged_artifacts["results/part3b_prediction_ledger/canonical_result_reconstruction.csv"]
     )
     combined_pred = pd.concat([pred_within, pred_cross], ignore_index=True)
+    dataset_profile_evidence = _dataset_profile_from_staged_registry(registry, bundle1)
+    reconstruction_evidence = _actual_reconstruction_evidence(bundle1)
+    dataset_profile = bundle1.get("dataset_profile", {})
     return {
         "part3b_version": PART3B_VERSION,
         "starting_commit": STARTING_COMMIT,
@@ -7810,12 +7906,16 @@ def _build_final_audit_json(
         "common_feature_names": bundle1.get("common_cols", []),
         "common_feature_count": len(bundle1.get("common_cols", [])),
         "dataset_profile_summary": {
-            "total_rows": len(registry),
-            "total_defective": int(registry["label"].sum()) if "label" in registry.columns else 0,
-            "total_nondefective": int((1 - registry["label"]).sum())
-            if "label" in registry.columns
-            else len(registry),
-            "common_feature_count": len(bundle1.get("common_cols", [])),
+            "total_rows": dataset_profile_evidence["dataset_profile_total_rows"],
+            "total_defective": dataset_profile_evidence[
+                "dataset_profile_total_defective"
+            ],
+            "total_nondefective": dataset_profile_evidence[
+                "dataset_profile_total_nondefective"
+            ],
+            "common_feature_count": dataset_profile.get(
+                "common_feature_count", len(bundle1.get("common_cols", []))
+            ),
         },
         "event_manifest_summary": {
             "event_count": len(event_manifest),
@@ -7856,37 +7956,34 @@ def _build_final_audit_json(
             "strict_validation_mismatches": integration_result.get(
                 "canonical_reconciliation_evidence", {}
             ).get("strict_validation_mismatches", -1),
-            "strict_result_mismatches_before_exception": integration_result.get(
-                "canonical_reconciliation_evidence", {}
-            ).get("strict_result_mismatches_before_exception", -1),
-            "approved_nondeterminism_exceptions": integration_result.get(
-                "canonical_reconciliation_evidence", {}
-            ).get("approved_nondeterminism_exceptions", 0),
-            "unapproved_result_mismatches": integration_result.get(
-                "canonical_reconciliation_evidence", {}
-            ).get("unapproved_result_mismatches", 0),
-            "canonical_result_reconstruction_strictly_identical": bundle1.get(
-                "check_evidence", {}
-            ).get("canonical_result_reconstruction_strictly_identical", False),
-            "canonical_result_reconstruction_scientifically_reconciled": bundle1.get(
-                "check_evidence", {}
-            ).get("canonical_result_reconstruction_scientifically_reconciled", False),
-            "validation_reconstruction_evidence": {
-                "row_count": len(val_recon),
-                "categorical_match": True,
-                "numeric_mismatches": 0,
-                "max_abs_diff": 0.0,
-                "max_rel_diff": 0.0,
-                "per_column": [],
-            },
-            "canonical_result_reconstruction_evidence": {
-                "row_count": len(result_recon),
-                "categorical_match": True,
-                "numeric_mismatches": 0,
-                "max_abs_diff": 0.0,
-                "max_rel_diff": 0.0,
-                "per_column": [],
-            },
+            "strict_result_mismatches_before_exception": reconstruction_evidence[
+                "strict_result_mismatches_before_exception"
+            ],
+            "approved_nondeterminism_exceptions": reconstruction_evidence[
+                "approved_nondeterminism_exceptions"
+            ],
+            "unapproved_result_mismatches": reconstruction_evidence[
+                "unapproved_result_mismatches"
+            ],
+            "canonical_nondeterminism_exception_validated": reconstruction_evidence[
+                "canonical_nondeterminism_exception_validated"
+            ],
+            "canonical_result_reconstruction_strictly_identical": (
+                reconstruction_evidence[
+                    "canonical_result_reconstruction_strictly_identical"
+                ]
+            ),
+            "canonical_result_reconstruction_scientifically_reconciled": (
+                reconstruction_evidence[
+                    "canonical_result_reconstruction_scientifically_reconciled"
+                ]
+            ),
+            "validation_reconstruction_evidence": reconstruction_evidence[
+                "validation_reconstruction_evidence"
+            ],
+            "canonical_result_reconstruction_evidence": reconstruction_evidence[
+                "canonical_result_reconstruction_evidence"
+            ],
         },
         "fitted_candidate_count": bundle1.get("fitted_count", EXPECTED_CANDIDATE_FITS),
         "completeness_evidence": {
@@ -7912,6 +8009,21 @@ def _build_final_audit_json(
         "negative_test_evidence": _evidence_for_json(
             integration_result.get("negative_test_evidence", {})
         ),
+        "dataset_profile_matches_staged_registry": dataset_profile_evidence[
+            "dataset_profile_matches_staged_registry"
+        ],
+        "dataset_profile_total_rows": dataset_profile_evidence[
+            "dataset_profile_total_rows"
+        ],
+        "dataset_profile_total_defective": dataset_profile_evidence[
+            "dataset_profile_total_defective"
+        ],
+        "dataset_profile_total_nondefective": dataset_profile_evidence[
+            "dataset_profile_total_nondefective"
+        ],
+        "final_audit_reconstruction_evidence_is_actual": reconstruction_evidence[
+            "final_audit_reconstruction_evidence_is_actual"
+        ],
     }
 
 
@@ -8089,12 +8201,22 @@ def finalize_and_validate_integrated_artifacts(
     final_eleven_artifact_self_comparison_passed = bool(
         final_self_comparison.get("semantic_reproducibility_passed")
     )
+    normalized_audit_json = audit_json_validation.get("normalized_audit_json") or {}
+    dataset_profile_matches = (
+        normalized_audit_json.get("dataset_profile_matches_staged_registry") is True
+    )
+    reconstruction_evidence_actual = (
+        normalized_audit_json.get("final_audit_reconstruction_evidence_is_actual")
+        is True
+    )
     final_artifact_contract_passed = bool(
         manifest_validation.get("manifest_valid")
         and audit_json_validation.get("audit_json_valid")
         and audit_md_validation.get("audit_md_valid")
         and final_metadata_independently_valid
         and final_eleven_artifact_self_comparison_passed
+        and dataset_profile_matches
+        and reconstruction_evidence_actual
     )
     return {
         "finalized_staged_artifacts": finalized_staged_artifacts,
@@ -8107,11 +8229,57 @@ def finalize_and_validate_integrated_artifacts(
             final_eleven_artifact_self_comparison_passed
         ),
         "final_artifact_contract_passed": final_artifact_contract_passed,
+        "dataset_profile_matches_staged_registry": dataset_profile_matches,
+        "dataset_profile_total_rows": normalized_audit_json.get(
+            "dataset_profile_total_rows"
+        ),
+        "dataset_profile_total_defective": normalized_audit_json.get(
+            "dataset_profile_total_defective"
+        ),
+        "dataset_profile_total_nondefective": normalized_audit_json.get(
+            "dataset_profile_total_nondefective"
+        ),
+        "final_audit_reconstruction_evidence_is_actual": (
+            reconstruction_evidence_actual
+        ),
+        "persisted_final_metadata_modified_after_validation": False,
+        "console_report_is_separate_copy": False,
         "final_markdown_json_consistent": bool(
             audit_md_validation.get("audit_md_provenance_matches_json")
             and audit_md_validation.get("audit_md_hash_table_matches_json")
             and audit_md_validation.get("audit_md_hash_table_matches_actual_files")
         ),
+    }
+
+
+def derive_production_outcome(integration_result: Dict[str, Any]) -> Dict[str, Any]:
+    audit_checks = copy.deepcopy(integration_result.get("final_audit_checks") or {})
+    stage_gate = copy.deepcopy(integration_result.get("stage_gate") or {})
+    stage_gate_evidence = copy.deepcopy(
+        integration_result.get("stage_gate_evidence") or {}
+    )
+    valid = bool(
+        integration_result.get("final_artifact_contract_passed") is True
+        and integration_result.get("stage_gate_would_pass") is True
+        and integration_result.get("part3b_complete") is True
+        and integration_result.get("part3c_authorized") is True
+        and integration_result.get("next_authorized_stage") == "Part 3C"
+        and integration_result.get("repository_publish_started") is True
+        and integration_result.get("repository_artifacts_written") == 11
+        and bool(audit_checks)
+        and audit_checks.get("all_critical_checks_passed") is True
+    )
+    return {
+        "production_outcome_valid": valid,
+        "audit_checks": audit_checks,
+        "stage_gate": stage_gate,
+        "stage_gate_evidence": stage_gate_evidence,
+        "part3b_complete": bool(integration_result.get("part3b_complete")) if valid else False,
+        "part3c_authorized": bool(integration_result.get("part3c_authorized")) if valid else False,
+        "next_authorized_stage": integration_result.get("next_authorized_stage")
+        if valid
+        else None,
+        "exit_code": 0 if valid else 1,
     }
 
 
@@ -8182,7 +8350,7 @@ def execute_postbuild_integration(
     *,
     canonical_reconciliation_evidence: Dict[str, Any],
     persisted_evidence_provider: Callable[[Path, Dict[str, Path], Dict[str, Any]], Dict[str, Any]],
-    negative_test_evidence_provider: Callable[[], Dict[str, Any]],
+    negative_test_evidence_provider: Callable[[Path, Dict[str, Path], Dict[str, Any]], Dict[str, Any]],
     preservation_evidence: Dict[str, Any],
     dry_run: bool,
     allow_repository_write: bool,
@@ -8345,7 +8513,9 @@ def execute_postbuild_integration(
 
         _trace("collect_negative_test_evidence")
         result["negative_provider_called"] = True
-        negative_test_evidence = negative_test_evidence_provider()
+        negative_test_evidence = negative_test_evidence_provider(
+            staging_root, staged_artifacts, bundle1
+        )
         result["negative_test_evidence"] = negative_test_evidence
 
         _trace("evaluate_preservation_evidence")
@@ -8457,6 +8627,11 @@ def execute_postbuild_integration(
                     )
                     published += 1
                 result["repository_artifacts_written"] = published
+            production_outcome = derive_production_outcome(result)
+            result["production_outcome"] = production_outcome
+            result["part3b_complete"] = production_outcome["part3b_complete"]
+            result["part3c_authorized"] = production_outcome["part3c_authorized"]
+            result["next_authorized_stage"] = production_outcome["next_authorized_stage"]
 
         _trace("finalize_integration_result")
         result["execution_trace_exact"] = execution_trace == INTEGRATION_EXECUTION_TRACE_STEPS
@@ -8538,7 +8713,11 @@ def _run_single_integration_dry_run(
             return persisted_evidence_override
         return verify_dry_run_persisted_evidence_from_staging(staged_artifacts, source_bundle)
 
-    def negative_provider() -> Dict[str, Any]:
+    def negative_provider(
+        staging_root: Path,
+        staged_artifacts: Dict[str, Path],
+        source_bundle: Dict[str, Any],
+    ) -> Dict[str, Any]:
         if negative_test_evidence_override is not None:
             return negative_test_evidence_override
         return _make_synthetic_negative_test_evidence()
@@ -8807,7 +8986,7 @@ def run_part_f_1_integration_tests() -> Tuple[List[Dict[str, Any]], bool, Dict[s
             repo_root() / ".part3b_f1_repo_subpath",
             canonical_reconciliation_evidence=_make_synthetic_canonical_reconciliation_evidence(),
             persisted_evidence_provider=lambda destination_root, staged_artifacts, source_bundle: _make_synthetic_persisted_ledger_evidence(),
-            negative_test_evidence_provider=_make_synthetic_negative_test_evidence,
+            negative_test_evidence_provider=lambda staging_root, staged_artifacts, source_bundle: _make_synthetic_negative_test_evidence(),
             preservation_evidence=_make_synthetic_preservation_evidence(),
             dry_run=True,
             allow_repository_write=False,
@@ -8889,7 +9068,7 @@ def run_part_f_1_integration_tests() -> Tuple[List[Dict[str, Any]], bool, Dict[s
                 repo_root(),
                 canonical_reconciliation_evidence=_make_synthetic_canonical_reconciliation_evidence(),
                 persisted_evidence_provider=lambda destination_root, staged_artifacts, source_bundle: _make_synthetic_persisted_ledger_evidence(),
-                negative_test_evidence_provider=_make_synthetic_negative_test_evidence,
+                negative_test_evidence_provider=lambda staging_root, staged_artifacts, source_bundle: _make_synthetic_negative_test_evidence(),
                 preservation_evidence=_make_synthetic_preservation_evidence(),
                 dry_run=False,
                 allow_repository_write=True,
@@ -8924,6 +9103,377 @@ def run_part_f_1_integration_tests() -> Tuple[List[Dict[str, Any]], bool, Dict[s
     return tests, all_passed, summary
 
 
+def run_part_f_2_integration_tests() -> Tuple[List[Dict[str, Any]], bool, Dict[str, Any]]:
+    """Six focused Part F.2 tests for staging-aware evidence and production tail."""
+    tests: List[Dict[str, Any]] = []
+    all_passed = True
+
+    def _record(case_name: str, passed: bool, **extra: Any) -> None:
+        nonlocal all_passed
+        tests.append({"case_name": case_name, "passed": passed, **extra})
+        all_passed = all_passed and passed
+
+    def _successful_integration_result() -> Dict[str, Any]:
+        audit_checks = _make_synthetic_audit_checks_all_true()
+        audit_checks["all_critical_checks_passed"] = True
+        return {
+            "final_artifact_contract_passed": True,
+            "stage_gate_would_pass": True,
+            "part3b_complete": True,
+            "part3c_authorized": True,
+            "next_authorized_stage": "Part 3C",
+            "repository_publish_started": True,
+            "repository_artifacts_written": 11,
+            "final_audit_checks": audit_checks,
+            "stage_gate": _make_synthetic_stage_gate_authorized(),
+            "stage_gate_evidence": {"schema_passed": True},
+        }
+
+    bundle1, _, temp_dirs = _make_approved_et_synthetic_bundles()
+    try:
+        staging_root = Path(tempfile.mkdtemp(prefix="part3b_f2_stage_"))
+        try:
+            staged_artifacts, _ = copy_bundle1_to_staging(bundle1, staging_root)
+
+            captured_negative_inputs: Dict[str, Any] = {}
+
+            def capturing_negative_runner(
+                frozen: Any,
+                within_df: pd.DataFrame,
+                cross_df: pd.DataFrame,
+                event_manifest_df: pd.DataFrame,
+                persisted_val_recon_df: pd.DataFrame,
+                persisted_result_recon_df: pd.DataFrame,
+            ) -> Tuple[List[Dict[str, Any]], bool]:
+                captured_negative_inputs["within_first_score"] = float(
+                    within_df.iloc[0]["score__LR_std_C0.1"]
+                )
+                captured_negative_inputs["cross_rows"] = len(cross_df)
+                captured_negative_inputs["event_rows"] = len(event_manifest_df)
+                captured_negative_inputs["validation_rows"] = len(
+                    persisted_val_recon_df
+                )
+                captured_negative_inputs["result_rows"] = len(
+                    persisted_result_recon_df
+                )
+                return (
+                    [
+                        {"case_name": f"persisted_neg_{i}", "passed": True}
+                        for i in range(6)
+                    ],
+                    True,
+                )
+
+            mutated_within = read_float_csv_round_trip(
+                staged_artifacts[
+                    "results/part3b_prediction_ledger/prediction_ledger_within.csv.gz"
+                ],
+                compression="gzip",
+            )
+            mutated_within.at[0, "score__LR_std_C0.1"] = 0.12345678912345678
+            mutated_within.to_csv(
+                staged_artifacts[
+                    "results/part3b_prediction_ledger/prediction_ledger_within.csv.gz"
+                ],
+                index=False,
+                lineterminator="\n",
+                compression="gzip",
+                float_format="%.17g",
+            )
+
+            original_negative_runner = _run_persisted_ledger_negative_tests
+            globals()["_run_persisted_ledger_negative_tests"] = capturing_negative_runner
+            try:
+                negative_evidence = collect_production_negative_test_evidence_from_staging(
+                    object(), staged_artifacts, bundle1
+                )
+            finally:
+                globals()["_run_persisted_ledger_negative_tests"] = original_negative_runner
+
+            _record(
+                "production_negative_provider_reads_staged_artifacts",
+                negative_evidence.get("negative_evidence_source_is_staging") is True
+                and captured_negative_inputs.get("within_first_score")
+                == float(mutated_within.iloc[0]["score__LR_std_C0.1"])
+                and negative_evidence["persisted_ledger_tests"]["executed"] == 6,
+                negative_test_evidence=negative_evidence,
+                captured_negative_inputs=captured_negative_inputs,
+            )
+
+            original_read_float = read_float_csv_round_trip
+            original_pd_read_csv = pd.read_csv
+            repo_outputs_root = (
+                repo_root() / "results" / "part3b_prediction_ledger"
+            ).resolve()
+
+            def guarding_read_float_csv_round_trip(
+                path: Path, *args: Any, **kwargs: Any
+            ) -> pd.DataFrame:
+                if Path(path).resolve().is_relative_to(repo_outputs_root):
+                    raise AssertionError("repository output read attempted")
+                return original_read_float(path, *args, **kwargs)
+
+            def guarding_pd_read_csv(*args: Any, **kwargs: Any) -> pd.DataFrame:
+                source = args[0] if args else kwargs.get("filepath_or_buffer")
+                if isinstance(source, (str, Path)) and Path(source).resolve().is_relative_to(
+                    repo_outputs_root
+                ):
+                    raise AssertionError("repository output read attempted")
+                return original_pd_read_csv(*args, **kwargs)
+
+            globals()["read_float_csv_round_trip"] = guarding_read_float_csv_round_trip
+            pd.read_csv = guarding_pd_read_csv
+            globals()["_run_persisted_ledger_negative_tests"] = capturing_negative_runner
+            try:
+                guarded_negative_evidence = (
+                    collect_production_negative_test_evidence_from_staging(
+                        object(), staged_artifacts, bundle1
+                    )
+                )
+            finally:
+                globals()["_run_persisted_ledger_negative_tests"] = original_negative_runner
+                globals()["read_float_csv_round_trip"] = original_read_float
+                pd.read_csv = original_pd_read_csv
+
+            _record(
+                "production_negative_provider_does_not_read_repository_outputs",
+                guarded_negative_evidence.get("negative_evidence_repository_files_used")
+                is False,
+                negative_test_evidence=guarded_negative_evidence,
+            )
+
+            successful_integration_result = _successful_integration_result()
+            production_outcome = derive_production_outcome(successful_integration_result)
+            production_tail_smoke_test_passed = (
+                production_outcome["production_outcome_valid"] is True
+                and production_outcome["audit_checks"]
+                == successful_integration_result["final_audit_checks"]
+                and production_outcome["stage_gate"]
+                == successful_integration_result["stage_gate"]
+                and production_outcome["exit_code"] == 0
+            )
+            _record(
+                "production_outcome_uses_integration_result",
+                production_outcome["production_outcome_valid"] is True
+                and production_outcome["audit_checks"]
+                == successful_integration_result["final_audit_checks"]
+                and production_outcome["part3b_complete"] is True
+                and production_outcome["part3c_authorized"] is True
+                and production_outcome["next_authorized_stage"] == "Part 3C"
+                and production_outcome["exit_code"] == 0,
+                production_outcome=production_outcome,
+                production_outcome_uses_final_audit_checks=(
+                    production_outcome["audit_checks"]
+                    == successful_integration_result["final_audit_checks"]
+                ),
+                production_tail_smoke_test_passed=production_tail_smoke_test_passed,
+            )
+
+            failed_integration_result = _successful_integration_result()
+            failed_integration_result["final_audit_checks"] = None
+            failed_outcome = derive_production_outcome(failed_integration_result)
+            _record(
+                "production_outcome_missing_final_evidence_fails_closed",
+                failed_outcome["production_outcome_valid"] is False
+                and failed_outcome["part3b_complete"] is False
+                and failed_outcome["part3c_authorized"] is False
+                and failed_outcome["next_authorized_stage"] is None
+                and failed_outcome["exit_code"] == 1,
+                production_outcome=failed_outcome,
+            )
+
+            audit_json = _build_final_audit_json(staged_artifacts, successful_integration_result, bundle1)
+            registry = pd.read_csv(
+                staged_artifacts["results/part3b_prediction_ledger/sample_registry.csv"]
+            )
+            expected_defective = int(
+                pd.to_numeric(registry["y_true"], errors="raise").sum()
+            )
+            expected_nondefective = int(len(registry) - expected_defective)
+            console_report = copy.deepcopy(audit_json)
+            console_report["determinism_verification"] = {"synthetic": True}
+            _record(
+                "final_dataset_profile_matches_y_true_registry",
+                audit_json["dataset_profile_matches_staged_registry"] is True
+                and audit_json["dataset_profile_total_rows"] == len(registry)
+                and audit_json["dataset_profile_total_defective"] == expected_defective
+                and audit_json["dataset_profile_total_nondefective"]
+                == expected_nondefective
+                and "label" not in registry.columns,
+                audit_json=audit_json,
+                persisted_final_metadata_modified_after_validation=(
+                    "determinism_verification" in audit_json
+                ),
+                console_report_is_separate_copy=(
+                    "determinism_verification" not in audit_json
+                    and console_report != audit_json
+                ),
+            )
+
+            distinctive_bundle = copy.deepcopy(bundle1)
+            distinctive_bundle["validation_results"] = copy.deepcopy(
+                bundle1["validation_results"]
+            )
+            distinctive_bundle["validation_results"][
+                "validation_reconstruction"
+            ] = (
+                True,
+                {
+                    "row_count": EXPECTED_VALIDATION_RECONSTRUCTION_ROWS,
+                    "categorical_match": False,
+                    "numeric_mismatches": 1,
+                    "max_abs_diff": 4.2835e-08,
+                    "max_rel_diff": 1.25e-06,
+                    "per_column": [
+                        {
+                            "column": "score__ET_leaf5",
+                            "compared_count": 7,
+                            "mismatch_count": 1,
+                            "maximum_absolute_difference": 4.2835e-08,
+                            "maximum_relative_difference": 1.25e-06,
+                        }
+                    ],
+                },
+            )
+            distinctive_bundle["validation_results"]["result_reconstruction"] = (
+                True,
+                {
+                    "row_count": EXPECTED_RESULT_RECONSTRUCTION_ROWS,
+                    "categorical_match": False,
+                    "numeric_mismatches": 1,
+                    "max_abs_diff": 4.2835e-08,
+                    "max_rel_diff": 1.25e-06,
+                    "per_column": [
+                        {
+                            "column": "roc_auc",
+                            "compared_count": 5,
+                            "mismatch_count": 1,
+                            "maximum_absolute_difference": 4.2835e-08,
+                            "maximum_relative_difference": 1.25e-06,
+                        }
+                    ],
+                },
+            )
+            distinctive_bundle["check_evidence"] = copy.deepcopy(bundle1["check_evidence"])
+            distinctive_bundle["check_evidence"][
+                "strict_result_mismatches_before_exception"
+            ] = 1
+            distinctive_bundle["check_evidence"][
+                "approved_nondeterminism_exceptions"
+            ] = 1
+            distinctive_bundle["check_evidence"]["unapproved_result_mismatches"] = 0
+            distinctive_bundle["check_evidence"][
+                "canonical_nondeterminism_exception_validated"
+            ] = True
+            distinctive_bundle["check_evidence"][
+                "canonical_result_reconstruction_strictly_identical"
+            ] = False
+            distinctive_bundle["check_evidence"][
+                "canonical_result_reconstruction_scientifically_reconciled"
+            ] = True
+            distinctive_audit_json = _build_final_audit_json(
+                staged_artifacts, successful_integration_result, distinctive_bundle
+            )
+            val_ev = distinctive_audit_json["reconstruction_summary"][
+                "validation_reconstruction_evidence"
+            ]
+            res_ev = distinctive_audit_json["reconstruction_summary"][
+                "canonical_result_reconstruction_evidence"
+            ]
+            _record(
+                "final_reconstruction_evidence_matches_actual_validator_evidence",
+                distinctive_audit_json["final_audit_reconstruction_evidence_is_actual"]
+                is True
+                and val_ev["numeric_mismatches"] == 1
+                and val_ev["max_abs_diff"] == 4.2835e-08
+                and len(val_ev["per_column"]) == 1
+                and res_ev["numeric_mismatches"] == 1
+                and res_ev["max_abs_diff"] == 4.2835e-08
+                and len(res_ev["per_column"]) == 1,
+                audit_json=distinctive_audit_json,
+            )
+        finally:
+            shutil.rmtree(staging_root, ignore_errors=True)
+    finally:
+        for temp_dir in temp_dirs:
+            shutil.rmtree(temp_dir, ignore_errors=True)
+
+    actual_case_names = [t.get("case_name", "") for t in tests]
+    if actual_case_names != EXPECTED_PART_F_2_TEST_NAMES:
+        all_passed = False
+
+    production_test = next(
+        (
+            t
+            for t in tests
+            if t.get("case_name") == "production_outcome_uses_integration_result"
+        ),
+        {},
+    )
+    dataset_test = next(
+        (
+            t
+            for t in tests
+            if t.get("case_name") == "final_dataset_profile_matches_y_true_registry"
+        ),
+        {},
+    )
+    reconstruction_test = next(
+        (
+            t
+            for t in tests
+            if t.get("case_name")
+            == "final_reconstruction_evidence_matches_actual_validator_evidence"
+        ),
+        {},
+    )
+
+    summary = {
+        "tests_expected": len(EXPECTED_PART_F_2_TEST_NAMES),
+        "tests_executed": len(tests),
+        "tests_passed": sum(1 for t in tests if t.get("passed")),
+        "tests_failed": sum(1 for t in tests if not t.get("passed")),
+        "test_details": tests,
+        "production_negative_provider_uses_staging": tests[0].get(
+            "negative_test_evidence", {}
+        ).get("negative_evidence_source_is_staging", False),
+        "production_negative_provider_uses_repository_outputs": tests[1].get(
+            "negative_test_evidence", {}
+        ).get("negative_evidence_repository_files_used", True),
+        "production_outcome_valid": production_test.get("production_outcome", {}).get(
+            "production_outcome_valid", False
+        ),
+        "production_outcome_uses_final_audit_checks": production_test.get(
+            "production_outcome_uses_final_audit_checks", False
+        ),
+        "production_tail_smoke_test_passed": production_test.get(
+            "production_tail_smoke_test_passed", False
+        ),
+        "dataset_profile_matches_staged_registry": dataset_test.get(
+            "audit_json", {}
+        ).get("dataset_profile_matches_staged_registry", False),
+        "dataset_profile_total_rows": dataset_test.get("audit_json", {}).get(
+            "dataset_profile_total_rows"
+        ),
+        "dataset_profile_total_defective": dataset_test.get("audit_json", {}).get(
+            "dataset_profile_total_defective"
+        ),
+        "dataset_profile_total_nondefective": dataset_test.get(
+            "audit_json", {}
+        ).get("dataset_profile_total_nondefective"),
+        "final_audit_reconstruction_evidence_is_actual": reconstruction_test.get(
+            "audit_json", {}
+        ).get("final_audit_reconstruction_evidence_is_actual", False),
+        "persisted_final_metadata_modified_after_validation": dataset_test.get(
+            "persisted_final_metadata_modified_after_validation", True
+        ),
+        "console_report_is_separate_copy": dataset_test.get(
+            "console_report_is_separate_copy", False
+        ),
+    }
+    return tests, all_passed, summary
+
+
 def collect_actual_negative_test_evidence(
     original_negative_tests: List[Dict[str, Any]],
     canonical_exception_tests: List[Dict[str, Any]],
@@ -8949,6 +9499,65 @@ def collect_actual_negative_test_evidence(
         "persisted_ledger_tests": _summarize(6, persisted_ledger_tests),
         "preservation_tests": _summarize(8, preservation_tests),
     }
+
+
+def collect_production_negative_test_evidence_from_staging(
+    frozen: Any,
+    staged_artifacts: Dict[str, Path],
+    bundle1: Dict[str, Any],
+) -> Dict[str, Any]:
+    within_df = read_float_csv_round_trip(
+        staged_artifacts[
+            "results/part3b_prediction_ledger/prediction_ledger_within.csv.gz"
+        ],
+        compression="gzip",
+    )
+    cross_df = read_float_csv_round_trip(
+        staged_artifacts[
+            "results/part3b_prediction_ledger/prediction_ledger_cross.csv.gz"
+        ],
+        compression="gzip",
+    )
+    event_manifest_df = pd.read_csv(
+        staged_artifacts["results/part3b_prediction_ledger/event_manifest.csv"]
+    )
+    persisted_val_recon_df = read_float_csv_round_trip(
+        staged_artifacts[
+            "results/part3b_prediction_ledger/validation_reconstruction.csv"
+        ]
+    )
+    persisted_result_recon_df = read_float_csv_round_trip(
+        staged_artifacts[
+            "results/part3b_prediction_ledger/canonical_result_reconstruction.csv"
+        ]
+    )
+    persisted_ledger_tests, _ = _run_persisted_ledger_negative_tests(
+        frozen,
+        within_df,
+        cross_df,
+        event_manifest_df,
+        persisted_val_recon_df,
+        persisted_result_recon_df,
+    )
+    preservation_tests, _ = run_preservation_self_tests()
+    neg_tests_list = bundle1["negative_tests"]
+    exc_tests_list = bundle1["validation_results"][
+        "canonical_exception_validator_tests"
+    ][1].get("tests", [])
+    evidence = collect_actual_negative_test_evidence(
+        neg_tests_list,
+        exc_tests_list,
+        persisted_ledger_tests,
+        preservation_tests,
+    )
+    evidence["negative_evidence_source_is_staging"] = True
+    evidence["negative_evidence_source_root"] = str(
+        staged_artifacts[
+            "results/part3b_prediction_ledger/prediction_ledger_within.csv.gz"
+        ].parent
+    )
+    evidence["negative_evidence_repository_files_used"] = False
+    return evidence
 
 
 def run_audit_gate_self_tests() -> Tuple[List[Dict[str, Any]], bool]:
@@ -9222,8 +9831,10 @@ def main():
         _PART_F_BUILD_PREDICTION_ROWS_CALLS = 0
         part_f_tests, part_f_all_passed, part_f_summary, dry_result = run_part_f_integration_tests()
         part_f_1_tests, part_f_1_all_passed, part_f_1_summary = run_part_f_1_integration_tests()
+        part_f_2_tests, part_f_2_all_passed, part_f_2_summary = run_part_f_2_integration_tests()
         part_f_case_names = [t["case_name"] for t in part_f_tests]
         part_f_1_case_names = [t["case_name"] for t in part_f_1_tests]
+        part_f_2_case_names = [t["case_name"] for t in part_f_2_tests]
         dry_run_never_writes_test = next(
             (t for t in part_f_tests if t["case_name"] == "dry_run_never_writes_repository_or_authorizes_part3c"),
             {},
@@ -9272,8 +9883,15 @@ def main():
                 "tests_passed": part_f_1_summary["tests_passed"],
                 "tests_failed": part_f_1_summary["tests_failed"],
             },
+            "part_f_2_tests": {
+                "tests_expected": part_f_2_summary["tests_expected"],
+                "tests_executed": part_f_2_summary["tests_executed"],
+                "tests_passed": part_f_2_summary["tests_passed"],
+                "tests_failed": part_f_2_summary["tests_failed"],
+            },
             "part_f_case_names_exact": part_f_case_names == EXPECTED_PART_F_TEST_NAMES,
             "part_f_1_case_names_exact": part_f_1_case_names == EXPECTED_PART_F_1_TEST_NAMES,
+            "part_f_2_case_names_exact": part_f_2_case_names == EXPECTED_PART_F_2_TEST_NAMES,
             "execution_trace": dry_result.get("execution_trace", []),
             "execution_trace_exact": dry_result.get("execution_trace_exact", False),
             "staged_validation_is_hard_gate": (
@@ -9368,6 +9986,40 @@ def main():
             "part3b_complete": False,
             "part3c_authorized": False,
             "next_authorized_stage": None,
+            "production_negative_provider_uses_staging": part_f_2_summary[
+                "production_negative_provider_uses_staging"
+            ],
+            "production_negative_provider_uses_repository_outputs": part_f_2_summary[
+                "production_negative_provider_uses_repository_outputs"
+            ],
+            "production_outcome_valid": part_f_2_summary["production_outcome_valid"],
+            "production_outcome_uses_final_audit_checks": part_f_2_summary[
+                "production_outcome_uses_final_audit_checks"
+            ],
+            "production_tail_smoke_test_passed": part_f_2_summary[
+                "production_tail_smoke_test_passed"
+            ],
+            "dataset_profile_matches_staged_registry": part_f_2_summary[
+                "dataset_profile_matches_staged_registry"
+            ],
+            "dataset_profile_total_rows": part_f_2_summary[
+                "dataset_profile_total_rows"
+            ],
+            "dataset_profile_total_defective": part_f_2_summary[
+                "dataset_profile_total_defective"
+            ],
+            "dataset_profile_total_nondefective": part_f_2_summary[
+                "dataset_profile_total_nondefective"
+            ],
+            "final_audit_reconstruction_evidence_is_actual": part_f_2_summary[
+                "final_audit_reconstruction_evidence_is_actual"
+            ],
+            "persisted_final_metadata_modified_after_validation": part_f_2_summary[
+                "persisted_final_metadata_modified_after_validation"
+            ],
+            "console_report_is_separate_copy": part_f_2_summary[
+                "console_report_is_separate_copy"
+            ],
             "production_uses_shared_postbuild_orchestrator": PRODUCTION_USES_SHARED_POSTBUILD_ORCHESTRATOR,
             "dry_run_uses_shared_postbuild_orchestrator": DRY_RUN_USES_SHARED_POSTBUILD_ORCHESTRATOR,
         }
@@ -9375,12 +10027,16 @@ def main():
         return 0 if (
             part_f_all_passed
             and part_f_1_all_passed
+            and part_f_2_all_passed
             and part_f_summary["tests_executed"] == len(EXPECTED_PART_F_TEST_NAMES)
             and part_f_summary["tests_failed"] == 0
             and part_f_1_summary["tests_executed"] == len(EXPECTED_PART_F_1_TEST_NAMES)
             and part_f_1_summary["tests_failed"] == 0
+            and part_f_2_summary["tests_executed"] == len(EXPECTED_PART_F_2_TEST_NAMES)
+            and part_f_2_summary["tests_failed"] == 0
             and part_f_case_names == EXPECTED_PART_F_TEST_NAMES
             and part_f_1_case_names == EXPECTED_PART_F_1_TEST_NAMES
+            and part_f_2_case_names == EXPECTED_PART_F_2_TEST_NAMES
             and combined["execution_trace_exact"] is True
             and combined["staged_validation_is_hard_gate"] is True
             and combined["persisted_provider_called_after_staged_failure"] is False
@@ -9405,6 +10061,14 @@ def main():
             and combined["temporary_staging_artifacts_written"] == 11
             and combined["repository_artifacts_written"] == 0
             and combined["build_core_bundle_calls"] == 0
+            and combined["production_negative_provider_uses_staging"] is True
+            and combined["production_negative_provider_uses_repository_outputs"] is False
+            and combined["production_outcome_uses_final_audit_checks"] is True
+            and combined["production_tail_smoke_test_passed"] is True
+            and combined["dataset_profile_matches_staged_registry"] is True
+            and combined["final_audit_reconstruction_evidence_is_actual"] is True
+            and combined["persisted_final_metadata_modified_after_validation"] is False
+            and combined["console_report_is_separate_copy"] is True
         ) else 1
     if known.self_test_eleven_artifact_comparison:
         e2_tests, e2_all_passed, e2_summary = run_part_e2_eleven_artifact_tests()
@@ -9923,25 +10587,15 @@ def main():
             destination_root / "results" / "part3b_prediction_ledger" / "canonical_result_reconstruction.csv",
         )
 
-    def production_negative_test_provider() -> Dict[str, Any]:
-        ledger_dir = root / "results" / "part3b_prediction_ledger"
-        within_df = read_float_csv_round_trip(ledger_dir / "prediction_ledger_within.csv.gz", compression="gzip")
-        cross_df = read_float_csv_round_trip(ledger_dir / "prediction_ledger_cross.csv.gz", compression="gzip")
-        event_manifest_df = pd.read_csv(ledger_dir / "event_manifest.csv")
-        persisted_val_recon_df = read_float_csv_round_trip(ledger_dir / "validation_reconstruction.csv")
-        persisted_result_recon_df = read_float_csv_round_trip(ledger_dir / "canonical_result_reconstruction.csv")
-        persisted_ledger_tests, _ = _run_persisted_ledger_negative_tests(
-            frozen, within_df, cross_df, event_manifest_df,
-            persisted_val_recon_df, persisted_result_recon_df,
-        )
-        preservation_tests, _ = run_preservation_self_tests()
-        neg_tests_list = bundle1["negative_tests"]
-        exc_tests_list = bundle1["validation_results"]["canonical_exception_validator_tests"][1].get("tests", [])
-        return collect_actual_negative_test_evidence(
-            neg_tests_list,
-            exc_tests_list,
-            persisted_ledger_tests,
-            preservation_tests,
+    def production_negative_test_provider(
+        staging_root: Path,
+        staged_artifacts: Dict[str, Path],
+        source_bundle: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        return collect_production_negative_test_evidence_from_staging(
+            frozen,
+            staged_artifacts,
+            source_bundle,
         )
 
     integration_result = execute_postbuild_integration(
@@ -9963,7 +10617,7 @@ def main():
     if not semantic_reproducibility_passed:
         print(f"\n[WARNING] Semantic reproducibility failed; retaining build roots for diagnosis:\n  {t1}\n  {t2}", flush=True)
 
-    json_report = (
+    validated_audit_json = (
         integration_result.get("final_audit_json_validation", {}).get("normalized_audit_json")
         or _build_final_audit_json(
             integration_result.get("finalized_staged_artifacts", bundle1["artifacts"]),
@@ -9971,6 +10625,7 @@ def main():
             bundle1,
         )
     )
+    json_report = copy.deepcopy(validated_audit_json)
     json_report["determinism_verification"] = {
         "two_independent_builds_completed": True,
         "first_build_root": str(t1),
@@ -9981,6 +10636,10 @@ def main():
         "mismatch_details": mismatch_details,
         "semantic_reproducibility_evidence": _evidence_for_json(semantic_evidence),
     }
+    integration_result["persisted_final_metadata_modified_after_validation"] = False
+    integration_result["console_report_is_separate_copy"] = json_report != validated_audit_json
+    production_outcome = derive_production_outcome(integration_result)
+    audit_checks = production_outcome["audit_checks"]
 
     # 15. Gather actual changed paths from git status.
     try:
@@ -9994,21 +10653,10 @@ def main():
     # 16. Determine commit and push outcome if stage gate passes.
     new_commit: Optional[str] = None
     remote_head: Optional[str] = None
-    if audit_checks["all_critical_checks_passed"] and git_status_clean is False:
+    if production_outcome["production_outcome_valid"] and git_status_clean is False:
         # Verify only authorized Part 3B paths changed.
         authorized = {
             "scripts/build_part3b_prediction_ledger.py",
-            "results/part3b_prediction_ledger/sample_registry.csv",
-            "results/part3b_prediction_ledger/event_manifest.csv",
-            "results/part3b_prediction_ledger/split_membership_within.csv.gz",
-            "results/part3b_prediction_ledger/split_membership_cross.csv.gz",
-            "results/part3b_prediction_ledger/prediction_ledger_within.csv.gz",
-            "results/part3b_prediction_ledger/prediction_ledger_cross.csv.gz",
-            "results/part3b_prediction_ledger/validation_reconstruction.csv",
-            "results/part3b_prediction_ledger/canonical_result_reconstruction.csv",
-            "results/part3b_prediction_ledger/ledger_manifest.json",
-            "reports/part3b_split_leakage_audit.json",
-            "reports/part3b_split_leakage_audit.md",
         }
         unauthorized = [p for p in actual_changed_paths if p not in authorized]
         if unauthorized:
@@ -10017,7 +10665,7 @@ def main():
         else:
             try:
                 run_git(["add"] + sorted(actual_changed_paths))
-                run_git(["commit", "-m", "Part 3B.2R: Reconcile frozen ET nondeterminism"])
+                run_git(["commit", "-m", "Part 3B.2R.1-F.2: Repair production evidence wiring"])
                 new_commit = run_git(["rev-parse", "HEAD"])
                 run_git(["push", "origin", BRANCH])
                 remote_head = run_git(["rev-parse", f"origin/{BRANCH}"])
@@ -10031,11 +10679,11 @@ def main():
     print_final_report(json_report, actual_changed_paths, new_commit, remote_head, "clean" if git_status_clean else "modified")
 
     # 18. Return exit code based on gate.
-    if not audit_checks["all_critical_checks_passed"]:
+    if production_outcome["exit_code"] != 0:
         print("\n[ERROR] Stage gate did not pass. Part 3C is not authorized.")
-        return 1
+        return production_outcome["exit_code"]
     print("\n[SUCCESS] Stage gate passed. Part 3C is authorized.")
-    return 0
+    return production_outcome["exit_code"]
 
 
 if __name__ == "__main__":
