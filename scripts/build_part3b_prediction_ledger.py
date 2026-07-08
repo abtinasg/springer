@@ -2016,6 +2016,59 @@ def validate_stage_gate(gate: Dict[str, Any]) -> Tuple[bool, Dict[str, Any]]:
     return passed, evidence
 
 
+def validate_stage_gate_schema_only(gate: Dict[str, Any]) -> Tuple[bool, Dict[str, Any]]:
+    """Validate the exact 16-field stage-gate schema and types only.
+
+    Unlike :func:`validate_stage_gate`, this does NOT check authorization
+    conditions.  It permits an intentionally unauthorized pre-comparison gate
+    with ``next_authorized_stage = None`` but still enforces the exact field
+    schema and types.
+    """
+    expected_fields = REQUIRED_STAGE_GATE_FIELDS
+    actual_keys = list(gate.keys())
+    expected_set = set(expected_fields)
+    actual_set = set(actual_keys)
+    missing_fields = sorted(expected_set - actual_set)
+    extra_fields = sorted(actual_set - expected_set)
+    order_exact = actual_keys == expected_fields
+
+    type_errors: List[str] = []
+    bool_fields = expected_fields[:14]
+    for name in bool_fields:
+        if name in gate:
+            v = gate[name]
+            if type(v) is not bool:
+                type_errors.append(name)
+
+    # next_authorized_stage must be None or "Part 3C"
+    nas = gate.get("next_authorized_stage")
+    if nas is not None and nas != "Part 3C":
+        type_errors.append("next_authorized_stage")
+
+    # part3c_constraint must equal PART3C_CONSTRAINT
+    if gate.get("part3c_constraint") != PART3C_CONSTRAINT:
+        type_errors.append("part3c_constraint")
+
+    schema_passed = (
+        len(gate) == 16
+        and len(missing_fields) == 0
+        and len(extra_fields) == 0
+        and order_exact
+        and len(type_errors) == 0
+    )
+
+    evidence: Dict[str, Any] = {
+        "fields_expected": len(expected_fields),
+        "fields_present": len(actual_keys),
+        "missing_fields": missing_fields,
+        "extra_fields": extra_fields,
+        "order_exact": order_exact,
+        "type_errors": type_errors,
+        "schema_passed": schema_passed,
+    }
+    return schema_passed, evidence
+
+
 # ---------------------------------------------------------------------------
 # Tie-policy tests
 # ---------------------------------------------------------------------------
@@ -3472,6 +3525,7 @@ def validate_and_normalize_ledger_manifest(
     """
     result: Dict[str, Any] = {
         "manifest_first_valid": False,
+        "manifest_valid": False,
         "manifest_top_level_exact": False,
         "manifest_artifact_order_exact": False,
         "manifest_actual_hashes_verified": False,
@@ -3491,13 +3545,13 @@ def validate_and_normalize_ledger_manifest(
         result["errors"].append(f"JSON parse error: {e}")
         return result
 
+    # JSON parse succeeded
     result["manifest_first_valid"] = True
 
     # Check exact top-level fields and order
     actual_keys = list(raw.keys())
     expected_keys = MANIFEST_REQUIRED_TOP_LEVEL_FIELDS
     top_level_exact = actual_keys == expected_keys
-    result["manifest_top_level_exact"] = top_level_exact
     if not top_level_exact:
         result["errors"].append(f"top-level fields mismatch: {actual_keys} vs {expected_keys}")
 
@@ -3519,30 +3573,32 @@ def validate_and_normalize_ledger_manifest(
             raw["self_referential_hash_embedded"] is False,
         ]
         if not all(value_checks):
-            result["manifest_top_level_exact"] = False
+            top_level_exact = False
             result["errors"].append("top-level value mismatch")
+    result["manifest_top_level_exact"] = top_level_exact
 
     # Check artifacts list: must contain exactly the eight data artifacts in order
     artifacts_list = raw.get("artifacts", [])
     expected_artifact_paths = list(SEMANTIC_DATA_ARTIFACTS)
     actual_artifact_paths = [a.get("relative_path") for a in artifacts_list]
     order_exact = actual_artifact_paths == expected_artifact_paths
-    result["manifest_artifact_order_exact"] = order_exact
     if not order_exact:
         result["errors"].append(f"artifact order mismatch: {actual_artifact_paths} vs {expected_artifact_paths}")
 
     # Validate each artifact entry fields and order
+    entry_fields_exact = True
     for entry in artifacts_list:
         entry_keys = list(entry.keys())
         if entry_keys != MANIFEST_ARTIFACT_ENTRY_FIELDS:
             result["errors"].append(f"artifact entry fields mismatch for {entry.get('relative_path')}: {entry_keys}")
-            result["manifest_artifact_order_exact"] = False
+            entry_fields_exact = False
+
+    result["manifest_artifact_order_exact"] = order_exact and entry_fields_exact
 
     # Verify each manifest entry's sha256 and byte_size against actual file
     approved_set = _approved_data_artifacts_set(data_comparison_evidence)
     hashes_verified = True
     sizes_verified = True
-    normalized_artifacts = []
 
     for entry in artifacts_list:
         rel = entry.get("relative_path")
@@ -3587,26 +3643,40 @@ def validate_and_normalize_ledger_manifest(
         except Exception as e:
             result["errors"].append(f"cannot read artifact {rel}: {e}")
 
-        # Build normalized entry
-        norm_entry = dict(entry)
-        if rel not in approved_set:
-            # Not approved for normalization - keep actual values
-            norm_entry["sha256"] = actual_hash
-            norm_entry["byte_size"] = actual_size
-        else:
-            # Approved - check if bytes differ between builds
-            # We'll normalize in the comparison function
-            norm_entry["_actual_sha256"] = actual_hash
-            norm_entry["_actual_byte_size"] = actual_size
-        normalized_artifacts.append(norm_entry)
-
     result["manifest_actual_hashes_verified"] = hashes_verified
     result["manifest_actual_sizes_verified"] = sizes_verified
 
-    # Build normalized manifest
-    normalized = {k: v for k, v in raw.items() if k != "artifacts"}
-    normalized["artifacts"] = normalized_artifacts
-    result["normalized_manifest"] = normalized
+    # Compute final manifest_valid
+    manifest_valid = (
+        result["manifest_first_valid"]
+        and result["manifest_top_level_exact"]
+        and result["manifest_artifact_order_exact"]
+        and result["manifest_actual_hashes_verified"]
+        and result["manifest_actual_sizes_verified"]
+        and len(result["errors"]) == 0
+    )
+    result["manifest_valid"] = manifest_valid
+
+    # Only construct normalized manifest when validation passed
+    if manifest_valid:
+        normalized_artifacts = []
+        for entry in artifacts_list:
+            rel = entry.get("relative_path")
+            actual_path = artifact_paths.get(rel)
+            actual_hash, actual_size = _actual_artifact_hash_and_size(actual_path)
+            norm_entry = dict(entry)
+            if rel not in approved_set:
+                norm_entry["sha256"] = actual_hash
+                norm_entry["byte_size"] = actual_size
+            else:
+                norm_entry["_actual_sha256"] = actual_hash
+                norm_entry["_actual_byte_size"] = actual_size
+            normalized_artifacts.append(norm_entry)
+        normalized = {k: v for k, v in raw.items() if k != "artifacts"}
+        normalized["artifacts"] = normalized_artifacts
+        result["normalized_manifest"] = normalized
+    else:
+        result["normalized_manifest"] = None
 
     return result
 
@@ -3623,15 +3693,19 @@ def _compare_normalized_manifests(
     approved_diffs: List[Dict[str, Any]] = []
     unapproved: List[Dict[str, Any]] = []
 
-    m1 = first_result.get("normalized_manifest")
-    m2 = second_result.get("normalized_manifest")
-    if m1 is None or m2 is None:
+    # Require both manifests to be independently valid
+    first_valid = first_result.get("manifest_valid", False) is True
+    second_valid = second_result.get("manifest_valid", False) is True
+    if not first_valid or not second_valid:
         return {
             "manifest_normalized_equal": False,
             "approved_manifest_hash_differences": approved_diffs,
-            "unapproved_manifest_differences": [{"reason": "manifest not valid"}],
+            "unapproved_manifest_differences": [{"reason": "manifest not independently valid"}],
             "manifest_comparison_passed": False,
         }
+
+    m1 = first_result.get("normalized_manifest")
+    m2 = second_result.get("normalized_manifest")
 
     # Compare all top-level fields except artifacts
     top_level_equal = True
@@ -3714,6 +3788,7 @@ def validate_and_normalize_audit_json(
     """Validate a single build's audit JSON against actual artifact files."""
     result: Dict[str, Any] = {
         "audit_json_first_valid": False,
+        "audit_json_valid": False,
         "audit_json_provenance_exact": False,
         "audit_json_audit_schema_exact": False,
         "audit_json_stage_gate_schema_exact": False,
@@ -3733,6 +3808,7 @@ def validate_and_normalize_audit_json(
         result["errors"].append(f"JSON parse error: {e}")
         return result
 
+    # JSON parse succeeded
     result["audit_json_first_valid"] = True
 
     # Check provenance fields
@@ -3747,27 +3823,36 @@ def validate_and_normalize_audit_json(
     if not provenance_exact:
         result["errors"].append("provenance fields mismatch")
 
-    # Check audit schema: 41 exact check names
+    # Check audit schema: 41 exact check names, all bool values
     audit_checks = raw.get("audit_checks", {})
-    actual_check_names = list(audit_checks.keys())
-    schema_exact = actual_check_names == REQUIRED_AUDIT_CHECK_NAMES
-    result["audit_json_audit_schema_exact"] = schema_exact
-    if not schema_exact:
-        result["errors"].append("audit check schema mismatch")
+    schema_passed, schema_evidence = validate_exact_audit_check_schema(audit_checks)
+    result["audit_json_audit_schema_exact"] = schema_passed
+    if not schema_passed:
+        result["errors"].append(f"audit check schema mismatch: {schema_evidence}")
 
-    # Check stage gate schema: 16 exact fields
+    # Check stage gate schema: 16 exact fields and types (schema-only, no authorization)
     stage_gate = raw.get("stage_gate", {})
-    actual_gate_fields = list(stage_gate.keys())
-    gate_exact = actual_gate_fields == REQUIRED_STAGE_GATE_FIELDS
-    result["audit_json_stage_gate_schema_exact"] = gate_exact
-    if not gate_exact:
-        result["errors"].append("stage gate schema mismatch")
+    gate_schema_passed, gate_evidence = validate_stage_gate_schema_only(stage_gate)
+    result["audit_json_stage_gate_schema_exact"] = gate_schema_passed
+    if not gate_schema_passed:
+        result["errors"].append(f"stage gate schema mismatch: {gate_evidence}")
 
     # Verify artifact_hashes against actual files
     approved_set = _approved_data_artifacts_set(data_comparison_evidence)
     artifact_hashes = raw.get("artifact_hashes", {})
     hashes_verified = True
-    normalized_hashes = {}
+
+    # Check exactly eight data artifacts, no missing or extra
+    actual_hash_keys = set(artifact_hashes.keys())
+    expected_hash_keys = set(SEMANTIC_DATA_ARTIFACTS)
+    if actual_hash_keys != expected_hash_keys:
+        hashes_verified = False
+        missing = sorted(expected_hash_keys - actual_hash_keys)
+        extra = sorted(actual_hash_keys - expected_hash_keys)
+        if missing:
+            result["errors"].append(f"missing artifact_hashes entries: {missing}")
+        if extra:
+            result["errors"].append(f"extra artifact_hashes entries: {extra}")
 
     for rel in SEMANTIC_DATA_ARTIFACTS:
         entry = artifact_hashes.get(rel)
@@ -3791,17 +3876,35 @@ def validate_and_normalize_audit_json(
             hashes_verified = False
             result["errors"].append(f"audit JSON byte_size mismatch for {rel}: {stored_size} vs {actual_size}")
 
-        norm_entry = dict(entry)
-        norm_entry["_actual_sha256"] = actual_hash
-        norm_entry["_actual_byte_size"] = actual_size
-        normalized_hashes[rel] = norm_entry
-
     result["audit_json_actual_hashes_verified"] = hashes_verified
 
-    # Build normalized JSON
-    normalized = dict(raw)
-    normalized["artifact_hashes"] = normalized_hashes
-    result["normalized_audit_json"] = normalized
+    # Compute final audit_json_valid
+    audit_json_valid = (
+        result["audit_json_first_valid"]
+        and result["audit_json_provenance_exact"]
+        and result["audit_json_audit_schema_exact"]
+        and result["audit_json_stage_gate_schema_exact"]
+        and result["audit_json_actual_hashes_verified"]
+        and len(result["errors"]) == 0
+    )
+    result["audit_json_valid"] = audit_json_valid
+
+    # Only construct normalized JSON when validation passed
+    if audit_json_valid:
+        normalized_hashes = {}
+        for rel in SEMANTIC_DATA_ARTIFACTS:
+            entry = artifact_hashes.get(rel)
+            actual_path = artifact_paths.get(rel)
+            actual_hash, actual_size = _actual_artifact_hash_and_size(actual_path)
+            norm_entry = dict(entry)
+            norm_entry["_actual_sha256"] = actual_hash
+            norm_entry["_actual_byte_size"] = actual_size
+            normalized_hashes[rel] = norm_entry
+        normalized = dict(raw)
+        normalized["artifact_hashes"] = normalized_hashes
+        result["normalized_audit_json"] = normalized
+    else:
+        result["normalized_audit_json"] = None
 
     return result
 
@@ -3818,15 +3921,19 @@ def _compare_normalized_audit_json(
     approved_diffs: List[Dict[str, Any]] = []
     unapproved: List[Dict[str, Any]] = []
 
-    j1 = first_result.get("normalized_audit_json")
-    j2 = second_result.get("normalized_audit_json")
-    if j1 is None or j2 is None:
+    # Require both audit JSONs to be independently valid
+    first_valid = first_result.get("audit_json_valid", False) is True
+    second_valid = second_result.get("audit_json_valid", False) is True
+    if not first_valid or not second_valid:
         return {
             "audit_json_normalized_equal": False,
             "approved_audit_json_hash_differences": approved_diffs,
-            "unapproved_audit_json_differences": [{"reason": "audit JSON not valid"}],
+            "unapproved_audit_json_differences": [{"reason": "audit JSON not independently valid"}],
             "audit_json_comparison_passed": False,
         }
+
+    j1 = first_result.get("normalized_audit_json")
+    j2 = second_result.get("normalized_audit_json")
 
     # Compare all fields except artifact_hashes
     all_equal = True
@@ -3915,6 +4022,7 @@ def validate_and_normalize_audit_markdown(
     """Validate a single build's audit Markdown against its JSON source and actual files."""
     result: Dict[str, Any] = {
         "audit_md_first_valid": False,
+        "audit_md_valid": False,
         "audit_md_required_sections_present": False,
         "audit_md_provenance_matches_json": False,
         "audit_md_hash_table_matches_json": False,
@@ -3934,6 +4042,7 @@ def validate_and_normalize_audit_markdown(
         result["errors"].append(f"read error: {e}")
         return result
 
+    # File read succeeded
     result["audit_md_first_valid"] = True
 
     # Normalize line endings to LF
@@ -3970,12 +4079,12 @@ def validate_and_normalize_audit_markdown(
 
     hash_table_matches_json = True
     hash_table_matches_actual = True
-    normalized_lines = list(lines)
 
     # Find the Artifact Hashes section and parse the table
     in_hash_section = False
     hash_table_start = -1
     hash_table_end = -1
+    md_artifact_rows: List[str] = []
     for i, line in enumerate(lines):
         if line.strip() == "## Artifact Hashes":
             in_hash_section = True
@@ -3992,6 +4101,7 @@ def validate_and_normalize_audit_markdown(
                 if len(parts) >= 4:
                     rel = parts[1]
                     md_hash = parts[2]
+                    md_artifact_rows.append(rel)
                     json_entry = json_hashes.get(rel, {})
                     json_hash = json_entry.get("sha256")
 
@@ -4000,47 +4110,66 @@ def validate_and_normalize_audit_markdown(
                         hash_table_matches_json = False
                         result["errors"].append(f"MD hash table mismatch with JSON for {rel}: {md_hash} vs {json_hash}")
 
-                    # Check MD hash matches actual file
+                    # Check MD hash matches actual file - no bypass for approved artifacts
                     actual_path = artifact_paths.get(rel)
                     if actual_path and actual_path.exists():
                         actual_hash = sha256_file(actual_path)
                         if md_hash != actual_hash:
-                            if rel in approved_set:
-                                # Approved - will be normalized
-                                pass
-                            else:
-                                hash_table_matches_actual = False
-                                result["errors"].append(f"MD hash mismatch with actual file for {rel}: {md_hash} vs {actual_hash}")
+                            hash_table_matches_actual = False
+                            result["errors"].append(f"MD hash mismatch with actual file for {rel}: {md_hash} vs {actual_hash}")
                     else:
                         if rel in SEMANTIC_DATA_ARTIFACTS:
                             hash_table_matches_actual = False
                             result["errors"].append(f"actual artifact not found for {rel}")
 
+    # Check artifact rows are exactly the eight data artifacts in expected order
+    if md_artifact_rows != list(SEMANTIC_DATA_ARTIFACTS):
+        hash_table_matches_json = False
+        missing_rows = [r for r in SEMANTIC_DATA_ARTIFACTS if r not in md_artifact_rows]
+        extra_rows = [r for r in md_artifact_rows if r not in SEMANTIC_DATA_ARTIFACTS]
+        if missing_rows:
+            result["errors"].append(f"missing artifact hash rows: {missing_rows}")
+        if extra_rows:
+            result["errors"].append(f"extra artifact hash rows: {extra_rows}")
+        if md_artifact_rows != list(SEMANTIC_DATA_ARTIFACTS) and not missing_rows and not extra_rows:
+            result["errors"].append(f"artifact hash row order mismatch: {md_artifact_rows} vs {list(SEMANTIC_DATA_ARTIFACTS)}")
+
     result["audit_md_hash_table_matches_json"] = hash_table_matches_json
     result["audit_md_hash_table_matches_actual_files"] = hash_table_matches_actual
 
-    # Build normalized markdown: replace approved hash differences with tokens
-    if in_hash_section and hash_table_start >= 0:
-        for i, line in enumerate(normalized_lines):
-            if i <= hash_table_start:
-                continue
-            if line.startswith("## "):
-                break
-            if line.startswith("| ") and "---" not in line and "Artifact" not in line:
-                parts = [p.strip() for p in line.split("|")]
-                if len(parts) >= 4:
-                    rel = parts[1]
-                    if rel in approved_set:
-                        actual_path = artifact_paths.get(rel)
-                        if actual_path and actual_path.exists():
-                            actual_hash = sha256_file(actual_path)
-                            # Check if this artifact has approved byte differences
-                            # by looking at the data comparison evidence
-                            comp = data_comparison_evidence.get("artifact_comparisons", {}).get(rel, {})
-                            if comp.get("within_policy") is True and not comp.get("decompressed_byte_equal", True):
-                                normalized_lines[i] = line.replace(parts[2], APPROVED_SEMANTIC_SHA_TOKEN)
+    # Compute final audit_md_valid
+    audit_md_valid = (
+        result["audit_md_first_valid"]
+        and result["audit_md_required_sections_present"]
+        and result["audit_md_provenance_matches_json"]
+        and result["audit_md_hash_table_matches_json"]
+        and result["audit_md_hash_table_matches_actual_files"]
+        and len(result["errors"]) == 0
+    )
+    result["audit_md_valid"] = audit_md_valid
 
-    result["normalized_markdown"] = "\n".join(normalized_lines)
+    # Only build normalized markdown when validation passed
+    if audit_md_valid:
+        normalized_lines = list(lines)
+        if in_hash_section and hash_table_start >= 0:
+            for i, line in enumerate(normalized_lines):
+                if i <= hash_table_start:
+                    continue
+                if line.startswith("## "):
+                    break
+                if line.startswith("| ") and "---" not in line and "Artifact" not in line:
+                    parts = [p.strip() for p in line.split("|")]
+                    if len(parts) >= 4:
+                        rel = parts[1]
+                        if rel in approved_set:
+                            actual_path = artifact_paths.get(rel)
+                            if actual_path and actual_path.exists():
+                                comp = data_comparison_evidence.get("artifact_comparisons", {}).get(rel, {})
+                                if comp.get("within_policy") is True and not comp.get("decompressed_byte_equal", True):
+                                    normalized_lines[i] = line.replace(parts[2], APPROVED_SEMANTIC_SHA_TOKEN)
+        result["normalized_markdown"] = "\n".join(normalized_lines)
+    else:
+        result["normalized_markdown"] = None
 
     return result
 
@@ -4055,15 +4184,19 @@ def _compare_normalized_audit_markdown(
     approved_diffs: List[Dict[str, Any]] = []
     unapproved: List[Dict[str, Any]] = []
 
-    md1 = first_result.get("normalized_markdown")
-    md2 = second_result.get("normalized_markdown")
-    if md1 is None or md2 is None:
+    # Require both Markdown files to be independently valid
+    first_valid = first_result.get("audit_md_valid", False) is True
+    second_valid = second_result.get("audit_md_valid", False) is True
+    if not first_valid or not second_valid:
         return {
             "audit_md_normalized_equal": False,
             "approved_audit_md_hash_differences": approved_diffs,
-            "unapproved_audit_md_differences": [{"reason": "markdown not valid"}],
+            "unapproved_audit_md_differences": [{"reason": "markdown not independently valid"}],
             "audit_md_comparison_passed": False,
         }
+
+    md1 = first_result.get("normalized_markdown")
+    md2 = second_result.get("normalized_markdown")
 
     # Line-by-line comparison after normalization
     lines1 = md1.split("\n")
@@ -4149,6 +4282,24 @@ def compare_eleven_artifacts_semantically(
     approved_metadata_hash_differences: List[Dict[str, Any]] = []
     unapproved_metadata_differences: List[Dict[str, Any]] = []
 
+    # Explicit fail-closed gate fields
+    manifest_first_valid = False
+    manifest_second_valid = False
+    manifest_actual_hashes_verified_first = False
+    manifest_actual_hashes_verified_second = False
+    manifest_actual_sizes_verified_first = False
+    manifest_actual_sizes_verified_second = False
+    audit_json_first_valid = False
+    audit_json_second_valid = False
+    audit_json_actual_hashes_verified_first = False
+    audit_json_actual_hashes_verified_second = False
+    audit_md_first_valid = False
+    audit_md_second_valid = False
+    audit_md_required_sections_present = False
+    audit_md_provenance_matches_json = False
+    audit_md_hash_table_matches_json = False
+    audit_md_hash_table_matches_actual_files = False
+
     if not data_passed:
         unapproved_metadata_differences.append({"reason": "data artifact comparison failed; metadata approval stopped"})
     else:
@@ -4167,15 +4318,22 @@ def compare_eleven_artifacts_semantically(
             first_artifacts, second_artifacts,
         )
 
+        manifest_first_valid = manifest_first.get("manifest_valid", False)
+        manifest_second_valid = manifest_second.get("manifest_valid", False)
+        manifest_actual_hashes_verified_first = manifest_first.get("manifest_actual_hashes_verified", False)
+        manifest_actual_hashes_verified_second = manifest_second.get("manifest_actual_hashes_verified", False)
+        manifest_actual_sizes_verified_first = manifest_first.get("manifest_actual_sizes_verified", False)
+        manifest_actual_sizes_verified_second = manifest_second.get("manifest_actual_sizes_verified", False)
+
         metadata_artifact_comparisons["ledger_manifest"] = {
-            "manifest_first_valid": manifest_first.get("manifest_first_valid", False),
-            "manifest_second_valid": manifest_second.get("manifest_first_valid", False),
+            "manifest_first_valid": manifest_first_valid,
+            "manifest_second_valid": manifest_second_valid,
             "manifest_top_level_exact": manifest_first.get("manifest_top_level_exact", False) and manifest_second.get("manifest_top_level_exact", False),
             "manifest_artifact_order_exact": manifest_first.get("manifest_artifact_order_exact", False) and manifest_second.get("manifest_artifact_order_exact", False),
-            "manifest_actual_hashes_verified_first": manifest_first.get("manifest_actual_hashes_verified", False),
-            "manifest_actual_hashes_verified_second": manifest_second.get("manifest_actual_hashes_verified", False),
-            "manifest_actual_sizes_verified_first": manifest_first.get("manifest_actual_sizes_verified", False),
-            "manifest_actual_sizes_verified_second": manifest_second.get("manifest_actual_sizes_verified", False),
+            "manifest_actual_hashes_verified_first": manifest_actual_hashes_verified_first,
+            "manifest_actual_hashes_verified_second": manifest_actual_hashes_verified_second,
+            "manifest_actual_sizes_verified_first": manifest_actual_sizes_verified_first,
+            "manifest_actual_sizes_verified_second": manifest_actual_sizes_verified_second,
             "manifest_normalized_equal": manifest_cmp.get("manifest_normalized_equal", False),
             "approved_manifest_hash_differences": manifest_cmp.get("approved_manifest_hash_differences", []),
             "unapproved_manifest_differences": manifest_cmp.get("unapproved_manifest_differences", []),
@@ -4200,14 +4358,19 @@ def compare_eleven_artifacts_semantically(
             first_artifacts, second_artifacts,
         )
 
+        audit_json_first_valid = audit_json_first.get("audit_json_valid", False)
+        audit_json_second_valid = audit_json_second.get("audit_json_valid", False)
+        audit_json_actual_hashes_verified_first = audit_json_first.get("audit_json_actual_hashes_verified", False)
+        audit_json_actual_hashes_verified_second = audit_json_second.get("audit_json_actual_hashes_verified", False)
+
         metadata_artifact_comparisons["audit_json"] = {
-            "audit_json_first_valid": audit_json_first.get("audit_json_first_valid", False),
-            "audit_json_second_valid": audit_json_second.get("audit_json_first_valid", False),
+            "audit_json_first_valid": audit_json_first_valid,
+            "audit_json_second_valid": audit_json_second_valid,
             "audit_json_provenance_exact": audit_json_first.get("audit_json_provenance_exact", False) and audit_json_second.get("audit_json_provenance_exact", False),
             "audit_json_audit_schema_exact": audit_json_first.get("audit_json_audit_schema_exact", False) and audit_json_second.get("audit_json_audit_schema_exact", False),
             "audit_json_stage_gate_schema_exact": audit_json_first.get("audit_json_stage_gate_schema_exact", False) and audit_json_second.get("audit_json_stage_gate_schema_exact", False),
-            "audit_json_actual_hashes_verified_first": audit_json_first.get("audit_json_actual_hashes_verified", False),
-            "audit_json_actual_hashes_verified_second": audit_json_second.get("audit_json_actual_hashes_verified", False),
+            "audit_json_actual_hashes_verified_first": audit_json_actual_hashes_verified_first,
+            "audit_json_actual_hashes_verified_second": audit_json_actual_hashes_verified_second,
             "audit_json_normalized_equal": audit_json_cmp.get("audit_json_normalized_equal", False),
             "approved_audit_json_hash_differences": audit_json_cmp.get("approved_audit_json_hash_differences", []),
             "unapproved_audit_json_differences": audit_json_cmp.get("unapproved_audit_json_differences", []),
@@ -4222,22 +4385,29 @@ def compare_eleven_artifacts_semantically(
         audit_md_second_path = second_artifacts.get(SEMANTIC_METADATA_ARTIFACTS[2])
 
         audit_md_first = validate_and_normalize_audit_markdown(
-            audit_md_first_path, audit_json_first.get("normalized_audit_json", {}), first_artifacts, data_comparison
+            audit_md_first_path, audit_json_first.get("normalized_audit_json") or {}, first_artifacts, data_comparison
         )
         audit_md_second = validate_and_normalize_audit_markdown(
-            audit_md_second_path, audit_json_second.get("normalized_audit_json", {}), second_artifacts, data_comparison
+            audit_md_second_path, audit_json_second.get("normalized_audit_json") or {}, second_artifacts, data_comparison
         )
         audit_md_cmp = _compare_normalized_audit_markdown(
             audit_md_first, audit_md_second, data_comparison
         )
 
+        audit_md_first_valid = audit_md_first.get("audit_md_valid", False)
+        audit_md_second_valid = audit_md_second.get("audit_md_valid", False)
+        audit_md_required_sections_present = audit_md_first.get("audit_md_required_sections_present", False) and audit_md_second.get("audit_md_required_sections_present", False)
+        audit_md_provenance_matches_json = audit_md_first.get("audit_md_provenance_matches_json", False) and audit_md_second.get("audit_md_provenance_matches_json", False)
+        audit_md_hash_table_matches_json = audit_md_first.get("audit_md_hash_table_matches_json", False) and audit_md_second.get("audit_md_hash_table_matches_json", False)
+        audit_md_hash_table_matches_actual_files = audit_md_first.get("audit_md_hash_table_matches_actual_files", False) and audit_md_second.get("audit_md_hash_table_matches_actual_files", False)
+
         metadata_artifact_comparisons["audit_markdown"] = {
-            "audit_md_first_valid": audit_md_first.get("audit_md_first_valid", False),
-            "audit_md_second_valid": audit_md_second.get("audit_md_first_valid", False),
-            "audit_md_required_sections_present": audit_md_first.get("audit_md_required_sections_present", False) and audit_md_second.get("audit_md_required_sections_present", False),
-            "audit_md_provenance_matches_json": audit_md_first.get("audit_md_provenance_matches_json", False) and audit_md_second.get("audit_md_provenance_matches_json", False),
-            "audit_md_hash_table_matches_json": audit_md_first.get("audit_md_hash_table_matches_json", False) and audit_md_second.get("audit_md_hash_table_matches_json", False),
-            "audit_md_hash_table_matches_actual_files": audit_md_first.get("audit_md_hash_table_matches_actual_files", False) and audit_md_second.get("audit_md_hash_table_matches_actual_files", False),
+            "audit_md_first_valid": audit_md_first_valid,
+            "audit_md_second_valid": audit_md_second_valid,
+            "audit_md_required_sections_present": audit_md_required_sections_present,
+            "audit_md_provenance_matches_json": audit_md_provenance_matches_json,
+            "audit_md_hash_table_matches_json": audit_md_hash_table_matches_json,
+            "audit_md_hash_table_matches_actual_files": audit_md_hash_table_matches_actual_files,
             "audit_md_normalized_equal": audit_md_cmp.get("audit_md_normalized_equal", False),
             "approved_audit_md_hash_differences": audit_md_cmp.get("approved_audit_md_hash_differences", []),
             "unapproved_audit_md_differences": audit_md_cmp.get("unapproved_audit_md_differences", []),
@@ -4247,8 +4417,25 @@ def compare_eleven_artifacts_semantically(
         approved_metadata_hash_differences.extend(audit_md_cmp.get("approved_audit_md_hash_differences", []))
         unapproved_metadata_differences.extend(audit_md_cmp.get("unapproved_audit_md_differences", []))
 
+    # Explicit fail-closed metadata gate
     metadata_artifact_comparison_passed = (
-        ledger_manifest_comparison_passed
+        manifest_first_valid
+        and manifest_second_valid
+        and manifest_actual_hashes_verified_first
+        and manifest_actual_hashes_verified_second
+        and manifest_actual_sizes_verified_first
+        and manifest_actual_sizes_verified_second
+        and audit_json_first_valid
+        and audit_json_second_valid
+        and audit_json_actual_hashes_verified_first
+        and audit_json_actual_hashes_verified_second
+        and audit_md_first_valid
+        and audit_md_second_valid
+        and audit_md_required_sections_present
+        and audit_md_provenance_matches_json
+        and audit_md_hash_table_matches_json
+        and audit_md_hash_table_matches_actual_files
+        and ledger_manifest_comparison_passed
         and audit_json_comparison_passed
         and audit_md_comparison_passed
     )
@@ -6173,6 +6360,163 @@ def run_part_e2_eleven_artifact_tests() -> Tuple[List[Dict[str, Any]], bool, Dic
     return tests, all_passed, summary
 
 
+def run_part_e2_1_fail_closed_tests() -> Tuple[List[Dict[str, Any]], bool, Dict[str, Any]]:
+    """Five fail-closed regression tests for metadata validation.
+
+    Each test creates two byte-identical builds with the same invalid metadata
+    and verifies that semantic_reproducibility_passed is False even though
+    both invalid files are identical.
+    """
+    tests: List[Dict[str, Any]] = []
+    all_passed = True
+
+    def _record(case_name: str, passed: bool, **extra: Any) -> None:
+        nonlocal all_passed
+        tests.append({"case_name": case_name, "passed": passed, **extra})
+        all_passed = all_passed and passed
+
+    with tempfile.TemporaryDirectory(prefix="part3b2_e21_base_") as base_data_dir:
+        base_data_root = _make_synthetic_eight_artifact_dir(Path(base_data_dir))
+
+        with tempfile.TemporaryDirectory(prefix="part3b2_e21_base_meta_") as base_meta_dir:
+            base_all = _make_synthetic_metadata_artifacts(base_data_root, Path(base_meta_dir))
+
+            # 1. Two byte-identical manifests with wrong version fail.
+            with tempfile.TemporaryDirectory(prefix="part3b2_e21_wv1_") as wv1_dir, \
+                 tempfile.TemporaryDirectory(prefix="part3b2_e21_wv2_") as wv2_dir:
+                wv1_root = Path(wv1_dir)
+                wv2_root = Path(wv2_dir)
+                for root in [wv1_root, wv2_root]:
+                    for rel, src in base_all.items():
+                        dst = root / Path(rel).name
+                        dst.parent.mkdir(parents=True, exist_ok=True)
+                        shutil.copy2(str(src), str(dst))
+                    with (root / "ledger_manifest.json").open("r") as f:
+                        manifest = json.load(f)
+                    manifest["manifest_version"] = "WRONG-VERSION"
+                    write_text_atomic(root / "ledger_manifest.json", _json_dumps(manifest))
+                wv1_paths = _all_artifact_paths_from_dir(wv1_root)
+                wv2_paths = _all_artifact_paths_from_dir(wv2_root)
+                result = compare_eleven_artifacts_semantically(wv1_paths, wv2_paths)
+                _record(
+                    "identical_malformed_manifests_wrong_version_fail",
+                    result["semantic_reproducibility_passed"] is False
+                    and result["metadata_artifact_comparison_passed"] is False,
+                )
+
+            # 2. Two byte-identical manifests with same stale sha256 fail.
+            with tempfile.TemporaryDirectory(prefix="part3b2_e21_sh1_") as sh1_dir, \
+                 tempfile.TemporaryDirectory(prefix="part3b2_e21_sh2_") as sh2_dir:
+                sh1_root = Path(sh1_dir)
+                sh2_root = Path(sh2_dir)
+                for root in [sh1_root, sh2_root]:
+                    for rel, src in base_all.items():
+                        dst = root / Path(rel).name
+                        dst.parent.mkdir(parents=True, exist_ok=True)
+                        shutil.copy2(str(src), str(dst))
+                    with (root / "ledger_manifest.json").open("r") as f:
+                        manifest = json.load(f)
+                    manifest["artifacts"][0]["sha256"] = "0" * 64
+                    write_text_atomic(root / "ledger_manifest.json", _json_dumps(manifest))
+                sh1_paths = _all_artifact_paths_from_dir(sh1_root)
+                sh2_paths = _all_artifact_paths_from_dir(sh2_root)
+                result = compare_eleven_artifacts_semantically(sh1_paths, sh2_paths)
+                _record(
+                    "identical_malformed_manifests_stale_hash_fail",
+                    result["semantic_reproducibility_passed"] is False
+                    and result["metadata_artifact_comparison_passed"] is False,
+                )
+
+            # 3. Two byte-identical manifests with wrong row_count fail.
+            with tempfile.TemporaryDirectory(prefix="part3b2_e21_rc1_") as rc1_dir, \
+                 tempfile.TemporaryDirectory(prefix="part3b2_e21_rc2_") as rc2_dir:
+                rc1_root = Path(rc1_dir)
+                rc2_root = Path(rc2_dir)
+                for root in [rc1_root, rc2_root]:
+                    for rel, src in base_all.items():
+                        dst = root / Path(rel).name
+                        dst.parent.mkdir(parents=True, exist_ok=True)
+                        shutil.copy2(str(src), str(dst))
+                    with (root / "ledger_manifest.json").open("r") as f:
+                        manifest = json.load(f)
+                    manifest["artifacts"][0]["row_count"] = 99999
+                    write_text_atomic(root / "ledger_manifest.json", _json_dumps(manifest))
+                rc1_paths = _all_artifact_paths_from_dir(rc1_root)
+                rc2_paths = _all_artifact_paths_from_dir(rc2_root)
+                result = compare_eleven_artifacts_semantically(rc1_paths, rc2_paths)
+                _record(
+                    "identical_malformed_manifests_wrong_row_count_fail",
+                    result["semantic_reproducibility_passed"] is False
+                    and result["metadata_artifact_comparison_passed"] is False,
+                )
+
+            # 4. Two byte-identical audit JSONs with wrong provenance fail.
+            with tempfile.TemporaryDirectory(prefix="part3b2_e21_aj1_") as aj1_dir, \
+                 tempfile.TemporaryDirectory(prefix="part3b2_e21_aj2_") as aj2_dir:
+                aj1_root = Path(aj1_dir)
+                aj2_root = Path(aj2_dir)
+                for root in [aj1_root, aj2_root]:
+                    for rel, src in base_all.items():
+                        dst = root / Path(rel).name
+                        dst.parent.mkdir(parents=True, exist_ok=True)
+                        shutil.copy2(str(src), str(dst))
+                    with (root / "part3b_split_leakage_audit.json").open("r") as f:
+                        audit = json.load(f)
+                    audit["part3b_version"] = "WRONG"
+                    write_text_atomic(root / "part3b_split_leakage_audit.json", _json_dumps(audit))
+                aj1_paths = _all_artifact_paths_from_dir(aj1_root)
+                aj2_paths = _all_artifact_paths_from_dir(aj2_root)
+                result = compare_eleven_artifacts_semantically(aj1_paths, aj2_paths)
+                _record(
+                    "identical_malformed_audit_jsons_wrong_provenance_fail",
+                    result["semantic_reproducibility_passed"] is False
+                    and result["metadata_artifact_comparison_passed"] is False,
+                )
+
+            # 5. Two byte-identical audit Markdowns with wrong hash fail.
+            with tempfile.TemporaryDirectory(prefix="part3b2_e21_am1_") as am1_dir, \
+                 tempfile.TemporaryDirectory(prefix="part3b2_e21_am2_") as am2_dir:
+                am1_root = Path(am1_dir)
+                am2_root = Path(am2_dir)
+                for root in [am1_root, am2_root]:
+                    for rel, src in base_all.items():
+                        dst = root / Path(rel).name
+                        dst.parent.mkdir(parents=True, exist_ok=True)
+                        shutil.copy2(str(src), str(dst))
+                    md_path = root / "part3b_split_leakage_audit.md"
+                    content = md_path.read_text()
+                    first_rel = SEMANTIC_DATA_ARTIFACTS[0]
+                    lines = content.split("\n")
+                    for i, line in enumerate(lines):
+                        if line.startswith(f"| {first_rel} |"):
+                            lines[i] = f"| {first_rel} | {'0' * 64} |"
+                            break
+                    write_text_atomic(md_path, "\n".join(lines))
+                am1_paths = _all_artifact_paths_from_dir(am1_root)
+                am2_paths = _all_artifact_paths_from_dir(am2_root)
+                result = compare_eleven_artifacts_semantically(am1_paths, am2_paths)
+                _record(
+                    "identical_malformed_audit_markdowns_wrong_hash_fail",
+                    result["semantic_reproducibility_passed"] is False
+                    and result["metadata_artifact_comparison_passed"] is False,
+                )
+
+    summary = {
+        "tests_expected": 5,
+        "tests_executed": len(tests),
+        "tests_passed": sum(1 for t in tests if t.get("passed")),
+        "tests_failed": sum(1 for t in tests if not t.get("passed")),
+        "test_details": tests,
+        "model_fits_executed": 0,
+        "prediction_calls_executed": 0,
+        "repository_artifacts_written": 0,
+        "full_build_executed": False,
+        "part3b_complete": False,
+        "part3c_authorized": False,
+    }
+    return tests, all_passed, summary
+
+
 # ---------------------------------------------------------------------------
 # Final printed report
 # ---------------------------------------------------------------------------
@@ -6910,6 +7254,7 @@ def main():
     known, _ = parser.parse_known_args()
     if known.self_test_eleven_artifact_comparison:
         e2_tests, e2_all_passed, e2_summary = run_part_e2_eleven_artifact_tests()
+        e21_tests, e21_all_passed, e21_summary = run_part_e2_1_fail_closed_tests()
         combined = {
             "part_e2_tests": {
                 "tests_expected": e2_summary["tests_expected"],
@@ -6917,11 +7262,21 @@ def main():
                 "tests_passed": e2_summary["tests_passed"],
                 "tests_failed": e2_summary["tests_failed"],
             },
+            "part_e2_1_fail_closed_tests": {
+                "tests_expected": e21_summary["tests_expected"],
+                "tests_executed": e21_summary["tests_executed"],
+                "tests_passed": e21_summary["tests_passed"],
+                "tests_failed": e21_summary["tests_failed"],
+            },
             "et_score_tolerance": e2_summary["et_score_tolerance"],
             "et_rank_metric_tolerance": e2_summary["et_rank_metric_tolerance"],
             "accepted_part3a_commit": ACCEPTED_PART3A_COMMIT,
             "starting_commit": STARTING_COMMIT,
             "part3b_version": PART3B_VERSION,
+            "manifest_valid_enforced": True,
+            "audit_json_valid_enforced": True,
+            "audit_md_valid_enforced": True,
+            "fail_closed_metadata_gate": True,
             "model_fits_executed": 0,
             "prediction_calls_executed": 0,
             "repository_artifacts_written": 0,
@@ -6934,6 +7289,9 @@ def main():
             e2_all_passed
             and e2_summary["tests_executed"] == 14
             and e2_summary["tests_failed"] == 0
+            and e21_all_passed
+            and e21_summary["tests_executed"] == 5
+            and e21_summary["tests_failed"] == 0
         ) else 1
     if known.self_test_data_artifact_comparison:
         e1_tests, e1_all_passed, e1_summary = run_data_artifact_comparison_self_tests()
