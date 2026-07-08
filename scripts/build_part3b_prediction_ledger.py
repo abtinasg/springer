@@ -3500,12 +3500,53 @@ def _actual_artifact_hash_and_size(path: Path) -> Tuple[str, int]:
 
 
 def _approved_data_artifacts_set(data_comparison_evidence: Dict[str, Any]) -> set:
-    """Return the set of data-artifact rels that are approved by the eight-data comparator."""
+    """Return the set of data-artifact rels that are approved by the eight-data comparator.
+
+    This returns all artifacts with within_policy=True, regardless of whether
+    their bytes actually differ between builds.  It is kept for backward
+    compatibility with the per-build validation functions.
+    """
     approved = set()
     comps = data_comparison_evidence.get("artifact_comparisons", {})
     for rel in SEMANTIC_DATA_ARTIFACTS:
         comp = comps.get(rel, {})
         if comp.get("within_policy") is True:
+            approved.add(rel)
+    return approved
+
+
+def get_approved_cross_build_byte_difference_artifacts(
+    data_comparison_evidence: Dict[str, Any],
+    first_artifacts: Dict[str, Path],
+    second_artifacts: Dict[str, Path],
+) -> set:
+    """Return the exact set of approved byte-different data artifacts.
+
+    An artifact is included only when **all** of the following hold:
+    - its Part E.1 comparison has ``within_policy`` is True;
+    - it exists in both builds;
+    - SHA-256 of the first actual file differs from SHA-256 of the second
+      actual file.
+
+    This function does **not** consult ``decompressed_byte_equal`` because
+    prediction-ledger and reconstruction comparison evidence does not contain
+    that field.
+    """
+    approved: set = set()
+    comps = data_comparison_evidence.get("artifact_comparisons", {})
+    for rel in SEMANTIC_DATA_ARTIFACTS:
+        comp = comps.get(rel, {})
+        if comp.get("within_policy") is not True:
+            continue
+        p1 = first_artifacts.get(rel)
+        p2 = second_artifacts.get(rel)
+        if p1 is None or not p1.exists():
+            continue
+        if p2 is None or not p2.exists():
+            continue
+        h1 = sha256_file(p1)
+        h2 = sha256_file(p2)
+        if h1 != h2:
             approved.add(rel)
     return approved
 
@@ -3595,8 +3636,9 @@ def validate_and_normalize_ledger_manifest(
 
     result["manifest_artifact_order_exact"] = order_exact and entry_fields_exact
 
-    # Verify each manifest entry's sha256 and byte_size against actual file
-    approved_set = _approved_data_artifacts_set(data_comparison_evidence)
+    # Verify each manifest entry's sha256 and byte_size against actual file.
+    # Each build must independently validate its own stored hash and size
+    # against its own actual file — no exceptions for approved artifacts.
     hashes_verified = True
     sizes_verified = True
 
@@ -3657,7 +3699,10 @@ def validate_and_normalize_ledger_manifest(
     )
     result["manifest_valid"] = manifest_valid
 
-    # Only construct normalized manifest when validation passed
+    # Only construct normalized manifest when validation passed.
+    # Always store _actual_sha256 and _actual_byte_size for every artifact
+    # so the cross-build comparator can determine which artifacts actually
+    # differ in bytes.
     if manifest_valid:
         normalized_artifacts = []
         for entry in artifacts_list:
@@ -3665,12 +3710,8 @@ def validate_and_normalize_ledger_manifest(
             actual_path = artifact_paths.get(rel)
             actual_hash, actual_size = _actual_artifact_hash_and_size(actual_path)
             norm_entry = dict(entry)
-            if rel not in approved_set:
-                norm_entry["sha256"] = actual_hash
-                norm_entry["byte_size"] = actual_size
-            else:
-                norm_entry["_actual_sha256"] = actual_hash
-                norm_entry["_actual_byte_size"] = actual_size
+            norm_entry["_actual_sha256"] = actual_hash
+            norm_entry["_actual_byte_size"] = actual_size
             normalized_artifacts.append(norm_entry)
         normalized = {k: v for k, v in raw.items() if k != "artifacts"}
         normalized["artifacts"] = normalized_artifacts
@@ -3684,12 +3725,18 @@ def validate_and_normalize_ledger_manifest(
 def _compare_normalized_manifests(
     first_result: Dict[str, Any],
     second_result: Dict[str, Any],
-    data_comparison_evidence: Dict[str, Any],
+    approved_byte_diff_set: set,
     first_artifact_paths: Dict[str, Path],
     second_artifact_paths: Dict[str, Path],
 ) -> Dict[str, Any]:
-    """Compare two validated manifests, normalizing only approved hash differences."""
-    approved_set = _approved_data_artifacts_set(data_comparison_evidence)
+    """Compare two validated manifests, normalizing only approved hash differences.
+
+    ``approved_byte_diff_set`` is the explicit set of data artifacts whose
+    bytes actually differ between builds and whose Part E.1 comparison has
+    ``within_policy`` is True.  It is computed by
+    ``get_approved_cross_build_byte_difference_artifacts``.
+    """
+    approved_set = approved_byte_diff_set
     approved_diffs: List[Dict[str, Any]] = []
     unapproved: List[Dict[str, Any]] = []
 
@@ -3837,8 +3884,9 @@ def validate_and_normalize_audit_json(
     if not gate_schema_passed:
         result["errors"].append(f"stage gate schema mismatch: {gate_evidence}")
 
-    # Verify artifact_hashes against actual files
-    approved_set = _approved_data_artifacts_set(data_comparison_evidence)
+    # Verify artifact_hashes against actual files.
+    # Each build must independently validate its own artifact_hashes against
+    # its own actual files — no exceptions for approved artifacts.
     artifact_hashes = raw.get("artifact_hashes", {})
     hashes_verified = True
 
@@ -3912,12 +3960,17 @@ def validate_and_normalize_audit_json(
 def _compare_normalized_audit_json(
     first_result: Dict[str, Any],
     second_result: Dict[str, Any],
-    data_comparison_evidence: Dict[str, Any],
+    approved_byte_diff_set: set,
     first_artifact_paths: Dict[str, Path],
     second_artifact_paths: Dict[str, Path],
 ) -> Dict[str, Any]:
-    """Compare two validated audit JSONs, normalizing only approved hash differences."""
-    approved_set = _approved_data_artifacts_set(data_comparison_evidence)
+    """Compare two validated audit JSONs, normalizing only approved hash differences.
+
+    ``approved_byte_diff_set`` is the explicit set of data artifacts whose
+    bytes actually differ between builds and whose Part E.1 comparison has
+    ``within_policy`` is True.
+    """
+    approved_set = approved_byte_diff_set
     approved_diffs: List[Dict[str, Any]] = []
     unapproved: List[Dict[str, Any]] = []
 
@@ -4017,9 +4070,17 @@ def validate_and_normalize_audit_markdown(
     markdown_path: Path,
     corresponding_audit_json: Dict[str, Any],
     artifact_paths: Dict[str, Path],
-    data_comparison_evidence: Dict[str, Any],
+    approved_byte_diff_set: set,
 ) -> Dict[str, Any]:
-    """Validate a single build's audit Markdown against its JSON source and actual files."""
+    """Validate a single build's audit Markdown against its JSON source and actual files.
+
+    Each build must independently validate:
+    - Markdown hash == same-build Audit JSON hash == same-build actual-file hash.
+
+    Tokenization with ``APPROVED_SEMANTIC_SHA_TOKEN`` is **not** performed here;
+    it is deferred to ``_compare_normalized_audit_markdown`` which runs only
+    after both builds independently pass validation.
+    """
     result: Dict[str, Any] = {
         "audit_md_first_valid": False,
         "audit_md_valid": False,
@@ -4028,6 +4089,7 @@ def validate_and_normalize_audit_markdown(
         "audit_md_hash_table_matches_json": False,
         "audit_md_hash_table_matches_actual_files": False,
         "normalized_markdown": None,
+        "hash_table_line_map": {},
         "errors": [],
     }
 
@@ -4074,7 +4136,6 @@ def validate_and_normalize_audit_markdown(
     result["audit_md_provenance_matches_json"] = provenance_matches
 
     # Parse Artifact Hashes table
-    approved_set = _approved_data_artifacts_set(data_comparison_evidence)
     json_hashes = corresponding_audit_json.get("artifact_hashes", {})
 
     hash_table_matches_json = True
@@ -4148,11 +4209,14 @@ def validate_and_normalize_audit_markdown(
     )
     result["audit_md_valid"] = audit_md_valid
 
-    # Only build normalized markdown when validation passed
+    # Store the raw content and a mapping of artifact rel -> line index so
+    # the cross-build comparator can tokenize after both builds pass.
     if audit_md_valid:
-        normalized_lines = list(lines)
+        result["normalized_markdown"] = content
+        # Build hash_table_line_map: rel -> line index in the lines list
+        line_map: Dict[str, int] = {}
         if in_hash_section and hash_table_start >= 0:
-            for i, line in enumerate(normalized_lines):
+            for i, line in enumerate(lines):
                 if i <= hash_table_start:
                     continue
                 if line.startswith("## "):
@@ -4161,15 +4225,11 @@ def validate_and_normalize_audit_markdown(
                     parts = [p.strip() for p in line.split("|")]
                     if len(parts) >= 4:
                         rel = parts[1]
-                        if rel in approved_set:
-                            actual_path = artifact_paths.get(rel)
-                            if actual_path and actual_path.exists():
-                                comp = data_comparison_evidence.get("artifact_comparisons", {}).get(rel, {})
-                                if comp.get("within_policy") is True and not comp.get("decompressed_byte_equal", True):
-                                    normalized_lines[i] = line.replace(parts[2], APPROVED_SEMANTIC_SHA_TOKEN)
-        result["normalized_markdown"] = "\n".join(normalized_lines)
+                        line_map[rel] = i
+        result["hash_table_line_map"] = line_map
     else:
         result["normalized_markdown"] = None
+        result["hash_table_line_map"] = {}
 
     return result
 
@@ -4177,10 +4237,14 @@ def validate_and_normalize_audit_markdown(
 def _compare_normalized_audit_markdown(
     first_result: Dict[str, Any],
     second_result: Dict[str, Any],
-    data_comparison_evidence: Dict[str, Any],
+    approved_byte_diff_set: set,
 ) -> Dict[str, Any]:
-    """Compare two validated audit Markdowns after normalization."""
-    approved_set = _approved_data_artifacts_set(data_comparison_evidence)
+    """Compare two validated audit Markdowns after normalization.
+
+    Tokenization with ``APPROVED_SEMANTIC_SHA_TOKEN`` is performed here —
+    only after both builds independently pass validation — and only for
+    artifacts in the explicit ``approved_byte_diff_set``.
+    """
     approved_diffs: List[Dict[str, Any]] = []
     unapproved: List[Dict[str, Any]] = []
 
@@ -4197,10 +4261,24 @@ def _compare_normalized_audit_markdown(
 
     md1 = first_result.get("normalized_markdown")
     md2 = second_result.get("normalized_markdown")
+    line_map1 = first_result.get("hash_table_line_map", {})
+    line_map2 = second_result.get("hash_table_line_map", {})
 
-    # Line-by-line comparison after normalization
+    # Tokenize: replace hash-table cells with APPROVED_SEMANTIC_SHA_TOKEN
+    # for artifacts in the approved byte-difference set.
     lines1 = md1.split("\n")
     lines2 = md2.split("\n")
+    for rel in approved_byte_diff_set:
+        idx1 = line_map1.get(rel)
+        idx2 = line_map2.get(rel)
+        if idx1 is not None and idx1 < len(lines1):
+            parts = [p.strip() for p in lines1[idx1].split("|")]
+            if len(parts) >= 4:
+                lines1[idx1] = lines1[idx1].replace(parts[2], APPROVED_SEMANTIC_SHA_TOKEN)
+        if idx2 is not None and idx2 < len(lines2):
+            parts = [p.strip() for p in lines2[idx2].split("|")]
+            if len(parts) >= 4:
+                lines2[idx2] = lines2[idx2].replace(parts[2], APPROVED_SEMANTIC_SHA_TOKEN)
 
     if len(lines1) != len(lines2):
         unapproved.append({"reason": "line count mismatch"})
@@ -4303,6 +4381,14 @@ def compare_eleven_artifacts_semantically(
     if not data_passed:
         unapproved_metadata_differences.append({"reason": "data artifact comparison failed; metadata approval stopped"})
     else:
+        # Compute the explicit approved cross-build byte-difference set.
+        # This is the set of data artifacts that (a) have within_policy=True
+        # from the Part E.1 comparison, (b) exist in both builds, and (c) have
+        # different SHA-256 hashes between the two actual files.
+        approved_byte_diff_set = get_approved_cross_build_byte_difference_artifacts(
+            data_comparison, data_artifact_paths_first, data_artifact_paths_second
+        )
+
         # 4. Validate and normalize ledger_manifest.json
         manifest_first_path = first_artifacts.get(SEMANTIC_METADATA_ARTIFACTS[0])
         manifest_second_path = second_artifacts.get(SEMANTIC_METADATA_ARTIFACTS[0])
@@ -4314,7 +4400,7 @@ def compare_eleven_artifacts_semantically(
             manifest_second_path, second_artifacts, data_comparison
         )
         manifest_cmp = _compare_normalized_manifests(
-            manifest_first, manifest_second, data_comparison,
+            manifest_first, manifest_second, approved_byte_diff_set,
             first_artifacts, second_artifacts,
         )
 
@@ -4354,7 +4440,7 @@ def compare_eleven_artifacts_semantically(
             audit_json_second_path, second_artifacts, data_comparison
         )
         audit_json_cmp = _compare_normalized_audit_json(
-            audit_json_first, audit_json_second, data_comparison,
+            audit_json_first, audit_json_second, approved_byte_diff_set,
             first_artifacts, second_artifacts,
         )
 
@@ -4385,13 +4471,13 @@ def compare_eleven_artifacts_semantically(
         audit_md_second_path = second_artifacts.get(SEMANTIC_METADATA_ARTIFACTS[2])
 
         audit_md_first = validate_and_normalize_audit_markdown(
-            audit_md_first_path, audit_json_first.get("normalized_audit_json") or {}, first_artifacts, data_comparison
+            audit_md_first_path, audit_json_first.get("normalized_audit_json") or {}, first_artifacts, approved_byte_diff_set
         )
         audit_md_second = validate_and_normalize_audit_markdown(
-            audit_md_second_path, audit_json_second.get("normalized_audit_json") or {}, second_artifacts, data_comparison
+            audit_md_second_path, audit_json_second.get("normalized_audit_json") or {}, second_artifacts, approved_byte_diff_set
         )
         audit_md_cmp = _compare_normalized_audit_markdown(
-            audit_md_first, audit_md_second, data_comparison
+            audit_md_first, audit_md_second, approved_byte_diff_set
         )
 
         audit_md_first_valid = audit_md_first.get("audit_md_valid", False)
@@ -6067,6 +6153,46 @@ def _all_artifact_paths_from_dir(root: Path) -> Dict[str, Path]:
     return paths
 
 
+def _make_approved_et_eleven_artifact_builds(
+    b1_data_dir: Path,
+    b1_meta_dir: Path,
+    b2_data_dir: Path,
+    b2_meta_dir: Path,
+) -> Tuple[Dict[str, Path], Dict[str, Path]]:
+    """Create two internally consistent eleven-artifact builds with an approved ET score difference.
+
+    Build 1 is the baseline.  Build 2 has one ``score__ET_leaf5`` value changed
+    within ``ET_SCORE_ATOL`` (1e-15) tolerance, with all metadata (manifest,
+    audit JSON, audit Markdown) updated to reflect the new hash and size of
+    the changed prediction ledger.
+    """
+    # Build 1: baseline
+    b1_data_root = _make_synthetic_eight_artifact_dir(b1_data_dir)
+    b1_all = _make_synthetic_metadata_artifacts(b1_data_root, b1_meta_dir)
+
+    # Build 2: copy data artifacts
+    b2_data_root = b2_data_dir
+    b2_data_root.mkdir(parents=True, exist_ok=True)
+    for rel in SEMANTIC_DATA_ARTIFACTS:
+        src = b1_all[rel]
+        dst = b2_data_root / Path(rel).name
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(str(src), str(dst))
+
+    # Modify one score__ET_leaf5 value in both prediction ledgers
+    et_delta = 1e-16
+    for ledger_name in ["prediction_ledger_within.csv.gz", "prediction_ledger_cross.csv.gz"]:
+        p = b2_data_root / ledger_name
+        df = _read_semantic_data_artifact(p)
+        df.at[0, "score__ET_leaf5"] = float(df.at[0, "score__ET_leaf5"]) + et_delta
+        df.to_csv(p, index=False, lineterminator="\n", compression="gzip", float_format="%.17g")
+
+    # Build 2: create metadata with updated hashes
+    b2_all = _make_synthetic_metadata_artifacts(b2_data_root, b2_meta_dir)
+
+    return b1_all, b2_all
+
+
 def run_part_e2_eleven_artifact_tests() -> Tuple[List[Dict[str, Any]], bool, Dict[str, Any]]:
     """Fourteen isolated tests for the strict eleven-artifact semantic gate."""
     tests: List[Dict[str, Any]] = []
@@ -6322,24 +6448,24 @@ def run_part_e2_eleven_artifact_tests() -> Tuple[List[Dict[str, Any]], bool, Dic
                     result["semantic_reproducibility_passed"] is False,
                 )
 
-            # 14. Data artifact difference stops metadata approval.
-            with tempfile.TemporaryDirectory(prefix="part3b2_e2_data_fail_") as df_dir:
-                df_root = Path(df_dir)
-                for rel, src in base_all.items():
-                    dst = df_root / Path(rel).name
-                    dst.parent.mkdir(parents=True, exist_ok=True)
-                    shutil.copy2(str(src), str(dst))
-                # Corrupt a data artifact (change identity)
-                reg = pd.read_csv(df_root / "sample_registry.csv")
-                reg.at[0, "sample_uid"] = "CM1:999999"
-                reg.to_csv(df_root / "sample_registry.csv", index=False, lineterminator="\n")
-                df_paths = _all_artifact_paths_from_dir(df_root)
-                result = compare_eleven_artifacts_semantically(base_all, df_paths)
+            # 14. Approved ET score difference passes with normalization.
+            with tempfile.TemporaryDirectory(prefix="part3b2_e2_et_b1_data_") as et_b1_data_dir, \
+                 tempfile.TemporaryDirectory(prefix="part3b2_e2_et_b1_meta_") as et_b1_meta_dir, \
+                 tempfile.TemporaryDirectory(prefix="part3b2_e2_et_b2_data_") as et_b2_data_dir, \
+                 tempfile.TemporaryDirectory(prefix="part3b2_e2_et_b2_meta_") as et_b2_meta_dir:
+                b1_all, b2_all = _make_approved_et_eleven_artifact_builds(
+                    Path(et_b1_data_dir), Path(et_b1_meta_dir),
+                    Path(et_b2_data_dir), Path(et_b2_meta_dir),
+                )
+                result = compare_eleven_artifacts_semantically(b1_all, b2_all)
                 _record(
-                    "data_artifact_difference_stops_metadata_approval",
-                    result["semantic_reproducibility_passed"] is False
-                    and result["data_artifact_comparison"]["data_artifact_semantic_comparison_passed"] is False
-                    and result["metadata_artifact_comparison_passed"] is False,
+                    "approved_et_score_difference_passes",
+                    result["semantic_reproducibility_passed"] is True
+                    and result["data_artifact_comparison"]["data_artifact_semantic_comparison_passed"] is True
+                    and result["metadata_artifact_comparison_passed"] is True
+                    and len(result["artifacts_with_approved_et_roundoff_only"]) == 2,
+                    maximum_et_score_difference=result.get("maximum_et_score_difference", 0.0),
+                    approved_artifacts=result.get("artifacts_with_approved_et_roundoff_only", []),
                 )
 
     summary = {
@@ -7255,18 +7381,28 @@ def main():
     if known.self_test_eleven_artifact_comparison:
         e2_tests, e2_all_passed, e2_summary = run_part_e2_eleven_artifact_tests()
         e21_tests, e21_all_passed, e21_summary = run_part_e2_1_fail_closed_tests()
+
+        e2_case_names = [t["case_name"] for t in e2_tests]
+        e21_case_names = [t["case_name"] for t in e21_tests]
+
+        approved_et_test = next(
+            (t for t in e2_tests if t["case_name"] == "approved_et_score_difference_passes"), {}
+        )
+
         combined = {
             "part_e2_tests": {
                 "tests_expected": e2_summary["tests_expected"],
                 "tests_executed": e2_summary["tests_executed"],
                 "tests_passed": e2_summary["tests_passed"],
                 "tests_failed": e2_summary["tests_failed"],
+                "case_names": e2_case_names,
             },
             "part_e2_1_fail_closed_tests": {
                 "tests_expected": e21_summary["tests_expected"],
                 "tests_executed": e21_summary["tests_executed"],
                 "tests_passed": e21_summary["tests_passed"],
                 "tests_failed": e21_summary["tests_failed"],
+                "case_names": e21_case_names,
             },
             "et_score_tolerance": e2_summary["et_score_tolerance"],
             "et_rank_metric_tolerance": e2_summary["et_rank_metric_tolerance"],
@@ -7277,6 +7413,14 @@ def main():
             "audit_json_valid_enforced": True,
             "audit_md_valid_enforced": True,
             "fail_closed_metadata_gate": True,
+            "approved_byte_diff_set_explicit": True,
+            "decompressed_byte_equal_not_used_in_markdown_normalization": True,
+            "approved_et_fixture_used": approved_et_test.get("passed", False),
+            "approved_et_maximum_score_difference": approved_et_test.get("maximum_et_score_difference", None),
+            "approved_et_artifacts_count": len(approved_et_test.get("approved_artifacts", [])),
+            "approved_et_artifacts": approved_et_test.get("approved_artifacts", []),
+            "e2_case_count_exact_14": len(e2_case_names) == 14,
+            "e2_1_case_count_exact_5": len(e21_case_names) == 5,
             "model_fits_executed": 0,
             "prediction_calls_executed": 0,
             "repository_artifacts_written": 0,
