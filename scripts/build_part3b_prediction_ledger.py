@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Part 3B.2R.1-E.1: Strict Semantic Comparator for the Eight Data Artifacts.
+"""Part 3B.2R.1-E.2: Strict Eleven-Artifact Semantic Reproducibility Comparator.
 
 This script is deterministic and self-contained. It may be invoked from any
 working directory; it locates the repository root from __file__ and references
 all other paths absolutely.
 
-Version: Part-3B.2R.1-E.1.1-v1
-Starting full commit: 414b4ee260f972a3b9315402ce947693665497d8
+Version: Part-3B.2R.1-E.2-v1
+Starting full commit: 58a77a8a697a7c07b5f7136427241be6e60c1000
 Accepted Part 3A commit:
 d16e28488aa0936014f020c05466181eff219af6
 """
@@ -41,9 +41,11 @@ warnings.filterwarnings("ignore")
 # ---------------------------------------------------------------------------
 # Frozen version and provenance constants
 # ---------------------------------------------------------------------------
-PART3B_VERSION = "Part-3B.2R.1-E.1.2-v1"
-STARTING_COMMIT = "414b4ee260f972a3b9315402ce947693665497d8"
+PART3B_VERSION = "Part-3B.2R.1-E.2-v1"
+STARTING_COMMIT = "58a77a8a697a7c07b5f7136427241be6e60c1000"
 ACCEPTED_PART3A_COMMIT = "d16e28488aa0936014f020c05466181eff219af6"
+assert STARTING_COMMIT == \
+    "58a77a8a697a7c07b5f7136427241be6e60c1000"
 assert ACCEPTED_PART3A_COMMIT == \
     "d16e28488aa0936014f020c05466181eff219af6"
 REPOSITORY = "abtinasg/springer"
@@ -3402,6 +3404,926 @@ def render_markdown_report(json_report: Dict[str, Any]) -> str:
 
 
 # ---------------------------------------------------------------------------
+# Part E.2: Normalization tokens for approved semantic hash differences
+# ---------------------------------------------------------------------------
+APPROVED_SEMANTIC_SHA_TOKEN = "__APPROVED_SEMANTIC_SHA_DIFFERENCE__"
+APPROVED_SEMANTIC_SIZE_TOKEN = "__APPROVED_SEMANTIC_SIZE_DIFFERENCE__"
+
+MANIFEST_REQUIRED_TOP_LEVEL_FIELDS = [
+    "manifest_version",
+    "starting_commit",
+    "accepted_part3a_commit",
+    "project_order",
+    "seed_order",
+    "candidate_order",
+    "event_count",
+    "sample_count",
+    "split_membership_total_rows",
+    "prediction_total_rows",
+    "validation_reconstruction_rows",
+    "canonical_result_reconstruction_rows",
+    "self_referential_hash_embedded",
+    "artifacts",
+]
+
+MANIFEST_ARTIFACT_ENTRY_FIELDS = [
+    "relative_path",
+    "format",
+    "compressed",
+    "row_count",
+    "column_count",
+    "columns",
+    "byte_size",
+    "sha256",
+]
+
+
+def _file_size(path: Path) -> int:
+    return path.stat().st_size
+
+
+def _actual_artifact_hash_and_size(path: Path) -> Tuple[str, int]:
+    return sha256_file(path), _file_size(path)
+
+
+def _approved_data_artifacts_set(data_comparison_evidence: Dict[str, Any]) -> set:
+    """Return the set of data-artifact rels that are approved by the eight-data comparator."""
+    approved = set()
+    comps = data_comparison_evidence.get("artifact_comparisons", {})
+    for rel in SEMANTIC_DATA_ARTIFACTS:
+        comp = comps.get(rel, {})
+        if comp.get("within_policy") is True:
+            approved.add(rel)
+    return approved
+
+
+# ---------------------------------------------------------------------------
+# Part E.2: Ledger manifest validation and normalization
+# ---------------------------------------------------------------------------
+def validate_and_normalize_ledger_manifest(
+    manifest_path: Path,
+    artifact_paths: Dict[str, Path],
+    data_comparison_evidence: Dict[str, Any],
+) -> Dict[str, Any]:
+    """Validate a single build's ledger_manifest.json against actual artifact files.
+
+    Returns a dict with validation results and a normalized manifest suitable
+    for cross-build comparison.
+    """
+    result: Dict[str, Any] = {
+        "manifest_first_valid": False,
+        "manifest_top_level_exact": False,
+        "manifest_artifact_order_exact": False,
+        "manifest_actual_hashes_verified": False,
+        "manifest_actual_sizes_verified": False,
+        "normalized_manifest": None,
+        "errors": [],
+    }
+
+    if not manifest_path or not manifest_path.exists():
+        result["errors"].append("manifest file not found")
+        return result
+
+    try:
+        with manifest_path.open("r", encoding="utf-8") as f:
+            raw = json.load(f)
+    except Exception as e:
+        result["errors"].append(f"JSON parse error: {e}")
+        return result
+
+    result["manifest_first_valid"] = True
+
+    # Check exact top-level fields and order
+    actual_keys = list(raw.keys())
+    expected_keys = MANIFEST_REQUIRED_TOP_LEVEL_FIELDS
+    top_level_exact = actual_keys == expected_keys
+    result["manifest_top_level_exact"] = top_level_exact
+    if not top_level_exact:
+        result["errors"].append(f"top-level fields mismatch: {actual_keys} vs {expected_keys}")
+
+    # Check exact top-level values
+    if top_level_exact:
+        value_checks = [
+            raw["manifest_version"] == PART3B_VERSION,
+            raw["starting_commit"] == STARTING_COMMIT,
+            raw["accepted_part3a_commit"] == ACCEPTED_PART3A_COMMIT,
+            raw["project_order"] == ["CM1", "JM1", "KC1", "KC2", "PC1"],
+            raw["seed_order"] == [7, 13, 29, 42, 101],
+            raw["candidate_order"] == ["LR_std_C0.1", "LR_std_C1", "DT_leaf5", "ET_leaf5"],
+            raw["event_count"] == 50,
+            raw["sample_count"] == 17442,
+            raw["split_membership_total_rows"] == 523260,
+            raw["prediction_total_rows"] == 209330,
+            raw["validation_reconstruction_rows"] == 600,
+            raw["canonical_result_reconstruction_rows"] == 400,
+            raw["self_referential_hash_embedded"] is False,
+        ]
+        if not all(value_checks):
+            result["manifest_top_level_exact"] = False
+            result["errors"].append("top-level value mismatch")
+
+    # Check artifacts list: must contain exactly the eight data artifacts in order
+    artifacts_list = raw.get("artifacts", [])
+    expected_artifact_paths = list(SEMANTIC_DATA_ARTIFACTS)
+    actual_artifact_paths = [a.get("relative_path") for a in artifacts_list]
+    order_exact = actual_artifact_paths == expected_artifact_paths
+    result["manifest_artifact_order_exact"] = order_exact
+    if not order_exact:
+        result["errors"].append(f"artifact order mismatch: {actual_artifact_paths} vs {expected_artifact_paths}")
+
+    # Validate each artifact entry fields and order
+    for entry in artifacts_list:
+        entry_keys = list(entry.keys())
+        if entry_keys != MANIFEST_ARTIFACT_ENTRY_FIELDS:
+            result["errors"].append(f"artifact entry fields mismatch for {entry.get('relative_path')}: {entry_keys}")
+            result["manifest_artifact_order_exact"] = False
+
+    # Verify each manifest entry's sha256 and byte_size against actual file
+    approved_set = _approved_data_artifacts_set(data_comparison_evidence)
+    hashes_verified = True
+    sizes_verified = True
+    normalized_artifacts = []
+
+    for entry in artifacts_list:
+        rel = entry.get("relative_path")
+        actual_path = artifact_paths.get(rel)
+        if actual_path is None or not actual_path.exists():
+            result["errors"].append(f"actual artifact not found: {rel}")
+            hashes_verified = False
+            sizes_verified = False
+            continue
+
+        actual_hash, actual_size = _actual_artifact_hash_and_size(actual_path)
+
+        # Check sha256 matches actual file
+        if entry.get("sha256") != actual_hash:
+            result["errors"].append(f"manifest sha256 mismatch for {rel}: {entry.get('sha256')} vs {actual_hash}")
+            hashes_verified = False
+
+        # Check byte_size matches actual file
+        if entry.get("byte_size") != actual_size:
+            result["errors"].append(f"manifest byte_size mismatch for {rel}: {entry.get('byte_size')} vs {actual_size}")
+            sizes_verified = False
+
+        # Check format, compressed, row_count, column_count, columns against frozen schema
+        expected_schema = EXPECTED_DATA_ARTIFACT_SCHEMAS.get(rel, [])
+        expected_format = "csv.gz" if rel.endswith(".gz") else "csv"
+        expected_compressed = rel.endswith(".gz")
+
+        if entry.get("format") != expected_format:
+            result["errors"].append(f"format mismatch for {rel}: {entry.get('format')} vs {expected_format}")
+        if entry.get("compressed") != expected_compressed:
+            result["errors"].append(f"compressed mismatch for {rel}")
+        if entry.get("columns") != expected_schema:
+            result["errors"].append(f"columns mismatch for {rel}")
+
+        # Read actual file for row/column count
+        try:
+            df_actual = _read_artifact_df(actual_path)
+            if entry.get("row_count") != len(df_actual):
+                result["errors"].append(f"row_count mismatch for {rel}: {entry.get('row_count')} vs {len(df_actual)}")
+            if entry.get("column_count") != len(df_actual.columns):
+                result["errors"].append(f"column_count mismatch for {rel}")
+        except Exception as e:
+            result["errors"].append(f"cannot read artifact {rel}: {e}")
+
+        # Build normalized entry
+        norm_entry = dict(entry)
+        if rel not in approved_set:
+            # Not approved for normalization - keep actual values
+            norm_entry["sha256"] = actual_hash
+            norm_entry["byte_size"] = actual_size
+        else:
+            # Approved - check if bytes differ between builds
+            # We'll normalize in the comparison function
+            norm_entry["_actual_sha256"] = actual_hash
+            norm_entry["_actual_byte_size"] = actual_size
+        normalized_artifacts.append(norm_entry)
+
+    result["manifest_actual_hashes_verified"] = hashes_verified
+    result["manifest_actual_sizes_verified"] = sizes_verified
+
+    # Build normalized manifest
+    normalized = {k: v for k, v in raw.items() if k != "artifacts"}
+    normalized["artifacts"] = normalized_artifacts
+    result["normalized_manifest"] = normalized
+
+    return result
+
+
+def _compare_normalized_manifests(
+    first_result: Dict[str, Any],
+    second_result: Dict[str, Any],
+    data_comparison_evidence: Dict[str, Any],
+    first_artifact_paths: Dict[str, Path],
+    second_artifact_paths: Dict[str, Path],
+) -> Dict[str, Any]:
+    """Compare two validated manifests, normalizing only approved hash differences."""
+    approved_set = _approved_data_artifacts_set(data_comparison_evidence)
+    approved_diffs: List[Dict[str, Any]] = []
+    unapproved: List[Dict[str, Any]] = []
+
+    m1 = first_result.get("normalized_manifest")
+    m2 = second_result.get("normalized_manifest")
+    if m1 is None or m2 is None:
+        return {
+            "manifest_normalized_equal": False,
+            "approved_manifest_hash_differences": approved_diffs,
+            "unapproved_manifest_differences": [{"reason": "manifest not valid"}],
+            "manifest_comparison_passed": False,
+        }
+
+    # Compare all top-level fields except artifacts
+    top_level_equal = True
+    for key in MANIFEST_REQUIRED_TOP_LEVEL_FIELDS:
+        if key == "artifacts":
+            continue
+        if m1.get(key) != m2.get(key):
+            top_level_equal = False
+            unapproved.append({"field": key, "first": m1.get(key), "second": m2.get(key)})
+
+    # Compare artifacts
+    a1 = m1.get("artifacts", [])
+    a2 = m2.get("artifacts", [])
+    artifacts_equal = True
+
+    if len(a1) != len(a2):
+        artifacts_equal = False
+        unapproved.append({"reason": "artifact count mismatch"})
+    else:
+        for e1, e2 in zip(a1, a2):
+            rel = e1.get("relative_path")
+            if e1.get("relative_path") != e2.get("relative_path"):
+                artifacts_equal = False
+                unapproved.append({"artifact": rel, "reason": "relative_path mismatch"})
+                continue
+            # Compare all fields except sha256 and byte_size
+            for field in ["format", "compressed", "row_count", "column_count", "columns"]:
+                if e1.get(field) != e2.get(field):
+                    artifacts_equal = False
+                    unapproved.append({"artifact": rel, "field": field, "first": e1.get(field), "second": e2.get(field)})
+
+            # Compare sha256 and byte_size
+            h1 = e1.get("_actual_sha256", e1.get("sha256"))
+            h2 = e2.get("_actual_sha256", e2.get("sha256"))
+            s1 = e1.get("_actual_byte_size", e1.get("byte_size"))
+            s2 = e2.get("_actual_byte_size", e2.get("byte_size"))
+
+            if h1 == h2:
+                # Identical hashes - must match exactly
+                if e1.get("sha256") != e2.get("sha256"):
+                    artifacts_equal = False
+                    unapproved.append({"artifact": rel, "field": "sha256", "reason": "identical bytes but different manifest hash"})
+                if e1.get("byte_size") != e2.get("byte_size"):
+                    artifacts_equal = False
+                    unapproved.append({"artifact": rel, "field": "byte_size", "reason": "identical bytes but different manifest size"})
+            else:
+                # Different actual bytes
+                if rel in approved_set:
+                    # Approved semantic difference - normalize
+                    approved_diffs.append({
+                        "artifact": rel,
+                        "first_sha256": h1,
+                        "second_sha256": h2,
+                        "first_byte_size": s1,
+                        "second_byte_size": s2,
+                    })
+                else:
+                    artifacts_equal = False
+                    unapproved.append({"artifact": rel, "field": "sha256", "reason": "unapproved byte difference"})
+
+    normalized_equal = top_level_equal and artifacts_equal
+    comparison_passed = normalized_equal and len(unapproved) == 0
+
+    return {
+        "manifest_normalized_equal": normalized_equal,
+        "approved_manifest_hash_differences": approved_diffs,
+        "unapproved_manifest_differences": unapproved,
+        "manifest_comparison_passed": comparison_passed,
+    }
+
+
+# ---------------------------------------------------------------------------
+# Part E.2: Audit JSON validation and normalization
+# ---------------------------------------------------------------------------
+def validate_and_normalize_audit_json(
+    audit_json_path: Path,
+    artifact_paths: Dict[str, Path],
+    data_comparison_evidence: Dict[str, Any],
+) -> Dict[str, Any]:
+    """Validate a single build's audit JSON against actual artifact files."""
+    result: Dict[str, Any] = {
+        "audit_json_first_valid": False,
+        "audit_json_provenance_exact": False,
+        "audit_json_audit_schema_exact": False,
+        "audit_json_stage_gate_schema_exact": False,
+        "audit_json_actual_hashes_verified": False,
+        "normalized_audit_json": None,
+        "errors": [],
+    }
+
+    if not audit_json_path or not audit_json_path.exists():
+        result["errors"].append("audit JSON file not found")
+        return result
+
+    try:
+        with audit_json_path.open("r", encoding="utf-8") as f:
+            raw = json.load(f)
+    except Exception as e:
+        result["errors"].append(f"JSON parse error: {e}")
+        return result
+
+    result["audit_json_first_valid"] = True
+
+    # Check provenance fields
+    provenance_exact = (
+        raw.get("part3b_version") == PART3B_VERSION
+        and raw.get("starting_commit") == STARTING_COMMIT
+        and raw.get("accepted_part3a_commit") == ACCEPTED_PART3A_COMMIT
+        and raw.get("repository") == REPOSITORY
+        and raw.get("branch") == BRANCH
+    )
+    result["audit_json_provenance_exact"] = provenance_exact
+    if not provenance_exact:
+        result["errors"].append("provenance fields mismatch")
+
+    # Check audit schema: 41 exact check names
+    audit_checks = raw.get("audit_checks", {})
+    actual_check_names = list(audit_checks.keys())
+    schema_exact = actual_check_names == REQUIRED_AUDIT_CHECK_NAMES
+    result["audit_json_audit_schema_exact"] = schema_exact
+    if not schema_exact:
+        result["errors"].append("audit check schema mismatch")
+
+    # Check stage gate schema: 16 exact fields
+    stage_gate = raw.get("stage_gate", {})
+    actual_gate_fields = list(stage_gate.keys())
+    gate_exact = actual_gate_fields == REQUIRED_STAGE_GATE_FIELDS
+    result["audit_json_stage_gate_schema_exact"] = gate_exact
+    if not gate_exact:
+        result["errors"].append("stage gate schema mismatch")
+
+    # Verify artifact_hashes against actual files
+    approved_set = _approved_data_artifacts_set(data_comparison_evidence)
+    artifact_hashes = raw.get("artifact_hashes", {})
+    hashes_verified = True
+    normalized_hashes = {}
+
+    for rel in SEMANTIC_DATA_ARTIFACTS:
+        entry = artifact_hashes.get(rel)
+        if entry is None:
+            hashes_verified = False
+            result["errors"].append(f"missing artifact_hashes entry for {rel}")
+            continue
+        actual_path = artifact_paths.get(rel)
+        if actual_path is None or not actual_path.exists():
+            hashes_verified = False
+            result["errors"].append(f"actual artifact not found: {rel}")
+            continue
+        actual_hash, actual_size = _actual_artifact_hash_and_size(actual_path)
+        stored_hash = entry.get("sha256")
+        stored_size = entry.get("byte_size")
+
+        if stored_hash != actual_hash:
+            hashes_verified = False
+            result["errors"].append(f"audit JSON sha256 mismatch for {rel}: {stored_hash} vs {actual_hash}")
+        if stored_size != actual_size:
+            hashes_verified = False
+            result["errors"].append(f"audit JSON byte_size mismatch for {rel}: {stored_size} vs {actual_size}")
+
+        norm_entry = dict(entry)
+        norm_entry["_actual_sha256"] = actual_hash
+        norm_entry["_actual_byte_size"] = actual_size
+        normalized_hashes[rel] = norm_entry
+
+    result["audit_json_actual_hashes_verified"] = hashes_verified
+
+    # Build normalized JSON
+    normalized = dict(raw)
+    normalized["artifact_hashes"] = normalized_hashes
+    result["normalized_audit_json"] = normalized
+
+    return result
+
+
+def _compare_normalized_audit_json(
+    first_result: Dict[str, Any],
+    second_result: Dict[str, Any],
+    data_comparison_evidence: Dict[str, Any],
+    first_artifact_paths: Dict[str, Path],
+    second_artifact_paths: Dict[str, Path],
+) -> Dict[str, Any]:
+    """Compare two validated audit JSONs, normalizing only approved hash differences."""
+    approved_set = _approved_data_artifacts_set(data_comparison_evidence)
+    approved_diffs: List[Dict[str, Any]] = []
+    unapproved: List[Dict[str, Any]] = []
+
+    j1 = first_result.get("normalized_audit_json")
+    j2 = second_result.get("normalized_audit_json")
+    if j1 is None or j2 is None:
+        return {
+            "audit_json_normalized_equal": False,
+            "approved_audit_json_hash_differences": approved_diffs,
+            "unapproved_audit_json_differences": [{"reason": "audit JSON not valid"}],
+            "audit_json_comparison_passed": False,
+        }
+
+    # Compare all fields except artifact_hashes
+    all_equal = True
+    for key in j1:
+        if key == "artifact_hashes":
+            continue
+        if key not in j2:
+            all_equal = False
+            unapproved.append({"field": key, "reason": "missing in second"})
+            continue
+        if j1[key] != j2[key]:
+            all_equal = False
+            unapproved.append({"field": key, "first": j1[key], "second": j2[key]})
+
+    # Check for extra keys in second
+    for key in j2:
+        if key not in j1:
+            all_equal = False
+            unapproved.append({"field": key, "reason": "extra in second"})
+
+    # Compare artifact_hashes
+    h1 = j1.get("artifact_hashes", {})
+    h2 = j2.get("artifact_hashes", {})
+    for rel in SEMANTIC_DATA_ARTIFACTS:
+        e1 = h1.get(rel, {})
+        e2 = h2.get(rel, {})
+        ah1 = e1.get("_actual_sha256", e1.get("sha256"))
+        ah2 = e2.get("_actual_sha256", e2.get("sha256"))
+        as1 = e1.get("_actual_byte_size", e1.get("byte_size"))
+        as2 = e2.get("_actual_byte_size", e2.get("byte_size"))
+
+        if ah1 == ah2:
+            if e1.get("sha256") != e2.get("sha256"):
+                all_equal = False
+                unapproved.append({"artifact": rel, "field": "sha256", "reason": "identical bytes but different stored hash"})
+            if e1.get("byte_size") != e2.get("byte_size"):
+                all_equal = False
+                unapproved.append({"artifact": rel, "field": "byte_size", "reason": "identical bytes but different stored size"})
+        else:
+            if rel in approved_set:
+                approved_diffs.append({
+                    "artifact": rel,
+                    "first_sha256": ah1,
+                    "second_sha256": ah2,
+                    "first_byte_size": as1,
+                    "second_byte_size": as2,
+                })
+            else:
+                all_equal = False
+                unapproved.append({"artifact": rel, "field": "sha256", "reason": "unapproved byte difference"})
+
+    comparison_passed = all_equal and len(unapproved) == 0
+
+    return {
+        "audit_json_normalized_equal": all_equal,
+        "approved_audit_json_hash_differences": approved_diffs,
+        "unapproved_audit_json_differences": unapproved,
+        "audit_json_comparison_passed": comparison_passed,
+    }
+
+
+# ---------------------------------------------------------------------------
+# Part E.2: Audit Markdown validation and normalization
+# ---------------------------------------------------------------------------
+AUDIT_MD_REQUIRED_SECTIONS = [
+    "# Part 3B.2R Split / Leakage Audit Report",
+    "## Stage Gate",
+    "## Audit Checks",
+    "## Prediction Ledger Summary",
+    "## Reconstruction Summary",
+    "## Canonical Nondeterminism Diagnostic",
+    "## Semantic Reproducibility (Two Independent Builds)",
+    "## Negative Tests",
+    "## Canonical Exception Validator Tests",
+    "## Tie Policy Tests",
+    "## Artifact Hashes",
+]
+
+
+def validate_and_normalize_audit_markdown(
+    markdown_path: Path,
+    corresponding_audit_json: Dict[str, Any],
+    artifact_paths: Dict[str, Path],
+    data_comparison_evidence: Dict[str, Any],
+) -> Dict[str, Any]:
+    """Validate a single build's audit Markdown against its JSON source and actual files."""
+    result: Dict[str, Any] = {
+        "audit_md_first_valid": False,
+        "audit_md_required_sections_present": False,
+        "audit_md_provenance_matches_json": False,
+        "audit_md_hash_table_matches_json": False,
+        "audit_md_hash_table_matches_actual_files": False,
+        "normalized_markdown": None,
+        "errors": [],
+    }
+
+    if not markdown_path or not markdown_path.exists():
+        result["errors"].append("audit Markdown file not found")
+        return result
+
+    try:
+        with markdown_path.open("r", encoding="utf-8") as f:
+            content = f.read()
+    except Exception as e:
+        result["errors"].append(f"read error: {e}")
+        return result
+
+    result["audit_md_first_valid"] = True
+
+    # Normalize line endings to LF
+    content = content.replace("\r\n", "\n").replace("\r", "\n")
+    lines = content.split("\n")
+
+    # Check required sections
+    sections_present = all(section in content for section in AUDIT_MD_REQUIRED_SECTIONS)
+    result["audit_md_required_sections_present"] = sections_present
+    if not sections_present:
+        missing = [s for s in AUDIT_MD_REQUIRED_SECTIONS if s not in content]
+        result["errors"].append(f"missing sections: {missing}")
+
+    # Check provenance lines match JSON
+    provenance_matches = True
+    expected_provenance = {
+        "Version": corresponding_audit_json.get("part3b_version", ""),
+        "Repository": corresponding_audit_json.get("repository", ""),
+        "Branch": corresponding_audit_json.get("branch", ""),
+        "Starting commit": corresponding_audit_json.get("starting_commit", ""),
+        "Accepted Part 3A commit": corresponding_audit_json.get("accepted_part3a_commit", ""),
+        "Timestamp": corresponding_audit_json.get("timestamp", ""),
+    }
+    for label, expected_val in expected_provenance.items():
+        expected_line = f"- **{label}:** {expected_val}"
+        if expected_line not in content:
+            provenance_matches = False
+            result["errors"].append(f"provenance line mismatch: {expected_line}")
+    result["audit_md_provenance_matches_json"] = provenance_matches
+
+    # Parse Artifact Hashes table
+    approved_set = _approved_data_artifacts_set(data_comparison_evidence)
+    json_hashes = corresponding_audit_json.get("artifact_hashes", {})
+
+    hash_table_matches_json = True
+    hash_table_matches_actual = True
+    normalized_lines = list(lines)
+
+    # Find the Artifact Hashes section and parse the table
+    in_hash_section = False
+    hash_table_start = -1
+    hash_table_end = -1
+    for i, line in enumerate(lines):
+        if line.strip() == "## Artifact Hashes":
+            in_hash_section = True
+            hash_table_start = i
+            continue
+        if in_hash_section:
+            if line.startswith("## ") or (line.strip() == "" and hash_table_end > 0):
+                if line.startswith("## "):
+                    hash_table_end = i
+                    break
+            if line.startswith("| ") and "---" not in line and "Artifact" not in line:
+                # Parse table row: | rel | sha256 |
+                parts = [p.strip() for p in line.split("|")]
+                if len(parts) >= 4:
+                    rel = parts[1]
+                    md_hash = parts[2]
+                    json_entry = json_hashes.get(rel, {})
+                    json_hash = json_entry.get("sha256")
+
+                    # Check MD hash matches JSON hash
+                    if md_hash != json_hash:
+                        hash_table_matches_json = False
+                        result["errors"].append(f"MD hash table mismatch with JSON for {rel}: {md_hash} vs {json_hash}")
+
+                    # Check MD hash matches actual file
+                    actual_path = artifact_paths.get(rel)
+                    if actual_path and actual_path.exists():
+                        actual_hash = sha256_file(actual_path)
+                        if md_hash != actual_hash:
+                            if rel in approved_set:
+                                # Approved - will be normalized
+                                pass
+                            else:
+                                hash_table_matches_actual = False
+                                result["errors"].append(f"MD hash mismatch with actual file for {rel}: {md_hash} vs {actual_hash}")
+                    else:
+                        if rel in SEMANTIC_DATA_ARTIFACTS:
+                            hash_table_matches_actual = False
+                            result["errors"].append(f"actual artifact not found for {rel}")
+
+    result["audit_md_hash_table_matches_json"] = hash_table_matches_json
+    result["audit_md_hash_table_matches_actual_files"] = hash_table_matches_actual
+
+    # Build normalized markdown: replace approved hash differences with tokens
+    if in_hash_section and hash_table_start >= 0:
+        for i, line in enumerate(normalized_lines):
+            if i <= hash_table_start:
+                continue
+            if line.startswith("## "):
+                break
+            if line.startswith("| ") and "---" not in line and "Artifact" not in line:
+                parts = [p.strip() for p in line.split("|")]
+                if len(parts) >= 4:
+                    rel = parts[1]
+                    if rel in approved_set:
+                        actual_path = artifact_paths.get(rel)
+                        if actual_path and actual_path.exists():
+                            actual_hash = sha256_file(actual_path)
+                            # Check if this artifact has approved byte differences
+                            # by looking at the data comparison evidence
+                            comp = data_comparison_evidence.get("artifact_comparisons", {}).get(rel, {})
+                            if comp.get("within_policy") is True and not comp.get("decompressed_byte_equal", True):
+                                normalized_lines[i] = line.replace(parts[2], APPROVED_SEMANTIC_SHA_TOKEN)
+
+    result["normalized_markdown"] = "\n".join(normalized_lines)
+
+    return result
+
+
+def _compare_normalized_audit_markdown(
+    first_result: Dict[str, Any],
+    second_result: Dict[str, Any],
+    data_comparison_evidence: Dict[str, Any],
+) -> Dict[str, Any]:
+    """Compare two validated audit Markdowns after normalization."""
+    approved_set = _approved_data_artifacts_set(data_comparison_evidence)
+    approved_diffs: List[Dict[str, Any]] = []
+    unapproved: List[Dict[str, Any]] = []
+
+    md1 = first_result.get("normalized_markdown")
+    md2 = second_result.get("normalized_markdown")
+    if md1 is None or md2 is None:
+        return {
+            "audit_md_normalized_equal": False,
+            "approved_audit_md_hash_differences": approved_diffs,
+            "unapproved_audit_md_differences": [{"reason": "markdown not valid"}],
+            "audit_md_comparison_passed": False,
+        }
+
+    # Line-by-line comparison after normalization
+    lines1 = md1.split("\n")
+    lines2 = md2.split("\n")
+
+    if len(lines1) != len(lines2):
+        unapproved.append({"reason": "line count mismatch"})
+        return {
+            "audit_md_normalized_equal": False,
+            "approved_audit_md_hash_differences": approved_diffs,
+            "unapproved_audit_md_differences": unapproved,
+            "audit_md_comparison_passed": False,
+        }
+
+    all_equal = True
+    for i, (l1, l2) in enumerate(zip(lines1, lines2)):
+        if l1 == l2:
+            continue
+        # Check if this is an approved hash normalization token line
+        if APPROVED_SEMANTIC_SHA_TOKEN in l1 or APPROVED_SEMANTIC_SHA_TOKEN in l2:
+            # This is an approved difference
+            approved_diffs.append({"line": i, "first": l1, "second": l2})
+            continue
+        all_equal = False
+        unapproved.append({"line": i, "first": l1, "second": l2})
+
+    comparison_passed = all_equal and len(unapproved) == 0
+
+    return {
+        "audit_md_normalized_equal": all_equal,
+        "approved_audit_md_hash_differences": approved_diffs,
+        "unapproved_audit_md_differences": unapproved,
+        "audit_md_comparison_passed": comparison_passed,
+    }
+
+
+# ---------------------------------------------------------------------------
+# Part E.2: Strict eleven-artifact semantic comparator
+# ---------------------------------------------------------------------------
+def compare_eleven_artifacts_semantically(
+    first_artifacts: Dict[str, Path],
+    second_artifacts: Dict[str, Path],
+) -> Dict[str, Any]:
+    """Strict eleven-artifact semantic reproducibility comparator.
+
+    Required order:
+    1. Verify exact eleven-artifact sets.
+    2. Run compare_eight_data_artifacts_semantically.
+    3. Stop metadata approval if the data comparator fails.
+    4. Validate and normalize ledger_manifest.json.
+    5. Validate and normalize audit JSON.
+    6. Validate and normalize audit Markdown.
+    7. Produce combined evidence.
+    """
+    # 1. Verify exact eleven-artifact sets
+    expected_set = set(SEMANTIC_ALL_ARTIFACTS)
+    present_first = {k for k, p in first_artifacts.items() if p is not None and p.exists()}
+    present_second = {k for k, p in second_artifacts.items() if p is not None and p.exists()}
+    missing_from_first = sorted(expected_set - present_first)
+    missing_from_second = sorted(expected_set - present_second)
+    extra_first = sorted(present_first - expected_set)
+    extra_second = sorted(present_second - expected_set)
+    extra_artifacts = sorted(set(extra_first) | set(extra_second))
+
+    all_artifacts_expected = len(SEMANTIC_ALL_ARTIFACTS)
+    all_artifacts_present_first = len(present_first)
+    all_artifacts_present_second = len(present_second)
+
+    # 2. Run the eight-data comparator
+    data_artifact_paths_first = {rel: first_artifacts.get(rel) for rel in SEMANTIC_DATA_ARTIFACTS}
+    data_artifact_paths_second = {rel: second_artifacts.get(rel) for rel in SEMANTIC_DATA_ARTIFACTS}
+    data_comparison = compare_eight_data_artifacts_semantically(
+        data_artifact_paths_first, data_artifact_paths_second
+    )
+    data_passed = data_comparison["data_artifact_semantic_comparison_passed"]
+
+    # 3. Stop metadata approval if data comparator fails
+    metadata_artifact_comparisons: Dict[str, Any] = {}
+    ledger_manifest_comparison_passed = False
+    audit_json_comparison_passed = False
+    audit_md_comparison_passed = False
+    metadata_artifact_comparison_passed = False
+    approved_metadata_hash_differences: List[Dict[str, Any]] = []
+    unapproved_metadata_differences: List[Dict[str, Any]] = []
+
+    if not data_passed:
+        unapproved_metadata_differences.append({"reason": "data artifact comparison failed; metadata approval stopped"})
+    else:
+        # 4. Validate and normalize ledger_manifest.json
+        manifest_first_path = first_artifacts.get(SEMANTIC_METADATA_ARTIFACTS[0])
+        manifest_second_path = second_artifacts.get(SEMANTIC_METADATA_ARTIFACTS[0])
+
+        manifest_first = validate_and_normalize_ledger_manifest(
+            manifest_first_path, first_artifacts, data_comparison
+        )
+        manifest_second = validate_and_normalize_ledger_manifest(
+            manifest_second_path, second_artifacts, data_comparison
+        )
+        manifest_cmp = _compare_normalized_manifests(
+            manifest_first, manifest_second, data_comparison,
+            first_artifacts, second_artifacts,
+        )
+
+        metadata_artifact_comparisons["ledger_manifest"] = {
+            "manifest_first_valid": manifest_first.get("manifest_first_valid", False),
+            "manifest_second_valid": manifest_second.get("manifest_first_valid", False),
+            "manifest_top_level_exact": manifest_first.get("manifest_top_level_exact", False) and manifest_second.get("manifest_top_level_exact", False),
+            "manifest_artifact_order_exact": manifest_first.get("manifest_artifact_order_exact", False) and manifest_second.get("manifest_artifact_order_exact", False),
+            "manifest_actual_hashes_verified_first": manifest_first.get("manifest_actual_hashes_verified", False),
+            "manifest_actual_hashes_verified_second": manifest_second.get("manifest_actual_hashes_verified", False),
+            "manifest_actual_sizes_verified_first": manifest_first.get("manifest_actual_sizes_verified", False),
+            "manifest_actual_sizes_verified_second": manifest_second.get("manifest_actual_sizes_verified", False),
+            "manifest_normalized_equal": manifest_cmp.get("manifest_normalized_equal", False),
+            "approved_manifest_hash_differences": manifest_cmp.get("approved_manifest_hash_differences", []),
+            "unapproved_manifest_differences": manifest_cmp.get("unapproved_manifest_differences", []),
+            "manifest_comparison_passed": manifest_cmp.get("manifest_comparison_passed", False),
+        }
+        ledger_manifest_comparison_passed = manifest_cmp.get("manifest_comparison_passed", False)
+        approved_metadata_hash_differences.extend(manifest_cmp.get("approved_manifest_hash_differences", []))
+        unapproved_metadata_differences.extend(manifest_cmp.get("unapproved_manifest_differences", []))
+
+        # 5. Validate and normalize audit JSON
+        audit_json_first_path = first_artifacts.get(SEMANTIC_METADATA_ARTIFACTS[1])
+        audit_json_second_path = second_artifacts.get(SEMANTIC_METADATA_ARTIFACTS[1])
+
+        audit_json_first = validate_and_normalize_audit_json(
+            audit_json_first_path, first_artifacts, data_comparison
+        )
+        audit_json_second = validate_and_normalize_audit_json(
+            audit_json_second_path, second_artifacts, data_comparison
+        )
+        audit_json_cmp = _compare_normalized_audit_json(
+            audit_json_first, audit_json_second, data_comparison,
+            first_artifacts, second_artifacts,
+        )
+
+        metadata_artifact_comparisons["audit_json"] = {
+            "audit_json_first_valid": audit_json_first.get("audit_json_first_valid", False),
+            "audit_json_second_valid": audit_json_second.get("audit_json_first_valid", False),
+            "audit_json_provenance_exact": audit_json_first.get("audit_json_provenance_exact", False) and audit_json_second.get("audit_json_provenance_exact", False),
+            "audit_json_audit_schema_exact": audit_json_first.get("audit_json_audit_schema_exact", False) and audit_json_second.get("audit_json_audit_schema_exact", False),
+            "audit_json_stage_gate_schema_exact": audit_json_first.get("audit_json_stage_gate_schema_exact", False) and audit_json_second.get("audit_json_stage_gate_schema_exact", False),
+            "audit_json_actual_hashes_verified_first": audit_json_first.get("audit_json_actual_hashes_verified", False),
+            "audit_json_actual_hashes_verified_second": audit_json_second.get("audit_json_actual_hashes_verified", False),
+            "audit_json_normalized_equal": audit_json_cmp.get("audit_json_normalized_equal", False),
+            "approved_audit_json_hash_differences": audit_json_cmp.get("approved_audit_json_hash_differences", []),
+            "unapproved_audit_json_differences": audit_json_cmp.get("unapproved_audit_json_differences", []),
+            "audit_json_comparison_passed": audit_json_cmp.get("audit_json_comparison_passed", False),
+        }
+        audit_json_comparison_passed = audit_json_cmp.get("audit_json_comparison_passed", False)
+        approved_metadata_hash_differences.extend(audit_json_cmp.get("approved_audit_json_hash_differences", []))
+        unapproved_metadata_differences.extend(audit_json_cmp.get("unapproved_audit_json_differences", []))
+
+        # 6. Validate and normalize audit Markdown
+        audit_md_first_path = first_artifacts.get(SEMANTIC_METADATA_ARTIFACTS[2])
+        audit_md_second_path = second_artifacts.get(SEMANTIC_METADATA_ARTIFACTS[2])
+
+        audit_md_first = validate_and_normalize_audit_markdown(
+            audit_md_first_path, audit_json_first.get("normalized_audit_json", {}), first_artifacts, data_comparison
+        )
+        audit_md_second = validate_and_normalize_audit_markdown(
+            audit_md_second_path, audit_json_second.get("normalized_audit_json", {}), second_artifacts, data_comparison
+        )
+        audit_md_cmp = _compare_normalized_audit_markdown(
+            audit_md_first, audit_md_second, data_comparison
+        )
+
+        metadata_artifact_comparisons["audit_markdown"] = {
+            "audit_md_first_valid": audit_md_first.get("audit_md_first_valid", False),
+            "audit_md_second_valid": audit_md_second.get("audit_md_first_valid", False),
+            "audit_md_required_sections_present": audit_md_first.get("audit_md_required_sections_present", False) and audit_md_second.get("audit_md_required_sections_present", False),
+            "audit_md_provenance_matches_json": audit_md_first.get("audit_md_provenance_matches_json", False) and audit_md_second.get("audit_md_provenance_matches_json", False),
+            "audit_md_hash_table_matches_json": audit_md_first.get("audit_md_hash_table_matches_json", False) and audit_md_second.get("audit_md_hash_table_matches_json", False),
+            "audit_md_hash_table_matches_actual_files": audit_md_first.get("audit_md_hash_table_matches_actual_files", False) and audit_md_second.get("audit_md_hash_table_matches_actual_files", False),
+            "audit_md_normalized_equal": audit_md_cmp.get("audit_md_normalized_equal", False),
+            "approved_audit_md_hash_differences": audit_md_cmp.get("approved_audit_md_hash_differences", []),
+            "unapproved_audit_md_differences": audit_md_cmp.get("unapproved_audit_md_differences", []),
+            "audit_md_comparison_passed": audit_md_cmp.get("audit_md_comparison_passed", False),
+        }
+        audit_md_comparison_passed = audit_md_cmp.get("audit_md_comparison_passed", False)
+        approved_metadata_hash_differences.extend(audit_md_cmp.get("approved_audit_md_hash_differences", []))
+        unapproved_metadata_differences.extend(audit_md_cmp.get("unapproved_audit_md_differences", []))
+
+    metadata_artifact_comparison_passed = (
+        ledger_manifest_comparison_passed
+        and audit_json_comparison_passed
+        and audit_md_comparison_passed
+    )
+
+    # 7. Produce combined evidence
+    # Determine byte-identical and approved-ET-roundoff artifacts
+    byte_identical_artifacts: List[str] = []
+    artifacts_with_approved_et_roundoff_only: List[str] = []
+    unapproved_differing_artifacts: List[str] = []
+
+    for rel in SEMANTIC_DATA_ARTIFACTS:
+        p1 = first_artifacts.get(rel)
+        p2 = second_artifacts.get(rel)
+        if p1 and p2 and p1.exists() and p2.exists():
+            if p1.read_bytes() == p2.read_bytes():
+                byte_identical_artifacts.append(rel)
+            else:
+                comp = data_comparison.get("artifact_comparisons", {}).get(rel, {})
+                if comp.get("within_policy") is True:
+                    artifacts_with_approved_et_roundoff_only.append(rel)
+                else:
+                    unapproved_differing_artifacts.append(rel)
+        else:
+            unapproved_differing_artifacts.append(rel)
+
+    # Also check metadata artifacts for byte equality
+    for rel in SEMANTIC_METADATA_ARTIFACTS:
+        p1 = first_artifacts.get(rel)
+        p2 = second_artifacts.get(rel)
+        if p1 and p2 and p1.exists() and p2.exists():
+            if p1.read_bytes() == p2.read_bytes():
+                byte_identical_artifacts.append(rel)
+
+    semantic_passed = bool(
+        all_artifacts_expected == 11
+        and len(missing_from_first) == 0
+        and len(missing_from_second) == 0
+        and len(extra_artifacts) == 0
+        and data_passed
+        and metadata_artifact_comparison_passed
+        and len(unapproved_metadata_differences) == 0
+        and len(unapproved_differing_artifacts) == 0
+    )
+
+    return {
+        "all_artifacts_expected": all_artifacts_expected,
+        "all_artifacts_present_first": all_artifacts_present_first,
+        "all_artifacts_present_second": all_artifacts_present_second,
+        "missing_from_first": missing_from_first,
+        "missing_from_second": missing_from_second,
+        "extra_artifacts": extra_artifacts,
+        "data_artifact_comparison": data_comparison,
+        "metadata_artifact_comparisons": metadata_artifact_comparisons,
+        "ledger_manifest_comparison_passed": ledger_manifest_comparison_passed,
+        "audit_json_comparison_passed": audit_json_comparison_passed,
+        "audit_md_comparison_passed": audit_md_comparison_passed,
+        "metadata_artifact_comparison_passed": metadata_artifact_comparison_passed,
+        "approved_metadata_hash_differences": approved_metadata_hash_differences,
+        "unapproved_metadata_differences": unapproved_metadata_differences,
+        "byte_identical_artifacts": byte_identical_artifacts,
+        "artifacts_with_approved_et_roundoff_only": artifacts_with_approved_et_roundoff_only,
+        "unapproved_differing_artifacts": unapproved_differing_artifacts,
+        "exact_structural_equality": data_comparison.get("exact_structural_equality", False),
+        "all_identity_columns_exact": data_comparison.get("all_identity_columns_exact", False),
+        "all_non_et_score_columns_exact": data_comparison.get("all_non_et_score_columns_exact", False),
+        "maximum_et_score_difference": data_comparison.get("maximum_et_score_difference", 0.0),
+        "number_of_et_cells_differing": data_comparison.get("exactly_different_et_cells", 0),
+        "all_selection_decisions_exact": data_comparison.get("all_selection_decisions_exact", False),
+        "all_thresholds_exact": data_comparison.get("all_thresholds_exact", False),
+        "all_non_exempt_metrics_strictly_equal": data_comparison.get("all_non_et_score_columns_exact", False),
+        "semantic_reproducibility_passed": semantic_passed,
+    }
+
+
+# ---------------------------------------------------------------------------
 # Two-build semantic reproducibility comparison
 # ---------------------------------------------------------------------------
 def _read_artifact_df(path: Path) -> pd.DataFrame:
@@ -3411,288 +4333,16 @@ def _read_artifact_df(path: Path) -> pd.DataFrame:
 
 
 def compare_two_builds_semantically(bundle1: Dict[str, Any], bundle2: Dict[str, Any]) -> Dict[str, Any]:
-    """Compare two independent builds under the Part 3B.2R semantic policy.
+    """Thin wrapper around compare_eleven_artifacts_semantically.
 
-    Exact byte equality is required for structural/identity artifacts. For prediction
-    ledgers, non-ET candidate score columns are exact and ET_leaf5 scores are allowed
-    a sub-ULP (atol=1e-15) roundoff from parallel ExtraTrees prediction with n_jobs=2.
-    Derived reconstruction artifacts (validation and canonical result reconstruction)
-    must agree within the reconstruction tolerances, because they are deterministic
-    functions of the candidate scores.
+    This preserves downstream compatibility by returning the same keys that
+    the production pipeline expects, while delegating all comparison logic
+    to the strict eleven-artifact comparator.
     """
     artifacts1 = bundle1["artifacts"]
     artifacts2 = bundle2["artifacts"]
-    rels = sorted(artifacts1.keys())
-
-    evidence: Dict[str, Any] = {
-        "artifact_sets_equal": rels == sorted(artifacts2.keys()),
-        "artifact_comparisons": {},
-        "byte_identical_artifacts": [],
-        "semantically_equivalent_artifacts": [],
-        "artifacts_with_approved_et_roundoff_only": [],
-        "unapproved_differing_artifacts": [],
-    }
-    all_unapproved: List[Dict[str, Any]] = []
-    max_et_diff = 0.0
-    et_cells_diff = 0
-
-    for rel in rels:
-        p1 = artifacts1[rel]
-        p2 = artifacts2[rel]
-        b1 = p1.read_bytes()
-        b2 = p2.read_bytes()
-        comp: Dict[str, Any] = {
-            "compressed_byte_equal": b1 == b2,
-            "decompressed_byte_equal": None,
-            "schema_equal": None,
-            "row_count_equal": None,
-            "identity_columns_equal": None,
-            "numeric_differences_by_column": {},
-            "maximum_absolute_difference": 0.0,
-            "within_policy": None,
-        }
-
-        if rel.endswith(".csv") or rel.endswith(".csv.gz"):
-            df1 = _read_artifact_df(p1)
-            df2 = _read_artifact_df(p2)
-            comp["schema_equal"] = list(df1.columns) == list(df2.columns)
-            comp["row_count_equal"] = len(df1) == len(df2)
-            comp["identity_columns_equal"] = False
-
-            if comp["schema_equal"] and len(df1) == len(df2):
-                # Determine semantic tolerance for this artifact.
-                if rel.endswith("prediction_ledger_within.csv.gz") or rel.endswith("prediction_ledger_cross.csv.gz"):
-                    identity_cols = [c for c in df1.columns if not c.startswith("score__")]
-                    numeric_cols = [c for c in df1.columns if c.startswith("score__")]
-                    et_col = "score__ET_leaf5"
-                    et_atol = 1e-15
-                    other_atol = 0.0
-                    allow_any_numeric = False
-                elif rel in {
-                    "results/part3b_prediction_ledger/validation_reconstruction.csv",
-                    "results/part3b_prediction_ledger/canonical_result_reconstruction.csv",
-                }:
-                    identity_cols = [c for c in df1.columns if not pd.api.types.is_numeric_dtype(df1[c])]
-                    numeric_cols = [c for c in df1.columns if pd.api.types.is_numeric_dtype(df1[c])]
-                    et_col = None
-                    et_atol = 0.0
-                    other_atol = RECON_ATOL
-                    allow_any_numeric = True
-                else:
-                    identity_cols = [c for c in df1.columns if not pd.api.types.is_numeric_dtype(df1[c])]
-                    numeric_cols = [c for c in df1.columns if pd.api.types.is_numeric_dtype(df1[c])]
-                    et_col = None
-                    et_atol = 0.0
-                    other_atol = 0.0
-                    allow_any_numeric = False
-
-                if identity_cols:
-                    comp["identity_columns_equal"] = df1[identity_cols].equals(df2[identity_cols])
-                else:
-                    comp["identity_columns_equal"] = True
-
-                # Decompressed CSV equality (raw text from data frames; not byte-exact because of gzip headers).
-                buf1 = io.StringIO()
-                buf2 = io.StringIO()
-                df1.to_csv(buf1, index=False, encoding="utf-8", lineterminator="\n", float_format="%.17g")
-                df2.to_csv(buf2, index=False, encoding="utf-8", lineterminator="\n", float_format="%.17g")
-                comp["decompressed_byte_equal"] = buf1.getvalue() == buf2.getvalue()
-
-                within_policy = comp["identity_columns_equal"]
-                for col in numeric_cols:
-                    a = df1[col].to_numpy(dtype=float)
-                    b = df2[col].to_numpy(dtype=float)
-                    if col == et_col:
-                        col_close = np.allclose(a, b, rtol=0.0, atol=et_atol, equal_nan=True)
-                        diff = np.abs(a - b)
-                        col_max = float(np.nanmax(diff)) if np.any(np.isfinite(diff)) else 0.0
-                        col_n = int(np.sum(~np.isclose(a, b, rtol=0.0, atol=et_atol, equal_nan=True)))
-                        max_et_diff = max(max_et_diff, col_max)
-                        et_cells_diff += col_n
-                    elif allow_any_numeric:
-                        col_close = np.allclose(a, b, rtol=RECON_RTOL, atol=RECON_ATOL, equal_nan=True)
-                        diff = np.abs(a - b)
-                        col_max = float(np.nanmax(diff)) if np.any(np.isfinite(diff)) else 0.0
-                        col_n = int(np.sum(~np.isclose(a, b, rtol=RECON_RTOL, atol=RECON_ATOL, equal_nan=True)))
-                    else:
-                        col_close = np.array_equal(a, b, equal_nan=True)
-                        col_max = 0.0 if col_close else float(np.nanmax(np.abs(a - b)))
-                        col_n = 0 if col_close else int(np.sum(a != b))
-                        if not col_close:
-                            all_unapproved.append({"artifact": rel, "column": col})
-                    comp["numeric_differences_by_column"][col] = {
-                        "maximum_absolute_difference": col_max,
-                        "differing_cells": col_n,
-                        "within_policy": col_close,
-                    }
-                    within_policy = within_policy and col_close
-                comp["within_policy"] = within_policy
-
-        comp["maximum_absolute_difference"] = max(
-            (v.get("maximum_absolute_difference", 0.0) for v in comp["numeric_differences_by_column"].values()),
-            default=0.0,
-        )
-        evidence["artifact_comparisons"][rel] = comp
-
-        if comp["compressed_byte_equal"]:
-            evidence["byte_identical_artifacts"].append(rel)
-            comp["within_policy"] = True
-        elif comp.get("within_policy"):
-            evidence["semantically_equivalent_artifacts"].append(rel)
-        elif rel.endswith("prediction_ledger_within.csv.gz") or rel.endswith("prediction_ledger_cross.csv.gz"):
-            nd = comp["numeric_differences_by_column"]
-            only_et = all(
-                v.get("within_policy", True) for k, v in nd.items() if k != "score__ET_leaf5"
-            ) and nd.get("score__ET_leaf5", {}).get("within_policy", False)
-            if only_et:
-                evidence["artifacts_with_approved_et_roundoff_only"].append(rel)
-                comp["within_policy"] = True
-            else:
-                evidence["unapproved_differing_artifacts"].append(rel)
-                all_unapproved.append({"artifact": rel})
-        else:
-            evidence["unapproved_differing_artifacts"].append(rel)
-            all_unapproved.append({"artifact": rel})
-
-    # Structural equality: compare event manifest, selection decisions, thresholds, etc.
-    manifest1 = bundle1["event_manifest"]
-    manifest2 = bundle2["event_manifest"]
-    structural_equal = (
-        list(manifest1.columns) == list(manifest2.columns)
-        and len(manifest1) == len(manifest2)
-        and (manifest1["event_id"].tolist() == manifest2["event_id"].tolist())
-        and (manifest1["train_uid_sha256"].tolist() == manifest2["train_uid_sha256"].tolist())
-        and (manifest1["validation_uid_sha256"].tolist() == manifest2["validation_uid_sha256"].tolist())
-        and (manifest1["test_uid_sha256"].tolist() == manifest2["test_uid_sha256"].tolist())
-    )
-
-    # Compare result reconstruction row selections/thresholds.
-    res1 = bundle1["result_recon"]
-    res2 = bundle2["result_recon"]
-    selection_equal = (
-        list(res1.columns) == list(res2.columns)
-        and len(res1) == len(res2)
-        and (res1[["experiment", "target_project", "seed", "model", "selected_candidate", "selection_mode", "threshold"]].equals(
-            res2[["experiment", "target_project", "seed", "model", "selected_candidate", "selection_mode", "threshold"]]
-        ))
-    )
-
-    # Non-CSV artifacts (reports, ledger manifest) contain byte hashes and build-specific
-    # metadata; they are not data-bearing and are excluded from the semantic gate.
-    data_artifacts = {
-        rel for rel in rels
-        if rel.endswith(".csv") or rel.endswith(".csv.gz")
-    }
-
-    all_identity_exact = all(
-        evidence["artifact_comparisons"][rel].get("identity_columns_equal") is not False
-        for rel in data_artifacts
-    )
-    all_non_et_exact = all(
-        comp["numeric_differences_by_column"].get(col, {}).get("within_policy", True)
-        for rel, comp in evidence["artifact_comparisons"].items()
-        if rel in data_artifacts
-        for col in comp.get("numeric_differences_by_column", {})
-        if col != "score__ET_leaf5"
-    )
-    all_thresholds_exact = selection_equal
-    all_selection_decisions_exact = selection_equal
-    all_non_exempt_metrics_strict = all(
-        comp["numeric_differences_by_column"].get(col, {}).get("within_policy", True)
-        for rel, comp in evidence["artifact_comparisons"].items()
-        if rel in data_artifacts
-        for col in comp.get("numeric_differences_by_column", {})
-        if col != "score__ET_leaf5"
-    )
-
-    # The canonical result reconstruction may contain rows affected by ET parallel prediction
-    # nondeterminism. Because the ledger stores exactly one ET_leaf5 score vector per event,
-    # any canonical result row that uses the ET_leaf5 score vector is affected. Two independent
-    # builds may sample different ET score vectors, so we allow ET-derived rows to differ within
-    # the documented upper bound (1e-7); all other rows must satisfy RECON_RTOL/ATOL.
-    ET_EXCEPTION_METRIC_TOL = 1e-7
-    for rel in [
-        "results/part3b_prediction_ledger/validation_reconstruction.csv",
-        "results/part3b_prediction_ledger/canonical_result_reconstruction.csv",
-    ]:
-        if rel not in evidence["artifact_comparisons"]:
-            continue
-        comp = evidence["artifact_comparisons"][rel]
-        df1 = _read_artifact_df(artifacts1[rel])
-        df2 = _read_artifact_df(artifacts2[rel])
-        if rel == "results/part3b_prediction_ledger/validation_reconstruction.csv":
-            candidate_col = "candidate"
-        else:
-            candidate_col = "selected_candidate"
-        # Rows driven by the ET_leaf5 score vector.
-        et_mask = (
-            (df1[candidate_col] == APPROVED_EXCEPTION_EVENT["selected_candidate"])
-            | df1[candidate_col].astype(str).str.contains(APPROVED_EXCEPTION_EVENT["selected_candidate"])
-        )
-        et_idx = np.where(et_mask)[0]
-        all_numeric_within_policy = True
-        for col in comp.get("numeric_differences_by_column", {}):
-            a = df1[col].to_numpy(dtype=float)
-            b = df2[col].to_numpy(dtype=float)
-            diff = np.abs(a - b)
-            if len(et_idx) > 0:
-                non_et_diff = diff.copy()
-                non_et_diff[et_idx] = 0.0
-                within_col = bool(
-                    np.all(diff[et_idx] <= ET_EXCEPTION_METRIC_TOL)
-                    and np.all(
-                        non_et_diff <= RECON_ATOL + RECON_RTOL * np.maximum(np.abs(a), np.abs(b))
-                    )
-                )
-            else:
-                within_col = bool(np.all(diff <= RECON_ATOL + RECON_RTOL * np.maximum(np.abs(a), np.abs(b))))
-            comp["numeric_differences_by_column"][col]["within_policy"] = within_col
-            comp["numeric_differences_by_column"][col]["differing_cells"] = int(np.sum(
-                ~np.isclose(a, b, rtol=RECON_RTOL, atol=RECON_ATOL, equal_nan=True)
-            ))
-            all_numeric_within_policy = all_numeric_within_policy and within_col
-        if comp["identity_columns_equal"] and all_numeric_within_policy:
-            comp["within_policy"] = True
-        comp["maximum_absolute_difference"] = max(
-            (v.get("maximum_absolute_difference", 0.0) for v in comp["numeric_differences_by_column"].values()),
-            default=0.0,
-        )
-        # Reclassify the artifact if now within policy.
-        if comp.get("within_policy") and rel in evidence["unapproved_differing_artifacts"]:
-            evidence["unapproved_differing_artifacts"].remove(rel)
-
-    # Recompute non-ET exactness after the exception loop has updated within_policy flags.
-    all_non_et_exact = all(
-        comp["numeric_differences_by_column"].get(col, {}).get("within_policy", True)
-        for rel, comp in evidence["artifact_comparisons"].items()
-        if rel in data_artifacts
-        for col in comp.get("numeric_differences_by_column", {})
-        if col != "score__ET_leaf5"
-    )
-    all_non_exempt_metrics_strict = all_non_et_exact
-
-    semantic_passed = bool(
-        evidence["artifact_sets_equal"]
-        and structural_equal
-        and all_identity_exact
-        and all_non_et_exact
-        and selection_equal
-        and max_et_diff <= 1e-15
-        and len([a for a in evidence["unapproved_differing_artifacts"] if a in data_artifacts]) == 0
-    )
-
-    evidence.update({
-        "exact_structural_equality": structural_equal,
-        "all_identity_columns_exact": all_identity_exact,
-        "all_non_et_score_columns_exact": all_non_et_exact,
-        "maximum_et_score_difference": max_et_diff,
-        "number_of_et_cells_differing": et_cells_diff,
-        "all_selection_decisions_exact": all_selection_decisions_exact,
-        "all_thresholds_exact": all_thresholds_exact,
-        "all_non_exempt_metrics_strictly_equal": all_non_exempt_metrics_strict,
-        "semantic_reproducibility_passed": semantic_passed,
-    })
-    return evidence
+    result = compare_eleven_artifacts_semantically(artifacts1, artifacts2)
+    return result
 
 
 # ---------------------------------------------------------------------------
@@ -3708,6 +4358,18 @@ SEMANTIC_DATA_ARTIFACTS = [
     "results/part3b_prediction_ledger/validation_reconstruction.csv",
     "results/part3b_prediction_ledger/canonical_result_reconstruction.csv",
 ]
+
+SEMANTIC_METADATA_ARTIFACTS = [
+    "results/part3b_prediction_ledger/ledger_manifest.json",
+    "reports/part3b_split_leakage_audit.json",
+    "reports/part3b_split_leakage_audit.md",
+]
+
+SEMANTIC_ALL_ARTIFACTS = list(SEMANTIC_DATA_ARTIFACTS) + list(SEMANTIC_METADATA_ARTIFACTS)
+
+assert len(SEMANTIC_DATA_ARTIFACTS) == 8
+assert len(SEMANTIC_METADATA_ARTIFACTS) == 3
+assert len(SEMANTIC_ALL_ARTIFACTS) == 11
 
 SEMANTIC_STRUCTURAL_ARTIFACTS = {
     "results/part3b_prediction_ledger/sample_registry.csv",
@@ -5060,6 +5722,458 @@ def run_part_e1_2_signed_zero_tests() -> Tuple[List[Dict[str, Any]], bool, Dict[
 
 
 # ---------------------------------------------------------------------------
+# Part E.2: Fourteen isolated tests for the eleven-artifact semantic gate
+# ---------------------------------------------------------------------------
+def _make_synthetic_metadata_artifacts(
+    data_root: Path,
+    output_root: Path,
+) -> Dict[str, Path]:
+    """Create synthetic ledger_manifest.json, audit JSON, and audit MD for tests."""
+    output_root.mkdir(parents=True, exist_ok=True)
+    (output_root / "results" / "part3b_prediction_ledger").mkdir(parents=True, exist_ok=True)
+    (output_root / "reports").mkdir(parents=True, exist_ok=True)
+
+    data_paths = _artifact_paths_from_dir(data_root)
+
+    # Build artifact hashes
+    artifact_hashes = {}
+    manifest_entries = []
+    for rel in SEMANTIC_DATA_ARTIFACTS:
+        p = data_paths[rel]
+        h = sha256_file(p)
+        sz = p.stat().st_size
+        df = _read_artifact_df(p)
+        artifact_hashes[rel] = {"sha256": h, "byte_size": sz}
+        manifest_entries.append({
+            "relative_path": rel,
+            "format": "csv.gz" if rel.endswith(".gz") else "csv",
+            "compressed": rel.endswith(".gz"),
+            "row_count": len(df),
+            "column_count": len(df.columns),
+            "columns": list(df.columns),
+            "byte_size": sz,
+            "sha256": h,
+        })
+
+    # Build ledger manifest
+    manifest_data = {
+        "manifest_version": PART3B_VERSION,
+        "starting_commit": STARTING_COMMIT,
+        "accepted_part3a_commit": ACCEPTED_PART3A_COMMIT,
+        "project_order": ["CM1", "JM1", "KC1", "KC2", "PC1"],
+        "seed_order": [7, 13, 29, 42, 101],
+        "candidate_order": ["LR_std_C0.1", "LR_std_C1", "DT_leaf5", "ET_leaf5"],
+        "event_count": 50,
+        "sample_count": 17442,
+        "split_membership_total_rows": 523260,
+        "prediction_total_rows": 209330,
+        "validation_reconstruction_rows": 600,
+        "canonical_result_reconstruction_rows": 400,
+        "self_referential_hash_embedded": False,
+        "artifacts": manifest_entries,
+    }
+    manifest_path = output_root / "results" / "part3b_prediction_ledger" / "ledger_manifest.json"
+    write_text_atomic(manifest_path, _json_dumps(manifest_data))
+
+    # Build audit JSON
+    audit_checks = {name: True for name in REQUIRED_AUDIT_CHECK_NAMES}
+    stage_gate = {field: False for field in REQUIRED_STAGE_GATE_FIELDS}
+    stage_gate["part3b_prediction_ledger_complete"] = False
+    stage_gate["next_authorized_stage"] = None
+    stage_gate["part3c_constraint"] = PART3C_CONSTRAINT
+
+    audit_json = {
+        "part3b_version": PART3B_VERSION,
+        "starting_commit": STARTING_COMMIT,
+        "accepted_part3a_commit": ACCEPTED_PART3A_COMMIT,
+        "repository": REPOSITORY,
+        "branch": BRANCH,
+        "timestamp": "1970-01-01T00:00:00",
+        "audit_checks": audit_checks,
+        "stage_gate": stage_gate,
+        "stage_gate_evidence": {},
+        "validation_results": {},
+        "duplicate_content_audit": {},
+        "negative_tests": [],
+        "canonical_exception_validator_tests": [],
+        "tie_policy_tests": [],
+        "canonical_nondeterminism_diagnostic": ET_ND_DIAGNOSTIC,
+        "preservation_state": {},
+        "artifact_hashes": artifact_hashes,
+        "feature_schema_sha256": "f" * 64,
+        "common_feature_names": [],
+        "common_feature_count": 0,
+        "dataset_profile_summary": {},
+        "event_manifest_summary": {},
+        "split_membership_summary": {},
+        "prediction_ledger_summary": {},
+        "reconstruction_summary": {},
+        "fitted_candidate_count": 0,
+    }
+    audit_json_path = output_root / "reports" / "part3b_split_leakage_audit.json"
+    write_text_atomic(audit_json_path, _json_dumps(audit_json))
+
+    # Build audit Markdown
+    md_lines = [
+        "# Part 3B.2R Split / Leakage Audit Report",
+        "",
+        f"- **Version:** {PART3B_VERSION}",
+        f"- **Repository:** {REPOSITORY}",
+        f"- **Branch:** {BRANCH}",
+        f"- **Starting commit:** {STARTING_COMMIT}",
+        f"- **Accepted Part 3A commit:** {ACCEPTED_PART3A_COMMIT}",
+        f"- **Timestamp:** 1970-01-01T00:00:00",
+        "",
+        "## Stage Gate",
+        "",
+    ]
+    for k, v in stage_gate.items():
+        md_lines.append(f"- **{k}:** {v}")
+    md_lines.append("")
+    md_lines.append("## Audit Checks")
+    md_lines.append("")
+    for k, v in audit_checks.items():
+        md_lines.append(f"- **{k}:** {v}")
+    md_lines.append("")
+    md_lines.append("## Prediction Ledger Summary")
+    md_lines.append("")
+    md_lines.append("## Reconstruction Summary")
+    md_lines.append("")
+    md_lines.append("## Canonical Nondeterminism Diagnostic")
+    md_lines.append("")
+    for k, v in ET_ND_DIAGNOSTIC.items():
+        md_lines.append(f"- **{k}:** {v}")
+    md_lines.append("")
+    md_lines.append("## Semantic Reproducibility (Two Independent Builds)")
+    md_lines.append("")
+    md_lines.append("## Negative Tests")
+    md_lines.append("")
+    md_lines.append("## Canonical Exception Validator Tests")
+    md_lines.append("")
+    md_lines.append("## Tie Policy Tests")
+    md_lines.append("")
+    md_lines.append("## Artifact Hashes")
+    md_lines.append("")
+    md_lines.append("| Artifact | SHA-256 |")
+    md_lines.append("|----------|---------|")
+    for rel, h in artifact_hashes.items():
+        md_lines.append(f"| {rel} | {h['sha256']} |")
+    md_lines.append("")
+
+    audit_md_path = output_root / "reports" / "part3b_split_leakage_audit.md"
+    write_text_atomic(audit_md_path, "\n".join(md_lines))
+
+    # Return all 11 artifact paths
+    all_paths = dict(data_paths)
+    all_paths["results/part3b_prediction_ledger/ledger_manifest.json"] = manifest_path
+    all_paths["reports/part3b_split_leakage_audit.json"] = audit_json_path
+    all_paths["reports/part3b_split_leakage_audit.md"] = audit_md_path
+    return all_paths
+
+
+def _all_artifact_paths_from_dir(root: Path) -> Dict[str, Path]:
+    """Return all 11 artifact paths from a directory."""
+    paths = _artifact_paths_from_dir(root)
+    paths["results/part3b_prediction_ledger/ledger_manifest.json"] = root / "ledger_manifest.json"
+    paths["reports/part3b_split_leakage_audit.json"] = root / "part3b_split_leakage_audit.json"
+    paths["reports/part3b_split_leakage_audit.md"] = root / "part3b_split_leakage_audit.md"
+    return paths
+
+
+def run_part_e2_eleven_artifact_tests() -> Tuple[List[Dict[str, Any]], bool, Dict[str, Any]]:
+    """Fourteen isolated tests for the strict eleven-artifact semantic gate."""
+    tests: List[Dict[str, Any]] = []
+    all_passed = True
+
+    def _record(case_name: str, passed: bool, **extra: Any) -> None:
+        nonlocal all_passed
+        tests.append({"case_name": case_name, "passed": passed, **extra})
+        all_passed = all_passed and passed
+
+    with tempfile.TemporaryDirectory(prefix="part3b2_e2_base_") as base_data_dir:
+        base_data_root = _make_synthetic_eight_artifact_dir(Path(base_data_dir))
+
+        with tempfile.TemporaryDirectory(prefix="part3b2_e2_base_meta_") as base_meta_dir:
+            base_all = _make_synthetic_metadata_artifacts(base_data_root, Path(base_meta_dir))
+
+            # 1. Exact eleven-artifact fixture passes.
+            with tempfile.TemporaryDirectory(prefix="part3b2_e2_copy_") as copy_dir:
+                copy_root = Path(copy_dir)
+                for rel, src in base_all.items():
+                    dst = copy_root / Path(rel).name
+                    dst.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copy2(str(src), str(dst))
+                copy_paths = _all_artifact_paths_from_dir(copy_root)
+                result = compare_eleven_artifacts_semantically(base_all, copy_paths)
+                _record(
+                    "exact_eleven_artifact_fixture_passes",
+                    result["semantic_reproducibility_passed"] is True,
+                )
+
+            # 2. One metadata artifact missing fails.
+            with tempfile.TemporaryDirectory(prefix="part3b2_e2_miss_meta_") as miss_meta_dir:
+                miss_meta_root = Path(miss_meta_dir)
+                for rel, src in base_all.items():
+                    if rel == "reports/part3b_split_leakage_audit.md":
+                        continue
+                    dst = miss_meta_root / Path(rel).name
+                    dst.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copy2(str(src), str(dst))
+                miss_paths = _all_artifact_paths_from_dir(miss_meta_root)
+                result = compare_eleven_artifacts_semantically(base_all, miss_paths)
+                _record(
+                    "one_metadata_artifact_missing_fails",
+                    result["semantic_reproducibility_passed"] is False
+                    and "reports/part3b_split_leakage_audit.md" in result["missing_from_second"],
+                )
+
+            # 3. Ledger manifest with wrong version fails.
+            with tempfile.TemporaryDirectory(prefix="part3b2_e2_wrong_ver_") as wv_dir:
+                wv_root = Path(wv_dir)
+                for rel, src in base_all.items():
+                    dst = wv_root / Path(rel).name
+                    dst.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copy2(str(src), str(dst))
+                with (wv_root / "ledger_manifest.json").open("r") as f:
+                    manifest = json.load(f)
+                manifest["manifest_version"] = "WRONG-VERSION"
+                write_text_atomic(wv_root / "ledger_manifest.json", _json_dumps(manifest))
+                wv_paths = _all_artifact_paths_from_dir(wv_root)
+                result = compare_eleven_artifacts_semantically(base_all, wv_paths)
+                _record(
+                    "manifest_wrong_version_fails",
+                    result["semantic_reproducibility_passed"] is False,
+                )
+
+            # 4. Ledger manifest with wrong starting commit fails.
+            with tempfile.TemporaryDirectory(prefix="part3b2_e2_wrong_commit_") as wc_dir:
+                wc_root = Path(wc_dir)
+                for rel, src in base_all.items():
+                    dst = wc_root / Path(rel).name
+                    dst.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copy2(str(src), str(dst))
+                with (wc_root / "ledger_manifest.json").open("r") as f:
+                    manifest = json.load(f)
+                manifest["starting_commit"] = "wrongcommit"
+                write_text_atomic(wc_root / "ledger_manifest.json", _json_dumps(manifest))
+                wc_paths = _all_artifact_paths_from_dir(wc_root)
+                result = compare_eleven_artifacts_semantically(base_all, wc_paths)
+                _record(
+                    "manifest_wrong_starting_commit_fails",
+                    result["semantic_reproducibility_passed"] is False,
+                )
+
+            # 5. Ledger manifest with wrong artifact order fails.
+            with tempfile.TemporaryDirectory(prefix="part3b2_e2_wrong_order_") as wo_dir:
+                wo_root = Path(wo_dir)
+                for rel, src in base_all.items():
+                    dst = wo_root / Path(rel).name
+                    dst.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copy2(str(src), str(dst))
+                with (wo_root / "ledger_manifest.json").open("r") as f:
+                    manifest = json.load(f)
+                manifest["artifacts"] = list(reversed(manifest["artifacts"]))
+                write_text_atomic(wo_root / "ledger_manifest.json", _json_dumps(manifest))
+                wo_paths = _all_artifact_paths_from_dir(wo_root)
+                result = compare_eleven_artifacts_semantically(base_all, wo_paths)
+                _record(
+                    "manifest_wrong_artifact_order_fails",
+                    result["semantic_reproducibility_passed"] is False,
+                )
+
+            # 6. Ledger manifest with stale sha256 fails.
+            with tempfile.TemporaryDirectory(prefix="part3b2_e2_stale_hash_") as sh_dir:
+                sh_root = Path(sh_dir)
+                for rel, src in base_all.items():
+                    dst = sh_root / Path(rel).name
+                    dst.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copy2(str(src), str(dst))
+                with (sh_root / "ledger_manifest.json").open("r") as f:
+                    manifest = json.load(f)
+                manifest["artifacts"][0]["sha256"] = "0" * 64
+                write_text_atomic(sh_root / "ledger_manifest.json", _json_dumps(manifest))
+                sh_paths = _all_artifact_paths_from_dir(sh_root)
+                result = compare_eleven_artifacts_semantically(base_all, sh_paths)
+                _record(
+                    "manifest_stale_sha256_fails",
+                    result["semantic_reproducibility_passed"] is False,
+                )
+
+            # 7. Audit JSON with wrong provenance fails.
+            with tempfile.TemporaryDirectory(prefix="part3b2_e2_audit_prov_") as ap_dir:
+                ap_root = Path(ap_dir)
+                for rel, src in base_all.items():
+                    dst = ap_root / Path(rel).name
+                    dst.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copy2(str(src), str(dst))
+                with (ap_root / "part3b_split_leakage_audit.json").open("r") as f:
+                    audit = json.load(f)
+                audit["part3b_version"] = "WRONG"
+                write_text_atomic(ap_root / "part3b_split_leakage_audit.json", _json_dumps(audit))
+                ap_paths = _all_artifact_paths_from_dir(ap_root)
+                result = compare_eleven_artifacts_semantically(base_all, ap_paths)
+                _record(
+                    "audit_json_wrong_provenance_fails",
+                    result["semantic_reproducibility_passed"] is False,
+                )
+
+            # 8. Audit JSON with wrong audit check schema fails.
+            with tempfile.TemporaryDirectory(prefix="part3b2_e2_audit_schema_") as as_dir:
+                as_root = Path(as_dir)
+                for rel, src in base_all.items():
+                    dst = as_root / Path(rel).name
+                    dst.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copy2(str(src), str(dst))
+                with (as_root / "part3b_split_leakage_audit.json").open("r") as f:
+                    audit = json.load(f)
+                audit["audit_checks"]["extra_bogus_check"] = True
+                write_text_atomic(as_root / "part3b_split_leakage_audit.json", _json_dumps(audit))
+                as_paths = _all_artifact_paths_from_dir(as_root)
+                result = compare_eleven_artifacts_semantically(base_all, as_paths)
+                _record(
+                    "audit_json_wrong_check_schema_fails",
+                    result["semantic_reproducibility_passed"] is False,
+                )
+
+            # 9. Audit JSON with wrong stage gate schema fails.
+            with tempfile.TemporaryDirectory(prefix="part3b2_e2_audit_gate_") as ag_dir:
+                ag_root = Path(ag_dir)
+                for rel, src in base_all.items():
+                    dst = ag_root / Path(rel).name
+                    dst.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copy2(str(src), str(dst))
+                with (ag_root / "part3b_split_leakage_audit.json").open("r") as f:
+                    audit = json.load(f)
+                audit["stage_gate"]["extra_bogus_field"] = True
+                write_text_atomic(ag_root / "part3b_split_leakage_audit.json", _json_dumps(audit))
+                ag_paths = _all_artifact_paths_from_dir(ag_root)
+                result = compare_eleven_artifacts_semantically(base_all, ag_paths)
+                _record(
+                    "audit_json_wrong_stage_gate_schema_fails",
+                    result["semantic_reproducibility_passed"] is False,
+                )
+
+            # 10. Audit JSON with stale artifact hash fails.
+            with tempfile.TemporaryDirectory(prefix="part3b2_e2_audit_hash_") as ah_dir:
+                ah_root = Path(ah_dir)
+                for rel, src in base_all.items():
+                    dst = ah_root / Path(rel).name
+                    dst.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copy2(str(src), str(dst))
+                with (ah_root / "part3b_split_leakage_audit.json").open("r") as f:
+                    audit = json.load(f)
+                first_rel = SEMANTIC_DATA_ARTIFACTS[0]
+                audit["artifact_hashes"][first_rel]["sha256"] = "0" * 64
+                write_text_atomic(ah_root / "part3b_split_leakage_audit.json", _json_dumps(audit))
+                ah_paths = _all_artifact_paths_from_dir(ah_root)
+                result = compare_eleven_artifacts_semantically(base_all, ah_paths)
+                _record(
+                    "audit_json_stale_artifact_hash_fails",
+                    result["semantic_reproducibility_passed"] is False,
+                )
+
+            # 11. Audit Markdown missing required section fails.
+            with tempfile.TemporaryDirectory(prefix="part3b2_e2_md_section_") as ms_dir:
+                ms_root = Path(ms_dir)
+                for rel, src in base_all.items():
+                    dst = ms_root / Path(rel).name
+                    dst.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copy2(str(src), str(dst))
+                md_path = ms_root / "part3b_split_leakage_audit.md"
+                content = md_path.read_text()
+                content = content.replace("## Negative Tests", "## Removed Section")
+                write_text_atomic(md_path, content)
+                ms_paths = _all_artifact_paths_from_dir(ms_root)
+                result = compare_eleven_artifacts_semantically(base_all, ms_paths)
+                _record(
+                    "audit_md_missing_section_fails",
+                    result["semantic_reproducibility_passed"] is False,
+                )
+
+            # 12. Audit Markdown provenance mismatch with JSON fails.
+            with tempfile.TemporaryDirectory(prefix="part3b2_e2_md_prov_") as mp_dir:
+                mp_root = Path(mp_dir)
+                for rel, src in base_all.items():
+                    dst = mp_root / Path(rel).name
+                    dst.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copy2(str(src), str(dst))
+                md_path = mp_root / "part3b_split_leakage_audit.md"
+                content = md_path.read_text()
+                content = content.replace(
+                    f"- **Version:** {PART3B_VERSION}",
+                    f"- **Version:** WRONG-VERSION",
+                )
+                write_text_atomic(md_path, content)
+                mp_paths = _all_artifact_paths_from_dir(mp_root)
+                result = compare_eleven_artifacts_semantically(base_all, mp_paths)
+                _record(
+                    "audit_md_provenance_mismatch_fails",
+                    result["semantic_reproducibility_passed"] is False,
+                )
+
+            # 13. Audit Markdown hash table mismatch with JSON fails.
+            with tempfile.TemporaryDirectory(prefix="part3b2_e2_md_hash_") as mh_dir:
+                mh_root = Path(mh_dir)
+                for rel, src in base_all.items():
+                    dst = mh_root / Path(rel).name
+                    dst.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copy2(str(src), str(dst))
+                md_path = mh_root / "part3b_split_leakage_audit.md"
+                content = md_path.read_text()
+                first_rel = SEMANTIC_DATA_ARTIFACTS[0]
+                # Replace the hash in the markdown table with a wrong hash
+                lines = content.split("\n")
+                for i, line in enumerate(lines):
+                    if line.startswith(f"| {first_rel} |"):
+                        lines[i] = f"| {first_rel} | {'0' * 64} |"
+                        break
+                write_text_atomic(md_path, "\n".join(lines))
+                mh_paths = _all_artifact_paths_from_dir(mh_root)
+                result = compare_eleven_artifacts_semantically(base_all, mh_paths)
+                _record(
+                    "audit_md_hash_table_mismatch_fails",
+                    result["semantic_reproducibility_passed"] is False,
+                )
+
+            # 14. Data artifact difference stops metadata approval.
+            with tempfile.TemporaryDirectory(prefix="part3b2_e2_data_fail_") as df_dir:
+                df_root = Path(df_dir)
+                for rel, src in base_all.items():
+                    dst = df_root / Path(rel).name
+                    dst.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copy2(str(src), str(dst))
+                # Corrupt a data artifact (change identity)
+                reg = pd.read_csv(df_root / "sample_registry.csv")
+                reg.at[0, "sample_uid"] = "CM1:999999"
+                reg.to_csv(df_root / "sample_registry.csv", index=False, lineterminator="\n")
+                df_paths = _all_artifact_paths_from_dir(df_root)
+                result = compare_eleven_artifacts_semantically(base_all, df_paths)
+                _record(
+                    "data_artifact_difference_stops_metadata_approval",
+                    result["semantic_reproducibility_passed"] is False
+                    and result["data_artifact_comparison"]["data_artifact_semantic_comparison_passed"] is False
+                    and result["metadata_artifact_comparison_passed"] is False,
+                )
+
+    summary = {
+        "tests_expected": 14,
+        "tests_executed": len(tests),
+        "tests_passed": sum(1 for t in tests if t.get("passed")),
+        "tests_failed": sum(1 for t in tests if not t.get("passed")),
+        "test_details": tests,
+        "model_fits_executed": 0,
+        "prediction_calls_executed": 0,
+        "repository_artifacts_written": 0,
+        "full_build_executed": False,
+        "part3b_complete": False,
+        "part3c_authorized": False,
+        "et_score_tolerance": ET_SCORE_ATOL,
+        "et_rank_metric_tolerance": ET_RANK_METRIC_ATOL,
+    }
+    return tests, all_passed, summary
+
+
+# ---------------------------------------------------------------------------
 # Final printed report
 # ---------------------------------------------------------------------------
 def print_final_report(json_report: Dict[str, Any], actual_changed_paths: List[str], new_commit: Optional[str] = None, remote_head: Optional[str] = None, git_status: Optional[str] = None) -> None:
@@ -5792,7 +6906,35 @@ def main():
     parser.add_argument("--self-test-preservation", action="store_true", default=False)
     parser.add_argument("--self-test-audit-gate", action="store_true", default=False)
     parser.add_argument("--self-test-data-artifact-comparison", action="store_true", default=False)
+    parser.add_argument("--self-test-eleven-artifact-comparison", action="store_true", default=False)
     known, _ = parser.parse_known_args()
+    if known.self_test_eleven_artifact_comparison:
+        e2_tests, e2_all_passed, e2_summary = run_part_e2_eleven_artifact_tests()
+        combined = {
+            "part_e2_tests": {
+                "tests_expected": e2_summary["tests_expected"],
+                "tests_executed": e2_summary["tests_executed"],
+                "tests_passed": e2_summary["tests_passed"],
+                "tests_failed": e2_summary["tests_failed"],
+            },
+            "et_score_tolerance": e2_summary["et_score_tolerance"],
+            "et_rank_metric_tolerance": e2_summary["et_rank_metric_tolerance"],
+            "accepted_part3a_commit": ACCEPTED_PART3A_COMMIT,
+            "starting_commit": STARTING_COMMIT,
+            "part3b_version": PART3B_VERSION,
+            "model_fits_executed": 0,
+            "prediction_calls_executed": 0,
+            "repository_artifacts_written": 0,
+            "full_build_executed": False,
+            "part3b_complete": False,
+            "part3c_authorized": False,
+        }
+        print(_json_dumps(combined))
+        return 0 if (
+            e2_all_passed
+            and e2_summary["tests_executed"] == 14
+            and e2_summary["tests_failed"] == 0
+        ) else 1
     if known.self_test_data_artifact_comparison:
         e1_tests, e1_all_passed, e1_summary = run_data_artifact_comparison_self_tests()
         e11_tests, e11_all_passed, e11_summary = run_part_e1_1_schema_provenance_tests()
