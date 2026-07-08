@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-"""Part 3B.2R.1-F.2:
-Production-Staging Evidence and Final Audit Integrity
+"""Part 3B.2R.1-F.3:
+Fail-Closed Production Delivery and Remote Persistence Gate
 
 This script is deterministic and self-contained. It may be invoked from any
 working directory; it locates the repository root from __file__ and references
 all other paths absolutely.
 
-Version: Part-3B.2R.1-F.2-v1
-Starting full commit: e50233c31b4b97921612cd68e1b4cdda9c1dabcb
+Version: Part-3B.2R.1-F.3-v1
+Starting full commit: e5506a1fa96b9029fec9cf4623c004cbe878a5aa
 Accepted Part 3A commit:
 d16e28488aa0936014f020c05466181eff219af6
 """
@@ -42,16 +42,21 @@ warnings.filterwarnings("ignore")
 # ---------------------------------------------------------------------------
 # Frozen version and provenance constants
 # ---------------------------------------------------------------------------
-PART3B_VERSION = "Part-3B.2R.1-F.2-v1"
-STARTING_COMMIT = "e50233c31b4b97921612cd68e1b4cdda9c1dabcb"
+PART3B_VERSION = "Part-3B.2R.1-F.3-v1"
+STARTING_COMMIT = "e5506a1fa96b9029fec9cf4623c004cbe878a5aa"
 ACCEPTED_PART3A_COMMIT = "d16e28488aa0936014f020c05466181eff219af6"
+assert PART3B_VERSION == "Part-3B.2R.1-F.3-v1"
+assert STARTING_COMMIT == "e5506a1fa96b9029fec9cf4623c004cbe878a5aa"
+assert ACCEPTED_PART3A_COMMIT == "d16e28488aa0936014f020c05466181eff219af6"
 assert STARTING_COMMIT == \
-    "e50233c31b4b97921612cd68e1b4cdda9c1dabcb"
+    "e5506a1fa96b9029fec9cf4623c004cbe878a5aa"
 assert ACCEPTED_PART3A_COMMIT == \
     "d16e28488aa0936014f020c05466181eff219af6"
-assert PART3B_VERSION == "Part-3B.2R.1-F.2-v1"
+assert PART3B_VERSION == "Part-3B.2R.1-F.3-v1"
 REPOSITORY = "abtinasg/springer"
 BRANCH = "major-revision-analysis-v2"
+FINAL_PRODUCTION_EXECUTION_AUTHORIZED = False
+FINAL_PRODUCTION_COMMIT_MESSAGE = None
 
 # ---------------------------------------------------------------------------
 # Frozen project and candidate constants
@@ -378,6 +383,25 @@ def sha256_file(path: Path) -> str:
         for chunk in iter(lambda: f.read(65536), b""):
             h.update(chunk)
     return h.hexdigest()
+
+
+def is_valid_full_sha1(value: Any) -> bool:
+    return isinstance(value, str) and re.fullmatch(r"[0-9a-f]{40}", value) is not None
+
+
+def normalize_repo_relative_path(path_value: Any) -> str:
+    normalized = str(path_value).replace("\\", "/").strip()
+    normalized = re.sub(r"/+", "/", normalized)
+    normalized = normalized.lstrip("./")
+    if normalized in {"", ".", ".."}:
+        raise ValueError(f"Invalid repository-relative path: {path_value!r}")
+    path = Path(normalized)
+    if path.is_absolute():
+        raise ValueError(f"Absolute paths are not allowed: {path_value!r}")
+    parts = path.parts
+    if any(part in {"", ".", ".."} for part in parts):
+        raise ValueError(f"Unsafe repository-relative path: {path_value!r}")
+    return path.as_posix()
 
 
 def deterministic_float_format(v: Any) -> str:
@@ -4651,6 +4675,28 @@ assert len(SEMANTIC_DATA_ARTIFACTS) == 8
 assert len(SEMANTIC_METADATA_ARTIFACTS) == 3
 assert len(SEMANTIC_ALL_ARTIFACTS) == 11
 
+FINAL_PRODUCTION_ARTIFACT_PATHS = [
+    "results/part3b_prediction_ledger/sample_registry.csv",
+    "results/part3b_prediction_ledger/event_manifest.csv",
+    "results/part3b_prediction_ledger/split_membership_within.csv.gz",
+    "results/part3b_prediction_ledger/split_membership_cross.csv.gz",
+    "results/part3b_prediction_ledger/prediction_ledger_within.csv.gz",
+    "results/part3b_prediction_ledger/prediction_ledger_cross.csv.gz",
+    "results/part3b_prediction_ledger/validation_reconstruction.csv",
+    "results/part3b_prediction_ledger/canonical_result_reconstruction.csv",
+    "results/part3b_prediction_ledger/ledger_manifest.json",
+    "reports/part3b_split_leakage_audit.json",
+    "reports/part3b_split_leakage_audit.md",
+]
+AUTHORIZED_FINAL_PRODUCTION_CHANGED_PATHS = {
+    "scripts/build_part3b_prediction_ledger.py",
+    *FINAL_PRODUCTION_ARTIFACT_PATHS,
+}
+
+assert FINAL_PRODUCTION_ARTIFACT_PATHS == SEMANTIC_ALL_ARTIFACTS
+assert len(FINAL_PRODUCTION_ARTIFACT_PATHS) == 11
+assert len(AUTHORIZED_FINAL_PRODUCTION_CHANGED_PATHS) == 12
+
 SEMANTIC_STRUCTURAL_ARTIFACTS = {
     "results/part3b_prediction_ledger/sample_registry.csv",
     "results/part3b_prediction_ledger/event_manifest.csv",
@@ -7381,6 +7427,17 @@ EXPECTED_PART_F_2_TEST_NAMES = [
     "final_reconstruction_evidence_matches_actual_validator_evidence",
 ]
 
+EXPECTED_PART_F_3_TEST_NAMES = [
+    "production_execution_blocked_before_part_g",
+    "authorized_changed_path_contract_accepts_eleven_outputs",
+    "authorized_changed_path_contract_accepts_script_plus_outputs",
+    "missing_output_path_rejected",
+    "unauthorized_changed_path_rejected",
+    "published_repository_hash_mismatch_rejected",
+    "remote_head_mismatch_rejects_delivery",
+    "complete_delivery_evidence_passes",
+]
+
 PRODUCTION_USES_SHARED_POSTBUILD_ORCHESTRATOR = True
 DRY_RUN_USES_SHARED_POSTBUILD_ORCHESTRATOR = True
 
@@ -8280,6 +8337,193 @@ def derive_production_outcome(integration_result: Dict[str, Any]) -> Dict[str, A
         if valid
         else None,
         "exit_code": 0 if valid else 1,
+    }
+
+
+def validate_final_production_execution_authorization() -> Dict[str, Any]:
+    commit_message_configured = (
+        isinstance(FINAL_PRODUCTION_COMMIT_MESSAGE, str)
+        and FINAL_PRODUCTION_COMMIT_MESSAGE.strip() != ""
+    )
+    accepted = (
+        FINAL_PRODUCTION_EXECUTION_AUTHORIZED is True
+        and commit_message_configured
+    )
+    return {
+        "accepted": accepted,
+        "production_execution_authorized": FINAL_PRODUCTION_EXECUTION_AUTHORIZED,
+        "final_production_commit_message_configured": commit_message_configured,
+        "required_stage": "Part G",
+        "build_core_bundle_calls": 0,
+        "fit_event_candidates_calls": 0,
+        "build_prediction_rows_calls": 0,
+        "model_fits_executed": 0,
+        "prediction_calls_executed": 0,
+        "repository_artifacts_written": 0,
+        "full_build_executed": False,
+        "part3b_complete": False,
+        "part3c_authorized": False,
+        "exit_code": 0 if accepted else 2,
+    }
+
+
+def verify_published_repository_artifacts(
+    finalized_staged_artifacts: Dict[str, Path],
+    repository_root: Path,
+) -> Dict[str, Any]:
+    present = 0
+    byte_exact = True
+    hashes_verified = True
+    missing: List[str] = []
+    mismatched: List[str] = []
+    for rel in FINAL_PRODUCTION_ARTIFACT_PATHS:
+        staged_path = finalized_staged_artifacts.get(rel)
+        repo_path = repository_root / rel
+        staged_exists = isinstance(staged_path, Path) and staged_path.exists()
+        repo_exists = repo_path.exists()
+        if staged_exists and repo_exists:
+            present += 1
+            staged_size = staged_path.stat().st_size
+            repo_size = repo_path.stat().st_size
+            staged_hash = sha256_file(staged_path)
+            repo_hash = sha256_file(repo_path)
+            if staged_size != repo_size:
+                byte_exact = False
+                if rel not in mismatched:
+                    mismatched.append(rel)
+            if staged_hash != repo_hash:
+                hashes_verified = False
+                if rel not in mismatched:
+                    mismatched.append(rel)
+        else:
+            byte_exact = False
+            hashes_verified = False
+            missing.append(rel)
+    return {
+        "published_artifacts_expected": len(FINAL_PRODUCTION_ARTIFACT_PATHS),
+        "published_artifacts_present": present,
+        "published_artifacts_byte_exact": byte_exact,
+        "published_artifact_hashes_verified": hashes_verified,
+        "missing_published_artifacts": sorted(missing),
+        "mismatched_published_artifacts": sorted(mismatched),
+        "repository_publication_verified": (
+            present == len(FINAL_PRODUCTION_ARTIFACT_PATHS)
+            and byte_exact is True
+            and hashes_verified is True
+            and not missing
+            and not mismatched
+        ),
+    }
+
+
+def validate_final_production_changed_paths(
+    changed_paths: Sequence[Any],
+) -> Dict[str, Any]:
+    normalized_paths: List[str] = []
+    seen: set[str] = set()
+    duplicates: List[str] = []
+    invalid_paths: List[str] = []
+    for path_value in changed_paths:
+        try:
+            normalized = normalize_repo_relative_path(path_value)
+        except ValueError:
+            invalid_paths.append(str(path_value))
+            continue
+        if normalized in seen:
+            duplicates.append(normalized)
+            continue
+        seen.add(normalized)
+        normalized_paths.append(normalized)
+    missing_required = [
+        rel for rel in FINAL_PRODUCTION_ARTIFACT_PATHS if rel not in seen
+    ]
+    unauthorized = sorted(
+        invalid_paths
+        + duplicates
+        + [
+            rel
+            for rel in normalized_paths
+            if rel not in AUTHORIZED_FINAL_PRODUCTION_CHANGED_PATHS
+        ]
+    )
+    script_changed = "scripts/build_part3b_prediction_ledger.py" in seen
+    return {
+        "changed_paths": normalized_paths,
+        "required_output_paths": list(FINAL_PRODUCTION_ARTIFACT_PATHS),
+        "missing_required_output_paths": missing_required,
+        "unauthorized_changed_paths": unauthorized,
+        "script_changed": script_changed,
+        "changed_path_contract_passed": (
+            len(missing_required) == 0
+            and len(unauthorized) == 0
+            and len(normalized_paths)
+            in {len(FINAL_PRODUCTION_ARTIFACT_PATHS), len(AUTHORIZED_FINAL_PRODUCTION_CHANGED_PATHS)}
+        ),
+    }
+
+
+def perform_final_git_delivery(
+    changed_paths: Sequence[str],
+    commit_message: Any,
+) -> Dict[str, Any]:
+    result = {
+        "commit_created": False,
+        "commit_sha": None,
+        "commit_message": commit_message,
+        "push_succeeded": False,
+        "remote_head": None,
+        "branch": BRANCH,
+        "error": None,
+    }
+    try:
+        validation = validate_final_production_changed_paths(changed_paths)
+        if validation["changed_path_contract_passed"] is not True:
+            raise RuntimeError(
+                f"changed path contract failed: {validation}"
+            )
+        if not isinstance(commit_message, str) or commit_message.strip() == "":
+            raise RuntimeError("final production commit message is not configured")
+        run_git(["add"] + validation["changed_paths"])
+        run_git(["commit", "-m", commit_message])
+        commit_sha = run_git(["rev-parse", "HEAD"])
+        result["commit_created"] = True
+        result["commit_sha"] = commit_sha
+        run_git(["push", "origin", BRANCH])
+        remote_head = run_git(["rev-parse", f"origin/{BRANCH}"])
+        result["remote_head"] = remote_head
+        result["push_succeeded"] = remote_head == commit_sha
+        if result["push_succeeded"] is not True:
+            result["error"] = (
+                f"remote HEAD mismatch: local {commit_sha} != remote {remote_head}"
+            )
+    except Exception as exc:
+        result["error"] = str(exc)
+    return result
+
+
+def derive_final_delivery_outcome(
+    production_outcome: Dict[str, Any],
+    publication_verification: Dict[str, Any],
+    changed_path_validation: Dict[str, Any],
+    commit_result: Dict[str, Any],
+    push_result: Dict[str, Any],
+) -> Dict[str, Any]:
+    success = bool(
+        production_outcome.get("production_outcome_valid") is True
+        and publication_verification.get("repository_publication_verified") is True
+        and changed_path_validation.get("changed_path_contract_passed") is True
+        and commit_result.get("commit_created") is True
+        and is_valid_full_sha1(commit_result.get("commit_sha"))
+        and push_result.get("push_succeeded") is True
+        and push_result.get("remote_head") == commit_result.get("commit_sha")
+        and push_result.get("branch") == BRANCH
+    )
+    return {
+        "final_delivery_succeeded": success,
+        "part3b_complete": success,
+        "part3c_authorized": success,
+        "next_authorized_stage": "Part 3C" if success else None,
+        "exit_code": 0 if success else 1,
     }
 
 
@@ -9474,6 +9718,201 @@ def run_part_f_2_integration_tests() -> Tuple[List[Dict[str, Any]], bool, Dict[s
     return tests, all_passed, summary
 
 
+def run_part_f_3_integration_tests() -> Tuple[List[Dict[str, Any]], bool, Dict[str, Any]]:
+    """Eight focused Part F.3 tests for final delivery gating."""
+    tests: List[Dict[str, Any]] = []
+    all_passed = True
+
+    def _record(case_name: str, passed: bool, **extra: Any) -> None:
+        nonlocal all_passed
+        tests.append({"case_name": case_name, "passed": passed, **extra})
+        all_passed = all_passed and passed
+
+    original_execution_authorized = FINAL_PRODUCTION_EXECUTION_AUTHORIZED
+    original_commit_message = FINAL_PRODUCTION_COMMIT_MESSAGE
+    try:
+        globals()["FINAL_PRODUCTION_EXECUTION_AUTHORIZED"] = False
+        globals()["FINAL_PRODUCTION_COMMIT_MESSAGE"] = None
+        guard = validate_final_production_execution_authorization()
+        _record(
+            "production_execution_blocked_before_part_g",
+            guard["accepted"] is False
+            and guard["exit_code"] == 2
+            and guard["build_core_bundle_calls"] == 0
+            and guard["model_fits_executed"] == 0
+            and guard["repository_artifacts_written"] == 0,
+            guard=guard,
+        )
+    finally:
+        globals()["FINAL_PRODUCTION_EXECUTION_AUTHORIZED"] = original_execution_authorized
+        globals()["FINAL_PRODUCTION_COMMIT_MESSAGE"] = original_commit_message
+
+    validation_eleven = validate_final_production_changed_paths(
+        FINAL_PRODUCTION_ARTIFACT_PATHS
+    )
+    _record(
+        "authorized_changed_path_contract_accepts_eleven_outputs",
+        validation_eleven["changed_path_contract_passed"] is True
+        and validation_eleven["missing_required_output_paths"] == []
+        and validation_eleven["unauthorized_changed_paths"] == [],
+        validation=validation_eleven,
+    )
+
+    validation_script_plus = validate_final_production_changed_paths(
+        ["scripts/build_part3b_prediction_ledger.py", *FINAL_PRODUCTION_ARTIFACT_PATHS]
+    )
+    _record(
+        "authorized_changed_path_contract_accepts_script_plus_outputs",
+        validation_script_plus["changed_path_contract_passed"] is True,
+        validation=validation_script_plus,
+    )
+
+    removed_path = "results/part3b_prediction_ledger/prediction_ledger_cross.csv.gz"
+    validation_missing = validate_final_production_changed_paths(
+        [rel for rel in FINAL_PRODUCTION_ARTIFACT_PATHS if rel != removed_path]
+    )
+    _record(
+        "missing_output_path_rejected",
+        validation_missing["changed_path_contract_passed"] is False
+        and removed_path in validation_missing["missing_required_output_paths"],
+        validation=validation_missing,
+    )
+
+    validation_unauthorized = validate_final_production_changed_paths(
+        [*FINAL_PRODUCTION_ARTIFACT_PATHS, "data/raw/CM1.csv"]
+    )
+    _record(
+        "unauthorized_changed_path_rejected",
+        validation_unauthorized["changed_path_contract_passed"] is False
+        and validation_unauthorized["unauthorized_changed_paths"] == ["data/raw/CM1.csv"],
+        validation=validation_unauthorized,
+    )
+
+    mismatch_path = FINAL_PRODUCTION_ARTIFACT_PATHS[4]
+    with tempfile.TemporaryDirectory(prefix="part3b_f3_stage_") as staged_dir, \
+         tempfile.TemporaryDirectory(prefix="part3b_f3_repo_") as repo_dir:
+        staged_root = Path(staged_dir)
+        repo_root_path = Path(repo_dir)
+        staged_artifacts: Dict[str, Path] = {}
+        for rel in FINAL_PRODUCTION_ARTIFACT_PATHS:
+            staged_path = staged_root / rel
+            staged_path.parent.mkdir(parents=True, exist_ok=True)
+            payload = f"staged::{rel}\n".encode("utf-8")
+            staged_path.write_bytes(payload)
+            staged_artifacts[rel] = staged_path
+
+            repo_path = repo_root_path / rel
+            repo_path.parent.mkdir(parents=True, exist_ok=True)
+            repo_path.write_bytes(payload)
+        mutated_repo_path = repo_root_path / mismatch_path
+        mutated_repo_path.write_bytes(mutated_repo_path.read_bytes() + b"mutated\n")
+        publication_mismatch = verify_published_repository_artifacts(
+            staged_artifacts, repo_root_path
+        )
+    _record(
+        "published_repository_hash_mismatch_rejected",
+        publication_mismatch["repository_publication_verified"] is False
+        and mismatch_path in publication_mismatch["mismatched_published_artifacts"],
+        publication_verification=publication_mismatch,
+    )
+
+    valid_production_outcome = {
+        "production_outcome_valid": True,
+    }
+    valid_publication_result = {
+        "repository_publication_verified": True,
+    }
+    valid_changed_path_result = {
+        "changed_path_contract_passed": True,
+    }
+    valid_commit_result = {
+        "commit_created": True,
+        "commit_sha": "1" * 40,
+    }
+    mismatched_push_result = {
+        "push_succeeded": True,
+        "remote_head": "2" * 40,
+        "branch": BRANCH,
+    }
+    mismatch_outcome = derive_final_delivery_outcome(
+        valid_production_outcome,
+        valid_publication_result,
+        valid_changed_path_result,
+        valid_commit_result,
+        mismatched_push_result,
+    )
+    _record(
+        "remote_head_mismatch_rejects_delivery",
+        mismatch_outcome["final_delivery_succeeded"] is False
+        and mismatch_outcome["part3b_complete"] is False
+        and mismatch_outcome["part3c_authorized"] is False
+        and mismatch_outcome["exit_code"] == 1,
+        final_delivery_outcome=mismatch_outcome,
+    )
+
+    complete_push_result = {
+        "push_succeeded": True,
+        "remote_head": "1" * 40,
+        "branch": BRANCH,
+    }
+    complete_outcome = derive_final_delivery_outcome(
+        valid_production_outcome,
+        valid_publication_result,
+        valid_changed_path_result,
+        valid_commit_result,
+        complete_push_result,
+    )
+    _record(
+        "complete_delivery_evidence_passes",
+        complete_outcome["final_delivery_succeeded"] is True
+        and complete_outcome["part3b_complete"] is True
+        and complete_outcome["part3c_authorized"] is True
+        and complete_outcome["next_authorized_stage"] == "Part 3C"
+        and complete_outcome["exit_code"] == 0,
+        final_delivery_outcome=complete_outcome,
+    )
+
+    actual_case_names = [t.get("case_name", "") for t in tests]
+    if actual_case_names != EXPECTED_PART_F_3_TEST_NAMES:
+        all_passed = False
+
+    summary = {
+        "tests_expected": len(EXPECTED_PART_F_3_TEST_NAMES),
+        "tests_executed": len(tests),
+        "tests_passed": sum(1 for t in tests if t.get("passed")),
+        "tests_failed": sum(1 for t in tests if not t.get("passed")),
+        "test_details": tests,
+        "production_execution_authorized": FINAL_PRODUCTION_EXECUTION_AUTHORIZED,
+        "final_production_commit_message_configured": (
+            isinstance(FINAL_PRODUCTION_COMMIT_MESSAGE, str)
+            and FINAL_PRODUCTION_COMMIT_MESSAGE.strip() != ""
+        ),
+        "final_production_artifact_count": len(FINAL_PRODUCTION_ARTIFACT_PATHS),
+        "authorized_final_changed_path_count": len(
+            AUTHORIZED_FINAL_PRODUCTION_CHANGED_PATHS
+        ),
+        "eleven_output_paths_authorized": tests[1].get("passed", False),
+        "script_plus_outputs_authorized": tests[2].get("passed", False),
+        "missing_output_rejected": tests[3].get("passed", False),
+        "unauthorized_path_rejected": tests[4].get("passed", False),
+        "publication_hash_mismatch_rejected": tests[5].get("passed", False),
+        "remote_head_mismatch_rejected": tests[6].get("passed", False),
+        "complete_delivery_evidence_passed": tests[7].get("passed", False),
+        "build_core_bundle_calls": 0,
+        "fit_event_candidates_calls": 0,
+        "build_prediction_rows_calls": 0,
+        "model_fits_executed": 0,
+        "prediction_calls_executed": 0,
+        "repository_artifacts_written": 0,
+        "real_commits_executed": 0,
+        "real_pushes_executed": 0,
+        "full_build_executed": False,
+        "part3b_complete": False,
+        "part3c_authorized": False,
+    }
+    return tests, all_passed, summary
+
+
 def collect_actual_negative_test_evidence(
     original_negative_tests: List[Dict[str, Any]],
     canonical_exception_tests: List[Dict[str, Any]],
@@ -9832,9 +10271,11 @@ def main():
         part_f_tests, part_f_all_passed, part_f_summary, dry_result = run_part_f_integration_tests()
         part_f_1_tests, part_f_1_all_passed, part_f_1_summary = run_part_f_1_integration_tests()
         part_f_2_tests, part_f_2_all_passed, part_f_2_summary = run_part_f_2_integration_tests()
+        part_f_3_tests, part_f_3_all_passed, part_f_3_summary = run_part_f_3_integration_tests()
         part_f_case_names = [t["case_name"] for t in part_f_tests]
         part_f_1_case_names = [t["case_name"] for t in part_f_1_tests]
         part_f_2_case_names = [t["case_name"] for t in part_f_2_tests]
+        part_f_3_case_names = [t["case_name"] for t in part_f_3_tests]
         dry_run_never_writes_test = next(
             (t for t in part_f_tests if t["case_name"] == "dry_run_never_writes_repository_or_authorizes_part3c"),
             {},
@@ -9889,9 +10330,16 @@ def main():
                 "tests_passed": part_f_2_summary["tests_passed"],
                 "tests_failed": part_f_2_summary["tests_failed"],
             },
+            "part_f_3_tests": {
+                "tests_expected": part_f_3_summary["tests_expected"],
+                "tests_executed": part_f_3_summary["tests_executed"],
+                "tests_passed": part_f_3_summary["tests_passed"],
+                "tests_failed": part_f_3_summary["tests_failed"],
+            },
             "part_f_case_names_exact": part_f_case_names == EXPECTED_PART_F_TEST_NAMES,
             "part_f_1_case_names_exact": part_f_1_case_names == EXPECTED_PART_F_1_TEST_NAMES,
             "part_f_2_case_names_exact": part_f_2_case_names == EXPECTED_PART_F_2_TEST_NAMES,
+            "part_f_3_case_names_exact": part_f_3_case_names == EXPECTED_PART_F_3_TEST_NAMES,
             "execution_trace": dry_result.get("execution_trace", []),
             "execution_trace_exact": dry_result.get("execution_trace_exact", False),
             "staged_validation_is_hard_gate": (
@@ -9967,12 +10415,53 @@ def main():
             "build_core_bundle_calls": part_f_summary["build_core_bundle_calls"],
             "fit_event_candidates_calls": part_f_summary["fit_event_candidates_calls"],
             "build_prediction_rows_calls": part_f_summary["build_prediction_rows_calls"],
+            "part_f_3_tests_summary": {
+                "tests_expected": part_f_3_summary["tests_expected"],
+                "tests_executed": part_f_3_summary["tests_executed"],
+                "tests_passed": part_f_3_summary["tests_passed"],
+                "tests_failed": part_f_3_summary["tests_failed"],
+            },
+            "production_execution_authorized": part_f_3_summary[
+                "production_execution_authorized"
+            ],
+            "final_production_commit_message_configured": part_f_3_summary[
+                "final_production_commit_message_configured"
+            ],
+            "final_production_artifact_count": part_f_3_summary[
+                "final_production_artifact_count"
+            ],
+            "authorized_final_changed_path_count": part_f_3_summary[
+                "authorized_final_changed_path_count"
+            ],
+            "eleven_output_paths_authorized": part_f_3_summary[
+                "eleven_output_paths_authorized"
+            ],
+            "script_plus_outputs_authorized": part_f_3_summary[
+                "script_plus_outputs_authorized"
+            ],
+            "missing_output_rejected": part_f_3_summary[
+                "missing_output_rejected"
+            ],
+            "unauthorized_path_rejected": part_f_3_summary[
+                "unauthorized_path_rejected"
+            ],
+            "publication_hash_mismatch_rejected": part_f_3_summary[
+                "publication_hash_mismatch_rejected"
+            ],
+            "remote_head_mismatch_rejected": part_f_3_summary[
+                "remote_head_mismatch_rejected"
+            ],
+            "complete_delivery_evidence_passed": part_f_3_summary[
+                "complete_delivery_evidence_passed"
+            ],
             "model_fits_executed": 0,
             "prediction_calls_executed": 0,
             "temporary_staging_artifacts_written": dry_result.get(
                 "temporary_staging_artifacts_written", 0
             ),
             "repository_artifacts_written": 0,
+            "real_commits_executed": part_f_3_summary["real_commits_executed"],
+            "real_pushes_executed": part_f_3_summary["real_pushes_executed"],
             "observed_test_8_repository_writes": observed_test_8_result.get(
                 "repository_artifacts_written", -1
             ),
@@ -10028,15 +10517,19 @@ def main():
             part_f_all_passed
             and part_f_1_all_passed
             and part_f_2_all_passed
+            and part_f_3_all_passed
             and part_f_summary["tests_executed"] == len(EXPECTED_PART_F_TEST_NAMES)
             and part_f_summary["tests_failed"] == 0
             and part_f_1_summary["tests_executed"] == len(EXPECTED_PART_F_1_TEST_NAMES)
             and part_f_1_summary["tests_failed"] == 0
             and part_f_2_summary["tests_executed"] == len(EXPECTED_PART_F_2_TEST_NAMES)
             and part_f_2_summary["tests_failed"] == 0
+            and part_f_3_summary["tests_executed"] == len(EXPECTED_PART_F_3_TEST_NAMES)
+            and part_f_3_summary["tests_failed"] == 0
             and part_f_case_names == EXPECTED_PART_F_TEST_NAMES
             and part_f_1_case_names == EXPECTED_PART_F_1_TEST_NAMES
             and part_f_2_case_names == EXPECTED_PART_F_2_TEST_NAMES
+            and part_f_3_case_names == EXPECTED_PART_F_3_TEST_NAMES
             and combined["execution_trace_exact"] is True
             and combined["staged_validation_is_hard_gate"] is True
             and combined["persisted_provider_called_after_staged_failure"] is False
@@ -10069,6 +10562,26 @@ def main():
             and combined["final_audit_reconstruction_evidence_is_actual"] is True
             and combined["persisted_final_metadata_modified_after_validation"] is False
             and combined["console_report_is_separate_copy"] is True
+            and combined["part_f_3_case_names_exact"] is True
+            and combined["production_execution_authorized"] is False
+            and combined["final_production_commit_message_configured"] is False
+            and combined["final_production_artifact_count"] == 11
+            and combined["authorized_final_changed_path_count"] == 12
+            and combined["eleven_output_paths_authorized"] is True
+            and combined["script_plus_outputs_authorized"] is True
+            and combined["missing_output_rejected"] is True
+            and combined["unauthorized_path_rejected"] is True
+            and combined["publication_hash_mismatch_rejected"] is True
+            and combined["remote_head_mismatch_rejected"] is True
+            and combined["complete_delivery_evidence_passed"] is True
+            and combined["model_fits_executed"] == 0
+            and combined["prediction_calls_executed"] == 0
+            and combined["repository_artifacts_written"] == 0
+            and combined["real_commits_executed"] == 0
+            and combined["real_pushes_executed"] == 0
+            and combined["full_build_executed"] is False
+            and combined["part3b_complete"] is False
+            and combined["part3c_authorized"] is False
         ) else 1
     if known.self_test_eleven_artifact_comparison:
         e2_tests, e2_all_passed, e2_summary = run_part_e2_eleven_artifact_tests()
@@ -10506,6 +11019,25 @@ def main():
         ) else 1
         return exit_code
 
+    production_guard = validate_final_production_execution_authorization()
+    if not production_guard["accepted"]:
+        print(
+            _json_dumps(
+                {
+                    "production_execution_authorized": False,
+                    "required_stage": "Part G",
+                    "model_fits_executed": 0,
+                    "prediction_calls_executed": 0,
+                    "repository_artifacts_written": 0,
+                    "full_build_executed": False,
+                    "part3b_complete": False,
+                    "part3c_authorized": False,
+                    "exit_code": 2,
+                }
+            )
+        )
+        return 2
+
     root = repo_root()
     data_dir = root / "data" / "raw"
     canonical_dir = root / "results" / "part1_full_reproduction"
@@ -10641,49 +11173,93 @@ def main():
     production_outcome = derive_production_outcome(integration_result)
     audit_checks = production_outcome["audit_checks"]
 
-    # 15. Gather actual changed paths from git status.
+    publication_verification = verify_published_repository_artifacts(
+        integration_result.get("finalized_staged_artifacts", {}),
+        root,
+    )
+
     try:
         git_status_lines = run_git(["status", "--short"]).splitlines()
-        actual_changed_paths = [line.split()[-1] for line in git_status_lines if line.strip()]
-        git_status_clean = len(actual_changed_paths) == 0
+        actual_changed_paths = [
+            normalize_repo_relative_path(line[3:])
+            for line in git_status_lines
+            if line.strip()
+        ]
     except Exception:
         actual_changed_paths = []
-        git_status_clean = None
+    changed_path_validation = validate_final_production_changed_paths(
+        actual_changed_paths
+    )
 
-    # 16. Determine commit and push outcome if stage gate passes.
+    commit_result: Dict[str, Any] = {
+        "commit_created": False,
+        "commit_sha": None,
+        "commit_message": FINAL_PRODUCTION_COMMIT_MESSAGE,
+        "push_succeeded": False,
+        "remote_head": None,
+        "branch": BRANCH,
+        "error": None,
+    }
+    push_result: Dict[str, Any] = {
+        "push_succeeded": False,
+        "remote_head": None,
+        "branch": BRANCH,
+        "error": None,
+    }
     new_commit: Optional[str] = None
     remote_head: Optional[str] = None
-    if production_outcome["production_outcome_valid"] and git_status_clean is False:
-        # Verify only authorized Part 3B paths changed.
-        authorized = {
-            "scripts/build_part3b_prediction_ledger.py",
+
+    if (
+        production_outcome["production_outcome_valid"] is True
+        and publication_verification["repository_publication_verified"] is True
+        and changed_path_validation["changed_path_contract_passed"] is True
+    ):
+        delivery_result = perform_final_git_delivery(
+            changed_path_validation["changed_paths"],
+            FINAL_PRODUCTION_COMMIT_MESSAGE,
+        )
+        commit_result = copy.deepcopy(delivery_result)
+        push_result = {
+            "push_succeeded": delivery_result.get("push_succeeded", False),
+            "remote_head": delivery_result.get("remote_head"),
+            "branch": delivery_result.get("branch"),
+            "error": delivery_result.get("error"),
         }
-        unauthorized = [p for p in actual_changed_paths if p not in authorized]
-        if unauthorized:
-            print(f"\n[ERROR] Unauthorized changed files detected; will not commit: {unauthorized}")
-            git_status_clean = None
-        else:
-            try:
-                run_git(["add"] + sorted(actual_changed_paths))
-                run_git(["commit", "-m", "Part 3B.2R.1-F.2: Repair production evidence wiring"])
-                new_commit = run_git(["rev-parse", "HEAD"])
-                run_git(["push", "origin", BRANCH])
-                remote_head = run_git(["rev-parse", f"origin/{BRANCH}"])
-                print(f"\n[SUCCESS] Committed and pushed: {new_commit}")
-            except Exception as e:
-                print(f"\n[ERROR] Commit/push failed: {e}")
-                new_commit = None
-                remote_head = None
+        new_commit = delivery_result.get("commit_sha")
+        remote_head = delivery_result.get("remote_head")
 
-    # 17. Print final report.
-    print_final_report(json_report, actual_changed_paths, new_commit, remote_head, "clean" if git_status_clean else "modified")
+    final_delivery_outcome = derive_final_delivery_outcome(
+        production_outcome,
+        publication_verification,
+        changed_path_validation,
+        commit_result,
+        push_result,
+    )
 
-    # 18. Return exit code based on gate.
-    if production_outcome["exit_code"] != 0:
+    try:
+        final_git_status_lines = run_git(["status", "--short"]).splitlines()
+        git_status_label = "clean" if len(final_git_status_lines) == 0 else "modified"
+    except Exception:
+        git_status_label = "unknown"
+
+    print_final_report(
+        json_report,
+        actual_changed_paths,
+        new_commit,
+        remote_head,
+        git_status_label,
+    )
+
+    if production_outcome["production_outcome_valid"] is not True:
         print("\n[ERROR] Stage gate did not pass. Part 3C is not authorized.")
         return production_outcome["exit_code"]
+    if final_delivery_outcome["final_delivery_succeeded"] is not True:
+        print(
+            "\n[ERROR] Scientific gate passed but final repository delivery failed."
+        )
+        return final_delivery_outcome["exit_code"]
     print("\n[SUCCESS] Stage gate passed. Part 3C is authorized.")
-    return production_outcome["exit_code"]
+    return final_delivery_outcome["exit_code"]
 
 
 if __name__ == "__main__":
