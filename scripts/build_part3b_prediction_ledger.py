@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-"""Part 3B.2R.1-F.4:
-Publication Evidence Persistence Across Staging Cleanup
+"""Part 3B.2R.1-F.5:
+Git-Diff and Verified Publication Contract Separation
 
 This script is deterministic and self-contained. It may be invoked from any
 working directory; it locates the repository root from __file__ and references
 all other paths absolutely.
 
-Version: Part-3B.2R.1-F.4-v1
-Starting full commit: 4656aa23b5fb8ffdc4b8c302e5b1c08ae5640ff8
+Version: Part-3B.2R.1-F.5-v1
+Starting full commit: 6fed3f420f628d9f17a85463cdf0e16027abd62e
 Accepted Part 3A commit:
 d16e28488aa0936014f020c05466181eff219af6
 """
@@ -42,11 +42,11 @@ warnings.filterwarnings("ignore")
 # ---------------------------------------------------------------------------
 # Frozen version and provenance constants
 # ---------------------------------------------------------------------------
-PART3B_VERSION = "Part-3B.2R.1-F.4-v1"
-STARTING_COMMIT = "4656aa23b5fb8ffdc4b8c302e5b1c08ae5640ff8"
+PART3B_VERSION = "Part-3B.2R.1-F.5-v1"
+STARTING_COMMIT = "6fed3f420f628d9f17a85463cdf0e16027abd62e"
 ACCEPTED_PART3A_COMMIT = "d16e28488aa0936014f020c05466181eff219af6"
-assert PART3B_VERSION == "Part-3B.2R.1-F.4-v1"
-assert STARTING_COMMIT == "4656aa23b5fb8ffdc4b8c302e5b1c08ae5640ff8"
+assert PART3B_VERSION == "Part-3B.2R.1-F.5-v1"
+assert STARTING_COMMIT == "6fed3f420f628d9f17a85463cdf0e16027abd62e"
 assert ACCEPTED_PART3A_COMMIT == "d16e28488aa0936014f020c05466181eff219af6"
 REPOSITORY = "abtinasg/springer"
 BRANCH = "major-revision-analysis-v2"
@@ -387,11 +387,17 @@ def is_valid_full_sha1(value: Any) -> bool:
 
 
 def normalize_repo_relative_path(path_value: Any) -> str:
-    normalized = str(path_value).replace("\\", "/").strip()
+    normalized = str(path_value).replace("\\", "/")
+    if "\0" in normalized:
+        raise ValueError(f"NUL characters are not allowed: {path_value!r}")
+    normalized = normalized.strip()
+    if normalized.startswith("./"):
+        normalized = normalized[2:]
     normalized = re.sub(r"/+", "/", normalized)
-    normalized = normalized.lstrip("./")
     if normalized in {"", ".", ".."}:
         raise ValueError(f"Invalid repository-relative path: {path_value!r}")
+    if normalized.startswith("/"):
+        raise ValueError(f"Absolute paths are not allowed: {path_value!r}")
     path = Path(normalized)
     if path.is_absolute():
         raise ValueError(f"Absolute paths are not allowed: {path_value!r}")
@@ -4689,10 +4695,17 @@ AUTHORIZED_FINAL_PRODUCTION_CHANGED_PATHS = {
     "scripts/build_part3b_prediction_ledger.py",
     *FINAL_PRODUCTION_ARTIFACT_PATHS,
 }
+REQUIRED_FINAL_METADATA_CHANGED_PATHS = {
+    "results/part3b_prediction_ledger/ledger_manifest.json",
+    "reports/part3b_split_leakage_audit.json",
+    "reports/part3b_split_leakage_audit.md",
+}
 
 assert FINAL_PRODUCTION_ARTIFACT_PATHS == SEMANTIC_ALL_ARTIFACTS
 assert len(FINAL_PRODUCTION_ARTIFACT_PATHS) == 11
 assert len(AUTHORIZED_FINAL_PRODUCTION_CHANGED_PATHS) == 12
+assert len(REQUIRED_FINAL_METADATA_CHANGED_PATHS) == 3
+assert REQUIRED_FINAL_METADATA_CHANGED_PATHS == set(SEMANTIC_METADATA_ARTIFACTS)
 
 SEMANTIC_STRUCTURAL_ARTIFACTS = {
     "results/part3b_prediction_ledger/sample_registry.csv",
@@ -7462,6 +7475,15 @@ EXPECTED_PART_F_4_TEST_NAMES = [
     "snapshot_repository_hash_mismatch_rejected",
 ]
 
+EXPECTED_PART_F_5_TEST_NAMES = [
+    "metadata_plus_script_changed_paths_pass",
+    "unchanged_data_artifacts_need_not_appear_in_git_diff",
+    "missing_required_metadata_path_fails",
+    "publication_verification_remains_authority_for_all_eleven",
+    "path_traversal_alias_is_rejected",
+    "inconsistent_publication_success_evidence_fails_closed",
+]
+
 PUBLICATION_VERIFICATION_FIELDS = (
     "published_artifacts_expected",
     "published_artifacts_present",
@@ -8643,7 +8665,18 @@ def resolve_stored_publication_verification(
         for path in mismatched
     ):
         return _fail_closed_publication_verification()
-    return copy.deepcopy(publication_verification)
+    result = copy.deepcopy(publication_verification)
+    if result.get("repository_publication_verified") is True:
+        if (
+            result.get("published_artifacts_expected") != expected
+            or result.get("published_artifacts_present") != expected
+            or result.get("published_artifacts_byte_exact") is not True
+            or result.get("published_artifact_hashes_verified") is not True
+            or result.get("missing_published_artifacts") != []
+            or result.get("mismatched_published_artifacts") != []
+        ):
+            return _fail_closed_publication_verification()
+    return result
 
 
 def validate_final_production_changed_paths(
@@ -8651,43 +8684,53 @@ def validate_final_production_changed_paths(
 ) -> Dict[str, Any]:
     normalized_paths: List[str] = []
     seen: set[str] = set()
-    duplicates: List[str] = []
-    invalid_paths: List[str] = []
+    duplicate_changed_paths: List[str] = []
+    invalid_changed_paths: List[str] = []
     for path_value in changed_paths:
         try:
             normalized = normalize_repo_relative_path(path_value)
         except ValueError:
-            invalid_paths.append(str(path_value))
+            invalid_changed_paths.append(str(path_value))
             continue
         if normalized in seen:
-            duplicates.append(normalized)
+            duplicate_changed_paths.append(normalized)
             continue
         seen.add(normalized)
         normalized_paths.append(normalized)
-    missing_required = [
+    missing_required_metadata = sorted(
+        rel for rel in REQUIRED_FINAL_METADATA_CHANGED_PATHS if rel not in seen
+    )
+    unauthorized_changed_paths = sorted(
+        rel
+        for rel in normalized_paths
+        if rel not in AUTHORIZED_FINAL_PRODUCTION_CHANGED_PATHS
+    )
+    changed_output_paths = sorted(
+        rel for rel in FINAL_PRODUCTION_ARTIFACT_PATHS if rel in seen
+    )
+    unchanged_output_paths = sorted(
         rel for rel in FINAL_PRODUCTION_ARTIFACT_PATHS if rel not in seen
-    ]
-    unauthorized = sorted(
-        invalid_paths
-        + duplicates
-        + [
-            rel
-            for rel in normalized_paths
-            if rel not in AUTHORIZED_FINAL_PRODUCTION_CHANGED_PATHS
-        ]
+    )
+    required_metadata_changed_paths = sorted(
+        rel for rel in REQUIRED_FINAL_METADATA_CHANGED_PATHS if rel in seen
     )
     script_changed = "scripts/build_part3b_prediction_ledger.py" in seen
     return {
         "changed_paths": normalized_paths,
-        "required_output_paths": list(FINAL_PRODUCTION_ARTIFACT_PATHS),
-        "missing_required_output_paths": missing_required,
-        "unauthorized_changed_paths": unauthorized,
+        "changed_output_paths": changed_output_paths,
+        "unchanged_output_paths": unchanged_output_paths,
+        "required_metadata_changed_paths": required_metadata_changed_paths,
+        "missing_required_metadata_changed_paths": missing_required_metadata,
+        "unauthorized_changed_paths": unauthorized_changed_paths,
+        "duplicate_changed_paths": duplicate_changed_paths,
+        "invalid_changed_paths": invalid_changed_paths,
         "script_changed": script_changed,
         "changed_path_contract_passed": (
-            len(missing_required) == 0
-            and len(unauthorized) == 0
-            and len(normalized_paths)
-            in {len(FINAL_PRODUCTION_ARTIFACT_PATHS), len(AUTHORIZED_FINAL_PRODUCTION_CHANGED_PATHS)}
+            len(normalized_paths) > 0
+            and missing_required_metadata == []
+            and unauthorized_changed_paths == []
+            and duplicate_changed_paths == []
+            and invalid_changed_paths == []
         ),
     }
 
@@ -10005,7 +10048,7 @@ def run_part_f_3_integration_tests() -> Tuple[List[Dict[str, Any]], bool, Dict[s
     _record(
         "authorized_changed_path_contract_accepts_eleven_outputs",
         validation_eleven["changed_path_contract_passed"] is True
-        and validation_eleven["missing_required_output_paths"] == []
+        and validation_eleven["missing_required_metadata_changed_paths"] == []
         and validation_eleven["unauthorized_changed_paths"] == [],
         validation=validation_eleven,
     )
@@ -10019,14 +10062,14 @@ def run_part_f_3_integration_tests() -> Tuple[List[Dict[str, Any]], bool, Dict[s
         validation=validation_script_plus,
     )
 
-    removed_path = "results/part3b_prediction_ledger/prediction_ledger_cross.csv.gz"
+    removed_path = "results/part3b_prediction_ledger/ledger_manifest.json"
     validation_missing = validate_final_production_changed_paths(
         [rel for rel in FINAL_PRODUCTION_ARTIFACT_PATHS if rel != removed_path]
     )
     _record(
         "missing_output_path_rejected",
         validation_missing["changed_path_contract_passed"] is False
-        and removed_path in validation_missing["missing_required_output_paths"],
+        and removed_path in validation_missing["missing_required_metadata_changed_paths"],
         validation=validation_missing,
     )
 
@@ -10436,6 +10479,230 @@ def run_part_f_4_integration_tests() -> Tuple[List[Dict[str, Any]], bool, Dict[s
     return tests, all_passed, summary
 
 
+def run_part_f_5_integration_tests() -> Tuple[List[Dict[str, Any]], bool, Dict[str, Any]]:
+    """Six focused Part F.5 tests for git-diff vs publication separation."""
+    tests: List[Dict[str, Any]] = []
+    all_passed = True
+
+    def _record(case_name: str, passed: bool, **extra: Any) -> None:
+        nonlocal all_passed
+        tests.append({"case_name": case_name, "passed": passed, **extra})
+        all_passed = all_passed and passed
+
+    metadata_paths = sorted(REQUIRED_FINAL_METADATA_CHANGED_PATHS)
+    script_path = "scripts/build_part3b_prediction_ledger.py"
+
+    validation_metadata_script = validate_final_production_changed_paths(
+        [script_path, *metadata_paths]
+    )
+    _record(
+        "metadata_plus_script_changed_paths_pass",
+        validation_metadata_script["changed_path_contract_passed"] is True
+        and set(metadata_paths).issubset(
+            set(validation_metadata_script["changed_output_paths"])
+        )
+        and set(SEMANTIC_DATA_ARTIFACTS)
+        == set(validation_metadata_script["unchanged_output_paths"]),
+        validation=validation_metadata_script,
+    )
+
+    one_data_artifact = SEMANTIC_DATA_ARTIFACTS[0]
+    validation_partial_data = validate_final_production_changed_paths(
+        [*metadata_paths, one_data_artifact]
+    )
+    unchanged_seven = [
+        rel for rel in SEMANTIC_DATA_ARTIFACTS if rel != one_data_artifact
+    ]
+    _record(
+        "unchanged_data_artifacts_need_not_appear_in_git_diff",
+        validation_partial_data["changed_path_contract_passed"] is True
+        and one_data_artifact in validation_partial_data["changed_output_paths"]
+        and set(unchanged_seven)
+        == set(validation_partial_data["unchanged_output_paths"]),
+        validation=validation_partial_data,
+    )
+
+    missing_metadata_path = "reports/part3b_split_leakage_audit.md"
+    validation_missing_metadata = validate_final_production_changed_paths(
+        [rel for rel in metadata_paths if rel != missing_metadata_path]
+    )
+    _record(
+        "missing_required_metadata_path_fails",
+        validation_missing_metadata["changed_path_contract_passed"] is False
+        and missing_metadata_path
+        in validation_missing_metadata["missing_required_metadata_changed_paths"],
+        validation=validation_missing_metadata,
+    )
+
+    with tempfile.TemporaryDirectory(prefix="part3b_f5_repo_") as repo_dir:
+        repo_root_path = Path(repo_dir)
+        staged_artifacts: Dict[str, Path] = {}
+        for rel in FINAL_PRODUCTION_ARTIFACT_PATHS:
+            staged_path = repo_root_path / rel
+            staged_path.parent.mkdir(parents=True, exist_ok=True)
+            payload = f"staged::{rel}\n".encode("utf-8")
+            staged_path.write_bytes(payload)
+            staged_artifacts[rel] = staged_path
+        snapshot = build_finalized_staging_snapshot(staged_artifacts)
+        publication_result = verify_published_repository_artifacts_from_snapshot(
+            snapshot,
+            repo_root_path,
+        )
+        changed_path_evidence = validate_final_production_changed_paths(
+            [script_path, *metadata_paths]
+        )
+        valid_production_outcome = {"production_outcome_valid": True}
+        valid_commit_result = {
+            "commit_created": True,
+            "commit_sha": "a" * 40,
+        }
+        valid_push_result = {
+            "push_succeeded": True,
+            "remote_head": "a" * 40,
+            "branch": BRANCH,
+        }
+        delivery_outcome = derive_final_delivery_outcome(
+            valid_production_outcome,
+            publication_result,
+            changed_path_evidence,
+            valid_commit_result,
+            valid_push_result,
+        )
+    _record(
+        "publication_verification_remains_authority_for_all_eleven",
+        publication_result.get("repository_publication_verified") is True
+        and changed_path_evidence.get("changed_path_contract_passed") is True
+        and delivery_outcome.get("final_delivery_succeeded") is True,
+        publication_verification=publication_result,
+        changed_path_validation=changed_path_evidence,
+        final_delivery_outcome=delivery_outcome,
+    )
+
+    traversal_path = "../results/part3b_prediction_ledger/ledger_manifest.json"
+    validation_traversal = validate_final_production_changed_paths(
+        [traversal_path, *metadata_paths]
+    )
+    traversal_rejected = (
+        traversal_path in validation_traversal["invalid_changed_paths"]
+        or traversal_path in validation_traversal["unauthorized_changed_paths"]
+    )
+    _record(
+        "path_traversal_alias_is_rejected",
+        validation_traversal["changed_path_contract_passed"] is False
+        and traversal_rejected,
+        validation=validation_traversal,
+    )
+
+    inconsistent_evidence = {
+        "repository_publication_verified": True,
+        "published_artifacts_expected": 11,
+        "published_artifacts_present": 0,
+        "published_artifacts_byte_exact": False,
+        "published_artifact_hashes_verified": False,
+        "missing_published_artifacts": [],
+        "mismatched_published_artifacts": [],
+    }
+    resolved_inconsistent = resolve_stored_publication_verification(
+        {"publication_verification": inconsistent_evidence}
+    )
+    inconsistent_delivery = derive_final_delivery_outcome(
+        {"production_outcome_valid": True},
+        resolved_inconsistent,
+        {"changed_path_contract_passed": True},
+        {"commit_created": True, "commit_sha": "b" * 40},
+        {"push_succeeded": True, "remote_head": "b" * 40, "branch": BRANCH},
+    )
+    _record(
+        "inconsistent_publication_success_evidence_fails_closed",
+        resolved_inconsistent.get("repository_publication_verified") is False
+        and resolved_inconsistent.get("published_artifacts_present") == 0
+        and inconsistent_delivery.get("final_delivery_succeeded") is False
+        and inconsistent_delivery.get("part3b_complete") is False
+        and inconsistent_delivery.get("part3c_authorized") is False
+        and inconsistent_delivery.get("exit_code") == 1,
+        resolved_publication=resolved_inconsistent,
+        final_delivery_outcome=inconsistent_delivery,
+    )
+
+    actual_case_names = [t.get("case_name", "") for t in tests]
+    if actual_case_names != EXPECTED_PART_F_5_TEST_NAMES:
+        all_passed = False
+
+    metadata_script_test = next(
+        (t for t in tests if t["case_name"] == "metadata_plus_script_changed_paths_pass"),
+        {},
+    )
+    unchanged_data_test = next(
+        (
+            t
+            for t in tests
+            if t["case_name"] == "unchanged_data_artifacts_need_not_appear_in_git_diff"
+        ),
+        {},
+    )
+    missing_metadata_test = next(
+        (t for t in tests if t["case_name"] == "missing_required_metadata_path_fails"),
+        {},
+    )
+    publication_authority_test = next(
+        (
+            t
+            for t in tests
+            if t["case_name"] == "publication_verification_remains_authority_for_all_eleven"
+        ),
+        {},
+    )
+    traversal_test = next(
+        (t for t in tests if t["case_name"] == "path_traversal_alias_is_rejected"),
+        {},
+    )
+    inconsistent_test = next(
+        (
+            t
+            for t in tests
+            if t["case_name"] == "inconsistent_publication_success_evidence_fails_closed"
+        ),
+        {},
+    )
+
+    summary = {
+        "tests_expected": len(EXPECTED_PART_F_5_TEST_NAMES),
+        "tests_executed": len(tests),
+        "tests_passed": sum(1 for t in tests if t.get("passed")),
+        "tests_failed": sum(1 for t in tests if not t.get("passed")),
+        "test_details": tests,
+        "required_final_metadata_changed_path_count": len(
+            REQUIRED_FINAL_METADATA_CHANGED_PATHS
+        ),
+        "metadata_plus_script_changed_paths_pass": metadata_script_test.get(
+            "passed", False
+        ),
+        "unchanged_data_artifacts_allowed_outside_git_diff": unchanged_data_test.get(
+            "passed", False
+        ),
+        "missing_required_metadata_rejected": missing_metadata_test.get("passed", False),
+        "publication_verification_authority_preserved": publication_authority_test.get(
+            "passed", False
+        ),
+        "path_traversal_alias_rejected": traversal_test.get("passed", False),
+        "inconsistent_publication_success_rejected": inconsistent_test.get(
+            "passed", False
+        ),
+        "build_core_bundle_calls": 0,
+        "fit_event_candidates_calls": 0,
+        "build_prediction_rows_calls": 0,
+        "model_fits_executed": 0,
+        "prediction_calls_executed": 0,
+        "repository_artifacts_written": 0,
+        "real_commits_executed": 0,
+        "real_pushes_executed": 0,
+        "full_build_executed": False,
+        "part3b_complete": False,
+        "part3c_authorized": False,
+    }
+    return tests, all_passed, summary
+
+
 def collect_actual_negative_test_evidence(
     original_negative_tests: List[Dict[str, Any]],
     canonical_exception_tests: List[Dict[str, Any]],
@@ -10796,11 +11063,13 @@ def main():
         part_f_2_tests, part_f_2_all_passed, part_f_2_summary = run_part_f_2_integration_tests()
         part_f_3_tests, part_f_3_all_passed, part_f_3_summary = run_part_f_3_integration_tests()
         part_f_4_tests, part_f_4_all_passed, part_f_4_summary = run_part_f_4_integration_tests()
+        part_f_5_tests, part_f_5_all_passed, part_f_5_summary = run_part_f_5_integration_tests()
         part_f_case_names = [t["case_name"] for t in part_f_tests]
         part_f_1_case_names = [t["case_name"] for t in part_f_1_tests]
         part_f_2_case_names = [t["case_name"] for t in part_f_2_tests]
         part_f_3_case_names = [t["case_name"] for t in part_f_3_tests]
         part_f_4_case_names = [t["case_name"] for t in part_f_4_tests]
+        part_f_5_case_names = [t["case_name"] for t in part_f_5_tests]
         dry_run_never_writes_test = next(
             (t for t in part_f_tests if t["case_name"] == "dry_run_never_writes_repository_or_authorizes_part3c"),
             {},
@@ -10867,11 +11136,39 @@ def main():
                 "tests_passed": part_f_4_summary["tests_passed"],
                 "tests_failed": part_f_4_summary["tests_failed"],
             },
+            "part_f_5_tests": {
+                "tests_expected": part_f_5_summary["tests_expected"],
+                "tests_executed": part_f_5_summary["tests_executed"],
+                "tests_passed": part_f_5_summary["tests_passed"],
+                "tests_failed": part_f_5_summary["tests_failed"],
+            },
             "part_f_case_names_exact": part_f_case_names == EXPECTED_PART_F_TEST_NAMES,
             "part_f_1_case_names_exact": part_f_1_case_names == EXPECTED_PART_F_1_TEST_NAMES,
             "part_f_2_case_names_exact": part_f_2_case_names == EXPECTED_PART_F_2_TEST_NAMES,
             "part_f_3_case_names_exact": part_f_3_case_names == EXPECTED_PART_F_3_TEST_NAMES,
             "part_f_4_case_names_exact": part_f_4_case_names == EXPECTED_PART_F_4_TEST_NAMES,
+            "part_f_5_case_names_exact": part_f_5_case_names == EXPECTED_PART_F_5_TEST_NAMES,
+            "required_final_metadata_changed_path_count": part_f_5_summary[
+                "required_final_metadata_changed_path_count"
+            ],
+            "metadata_plus_script_changed_paths_pass": part_f_5_summary[
+                "metadata_plus_script_changed_paths_pass"
+            ],
+            "unchanged_data_artifacts_allowed_outside_git_diff": part_f_5_summary[
+                "unchanged_data_artifacts_allowed_outside_git_diff"
+            ],
+            "missing_required_metadata_rejected": part_f_5_summary[
+                "missing_required_metadata_rejected"
+            ],
+            "publication_verification_authority_preserved": part_f_5_summary[
+                "publication_verification_authority_preserved"
+            ],
+            "path_traversal_alias_rejected": part_f_5_summary[
+                "path_traversal_alias_rejected"
+            ],
+            "inconsistent_publication_success_rejected": part_f_5_summary[
+                "inconsistent_publication_success_rejected"
+            ],
             "publication_verification_completed_before_cleanup": part_f_4_summary[
                 "publication_verification_completed_before_cleanup"
             ],
@@ -11078,6 +11375,7 @@ def main():
             and part_f_2_all_passed
             and part_f_3_all_passed
             and part_f_4_all_passed
+            and part_f_5_all_passed
             and part_f_summary["tests_executed"] == len(EXPECTED_PART_F_TEST_NAMES)
             and part_f_summary["tests_failed"] == 0
             and part_f_1_summary["tests_executed"] == len(EXPECTED_PART_F_1_TEST_NAMES)
@@ -11088,11 +11386,14 @@ def main():
             and part_f_3_summary["tests_failed"] == 0
             and part_f_4_summary["tests_executed"] == len(EXPECTED_PART_F_4_TEST_NAMES)
             and part_f_4_summary["tests_failed"] == 0
+            and part_f_5_summary["tests_executed"] == len(EXPECTED_PART_F_5_TEST_NAMES)
+            and part_f_5_summary["tests_failed"] == 0
             and part_f_case_names == EXPECTED_PART_F_TEST_NAMES
             and part_f_1_case_names == EXPECTED_PART_F_1_TEST_NAMES
             and part_f_2_case_names == EXPECTED_PART_F_2_TEST_NAMES
             and part_f_3_case_names == EXPECTED_PART_F_3_TEST_NAMES
             and part_f_4_case_names == EXPECTED_PART_F_4_TEST_NAMES
+            and part_f_5_case_names == EXPECTED_PART_F_5_TEST_NAMES
             and combined["execution_trace_exact"] is True
             and combined["staged_validation_is_hard_gate"] is True
             and combined["persisted_provider_called_after_staged_failure"] is False
@@ -11147,6 +11448,14 @@ def main():
             and combined["main_reverifies_deleted_staging_paths"] is False
             and combined["missing_stored_publication_verification_rejected"] is True
             and combined["snapshot_repository_hash_mismatch_rejected"] is True
+            and combined["part_f_5_case_names_exact"] is True
+            and combined["required_final_metadata_changed_path_count"] == 3
+            and combined["metadata_plus_script_changed_paths_pass"] is True
+            and combined["unchanged_data_artifacts_allowed_outside_git_diff"] is True
+            and combined["missing_required_metadata_rejected"] is True
+            and combined["publication_verification_authority_preserved"] is True
+            and combined["path_traversal_alias_rejected"] is True
+            and combined["inconsistent_publication_success_rejected"] is True
             and combined["model_fits_executed"] == 0
             and combined["prediction_calls_executed"] == 0
             and combined["repository_artifacts_written"] == 0
