@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-"""Part 3B.2R.1-G.D2:
-Deterministic ExtraTrees Scoring and Fail-Closed Production Recovery
+"""Part 3B.2R.1-G.D3:
+Scientific-Success Publication Gate and Canonical-Mismatch Forensics
 
 This script is deterministic and self-contained. It may be invoked from any
 working directory; it locates the repository root from __file__ and references
 all other paths absolutely.
 
-Version: Part-3B.2R.1-G.D2-v1
-Starting full commit: 9defce264a345fb6efc4cff9f65226878e6844c9
+Version: Part-3B.2R.1-G.D3-v1
+Starting full commit: 920bada5112d1ac36801c6b9e7b23f89714163c1
 Accepted Part 3A commit:
 d16e28488aa0936014f020c05466181eff219af6
 """
@@ -42,11 +42,11 @@ warnings.filterwarnings("ignore")
 # ---------------------------------------------------------------------------
 # Frozen version and provenance constants
 # ---------------------------------------------------------------------------
-PART3B_VERSION = "Part-3B.2R.1-G.D2-v1"
-STARTING_COMMIT = "9defce264a345fb6efc4cff9f65226878e6844c9"
+PART3B_VERSION = "Part-3B.2R.1-G.D3-v1"
+STARTING_COMMIT = "920bada5112d1ac36801c6b9e7b23f89714163c1"
 ACCEPTED_PART3A_COMMIT = "d16e28488aa0936014f020c05466181eff219af6"
-assert PART3B_VERSION == "Part-3B.2R.1-G.D2-v1"
-assert STARTING_COMMIT == "9defce264a345fb6efc4cff9f65226878e6844c9"
+assert PART3B_VERSION == "Part-3B.2R.1-G.D3-v1"
+assert STARTING_COMMIT == "920bada5112d1ac36801c6b9e7b23f89714163c1"
 assert ACCEPTED_PART3A_COMMIT == "d16e28488aa0936014f020c05466181eff219af6"
 REPOSITORY = "abtinasg/springer"
 BRANCH = "major-revision-analysis-v2"
@@ -8464,20 +8464,71 @@ def finalize_and_validate_integrated_artifacts(
     }
 
 
+def derive_scientific_production_readiness(
+    integration_result: Dict[str, Any],
+) -> Dict[str, Any]:
+    """Pure helper: scientific readiness is independent of repository delivery."""
+    failure_reasons: List[str] = []
+
+    if integration_result.get("final_artifact_contract_passed") is not True:
+        failure_reasons.append("final_artifact_contract_passed")
+    if integration_result.get("ledger_completeness_would_pass") is not True:
+        failure_reasons.append("ledger_completeness_would_pass")
+    if integration_result.get("stage_gate_would_pass") is not True:
+        failure_reasons.append("stage_gate_would_pass")
+
+    stage_gate = integration_result.get("stage_gate")
+    if stage_gate is None:
+        failure_reasons.append("stage_gate_missing")
+    else:
+        gate_passed, _ = validate_stage_gate(stage_gate)
+        if not gate_passed:
+            failure_reasons.append("stage_gate_invalid")
+
+    final_audit_checks = integration_result.get("final_audit_checks")
+    if final_audit_checks is None:
+        failure_reasons.append("final_audit_checks_missing")
+    else:
+        schema_passed, _ = validate_exact_audit_check_schema(final_audit_checks)
+        if not schema_passed:
+            failure_reasons.append("final_audit_checks_schema_invalid")
+        elif final_audit_checks.get("all_critical_checks_passed") is not True:
+            failure_reasons.append("all_critical_checks_passed")
+
+    if integration_result.get("part3b_complete") is not True:
+        failure_reasons.append("part3b_complete")
+    if integration_result.get("part3c_authorized") is not True:
+        failure_reasons.append("part3c_authorized")
+    if integration_result.get("next_authorized_stage") != "Part 3C":
+        failure_reasons.append("next_authorized_stage")
+
+    return {
+        "scientific_readiness_valid": len(failure_reasons) == 0,
+        "failure_reasons": failure_reasons,
+        "part3b_complete": bool(integration_result.get("part3b_complete")),
+        "part3c_authorized": bool(integration_result.get("part3c_authorized")),
+        "next_authorized_stage": integration_result.get("next_authorized_stage"),
+    }
+
+
 def derive_production_outcome(integration_result: Dict[str, Any]) -> Dict[str, Any]:
     audit_checks = copy.deepcopy(integration_result.get("final_audit_checks") or {})
     stage_gate = copy.deepcopy(integration_result.get("stage_gate") or {})
     stage_gate_evidence = copy.deepcopy(
         integration_result.get("stage_gate_evidence") or {}
     )
+    scientific = integration_result.get("scientific_readiness") or {}
+    publication = integration_result.get("publication_verification") or {}
     valid = bool(
-        integration_result.get("final_artifact_contract_passed") is True
+        scientific.get("scientific_readiness_valid") is True
+        and integration_result.get("final_artifact_contract_passed") is True
         and integration_result.get("stage_gate_would_pass") is True
         and integration_result.get("part3b_complete") is True
         and integration_result.get("part3c_authorized") is True
         and integration_result.get("next_authorized_stage") == "Part 3C"
         and integration_result.get("repository_publish_started") is True
         and integration_result.get("repository_artifacts_written") == 11
+        and publication.get("repository_publication_verified") is True
         and bool(audit_checks)
         and audit_checks.get("all_critical_checks_passed") is True
     )
@@ -9238,7 +9289,21 @@ def execute_postbuild_integration(
                 if result["part3c_authorized"]
                 else None
             )
-            if allow_repository_write and result.get("final_artifact_contract_passed"):
+            scientific_readiness = derive_scientific_production_readiness(result)
+            result["scientific_readiness"] = scientific_readiness
+            if not scientific_readiness["scientific_readiness_valid"]:
+                result["repository_publish_started"] = False
+                result["repository_artifacts_written"] = 0
+                result["publication_verification"] = _fail_closed_publication_verification()
+                result["part3b_complete"] = False
+                result["part3c_authorized"] = False
+                result["next_authorized_stage"] = None
+                production_outcome = derive_production_outcome(result)
+                result["production_outcome"] = production_outcome
+                result["part3b_complete"] = production_outcome["part3b_complete"]
+                result["part3c_authorized"] = production_outcome["part3c_authorized"]
+                result["next_authorized_stage"] = production_outcome["next_authorized_stage"]
+            elif allow_repository_write and result.get("final_artifact_contract_passed"):
                 result["repository_publish_started"] = True
                 finalized_staging_snapshot = build_finalized_staging_snapshot(
                     result["finalized_staged_artifacts"]
@@ -9265,11 +9330,11 @@ def execute_postbuild_integration(
                     result["part3b_complete"] = False
                     result["part3c_authorized"] = False
                     result["next_authorized_stage"] = None
-            production_outcome = derive_production_outcome(result)
-            result["production_outcome"] = production_outcome
-            result["part3b_complete"] = production_outcome["part3b_complete"]
-            result["part3c_authorized"] = production_outcome["part3c_authorized"]
-            result["next_authorized_stage"] = production_outcome["next_authorized_stage"]
+                production_outcome = derive_production_outcome(result)
+                result["production_outcome"] = production_outcome
+                result["part3b_complete"] = production_outcome["part3b_complete"]
+                result["part3c_authorized"] = production_outcome["part3c_authorized"]
+                result["next_authorized_stage"] = production_outcome["next_authorized_stage"]
 
         _trace("finalize_integration_result")
         result["execution_trace_exact"] = execution_trace == INTEGRATION_EXECUTION_TRACE_STEPS
@@ -9754,8 +9819,9 @@ def run_part_f_2_integration_tests() -> Tuple[List[Dict[str, Any]], bool, Dict[s
     def _successful_integration_result() -> Dict[str, Any]:
         audit_checks = _make_synthetic_audit_checks_all_true()
         audit_checks["all_critical_checks_passed"] = True
-        return {
+        result = {
             "final_artifact_contract_passed": True,
+            "ledger_completeness_would_pass": True,
             "stage_gate_would_pass": True,
             "part3b_complete": True,
             "part3c_authorized": True,
@@ -9765,7 +9831,14 @@ def run_part_f_2_integration_tests() -> Tuple[List[Dict[str, Any]], bool, Dict[s
             "final_audit_checks": audit_checks,
             "stage_gate": _make_synthetic_stage_gate_authorized(),
             "stage_gate_evidence": {"schema_passed": True},
+            "publication_verification": {
+                "repository_publication_verified": True,
+                "published_artifacts_present": 11,
+                "published_artifacts_expected": 11,
+            },
         }
+        result["scientific_readiness"] = derive_scientific_production_readiness(result)
+        return result
 
     bundle1, _, temp_dirs = _make_approved_et_synthetic_bundles()
     try:
@@ -10364,7 +10437,7 @@ def run_part_f_4_integration_tests() -> Tuple[List[Dict[str, Any]], bool, Dict[s
                 preservation_evidence=_make_synthetic_preservation_evidence(),
                 dry_run=False,
                 allow_repository_write=True,
-                allow_part3c_authorization=False,
+                allow_part3c_authorization=True,
             )
         publication_verification = integration_result.get("publication_verification", {})
         _record(
@@ -11063,13 +11136,20 @@ def _make_synthetic_successful_integration_result_for_continuation() -> Dict[str
         "final_audit_checks": audit_checks,
         "stage_gate": stage_gate,
         "final_artifact_contract_passed": True,
+        "ledger_completeness_would_pass": True,
         "stage_gate_would_pass": True,
         "part3b_complete": True,
         "part3c_authorized": True,
         "next_authorized_stage": "Part 3C",
         "repository_publish_started": True,
         "repository_artifacts_written": 11,
+        "publication_verification": {
+            "repository_publication_verified": True,
+            "published_artifacts_present": 11,
+            "published_artifacts_expected": 11,
+        },
     }
+    base["scientific_readiness"] = derive_scientific_production_readiness(base)
     base["production_outcome"] = derive_production_outcome(base)
     return base
 
@@ -11448,6 +11528,213 @@ def run_part_g_d2_recovery_tests() -> Tuple[List[Dict[str, Any]], bool, Dict[str
     return tests, all_passed, summary
 
 
+EXPECTED_PART_G_D3_TEST_NAMES = [
+    "scientific_failure_blocks_repository_publication",
+    "final_artifact_contract_alone_cannot_publish",
+    "failed_stage_gate_cannot_publish",
+    "failed_all_critical_checks_cannot_publish",
+    "valid_scientific_readiness_allows_temporary_destination_publication",
+    "publication_failure_keeps_delivery_invalid",
+    "semantic_success_with_canonical_failure_writes_zero_repository_artifacts",
+]
+
+
+def run_part_g_d3_publication_gate_tests() -> Tuple[List[Dict[str, Any]], bool, Dict[str, Any]]:
+    """Seven focused G.D3 tests for scientific-success publication gating."""
+    tests: List[Dict[str, Any]] = []
+    all_passed = True
+
+    def _record(case_name: str, passed: bool, **extra: Any) -> None:
+        nonlocal all_passed
+        tests.append({"case_name": case_name, "passed": passed, **extra})
+        all_passed = all_passed and passed
+
+    bundle1, bundle2, temp_dirs = _make_approved_et_synthetic_bundles()
+    canonical_ok = _make_synthetic_canonical_reconciliation_evidence()
+    preservation = _make_synthetic_preservation_evidence()
+    persisted = _make_synthetic_persisted_ledger_evidence()
+    negative = _make_synthetic_negative_test_evidence()
+
+    def _run_integration(
+        destination: Path,
+        *,
+        canonical_reconciliation: Optional[Dict[str, Any]] = None,
+        ledger_complete_override: Optional[bool] = None,
+        stage_gate_override: Optional[Dict[str, Any]] = None,
+        audit_checks_override: Optional[Dict[str, bool]] = None,
+        publication_verifier: Optional[Callable[..., Dict[str, Any]]] = None,
+        all_critical_override: Optional[bool] = None,
+    ) -> Dict[str, Any]:
+        canonical = canonical_reconciliation or canonical_ok
+        original_compute = compute_part3b_prediction_ledger_complete
+        original_build_gate = build_stage_gate
+        original_verify_pub = verify_published_repository_artifacts_from_snapshot
+        original_all_critical = compute_all_critical_checks_passed
+
+        def _ledger_complete(*args: Any, **kwargs: Any) -> bool:
+            if ledger_complete_override is not None:
+                return ledger_complete_override
+            return original_compute(*args, **kwargs)
+
+        def _build_gate(*args: Any, **kwargs: Any) -> Dict[str, Any]:
+            if stage_gate_override is not None:
+                return stage_gate_override
+            return original_build_gate(*args, **kwargs)
+
+        def _verify_pub(*args: Any, **kwargs: Any) -> Dict[str, Any]:
+            if publication_verifier is not None:
+                return publication_verifier(*args, **kwargs)
+            return original_verify_pub(*args, **kwargs)
+
+        def _all_critical(audit_checks: Dict[str, Any]) -> bool:
+            if all_critical_override is not None:
+                return all_critical_override
+            return original_all_critical(audit_checks)
+
+        globals()["compute_part3b_prediction_ledger_complete"] = _ledger_complete
+        globals()["build_stage_gate"] = _build_gate
+        globals()["verify_published_repository_artifacts_from_snapshot"] = _verify_pub
+        globals()["compute_all_critical_checks_passed"] = _all_critical
+        try:
+            return execute_postbuild_integration(
+                bundle1,
+                bundle2,
+                destination,
+                canonical_reconciliation_evidence=canonical,
+                persisted_evidence_provider=lambda d, s, b: persisted,
+                negative_test_evidence_provider=lambda d, s, b: negative,
+                preservation_evidence=preservation,
+                dry_run=False,
+                allow_repository_write=True,
+                allow_part3c_authorization=True,
+            )
+        finally:
+            globals()["compute_part3b_prediction_ledger_complete"] = original_compute
+            globals()["build_stage_gate"] = original_build_gate
+            globals()["verify_published_repository_artifacts_from_snapshot"] = original_verify_pub
+            globals()["compute_all_critical_checks_passed"] = original_all_critical
+
+    try:
+        with tempfile.TemporaryDirectory(prefix="part3b_gd3_dest_") as dest_dir:
+            dest = Path(dest_dir)
+
+            r1 = _run_integration(dest, ledger_complete_override=False)
+            _record(
+                "scientific_failure_blocks_repository_publication",
+                r1.get("scientific_readiness", {}).get("scientific_readiness_valid") is False
+                and r1.get("repository_publish_started") is False
+                and r1.get("repository_artifacts_written") == 0,
+                integration_result=r1,
+            )
+
+            r2 = _run_integration(dest, ledger_complete_override=False)
+            _record(
+                "final_artifact_contract_alone_cannot_publish",
+                r2.get("final_artifact_contract_passed") is True
+                and r2.get("scientific_readiness", {}).get("scientific_readiness_valid") is False
+                and r2.get("repository_artifacts_written") == 0,
+                integration_result=r2,
+            )
+
+            failed_gate = _make_synthetic_stage_gate_authorized()
+            failed_gate["canonical_result_reconstruction_passed"] = False
+            failed_gate["next_authorized_stage"] = None
+            r3 = _run_integration(dest, stage_gate_override=failed_gate)
+            _record(
+                "failed_stage_gate_cannot_publish",
+                r3.get("stage_gate_would_pass") is False
+                and r3.get("repository_publish_started") is False
+                and r3.get("repository_artifacts_written") == 0,
+                integration_result=r3,
+            )
+
+            audit_fail = _make_synthetic_audit_checks_all_true()
+            audit_fail["all_critical_checks_passed"] = False
+            r4 = _run_integration(dest, all_critical_override=False)
+            _record(
+                "failed_all_critical_checks_cannot_publish",
+                r4.get("final_audit_checks", {}).get("all_critical_checks_passed") is False
+                and r4.get("repository_publish_started") is False
+                and r4.get("repository_artifacts_written") == 0,
+                integration_result=r4,
+            )
+
+            with tempfile.TemporaryDirectory(prefix="part3b_gd3_pub_") as pub_dir:
+                pub_dest = Path(pub_dir)
+                r5 = _run_integration(pub_dest)
+                _record(
+                    "valid_scientific_readiness_allows_temporary_destination_publication",
+                    r5.get("scientific_readiness", {}).get("scientific_readiness_valid") is True
+                    and r5.get("repository_publish_started") is True
+                    and r5.get("repository_artifacts_written") == 11
+                    and r5.get("publication_verification", {}).get(
+                        "repository_publication_verified"
+                    )
+                    is True,
+                    integration_result=r5,
+                )
+
+            def _failing_publication(*args: Any, **kwargs: Any) -> Dict[str, Any]:
+                return _fail_closed_publication_verification()
+
+            r6 = _run_integration(dest, publication_verifier=_failing_publication)
+            outcome6 = r6.get("production_outcome", {})
+            _record(
+                "publication_failure_keeps_delivery_invalid",
+                outcome6.get("production_outcome_valid") is False
+                and r6.get("part3b_complete") is False
+                and r6.get("part3c_authorized") is False,
+                integration_result=r6,
+            )
+
+            gr1_canonical = {
+                "strict_validation_mismatches": 0,
+                "strict_result_mismatches_before_exception": 9,
+                "approved_nondeterminism_exceptions": 1,
+                "unapproved_result_mismatches": 8,
+                "canonical_nondeterminism_exception_validated": False,
+            }
+            r7 = _run_integration(dest, canonical_reconciliation=gr1_canonical)
+            outcome7 = r7.get("production_outcome", {})
+            _record(
+                "semantic_success_with_canonical_failure_writes_zero_repository_artifacts",
+                r7.get("semantic_reproducibility_passed") is True
+                and gr1_canonical["canonical_nondeterminism_exception_validated"] is False
+                and gr1_canonical["unapproved_result_mismatches"] == 8
+                and r7.get("stage_gate_would_pass") is False
+                and r7.get("final_artifact_contract_passed") is True
+                and r7.get("repository_publish_started") is False
+                and r7.get("repository_artifacts_written") == 0
+                and r7.get("part3b_complete") is False
+                and r7.get("part3c_authorized") is False
+                and outcome7.get("exit_code") == 1,
+                integration_result=r7,
+            )
+    finally:
+        for temp_dir in temp_dirs:
+            shutil.rmtree(temp_dir, ignore_errors=True)
+
+    case_names = [t["case_name"] for t in tests]
+    if case_names != EXPECTED_PART_G_D3_TEST_NAMES:
+        all_passed = False
+    summary = {
+        "tests_expected": 7,
+        "tests_executed": len(tests),
+        "tests_passed": sum(1 for t in tests if t.get("passed")),
+        "tests_failed": sum(1 for t in tests if not t.get("passed")),
+        "test_details": tests,
+        "part_g_d3_case_names_exact": case_names == EXPECTED_PART_G_D3_TEST_NAMES,
+        "model_fits_executed": 0,
+        "full_build_executed": False,
+        "repository_artifacts_written": 0,
+        "real_commits_executed": 0,
+        "real_pushes_executed": 0,
+        "part3b_complete": False,
+        "part3c_authorized": False,
+    }
+    return tests, all_passed, summary
+
+
 def validate_postbuild_integration_ready_for_final_metadata(
     integration_result: Dict[str, Any],
 ) -> Dict[str, Any]:
@@ -11590,6 +11877,7 @@ SUPPORTED_SELF_TEST_FLAGS = {
     "--self-test-eleven-artifact-comparison",
     "--self-test-integration-dry-run",
     "--self-test-gd2-recovery",
+    "--self-test-gd3-publication-gate",
 }
 
 
@@ -11707,6 +11995,7 @@ def main():
     parser.add_argument("--self-test-eleven-artifact-comparison", action="store_true", default=False)
     parser.add_argument("--self-test-integration-dry-run", action="store_true", default=False)
     parser.add_argument("--self-test-gd2-recovery", action="store_true", default=False)
+    parser.add_argument("--self-test-gd3-publication-gate", action="store_true", default=False)
     known, _ = parser.parse_known_args()
     if known.self_test_integration_dry_run:
         global _PART_F_BUILD_CORE_BUNDLE_CALLS, _PART_F_FIT_EVENT_CANDIDATES_CALLS, _PART_F_BUILD_PREDICTION_ROWS_CALLS
@@ -12371,6 +12660,32 @@ def main():
             and gd2_summary["tests_failed"] == 0
             and gd2_summary["model_fits_executed"] == 5
             and gd2_summary["part_g_d2_case_names_exact"] is True
+        ) else 1
+    if known.self_test_gd3_publication_gate:
+        gd3_tests, gd3_all_passed, gd3_summary = run_part_g_d3_publication_gate_tests()
+        combined = {
+            "part_g_d3_tests": {
+                "tests_expected": gd3_summary["tests_expected"],
+                "tests_executed": gd3_summary["tests_executed"],
+                "tests_passed": gd3_summary["tests_passed"],
+                "tests_failed": gd3_summary["tests_failed"],
+            },
+            "part_g_d3_case_names_exact": gd3_summary["part_g_d3_case_names_exact"],
+            "model_fits_executed": gd3_summary["model_fits_executed"],
+            "full_build_executed": gd3_summary["full_build_executed"],
+            "repository_artifacts_written": gd3_summary["repository_artifacts_written"],
+            "real_commits_executed": gd3_summary["real_commits_executed"],
+            "real_pushes_executed": gd3_summary["real_pushes_executed"],
+            "part3b_complete": gd3_summary["part3b_complete"],
+            "part3c_authorized": gd3_summary["part3c_authorized"],
+        }
+        print(_json_dumps(combined))
+        return 0 if (
+            gd3_all_passed
+            and gd3_summary["tests_executed"] == 7
+            and gd3_summary["tests_failed"] == 0
+            and gd3_summary["model_fits_executed"] == 0
+            and gd3_summary["part_g_d3_case_names_exact"] is True
         ) else 1
     if known.self_test_persisted_ledger:
         root = repo_root()
