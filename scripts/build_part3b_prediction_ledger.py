@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-"""Part 3B.2R.1-F.3:
-Fail-Closed Production Delivery and Remote Persistence Gate
+"""Part 3B.2R.1-F.4:
+Publication Evidence Persistence Across Staging Cleanup
 
 This script is deterministic and self-contained. It may be invoked from any
 working directory; it locates the repository root from __file__ and references
 all other paths absolutely.
 
-Version: Part-3B.2R.1-F.3-v1
-Starting full commit: e5506a1fa96b9029fec9cf4623c004cbe878a5aa
+Version: Part-3B.2R.1-F.4-v1
+Starting full commit: 4656aa23b5fb8ffdc4b8c302e5b1c08ae5640ff8
 Accepted Part 3A commit:
 d16e28488aa0936014f020c05466181eff219af6
 """
@@ -42,21 +42,18 @@ warnings.filterwarnings("ignore")
 # ---------------------------------------------------------------------------
 # Frozen version and provenance constants
 # ---------------------------------------------------------------------------
-PART3B_VERSION = "Part-3B.2R.1-F.3-v1"
-STARTING_COMMIT = "e5506a1fa96b9029fec9cf4623c004cbe878a5aa"
+PART3B_VERSION = "Part-3B.2R.1-F.4-v1"
+STARTING_COMMIT = "4656aa23b5fb8ffdc4b8c302e5b1c08ae5640ff8"
 ACCEPTED_PART3A_COMMIT = "d16e28488aa0936014f020c05466181eff219af6"
-assert PART3B_VERSION == "Part-3B.2R.1-F.3-v1"
-assert STARTING_COMMIT == "e5506a1fa96b9029fec9cf4623c004cbe878a5aa"
+assert PART3B_VERSION == "Part-3B.2R.1-F.4-v1"
+assert STARTING_COMMIT == "4656aa23b5fb8ffdc4b8c302e5b1c08ae5640ff8"
 assert ACCEPTED_PART3A_COMMIT == "d16e28488aa0936014f020c05466181eff219af6"
-assert STARTING_COMMIT == \
-    "e5506a1fa96b9029fec9cf4623c004cbe878a5aa"
-assert ACCEPTED_PART3A_COMMIT == \
-    "d16e28488aa0936014f020c05466181eff219af6"
-assert PART3B_VERSION == "Part-3B.2R.1-F.3-v1"
 REPOSITORY = "abtinasg/springer"
 BRANCH = "major-revision-analysis-v2"
 FINAL_PRODUCTION_EXECUTION_AUTHORIZED = False
 FINAL_PRODUCTION_COMMIT_MESSAGE = None
+assert FINAL_PRODUCTION_EXECUTION_AUTHORIZED is False
+assert FINAL_PRODUCTION_COMMIT_MESSAGE is None
 
 # ---------------------------------------------------------------------------
 # Frozen project and candidate constants
@@ -6908,6 +6905,7 @@ PERSISTED_RESULT_RECON_ROWS = 400
 
 PERSISTED_VALIDATION_CATEGORY_KEYS = ["experiment", "target_project", "seed", "candidate", "mode"]
 PERSISTED_RESULT_CATEGORY_KEYS = ["experiment", "target_project", "seed", "model", "selected_candidate", "selection_mode"]
+_PERSISTED_RECONSTRUCTION_CACHE: Dict[Tuple[str, str, str], Tuple[pd.DataFrame, pd.DataFrame]] = {}
 
 
 def _validate_persisted_prediction_schema(df: pd.DataFrame) -> bool:
@@ -7011,9 +7009,26 @@ def verify_persisted_ledger_reconstruction(
     persisted_result_recon = read_float_csv_round_trip(persisted_result_reconstruction_path)
 
     if schema_ok and keys_ok:
-        combined_sorted = _prediction_ledger_sorted(combined)
-        reread_val_recon = reconstruct_validation_from_ledger(frozen, combined_sorted)
-        reread_result_recon = reconstruct_results_from_ledger(frozen, combined_sorted, event_manifest)
+        cache_key = (
+            sha256_file(prediction_ledger_within_path),
+            sha256_file(prediction_ledger_cross_path),
+            sha256_file(event_manifest_path),
+        )
+        cached_reconstruction = _PERSISTED_RECONSTRUCTION_CACHE.get(cache_key)
+        if cached_reconstruction is None:
+            combined_sorted = _prediction_ledger_sorted(combined)
+            cached_reconstruction = (
+                reconstruct_validation_from_ledger(frozen, combined_sorted),
+                reconstruct_results_from_ledger(frozen, combined_sorted, event_manifest),
+            )
+            _PERSISTED_RECONSTRUCTION_CACHE[cache_key] = (
+                cached_reconstruction[0].copy(deep=True),
+                cached_reconstruction[1].copy(deep=True),
+            )
+        reread_val_recon, reread_result_recon = (
+            cached_reconstruction[0].copy(deep=True),
+            cached_reconstruction[1].copy(deep=True),
+        )
 
         val_ok, val_ev = _compare_persisted_reconstruction(
             reread_val_recon, persisted_val_recon, PERSISTED_VALIDATION_CATEGORY_KEYS,
@@ -7437,6 +7452,25 @@ EXPECTED_PART_F_3_TEST_NAMES = [
     "remote_head_mismatch_rejects_delivery",
     "complete_delivery_evidence_passes",
 ]
+
+EXPECTED_PART_F_4_TEST_NAMES = [
+    "publication_verified_before_staging_cleanup",
+    "staging_paths_are_ephemeral_after_integration_return",
+    "stored_publication_verification_survives_cleanup",
+    "production_main_uses_stored_publication_verification",
+    "missing_stored_publication_verification_fails_closed",
+    "snapshot_repository_hash_mismatch_rejected",
+]
+
+PUBLICATION_VERIFICATION_FIELDS = (
+    "published_artifacts_expected",
+    "published_artifacts_present",
+    "published_artifacts_byte_exact",
+    "published_artifact_hashes_verified",
+    "missing_published_artifacts",
+    "mismatched_published_artifacts",
+    "repository_publication_verified",
+)
 
 PRODUCTION_USES_SHARED_POSTBUILD_ORCHESTRATOR = True
 DRY_RUN_USES_SHARED_POSTBUILD_ORCHESTRATOR = True
@@ -8416,6 +8450,202 @@ def verify_published_repository_artifacts(
     }
 
 
+def is_valid_sha256_hex(value: Any) -> bool:
+    return isinstance(value, str) and re.fullmatch(r"[a-f0-9]{64}", value) is not None
+
+
+def build_finalized_staging_snapshot(
+    finalized_staged_artifacts: Dict[str, Path],
+) -> Dict[str, Any]:
+    """Immutable snapshot of finalized staging artifacts before cleanup."""
+    artifact_keys = set(finalized_staged_artifacts.keys())
+    expected_keys = set(FINAL_PRODUCTION_ARTIFACT_PATHS)
+    if artifact_keys != expected_keys:
+        raise RuntimeError(
+            "finalized staging snapshot requires exactly the authorized eleven artifacts"
+        )
+    missing: List[str] = []
+    snapshot_entries: Dict[str, Dict[str, Any]] = {}
+    for rel in FINAL_PRODUCTION_ARTIFACT_PATHS:
+        staged_path = finalized_staged_artifacts.get(rel)
+        if not isinstance(staged_path, Path) or not staged_path.exists():
+            missing.append(rel)
+            continue
+        byte_size = staged_path.stat().st_size
+        if byte_size < 0:
+            raise RuntimeError(f"invalid byte size for staged artifact: {rel}")
+        staged_hash = sha256_file(staged_path)
+        if not is_valid_sha256_hex(staged_hash):
+            raise RuntimeError(f"invalid sha256 for staged artifact: {rel}")
+        snapshot_entries[rel] = {
+            "relative_path": rel,
+            "sha256": staged_hash,
+            "byte_size": byte_size,
+        }
+    if missing:
+        raise RuntimeError(
+            f"missing staged artifacts for finalized snapshot: {sorted(missing)}"
+        )
+    present = len(snapshot_entries)
+    expected = len(FINAL_PRODUCTION_ARTIFACT_PATHS)
+    return {
+        "snapshot_artifacts_expected": expected,
+        "snapshot_artifacts_present": present,
+        "snapshot_artifact_set_exact": (
+            artifact_keys == expected_keys
+            and present == expected
+            and not missing
+        ),
+        "snapshot_entries": snapshot_entries,
+    }
+
+
+def _snapshot_schema_is_valid(finalized_staging_snapshot: Dict[str, Any]) -> bool:
+    if not isinstance(finalized_staging_snapshot, dict):
+        return False
+    if finalized_staging_snapshot.get("snapshot_artifacts_expected") != len(
+        FINAL_PRODUCTION_ARTIFACT_PATHS
+    ):
+        return False
+    if finalized_staging_snapshot.get("snapshot_artifacts_present") != len(
+        FINAL_PRODUCTION_ARTIFACT_PATHS
+    ):
+        return False
+    if finalized_staging_snapshot.get("snapshot_artifact_set_exact") is not True:
+        return False
+    snapshot_entries = finalized_staging_snapshot.get("snapshot_entries")
+    if not isinstance(snapshot_entries, dict):
+        return False
+    if set(snapshot_entries.keys()) != set(FINAL_PRODUCTION_ARTIFACT_PATHS):
+        return False
+    for rel in FINAL_PRODUCTION_ARTIFACT_PATHS:
+        entry = snapshot_entries.get(rel)
+        if not isinstance(entry, dict):
+            return False
+        if entry.get("relative_path") != rel:
+            return False
+        if not is_valid_sha256_hex(entry.get("sha256")):
+            return False
+        byte_size = entry.get("byte_size")
+        if not isinstance(byte_size, int) or byte_size < 0:
+            return False
+    return True
+
+
+def verify_published_repository_artifacts_from_snapshot(
+    finalized_staging_snapshot: Dict[str, Any],
+    repository_root: Path,
+) -> Dict[str, Any]:
+    if not _snapshot_schema_is_valid(finalized_staging_snapshot):
+        return _fail_closed_publication_verification()
+    present = 0
+    byte_exact = True
+    hashes_verified = True
+    missing: List[str] = []
+    mismatched: List[str] = []
+    snapshot_entries = finalized_staging_snapshot.get("snapshot_entries", {})
+    for rel in FINAL_PRODUCTION_ARTIFACT_PATHS:
+        entry = snapshot_entries.get(rel)
+        repo_path = repository_root / rel
+        if not isinstance(entry, dict) or not repo_path.exists():
+            byte_exact = False
+            hashes_verified = False
+            missing.append(rel)
+            continue
+        present += 1
+        staged_size = entry.get("byte_size")
+        staged_hash = entry.get("sha256")
+        repo_size = repo_path.stat().st_size
+        repo_hash = sha256_file(repo_path)
+        if not isinstance(staged_size, int) or staged_size < 0:
+            byte_exact = False
+            hashes_verified = False
+            if rel not in mismatched:
+                mismatched.append(rel)
+            continue
+        if not is_valid_sha256_hex(staged_hash):
+            byte_exact = False
+            hashes_verified = False
+            if rel not in mismatched:
+                mismatched.append(rel)
+            continue
+        if staged_size != repo_size:
+            byte_exact = False
+            if rel not in mismatched:
+                mismatched.append(rel)
+        if staged_hash != repo_hash:
+            hashes_verified = False
+            if rel not in mismatched:
+                mismatched.append(rel)
+    return {
+        "published_artifacts_expected": len(FINAL_PRODUCTION_ARTIFACT_PATHS),
+        "published_artifacts_present": present,
+        "published_artifacts_byte_exact": byte_exact,
+        "published_artifact_hashes_verified": hashes_verified,
+        "missing_published_artifacts": sorted(missing),
+        "mismatched_published_artifacts": sorted(mismatched),
+        "repository_publication_verified": (
+            present == len(FINAL_PRODUCTION_ARTIFACT_PATHS)
+            and byte_exact is True
+            and hashes_verified is True
+            and not missing
+            and not mismatched
+        ),
+    }
+
+
+def _fail_closed_publication_verification() -> Dict[str, Any]:
+    return {
+        "published_artifacts_expected": len(FINAL_PRODUCTION_ARTIFACT_PATHS),
+        "published_artifacts_present": 0,
+        "published_artifacts_byte_exact": False,
+        "published_artifact_hashes_verified": False,
+        "missing_published_artifacts": list(FINAL_PRODUCTION_ARTIFACT_PATHS),
+        "mismatched_published_artifacts": [],
+        "repository_publication_verified": False,
+    }
+
+
+def resolve_stored_publication_verification(
+    integration_result: Dict[str, Any],
+) -> Dict[str, Any]:
+    publication_verification = integration_result.get("publication_verification")
+    if not isinstance(publication_verification, dict):
+        return _fail_closed_publication_verification()
+    for field in PUBLICATION_VERIFICATION_FIELDS:
+        if field not in publication_verification:
+            return _fail_closed_publication_verification()
+    expected = len(FINAL_PRODUCTION_ARTIFACT_PATHS)
+    if publication_verification.get("published_artifacts_expected") != expected:
+        return _fail_closed_publication_verification()
+    present = publication_verification.get("published_artifacts_present")
+    if not isinstance(present, int) or present < 0 or present > expected:
+        return _fail_closed_publication_verification()
+    if not isinstance(publication_verification.get("published_artifacts_byte_exact"), bool):
+        return _fail_closed_publication_verification()
+    if not isinstance(
+        publication_verification.get("published_artifact_hashes_verified"), bool
+    ):
+        return _fail_closed_publication_verification()
+    if not isinstance(
+        publication_verification.get("repository_publication_verified"), bool
+    ):
+        return _fail_closed_publication_verification()
+    missing = publication_verification.get("missing_published_artifacts")
+    mismatched = publication_verification.get("mismatched_published_artifacts")
+    if not isinstance(missing, list) or not all(
+        isinstance(path, str) and path in FINAL_PRODUCTION_ARTIFACT_PATHS
+        for path in missing
+    ):
+        return _fail_closed_publication_verification()
+    if not isinstance(mismatched, list) or not all(
+        isinstance(path, str) and path in FINAL_PRODUCTION_ARTIFACT_PATHS
+        for path in mismatched
+    ):
+        return _fail_closed_publication_verification()
+    return copy.deepcopy(publication_verification)
+
+
 def validate_final_production_changed_paths(
     changed_paths: Sequence[Any],
 ) -> Dict[str, Any]:
@@ -8626,6 +8856,10 @@ def execute_postbuild_integration(
         "prediction_calls_executed": 0,
         "canonical_reconciliation_evidence": canonical_reconciliation_evidence,
         "preservation_evidence": preservation_evidence,
+        "temporary_staging_cleanup_expected": False,
+        "finalized_staging_paths_ephemeral": False,
+        "publication_verification_completed_before_cleanup": False,
+        "publication_verification_uses_snapshot": False,
     }
 
     def _trace(step: str) -> None:
@@ -8695,6 +8929,9 @@ def execute_postbuild_integration(
 
     with tempfile.TemporaryDirectory(prefix="part3b_f_integrate_") as staging_dir:
         staging_root = Path(staging_dir).resolve()
+        result["temporary_staging_cleanup_expected"] = True
+        result["finalized_staging_paths_ephemeral"] = True
+        result["temporary_staging_root"] = str(staging_root)
         staging_classification = classify_integration_destination(staging_root, repo_root())
         result["temporary_staging_used"] = bool(
             staging_classification["destination_is_system_temp"]
@@ -8861,6 +9098,10 @@ def execute_postbuild_integration(
             )
             if allow_repository_write and result.get("final_artifact_contract_passed"):
                 result["repository_publish_started"] = True
+                finalized_staging_snapshot = build_finalized_staging_snapshot(
+                    result["finalized_staged_artifacts"]
+                )
+                result["finalized_staging_snapshot"] = finalized_staging_snapshot
                 published = 0
                 for rel in SEMANTIC_ALL_ARTIFACTS:
                     dst = destination_root / rel
@@ -8871,6 +9112,17 @@ def execute_postbuild_integration(
                     )
                     published += 1
                 result["repository_artifacts_written"] = published
+                publication_verification = verify_published_repository_artifacts_from_snapshot(
+                    finalized_staging_snapshot,
+                    destination_root,
+                )
+                result["publication_verification"] = publication_verification
+                result["publication_verification_completed_before_cleanup"] = True
+                result["publication_verification_uses_snapshot"] = True
+                if publication_verification.get("repository_publication_verified") is not True:
+                    result["part3b_complete"] = False
+                    result["part3c_authorized"] = False
+                    result["next_authorized_stage"] = None
             production_outcome = derive_production_outcome(result)
             result["production_outcome"] = production_outcome
             result["part3b_complete"] = production_outcome["part3b_complete"]
@@ -9913,6 +10165,277 @@ def run_part_f_3_integration_tests() -> Tuple[List[Dict[str, Any]], bool, Dict[s
     return tests, all_passed, summary
 
 
+def run_part_f_4_integration_tests() -> Tuple[List[Dict[str, Any]], bool, Dict[str, Any]]:
+    """Six focused Part F.4 tests for publication evidence persistence."""
+    tests: List[Dict[str, Any]] = []
+    all_passed = True
+
+    def _record(case_name: str, passed: bool, **extra: Any) -> None:
+        nonlocal all_passed
+        tests.append({"case_name": case_name, "passed": passed, **extra})
+        all_passed = all_passed and passed
+
+    bundle1, bundle2, temp_dirs = _make_approved_et_synthetic_bundles()
+    integration_result: Dict[str, Any] = {}
+    publication_instrumentation: Dict[str, Any] = {
+        "staged_files_existed_at_snapshot": False,
+        "staged_files_existed_at_verify": False,
+    }
+    original_build_snapshot = build_finalized_staging_snapshot
+    original_verify_snapshot = verify_published_repository_artifacts_from_snapshot
+    captured_staging_paths: Dict[str, Path] = {}
+
+    def instrumented_build_snapshot(
+        finalized_staged_artifacts: Dict[str, Path],
+    ) -> Dict[str, Any]:
+        captured_staging_paths.clear()
+        captured_staging_paths.update(finalized_staged_artifacts)
+        publication_instrumentation["staged_files_existed_at_snapshot"] = all(
+            isinstance(path, Path) and path.exists()
+            for path in finalized_staged_artifacts.values()
+        )
+        return original_build_snapshot(finalized_staged_artifacts)
+
+    def instrumented_verify_snapshot(
+        finalized_staging_snapshot: Dict[str, Any],
+        repository_root: Path,
+    ) -> Dict[str, Any]:
+        publication_instrumentation["staged_files_existed_at_verify"] = all(
+            isinstance(path, Path) and path.exists()
+            for path in captured_staging_paths.values()
+        )
+        return original_verify_snapshot(finalized_staging_snapshot, repository_root)
+
+    try:
+        globals()["build_finalized_staging_snapshot"] = instrumented_build_snapshot
+        globals()["verify_published_repository_artifacts_from_snapshot"] = (
+            instrumented_verify_snapshot
+        )
+        with tempfile.TemporaryDirectory(prefix="part3b_f4_dest_") as dest_dir:
+            integration_result = execute_postbuild_integration(
+                bundle1,
+                bundle2,
+                Path(dest_dir),
+                canonical_reconciliation_evidence=_make_synthetic_canonical_reconciliation_evidence(),
+                persisted_evidence_provider=lambda destination_root, staged_artifacts, source_bundle: _make_synthetic_persisted_ledger_evidence(),
+                negative_test_evidence_provider=lambda staging_root, staged_artifacts, source_bundle: _make_synthetic_negative_test_evidence(),
+                preservation_evidence=_make_synthetic_preservation_evidence(),
+                dry_run=False,
+                allow_repository_write=True,
+                allow_part3c_authorization=False,
+            )
+        publication_verification = integration_result.get("publication_verification", {})
+        _record(
+            "publication_verified_before_staging_cleanup",
+            integration_result.get("publication_verification_completed_before_cleanup")
+            is True
+            and integration_result.get("publication_verification_uses_snapshot") is True
+            and integration_result.get("finalized_staging_snapshot", {}).get(
+                "snapshot_artifact_set_exact"
+            )
+            is True
+            and publication_verification.get("repository_publication_verified") is True
+            and publication_verification.get("published_artifacts_present") == 11
+            and publication_instrumentation["staged_files_existed_at_snapshot"] is True
+            and publication_instrumentation["staged_files_existed_at_verify"] is True,
+            integration_result=integration_result,
+            publication_instrumentation=publication_instrumentation,
+        )
+
+        finalized_staged_artifacts = integration_result.get("finalized_staged_artifacts", {})
+        temporary_staging_root = Path(
+            integration_result.get("temporary_staging_root", "")
+        ) if integration_result.get("temporary_staging_root") else None
+        ephemeral_paths_missing = any(
+            isinstance(path, Path) and not path.exists()
+            for path in finalized_staged_artifacts.values()
+        )
+        _record(
+            "staging_paths_are_ephemeral_after_integration_return",
+            integration_result.get("temporary_staging_cleanup_expected") is True
+            and integration_result.get("finalized_staging_paths_ephemeral") is True
+            and isinstance(temporary_staging_root, Path)
+            and temporary_staging_root.exists() is False
+            and bool(finalized_staged_artifacts)
+            and ephemeral_paths_missing,
+            integration_result=integration_result,
+        )
+
+        stored_publication = resolve_stored_publication_verification(integration_result)
+        _record(
+            "stored_publication_verification_survives_cleanup",
+            integration_result.get("temporary_staging_cleanup_expected") is True
+            and isinstance(temporary_staging_root, Path)
+            and temporary_staging_root.exists() is False
+            and ephemeral_paths_missing is True
+            and
+            stored_publication.get("repository_publication_verified") is True
+            and stored_publication.get("published_artifacts_present") == 11,
+            stored_publication=stored_publication,
+        )
+
+        main_source = inspect.getsource(main)
+        integration_marker = "integration_result = execute_postbuild_integration("
+        integration_index = main_source.find(integration_marker)
+        main_tail = main_source[integration_index:] if integration_index >= 0 else ""
+        main_uses_stored = (
+            "resolve_stored_publication_verification(integration_result)"
+            in main_source
+        )
+        main_reverifies_deleted_staging_paths = (
+            "verify_published_repository_artifacts(" in main_tail
+        )
+        _record(
+            "production_main_uses_stored_publication_verification",
+            main_uses_stored is True
+            and main_reverifies_deleted_staging_paths is False,
+            main_uses_stored_publication_verification=main_uses_stored,
+            main_reverifies_deleted_staging_paths=main_reverifies_deleted_staging_paths,
+        )
+
+        missing_publication = resolve_stored_publication_verification({})
+        valid_production_outcome = {"production_outcome_valid": True}
+        valid_changed_path_result = {"changed_path_contract_passed": True}
+        valid_commit_result = {
+            "commit_created": True,
+            "commit_sha": "1" * 40,
+        }
+        valid_push_result = {
+            "push_succeeded": True,
+            "remote_head": "1" * 40,
+            "branch": BRANCH,
+        }
+        missing_publication_outcome = derive_final_delivery_outcome(
+            valid_production_outcome,
+            missing_publication,
+            valid_changed_path_result,
+            valid_commit_result,
+            valid_push_result,
+        )
+        _record(
+            "missing_stored_publication_verification_fails_closed",
+            missing_publication.get("repository_publication_verified") is False
+            and missing_publication.get("published_artifacts_present") == 0
+            and missing_publication_outcome.get("final_delivery_succeeded") is False
+            and missing_publication_outcome.get("part3b_complete") is False
+            and missing_publication_outcome.get("part3c_authorized") is False
+            and missing_publication_outcome.get("exit_code") == 1,
+            missing_publication=missing_publication,
+            final_delivery_outcome=missing_publication_outcome,
+        )
+
+        mismatch_path = FINAL_PRODUCTION_ARTIFACT_PATHS[4]
+        with tempfile.TemporaryDirectory(prefix="part3b_f4_repo_") as repo_dir:
+            staged_root = Path(repo_dir)
+            staged_artifacts: Dict[str, Path] = {}
+            for rel in FINAL_PRODUCTION_ARTIFACT_PATHS:
+                staged_path = staged_root / rel
+                staged_path.parent.mkdir(parents=True, exist_ok=True)
+                payload = f"staged::{rel}\n".encode("utf-8")
+                staged_path.write_bytes(payload)
+                staged_artifacts[rel] = staged_path
+            snapshot = build_finalized_staging_snapshot(staged_artifacts)
+            for rel in FINAL_PRODUCTION_ARTIFACT_PATHS:
+                repo_path = staged_root / rel
+                repo_path.parent.mkdir(parents=True, exist_ok=True)
+                repo_path.write_bytes(staged_artifacts[rel].read_bytes())
+            mutated_repo_path = staged_root / mismatch_path
+            mutated_repo_path.write_bytes(mutated_repo_path.read_bytes() + b"mutated\n")
+            snapshot_mismatch = verify_published_repository_artifacts_from_snapshot(
+                snapshot,
+                staged_root,
+            )
+        _record(
+            "snapshot_repository_hash_mismatch_rejected",
+            snapshot_mismatch.get("repository_publication_verified") is False
+            and mismatch_path in snapshot_mismatch.get("mismatched_published_artifacts", []),
+            publication_verification=snapshot_mismatch,
+        )
+    finally:
+        globals()["build_finalized_staging_snapshot"] = original_build_snapshot
+        globals()["verify_published_repository_artifacts_from_snapshot"] = (
+            original_verify_snapshot
+        )
+        for temp_dir in temp_dirs:
+            shutil.rmtree(temp_dir, ignore_errors=True)
+
+    actual_case_names = [t.get("case_name", "") for t in tests]
+    if actual_case_names != EXPECTED_PART_F_4_TEST_NAMES:
+        all_passed = False
+
+    publication_before_cleanup_test = next(
+        (t for t in tests if t["case_name"] == "publication_verified_before_staging_cleanup"),
+        {},
+    )
+    staging_ephemeral_test = next(
+        (t for t in tests if t["case_name"] == "staging_paths_are_ephemeral_after_integration_return"),
+        {},
+    )
+    stored_publication_test = next(
+        (t for t in tests if t["case_name"] == "stored_publication_verification_survives_cleanup"),
+        {},
+    )
+    main_stored_test = next(
+        (t for t in tests if t["case_name"] == "production_main_uses_stored_publication_verification"),
+        {},
+    )
+    missing_publication_test = next(
+        (t for t in tests if t["case_name"] == "missing_stored_publication_verification_fails_closed"),
+        {},
+    )
+    snapshot_mismatch_test = next(
+        (t for t in tests if t["case_name"] == "snapshot_repository_hash_mismatch_rejected"),
+        {},
+    )
+
+    summary = {
+        "tests_expected": len(EXPECTED_PART_F_4_TEST_NAMES),
+        "tests_executed": len(tests),
+        "tests_passed": sum(1 for t in tests if t.get("passed")),
+        "tests_failed": sum(1 for t in tests if not t.get("passed")),
+        "test_details": tests,
+        "publication_verification_completed_before_cleanup": publication_before_cleanup_test.get(
+            "passed", False
+        ),
+        "publication_verification_uses_snapshot": publication_before_cleanup_test.get(
+            "integration_result", {}
+        ).get("publication_verification_uses_snapshot", False),
+        "temporary_staging_cleanup_expected": staging_ephemeral_test.get(
+            "integration_result", {}
+        ).get("temporary_staging_cleanup_expected", False),
+        "finalized_staging_paths_ephemeral": staging_ephemeral_test.get(
+            "integration_result", {}
+        ).get("finalized_staging_paths_ephemeral", False),
+        "stored_publication_verification_survives_cleanup": stored_publication_test.get(
+            "passed", False
+        ),
+        "main_uses_stored_publication_verification": main_stored_test.get(
+            "main_uses_stored_publication_verification", False
+        ),
+        "main_reverifies_deleted_staging_paths": main_stored_test.get(
+            "main_reverifies_deleted_staging_paths", True
+        ),
+        "missing_stored_publication_verification_rejected": missing_publication_test.get(
+            "passed", False
+        ),
+        "snapshot_repository_hash_mismatch_rejected": snapshot_mismatch_test.get(
+            "passed", False
+        ),
+        "build_core_bundle_calls": 0,
+        "fit_event_candidates_calls": 0,
+        "build_prediction_rows_calls": 0,
+        "model_fits_executed": 0,
+        "prediction_calls_executed": 0,
+        "repository_artifacts_written": 0,
+        "real_commits_executed": 0,
+        "real_pushes_executed": 0,
+        "full_build_executed": False,
+        "part3b_complete": False,
+        "part3c_authorized": False,
+    }
+    return tests, all_passed, summary
+
+
 def collect_actual_negative_test_evidence(
     original_negative_tests: List[Dict[str, Any]],
     canonical_exception_tests: List[Dict[str, Any]],
@@ -10272,10 +10795,12 @@ def main():
         part_f_1_tests, part_f_1_all_passed, part_f_1_summary = run_part_f_1_integration_tests()
         part_f_2_tests, part_f_2_all_passed, part_f_2_summary = run_part_f_2_integration_tests()
         part_f_3_tests, part_f_3_all_passed, part_f_3_summary = run_part_f_3_integration_tests()
+        part_f_4_tests, part_f_4_all_passed, part_f_4_summary = run_part_f_4_integration_tests()
         part_f_case_names = [t["case_name"] for t in part_f_tests]
         part_f_1_case_names = [t["case_name"] for t in part_f_1_tests]
         part_f_2_case_names = [t["case_name"] for t in part_f_2_tests]
         part_f_3_case_names = [t["case_name"] for t in part_f_3_tests]
+        part_f_4_case_names = [t["case_name"] for t in part_f_4_tests]
         dry_run_never_writes_test = next(
             (t for t in part_f_tests if t["case_name"] == "dry_run_never_writes_repository_or_authorizes_part3c"),
             {},
@@ -10336,10 +10861,44 @@ def main():
                 "tests_passed": part_f_3_summary["tests_passed"],
                 "tests_failed": part_f_3_summary["tests_failed"],
             },
+            "part_f_4_tests": {
+                "tests_expected": part_f_4_summary["tests_expected"],
+                "tests_executed": part_f_4_summary["tests_executed"],
+                "tests_passed": part_f_4_summary["tests_passed"],
+                "tests_failed": part_f_4_summary["tests_failed"],
+            },
             "part_f_case_names_exact": part_f_case_names == EXPECTED_PART_F_TEST_NAMES,
             "part_f_1_case_names_exact": part_f_1_case_names == EXPECTED_PART_F_1_TEST_NAMES,
             "part_f_2_case_names_exact": part_f_2_case_names == EXPECTED_PART_F_2_TEST_NAMES,
             "part_f_3_case_names_exact": part_f_3_case_names == EXPECTED_PART_F_3_TEST_NAMES,
+            "part_f_4_case_names_exact": part_f_4_case_names == EXPECTED_PART_F_4_TEST_NAMES,
+            "publication_verification_completed_before_cleanup": part_f_4_summary[
+                "publication_verification_completed_before_cleanup"
+            ],
+            "publication_verification_uses_snapshot": part_f_4_summary[
+                "publication_verification_uses_snapshot"
+            ],
+            "temporary_staging_cleanup_expected": part_f_4_summary[
+                "temporary_staging_cleanup_expected"
+            ],
+            "finalized_staging_paths_ephemeral": part_f_4_summary[
+                "finalized_staging_paths_ephemeral"
+            ],
+            "stored_publication_verification_survives_cleanup": part_f_4_summary[
+                "stored_publication_verification_survives_cleanup"
+            ],
+            "main_uses_stored_publication_verification": part_f_4_summary[
+                "main_uses_stored_publication_verification"
+            ],
+            "main_reverifies_deleted_staging_paths": part_f_4_summary[
+                "main_reverifies_deleted_staging_paths"
+            ],
+            "missing_stored_publication_verification_rejected": part_f_4_summary[
+                "missing_stored_publication_verification_rejected"
+            ],
+            "snapshot_repository_hash_mismatch_rejected": part_f_4_summary[
+                "snapshot_repository_hash_mismatch_rejected"
+            ],
             "execution_trace": dry_result.get("execution_trace", []),
             "execution_trace_exact": dry_result.get("execution_trace_exact", False),
             "staged_validation_is_hard_gate": (
@@ -10518,6 +11077,7 @@ def main():
             and part_f_1_all_passed
             and part_f_2_all_passed
             and part_f_3_all_passed
+            and part_f_4_all_passed
             and part_f_summary["tests_executed"] == len(EXPECTED_PART_F_TEST_NAMES)
             and part_f_summary["tests_failed"] == 0
             and part_f_1_summary["tests_executed"] == len(EXPECTED_PART_F_1_TEST_NAMES)
@@ -10526,10 +11086,13 @@ def main():
             and part_f_2_summary["tests_failed"] == 0
             and part_f_3_summary["tests_executed"] == len(EXPECTED_PART_F_3_TEST_NAMES)
             and part_f_3_summary["tests_failed"] == 0
+            and part_f_4_summary["tests_executed"] == len(EXPECTED_PART_F_4_TEST_NAMES)
+            and part_f_4_summary["tests_failed"] == 0
             and part_f_case_names == EXPECTED_PART_F_TEST_NAMES
             and part_f_1_case_names == EXPECTED_PART_F_1_TEST_NAMES
             and part_f_2_case_names == EXPECTED_PART_F_2_TEST_NAMES
             and part_f_3_case_names == EXPECTED_PART_F_3_TEST_NAMES
+            and part_f_4_case_names == EXPECTED_PART_F_4_TEST_NAMES
             and combined["execution_trace_exact"] is True
             and combined["staged_validation_is_hard_gate"] is True
             and combined["persisted_provider_called_after_staged_failure"] is False
@@ -10574,6 +11137,16 @@ def main():
             and combined["publication_hash_mismatch_rejected"] is True
             and combined["remote_head_mismatch_rejected"] is True
             and combined["complete_delivery_evidence_passed"] is True
+            and combined["part_f_4_case_names_exact"] is True
+            and combined["publication_verification_completed_before_cleanup"] is True
+            and combined["publication_verification_uses_snapshot"] is True
+            and combined["temporary_staging_cleanup_expected"] is True
+            and combined["finalized_staging_paths_ephemeral"] is True
+            and combined["stored_publication_verification_survives_cleanup"] is True
+            and combined["main_uses_stored_publication_verification"] is True
+            and combined["main_reverifies_deleted_staging_paths"] is False
+            and combined["missing_stored_publication_verification_rejected"] is True
+            and combined["snapshot_repository_hash_mismatch_rejected"] is True
             and combined["model_fits_executed"] == 0
             and combined["prediction_calls_executed"] == 0
             and combined["repository_artifacts_written"] == 0
@@ -11173,10 +11746,7 @@ def main():
     production_outcome = derive_production_outcome(integration_result)
     audit_checks = production_outcome["audit_checks"]
 
-    publication_verification = verify_published_repository_artifacts(
-        integration_result.get("finalized_staged_artifacts", {}),
-        root,
-    )
+    publication_verification = resolve_stored_publication_verification(integration_result)
 
     try:
         git_status_lines = run_git(["status", "--short"]).splitlines()
