@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-"""Part 3B.2R.1-F.5:
-Git-Diff and Verified Publication Contract Separation
+"""Part 3B.2R.1-G.D2:
+Deterministic ExtraTrees Scoring and Fail-Closed Production Recovery
 
 This script is deterministic and self-contained. It may be invoked from any
 working directory; it locates the repository root from __file__ and references
 all other paths absolutely.
 
-Version: Part-3B.2R.1-F.5-v1
-Starting full commit: 6fed3f420f628d9f17a85463cdf0e16027abd62e
+Version: Part-3B.2R.1-G.D2-v1
+Starting full commit: 9defce264a345fb6efc4cff9f65226878e6844c9
 Accepted Part 3A commit:
 d16e28488aa0936014f020c05466181eff219af6
 """
@@ -42,11 +42,11 @@ warnings.filterwarnings("ignore")
 # ---------------------------------------------------------------------------
 # Frozen version and provenance constants
 # ---------------------------------------------------------------------------
-PART3B_VERSION = "Part-3B.2R.1-F.5-v1"
-STARTING_COMMIT = "6fed3f420f628d9f17a85463cdf0e16027abd62e"
+PART3B_VERSION = "Part-3B.2R.1-G.D2-v1"
+STARTING_COMMIT = "9defce264a345fb6efc4cff9f65226878e6844c9"
 ACCEPTED_PART3A_COMMIT = "d16e28488aa0936014f020c05466181eff219af6"
-assert PART3B_VERSION == "Part-3B.2R.1-F.5-v1"
-assert STARTING_COMMIT == "6fed3f420f628d9f17a85463cdf0e16027abd62e"
+assert PART3B_VERSION == "Part-3B.2R.1-G.D2-v1"
+assert STARTING_COMMIT == "9defce264a345fb6efc4cff9f65226878e6844c9"
 assert ACCEPTED_PART3A_COMMIT == "d16e28488aa0936014f020c05466181eff219af6"
 REPOSITORY = "abtinasg/springer"
 BRANCH = "major-revision-analysis-v2"
@@ -784,18 +784,65 @@ def build_all_events(projects: Dict[str, pd.DataFrame], common_cols: List[str]) 
 # ---------------------------------------------------------------------------
 # Candidate fitting, preprocessing audit, and configuration audit
 # ---------------------------------------------------------------------------
+def score_candidate_deterministically(
+    frozen: Any,
+    model: Any,
+    X: pd.DataFrame,
+    candidate_name: str,
+    *,
+    scoring_hook: Optional[Callable[[], None]] = None,
+) -> np.ndarray:
+    """Score one candidate with deterministic ET prediction when required."""
+    if candidate_name != "ET_leaf5":
+        return frozen.model_scores(model, X)
+
+    clf = model.named_steps["clf"]
+    if not hasattr(clf, "get_params") or not hasattr(clf, "set_params"):
+        raise TypeError("ET_leaf5 classifier must be ExtraTreesClassifier-compatible")
+    if type(clf).__name__ != "ExtraTreesClassifier":
+        raise TypeError("ET_leaf5 classifier must be ExtraTreesClassifier-compatible")
+
+    original_n_jobs = clf.get_params()["n_jobs"]
+    if original_n_jobs != 2:
+        raise ValueError(f"ET_leaf5 requires n_jobs == 2 before prediction, got {original_n_jobs}")
+
+    try:
+        clf.set_params(n_jobs=1)
+        if scoring_hook is not None:
+            scoring_hook()
+        return frozen.model_scores(model, X)
+    finally:
+        clf.set_params(n_jobs=original_n_jobs)
+        if clf.get_params()["n_jobs"] != 2:
+            raise RuntimeError("ET_leaf5 n_jobs restoration failed: expected 2 after prediction")
+
+
 def fit_event_candidates(frozen: Any, event: Dict[str, Any], seed: int) -> Dict[str, Any]:
     fitted: Dict[str, Any] = {}
     for name, factory in frozen.candidate_factories().items():
         model = factory(seed)
         model.fit(event["X_train"], event["y_train"])
-        val_scores = frozen.model_scores(model, event["X_val"])
-        test_scores = frozen.model_scores(model, event["X_test"])
+        val_scores = score_candidate_deterministically(
+            frozen, model, event["X_val"], name
+        )
+        test_scores = score_candidate_deterministically(
+            frozen, model, event["X_test"], name
+        )
         fitted[name] = {
             "model": model,
             "val_scores": val_scores,
             "test_scores": test_scores,
         }
+        if name == "ET_leaf5":
+            clf = model.named_steps["clf"]
+            fitted[name]["deterministic_scoring_evidence"] = {
+                "candidate": "ET_leaf5",
+                "fit_n_jobs": 2,
+                "prediction_n_jobs": 1,
+                "restored_n_jobs": clf.get_params()["n_jobs"],
+                "single_thread_prediction_used": True,
+                "post_prediction_configuration_restored": clf.get_params()["n_jobs"] == 2,
+            }
         for mode in OBJECTIVE_MODES:
             if mode == "rank":
                 t = 0.5
@@ -2401,6 +2448,65 @@ def run_canonical_exception_validator_tests(
     return tests, all_passed
 
 
+CANONICAL_EXCEPTION_TEST_REQUIRED_FIELDS = (
+    "case_name",
+    "matcher_returned_true",
+    "passed",
+)
+CANONICAL_EXCEPTION_TEST_OPTIONAL_FIELDS = ("validator_returned_false",)
+
+
+def validate_canonical_exception_test_record(record: Dict[str, Any]) -> Tuple[bool, str]:
+    """Validate one canonical-exception validator test record before rendering."""
+    if not isinstance(record, dict):
+        return False, "record must be a dictionary"
+    for field in CANONICAL_EXCEPTION_TEST_REQUIRED_FIELDS:
+        if field not in record:
+            return False, f"missing required field: {field}"
+    allowed_keys = set(CANONICAL_EXCEPTION_TEST_REQUIRED_FIELDS) | set(
+        CANONICAL_EXCEPTION_TEST_OPTIONAL_FIELDS
+    )
+    unknown_keys = sorted(set(record.keys()) - allowed_keys)
+    if unknown_keys:
+        return False, f"unexpected fields: {unknown_keys}"
+    if type(record["case_name"]) is not str:
+        return False, "case_name must be a string"
+    if type(record["matcher_returned_true"]) is not bool:
+        return False, "matcher_returned_true must be a bool"
+    if type(record["passed"]) is not bool:
+        return False, "passed must be a bool"
+    if "validator_returned_false" in record and type(record["validator_returned_false"]) is not bool:
+        return False, "validator_returned_false must be a bool"
+    return True, ""
+
+
+def render_canonical_exception_validator_tests_markdown(
+    tests: Sequence[Dict[str, Any]],
+) -> str:
+    """Render canonical-exception validator tests using the actual record schema."""
+    lines = [
+        "## Canonical Exception Validator Tests",
+        "",
+        "| Case | Matcher Returned True | Validator Returned False | Passed |",
+        "|------|----------------------|--------------------------|--------|",
+    ]
+    for record in tests:
+        valid, reason = validate_canonical_exception_test_record(record)
+        if not valid:
+            raise ValueError(f"Malformed canonical exception test record: {reason}")
+        validator_false = (
+            record["validator_returned_false"]
+            if "validator_returned_false" in record
+            else "N/A"
+        )
+        lines.append(
+            f"| {record['case_name']} | {record['matcher_returned_true']} | "
+            f"{validator_false} | {record['passed']} |"
+        )
+    lines.append("")
+    return "\n".join(lines)
+
+
 # ---------------------------------------------------------------------------
 # Duplicate-content audit
 # ---------------------------------------------------------------------------
@@ -2727,12 +2833,17 @@ def build_core_bundle(
     split_rows: List[Dict[str, Any]] = []
     pred_rows: List[Dict[str, Any]] = []
     preprocessing_audits: List[Dict[str, Any]] = []
+    et_deterministic_scoring_evidence: List[Dict[str, Any]] = []
     fitted_count = 0
 
     for i, event in enumerate(events):
         print(f"PROGRESS: event {i + 1}/{len(events)} {event['event_id']}", flush=True)
         fitted = fit_event_candidates(frozen, event, event["seed"])
         fitted_count += 4
+        if "deterministic_scoring_evidence" in fitted["ET_leaf5"]:
+            et_entry = dict(fitted["ET_leaf5"]["deterministic_scoring_evidence"])
+            et_entry["event_id"] = event["event_id"]
+            et_deterministic_scoring_evidence.append(et_entry)
         split_rows.extend(build_split_membership_rows(event))
         pred_rows.extend(build_prediction_rows(event, fitted, frozen))
         preprocessing_audits.extend(audit_event_preprocessing(event, fitted))
@@ -2847,6 +2958,7 @@ def build_core_bundle(
     audit_checks, check_evidence = build_all_checks(
         validation_results, duplicate_audit, negative_tests, tie_tests, True, True, common_cols, fitted_count, pred_within, pred_cross, dataset_profile, event_manifest
     )
+    check_evidence["et_deterministic_scoring_evidence"] = et_deterministic_scoring_evidence
     _root = repo_root()
     _accepted_contract = load_accepted_preservation_contract(_root, ACCEPTED_PART3A_COMMIT)
     _preservation_ok, _preservation_ev = compare_protected_state_to_accepted_contract(
@@ -3464,12 +3576,9 @@ def render_markdown_report(json_report: Dict[str, Any]) -> str:
     for t in json_report["negative_tests"]:
         lines.append(f"| {t['case_name']} | {t['mutation']} | {t['validator_name']} | {t['passed']} |")
     lines.append("")
-    lines.append("## Canonical Exception Validator Tests")
-    lines.append("")
-    lines.append("| Case | Mutation | Validator | Validated | Passed |")
-    lines.append("|------|----------|-----------|-----------|--------|")
-    for t in json_report.get("canonical_exception_validator_tests", []):
-        lines.append(f"| {t['case_name']} | {t['mutation']} | {t['validator_name']} | {t.get('validator_returned_validated', False)} | {t['passed']} |")
+    lines.append(render_canonical_exception_validator_tests_markdown(
+        json_report.get("canonical_exception_validator_tests", [])
+    ).rstrip("\n"))
     lines.append("")
     lines.append("## Tie Policy Tests")
     lines.append("")
@@ -7503,6 +7612,7 @@ _PART_F_BUILD_PREDICTION_ROWS_CALLS = 0
 
 
 def _build_synthetic_validation_results() -> Dict[str, Tuple[bool, Dict[str, Any]]]:
+    canonical_exception_tests, _ = run_canonical_exception_validator_tests()
     return {
         "dataset_profile": (True, {}),
         "sample_registry": (True, {}),
@@ -7557,7 +7667,7 @@ def _build_synthetic_validation_results() -> Dict[str, Tuple[bool, Dict[str, Any
             },
         ),
         "canonical_nondeterminism_exception": (True, {"validated": True, "approved_exception_count": 1, "unapproved_mismatch_count": 0, "approved_exception_matches": [{}], "unapproved_mismatches": []}),
-        "canonical_exception_validator_tests": (True, {"tests": [{"case_name": f"exc_{i}", "passed": True} for i in range(10)]}),
+        "canonical_exception_validator_tests": (True, {"tests": canonical_exception_tests}),
         "tie_policy": (True, {"tests": []}),
         "negative_tests": (True, {"tests": []}),
         "preservation": (True, {}),
@@ -8185,22 +8295,11 @@ def _render_final_audit_markdown(json_report: Dict[str, Any]) -> str:
             f"| {test.get('case_name')} | {test.get('mutation', '')} | "
             f"{test.get('validator_name', '')} | {test.get('passed')} |"
         )
-    lines.extend(
-        [
-            "",
-            "## Canonical Exception Validator Tests",
-            "",
-            "| Case | Mutation | Validator | Validated | Passed |",
-            "|------|----------|-----------|-----------|--------|",
-        ]
+    lines.append(
+        render_canonical_exception_validator_tests_markdown(
+            json_report.get("canonical_exception_validator_tests", [])
+        ).rstrip("\n")
     )
-    for test in json_report.get("canonical_exception_validator_tests", []):
-        lines.append(
-            f"| {test.get('case_name')} | {test.get('mutation', '')} | "
-            f"{test.get('validator_name', '')} | "
-            f"{test.get('validator_returned_validated', False)} | "
-            f"{test.get('passed')} |"
-        )
     lines.extend(
         [
             "",
@@ -10928,6 +11027,560 @@ def run_completeness_wiring_tests() -> Tuple[List[Dict[str, Any]], bool]:
     return tests, all_passed
 
 
+EXPECTED_PART_G_D2_TEST_NAMES = [
+    "frozen_et_factory_and_fit_remain_n_jobs_2",
+    "et_prediction_temporarily_uses_n_jobs_1_and_restores_2",
+    "cross_jm1_seed42_scores_repeat_byte_exact",
+    "within_cm1_seed7_scores_repeat_byte_exact",
+    "cross_jm1_seed42_approved_exception_value_preserved",
+    "canonical_exception_markdown_renders_actual_schema",
+    "semantic_failure_blocks_final_metadata_and_delivery",
+    "successful_continuation_requires_exact_final_fields",
+]
+
+
+def _load_diagnostic_event(
+    experiment: str,
+    target_project: str,
+    seed: int,
+) -> Tuple[Any, Dict[str, Any]]:
+    root = repo_root()
+    frozen = import_frozen_pipeline(root)
+    data_dir = root / "data" / "raw"
+    projects, common_cols, _ = load_raw_projects(frozen, data_dir)
+    registry = build_sample_registry(projects, common_cols)
+    projects = attach_registry_identity(projects, registry)
+    event = build_event_split(experiment, target_project, seed, projects, common_cols)
+    return frozen, event
+
+
+def _make_synthetic_successful_integration_result_for_continuation() -> Dict[str, Any]:
+    audit_checks = _make_synthetic_audit_checks_all_true()
+    audit_checks["all_critical_checks_passed"] = True
+    stage_gate = _make_synthetic_stage_gate_authorized()
+    base = {
+        "semantic_reproducibility_passed": True,
+        "final_audit_checks": audit_checks,
+        "stage_gate": stage_gate,
+        "final_artifact_contract_passed": True,
+        "stage_gate_would_pass": True,
+        "part3b_complete": True,
+        "part3c_authorized": True,
+        "next_authorized_stage": "Part 3C",
+        "repository_publish_started": True,
+        "repository_artifacts_written": 11,
+    }
+    base["production_outcome"] = derive_production_outcome(base)
+    return base
+
+
+def run_part_g_d2_recovery_tests() -> Tuple[List[Dict[str, Any]], bool, Dict[str, Any]]:
+    """Eight focused G.D2 tests for deterministic ET scoring and continuation gate."""
+    tests: List[Dict[str, Any]] = []
+    all_passed = True
+    model_fits_executed = 0
+    diagnostics: Dict[str, Any] = {
+        "frozen_et_n_jobs": None,
+        "et_prediction_n_jobs": None,
+        "et_restored_n_jobs": None,
+        "et_configuration_restored": None,
+        "cross_jm1_validation_byte_equal": None,
+        "cross_jm1_test_byte_equal": None,
+        "cross_jm1_max_validation_difference": None,
+        "cross_jm1_max_test_difference": None,
+        "within_cm1_validation_byte_equal": None,
+        "within_cm1_test_byte_equal": None,
+        "within_cm1_max_validation_difference": None,
+        "within_cm1_max_test_difference": None,
+        "cross_jm1_rank_selected_candidate": None,
+        "cross_jm1_deterministic_test_roc_auc": None,
+        "approved_exception_value_preserved": None,
+        "post_hoc_score_selection_used": False,
+        "canonical_exception_markdown_rendered": None,
+        "malformed_canonical_test_record_rejected": None,
+        "semantic_failure_ready_for_final_metadata": None,
+        "semantic_failure_final_audit_called": None,
+        "semantic_failure_markdown_called": None,
+        "semantic_failure_manifest_called": None,
+        "semantic_failure_git_delivery_called": None,
+        "semantic_failure_exit_code": None,
+    }
+
+    def _record(case_name: str, passed: bool, **extra: Any) -> None:
+        nonlocal all_passed
+        tests.append({"case_name": case_name, "passed": passed, **extra})
+        all_passed = all_passed and passed
+
+    frozen_jm1, event_jm1 = _load_diagnostic_event("cross_project", "JM1", 42)
+    factories = frozen_jm1.candidate_factories()
+    et_factory = factories["ET_leaf5"]
+    et_model = et_factory(42)
+    clf = et_model.named_steps["clf"]
+    pre_fit_n_jobs = clf.get_params()["n_jobs"]
+    et_model.fit(event_jm1["X_train"], event_jm1["y_train"])
+    model_fits_executed += 1
+    post_fit_n_jobs = clf.get_params()["n_jobs"]
+    diagnostics["frozen_et_n_jobs"] = post_fit_n_jobs
+    _record(
+        "frozen_et_factory_and_fit_remain_n_jobs_2",
+        pre_fit_n_jobs == 2 and post_fit_n_jobs == 2,
+        pre_fit_n_jobs=pre_fit_n_jobs,
+        post_fit_n_jobs=post_fit_n_jobs,
+    )
+
+    n_jobs_before_prediction: List[int] = []
+    n_jobs_during_prediction: List[int] = []
+    n_jobs_after_prediction: List[int] = []
+
+    def _capture_before() -> None:
+        n_jobs_before_prediction.append(clf.get_params()["n_jobs"])
+
+    def _capture_during() -> None:
+        n_jobs_during_prediction.append(clf.get_params()["n_jobs"])
+
+    _capture_before()
+    _ = score_candidate_deterministically(
+        frozen_jm1,
+        et_model,
+        event_jm1["X_val"],
+        "ET_leaf5",
+        scoring_hook=_capture_during,
+    )
+    n_jobs_after_prediction.append(clf.get_params()["n_jobs"])
+    restoration_ok = (
+        n_jobs_before_prediction == [2]
+        and n_jobs_during_prediction == [1]
+        and n_jobs_after_prediction == [2]
+    )
+    diagnostics["et_prediction_n_jobs"] = 1 if n_jobs_during_prediction == [1] else None
+    diagnostics["et_restored_n_jobs"] = clf.get_params()["n_jobs"]
+    diagnostics["et_configuration_restored"] = clf.get_params()["n_jobs"] == 2
+
+    exception_during_restore_ok = True
+    original_model_scores = frozen_jm1.model_scores
+
+    def _raising_model_scores(model: Any, X: pd.DataFrame) -> np.ndarray:
+        raise RuntimeError("synthetic scoring exception")
+
+    frozen_jm1.model_scores = _raising_model_scores  # type: ignore[method-assign]
+    try:
+        try:
+            score_candidate_deterministically(
+                frozen_jm1,
+                et_model,
+                event_jm1["X_val"],
+                "ET_leaf5",
+            )
+            exception_during_restore_ok = False
+        except RuntimeError:
+            exception_during_restore_ok = clf.get_params()["n_jobs"] == 2
+    finally:
+        frozen_jm1.model_scores = original_model_scores  # type: ignore[method-assign]
+
+    _record(
+        "et_prediction_temporarily_uses_n_jobs_1_and_restores_2",
+        restoration_ok and exception_during_restore_ok,
+        restoration_ok=restoration_ok,
+        exception_during_restore_ok=exception_during_restore_ok,
+    )
+
+    val_a = score_candidate_deterministically(
+        frozen_jm1, et_model, event_jm1["X_val"], "ET_leaf5"
+    )
+    val_b = score_candidate_deterministically(
+        frozen_jm1, et_model, event_jm1["X_val"], "ET_leaf5"
+    )
+    test_a = score_candidate_deterministically(
+        frozen_jm1, et_model, event_jm1["X_test"], "ET_leaf5"
+    )
+    test_b = score_candidate_deterministically(
+        frozen_jm1, et_model, event_jm1["X_test"], "ET_leaf5"
+    )
+    cross_val_equal = bool(np.array_equal(val_a, val_b))
+    cross_test_equal = bool(np.array_equal(test_a, test_b))
+    cross_val_bytes_equal = val_a.tobytes() == val_b.tobytes()
+    cross_test_bytes_equal = test_a.tobytes() == test_b.tobytes()
+    cross_val_max_diff = float(np.max(np.abs(val_a - val_b))) if len(val_a) else 0.0
+    cross_test_max_diff = float(np.max(np.abs(test_a - test_b))) if len(test_a) else 0.0
+    diagnostics.update(
+        {
+            "cross_jm1_validation_byte_equal": cross_val_bytes_equal,
+            "cross_jm1_test_byte_equal": cross_test_bytes_equal,
+            "cross_jm1_max_validation_difference": cross_val_max_diff,
+            "cross_jm1_max_test_difference": cross_test_max_diff,
+        }
+    )
+    _record(
+        "cross_jm1_seed42_scores_repeat_byte_exact",
+        cross_val_equal
+        and cross_test_equal
+        and cross_val_bytes_equal
+        and cross_test_bytes_equal
+        and cross_val_max_diff == 0.0
+        and cross_test_max_diff == 0.0,
+    )
+
+    frozen_cm1, event_cm1 = _load_diagnostic_event("within_project", "CM1", 7)
+    cm1_model = frozen_cm1.candidate_factories()["ET_leaf5"](7)
+    cm1_model.fit(event_cm1["X_train"], event_cm1["y_train"])
+    model_fits_executed += 1
+    cm1_val_a = score_candidate_deterministically(
+        frozen_cm1, cm1_model, event_cm1["X_val"], "ET_leaf5"
+    )
+    cm1_val_b = score_candidate_deterministically(
+        frozen_cm1, cm1_model, event_cm1["X_val"], "ET_leaf5"
+    )
+    cm1_test_a = score_candidate_deterministically(
+        frozen_cm1, cm1_model, event_cm1["X_test"], "ET_leaf5"
+    )
+    cm1_test_b = score_candidate_deterministically(
+        frozen_cm1, cm1_model, event_cm1["X_test"], "ET_leaf5"
+    )
+    within_val_equal = bool(np.array_equal(cm1_val_a, cm1_val_b))
+    within_test_equal = bool(np.array_equal(cm1_test_a, cm1_test_b))
+    within_val_bytes_equal = cm1_val_a.tobytes() == cm1_val_b.tobytes()
+    within_test_bytes_equal = cm1_test_a.tobytes() == cm1_test_b.tobytes()
+    within_val_max_diff = float(np.max(np.abs(cm1_val_a - cm1_val_b))) if len(cm1_val_a) else 0.0
+    within_test_max_diff = float(np.max(np.abs(cm1_test_a - cm1_test_b))) if len(cm1_test_a) else 0.0
+    diagnostics.update(
+        {
+            "within_cm1_validation_byte_equal": within_val_bytes_equal,
+            "within_cm1_test_byte_equal": within_test_bytes_equal,
+            "within_cm1_max_validation_difference": within_val_max_diff,
+            "within_cm1_max_test_difference": within_test_max_diff,
+        }
+    )
+    _record(
+        "within_cm1_seed7_scores_repeat_byte_exact",
+        within_val_equal
+        and within_test_equal
+        and within_val_bytes_equal
+        and within_test_bytes_equal
+        and within_val_max_diff == 0.0
+        and within_test_max_diff == 0.0,
+    )
+
+    fitted_jm1: Dict[str, Any] = {
+        "ET_leaf5": {
+            "model": et_model,
+            "val_scores": val_a,
+            "test_scores": test_a,
+        }
+    }
+    for name in ["LR_std_C0.1", "LR_std_C1", "DT_leaf5"]:
+        model = factories[name](42)
+        model.fit(event_jm1["X_train"], event_jm1["y_train"])
+        model_fits_executed += 1
+        val_scores = score_candidate_deterministically(
+            frozen_jm1, model, event_jm1["X_val"], name
+        )
+        test_scores = score_candidate_deterministically(
+            frozen_jm1, model, event_jm1["X_test"], name
+        )
+        fitted_jm1[name] = {
+            "model": model,
+            "val_scores": val_scores,
+            "test_scores": test_scores,
+            "objective_rank": frozen_jm1.objective_value(
+                event_jm1["y_val"], val_scores, 0.5, "rank"
+            ),
+        }
+    fitted_jm1["ET_leaf5"]["objective_rank"] = frozen_jm1.objective_value(
+        event_jm1["y_val"], val_a, 0.5, "rank"
+    )
+    selected_rank = max(CANDIDATES, key=lambda k: fitted_jm1[k]["objective_rank"])
+    test_roc_auc = float(
+        frozen_jm1.metric_row(event_jm1["y_test"], test_a, 0.5)["roc_auc"]
+    )
+    approved_diff = abs(test_roc_auc - APPROVED_EXCEPTION_RECON_VALUE)
+    exception_evidence = {
+        "experiment": "cross_project",
+        "target_project": "JM1",
+        "seed": 42,
+        "model": "AQRPE_v2_rank",
+        "selected_candidate": selected_rank,
+        "selection_mode": "rank_objective_fixed_threshold",
+        "column": "roc_auc",
+        "canonical_value": APPROVED_EXCEPTION_CANONICAL_VALUE,
+        "recon_value": test_roc_auc,
+        "absolute_difference": abs(APPROVED_EXCEPTION_CANONICAL_VALUE - test_roc_auc),
+    }
+    approved_exception_ok = (
+        selected_rank == "ET_leaf5"
+        and approved_diff <= 1e-15
+        and is_exact_directional_canonical_exception(exception_evidence)
+    )
+    diagnostics.update(
+        {
+            "cross_jm1_rank_selected_candidate": selected_rank,
+            "cross_jm1_deterministic_test_roc_auc": test_roc_auc,
+            "approved_exception_value_preserved": approved_exception_ok,
+        }
+    )
+    _record(
+        "cross_jm1_seed42_approved_exception_value_preserved",
+        approved_exception_ok,
+        test_roc_auc=test_roc_auc,
+        approved_diff=approved_diff,
+    )
+
+    canonical_tests, _ = run_canonical_exception_validator_tests()
+    markdown_rendered_ok = True
+    markdown_error: Optional[str] = None
+    try:
+        rendered = render_canonical_exception_validator_tests_markdown(canonical_tests)
+        markdown_rendered_ok = (
+            "| Case | Matcher Returned True | Validator Returned False | Passed |" in rendered
+            and "mutation" not in rendered
+            and "validator_name" not in rendered
+            and all(t["case_name"] in rendered for t in canonical_tests)
+        )
+    except Exception as exc:
+        markdown_rendered_ok = False
+        markdown_error = str(exc)
+    malformed_rejected = False
+    try:
+        bad_record = dict(canonical_tests[0])
+        del bad_record["passed"]
+        render_canonical_exception_validator_tests_markdown([bad_record])
+    except (ValueError, KeyError):
+        malformed_rejected = True
+    diagnostics["canonical_exception_markdown_rendered"] = markdown_rendered_ok
+    diagnostics["malformed_canonical_test_record_rejected"] = malformed_rejected
+    _record(
+        "canonical_exception_markdown_renders_actual_schema",
+        markdown_rendered_ok and malformed_rejected,
+        markdown_error=markdown_error,
+    )
+
+    sentinel_flags = {
+        "_build_final_audit_json": False,
+        "render_markdown_report": False,
+        "finalize_and_validate_integrated_artifacts": False,
+        "perform_final_git_delivery": False,
+    }
+
+    def _mark(name: str) -> Callable[..., Any]:
+        def _sentinel(*args: Any, **kwargs: Any) -> Any:
+            sentinel_flags[name] = True
+            return {}
+        return _sentinel
+
+    semantic_failure_result = exercise_post_integration_continuation_authority(
+        {"semantic_reproducibility_passed": False},
+        sentinels={
+            "_build_final_audit_json": _mark("_build_final_audit_json"),
+            "render_markdown_report": _mark("render_markdown_report"),
+            "finalize_and_validate_integrated_artifacts": _mark(
+                "finalize_and_validate_integrated_artifacts"
+            ),
+            "perform_final_git_delivery": _mark("perform_final_git_delivery"),
+        },
+    )
+    diagnostics.update(
+        {
+            "semantic_failure_ready_for_final_metadata": semantic_failure_result[
+                "ready_for_final_metadata"
+            ],
+            "semantic_failure_final_audit_called": sentinel_flags["_build_final_audit_json"],
+            "semantic_failure_markdown_called": sentinel_flags["render_markdown_report"],
+            "semantic_failure_manifest_called": sentinel_flags[
+                "finalize_and_validate_integrated_artifacts"
+            ],
+            "semantic_failure_git_delivery_called": sentinel_flags[
+                "perform_final_git_delivery"
+            ],
+            "semantic_failure_exit_code": semantic_failure_result["exit_code"],
+        }
+    )
+    _record(
+        "semantic_failure_blocks_final_metadata_and_delivery",
+        semantic_failure_result["ready_for_final_metadata"] is False
+        and not any(sentinel_flags.values())
+        and semantic_failure_result["exit_code"] == 1,
+        semantic_failure_result=semantic_failure_result,
+    )
+
+    successful_result = _make_synthetic_successful_integration_result_for_continuation()
+    successful_readiness = validate_postbuild_integration_ready_for_final_metadata(
+        successful_result
+    )
+    mutation_failures: List[str] = []
+    for field in (
+        "final_audit_checks",
+        "stage_gate",
+        "final_artifact_contract_passed",
+        "production_outcome",
+    ):
+        mutated = copy.deepcopy(successful_result)
+        del mutated[field]
+        mutated_readiness = validate_postbuild_integration_ready_for_final_metadata(mutated)
+        if mutated_readiness["ready_for_final_metadata"]:
+            mutation_failures.append(field)
+    _record(
+        "successful_continuation_requires_exact_final_fields",
+        successful_readiness["ready_for_final_metadata"] is True
+        and len(mutation_failures) == 0,
+        mutation_failures=mutation_failures,
+    )
+
+    case_names = [t["case_name"] for t in tests]
+    summary = {
+        "tests_expected": 8,
+        "tests_executed": len(tests),
+        "tests_passed": sum(1 for t in tests if t.get("passed")),
+        "tests_failed": sum(1 for t in tests if not t.get("passed")),
+        "test_details": tests,
+        "part_g_d2_case_names_exact": case_names == EXPECTED_PART_G_D2_TEST_NAMES,
+        "diagnostic_events": [
+            "cross_project__JM1__seed_042",
+            "within_project__CM1__seed_007",
+        ],
+        "model_fits_executed": model_fits_executed,
+        "full_build_executed": False,
+        "repository_artifacts_written": 0,
+        "real_commits_executed": 0,
+        "real_pushes_executed": 0,
+        "part3b_complete": False,
+        "part3c_authorized": False,
+        **diagnostics,
+    }
+    return tests, all_passed, summary
+
+
+def validate_postbuild_integration_ready_for_final_metadata(
+    integration_result: Dict[str, Any],
+) -> Dict[str, Any]:
+    """Fail closed unless post-integration evidence is ready for final metadata."""
+    missing_required_fields: List[str] = []
+    invalid_required_fields: List[str] = []
+
+    if "semantic_reproducibility_passed" not in integration_result:
+        missing_required_fields.append("semantic_reproducibility_passed")
+    elif integration_result["semantic_reproducibility_passed"] is not True:
+        invalid_required_fields.append("semantic_reproducibility_passed")
+
+    final_audit_checks = integration_result.get("final_audit_checks")
+    if final_audit_checks is None:
+        missing_required_fields.append("final_audit_checks")
+    else:
+        schema_passed, _ = validate_exact_audit_check_schema(final_audit_checks)
+        if not schema_passed:
+            invalid_required_fields.append("final_audit_checks")
+
+    stage_gate = integration_result.get("stage_gate")
+    if stage_gate is None:
+        missing_required_fields.append("stage_gate")
+    else:
+        gate_passed, _ = validate_stage_gate(stage_gate)
+        if not gate_passed:
+            invalid_required_fields.append("stage_gate")
+
+    if "final_artifact_contract_passed" not in integration_result:
+        missing_required_fields.append("final_artifact_contract_passed")
+    elif integration_result["final_artifact_contract_passed"] is not True:
+        invalid_required_fields.append("final_artifact_contract_passed")
+
+    production_outcome = integration_result.get("production_outcome")
+    if production_outcome is None:
+        missing_required_fields.append("production_outcome")
+    elif production_outcome.get("production_outcome_valid") is not True:
+        invalid_required_fields.append("production_outcome.production_outcome_valid")
+
+    ready_for_final_metadata = (
+        len(missing_required_fields) == 0 and len(invalid_required_fields) == 0
+    )
+    if ready_for_final_metadata:
+        failure_reason = None
+    elif missing_required_fields:
+        failure_reason = (
+            "missing required post-integration fields: "
+            + ", ".join(missing_required_fields)
+        )
+    else:
+        failure_reason = (
+            "invalid required post-integration fields: "
+            + ", ".join(invalid_required_fields)
+        )
+
+    return {
+        "ready_for_final_metadata": ready_for_final_metadata,
+        "failure_reason": failure_reason,
+        "missing_required_fields": missing_required_fields,
+        "invalid_required_fields": invalid_required_fields,
+    }
+
+
+def exercise_post_integration_continuation_authority(
+    integration_result: Dict[str, Any],
+    *,
+    bundle1: Optional[Dict[str, Any]] = None,
+    sentinels: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
+    """Mirror main()'s post-integration continuation gate and final metadata path."""
+    readiness = validate_postbuild_integration_ready_for_final_metadata(integration_result)
+    semantic_evidence = integration_result.get("semantic_evidence", {})
+    outcome = {
+        "ready_for_final_metadata": readiness["ready_for_final_metadata"],
+        "failure_reason": readiness["failure_reason"],
+        "missing_required_fields": readiness["missing_required_fields"],
+        "invalid_required_fields": readiness["invalid_required_fields"],
+        "semantic_reproducibility_passed": integration_result.get(
+            "semantic_reproducibility_passed"
+        ),
+        "unapproved_differing_artifacts": semantic_evidence.get(
+            "unapproved_differing_artifacts", []
+        ),
+        "final_audit_called": False,
+        "markdown_called": False,
+        "manifest_called": False,
+        "git_delivery_called": False,
+        "repository_artifacts_written": 0,
+        "commit_created": False,
+        "push_succeeded": False,
+        "part3b_complete": False,
+        "part3c_authorized": False,
+        "exit_code": 0,
+    }
+    if not readiness["ready_for_final_metadata"]:
+        outcome["exit_code"] = 1
+        return outcome
+
+    if sentinels is None:
+        outcome["exit_code"] = 0
+        return outcome
+
+    staged_artifacts = integration_result.get(
+        "finalized_staged_artifacts",
+        (bundle1 or {}).get("artifacts", {}),
+    )
+    if sentinels.get("_build_final_audit_json") is not None:
+        sentinels["_build_final_audit_json"](
+            staged_artifacts, integration_result, bundle1 or {}
+        )
+        outcome["final_audit_called"] = True
+    if sentinels.get("render_markdown_report") is not None:
+        sentinels["render_markdown_report"](
+            integration_result.get("final_audit_json_validation", {}).get(
+                "normalized_audit_json", {}
+            )
+        )
+        outcome["markdown_called"] = True
+    if sentinels.get("finalize_and_validate_integrated_artifacts") is not None:
+        sentinels["finalize_and_validate_integrated_artifacts"](
+            staged_artifacts,
+            integration_result,
+            bundle1 or {},
+            repo_root(),
+        )
+        outcome["manifest_called"] = True
+    if sentinels.get("perform_final_git_delivery") is not None:
+        sentinels["perform_final_git_delivery"]([], None)
+        outcome["git_delivery_called"] = True
+    outcome["exit_code"] = 0
+    return outcome
+
+
 SUPPORTED_SELF_TEST_FLAGS = {
     "--self-test-canonical-exception",
     "--self-test-persisted-ledger",
@@ -10936,6 +11589,7 @@ SUPPORTED_SELF_TEST_FLAGS = {
     "--self-test-data-artifact-comparison",
     "--self-test-eleven-artifact-comparison",
     "--self-test-integration-dry-run",
+    "--self-test-gd2-recovery",
 }
 
 
@@ -11052,6 +11706,7 @@ def main():
     parser.add_argument("--self-test-data-artifact-comparison", action="store_true", default=False)
     parser.add_argument("--self-test-eleven-artifact-comparison", action="store_true", default=False)
     parser.add_argument("--self-test-integration-dry-run", action="store_true", default=False)
+    parser.add_argument("--self-test-gd2-recovery", action="store_true", default=False)
     known, _ = parser.parse_known_args()
     if known.self_test_integration_dry_run:
         global _PART_F_BUILD_CORE_BUNDLE_CALLS, _PART_F_FIT_EVENT_CANDIDATES_CALLS, _PART_F_BUILD_PREDICTION_ROWS_CALLS
@@ -11666,6 +12321,57 @@ def main():
             and e12_summary["lr_signed_zero_rejected"] is True
             and e12_summary["dt_signed_zero_rejected"] is True
         ) else 1
+    if known.self_test_gd2_recovery:
+        gd2_tests, gd2_all_passed, gd2_summary = run_part_g_d2_recovery_tests()
+        combined = {
+            "part_g_d2_tests": {
+                "tests_expected": gd2_summary["tests_expected"],
+                "tests_executed": gd2_summary["tests_executed"],
+                "tests_passed": gd2_summary["tests_passed"],
+                "tests_failed": gd2_summary["tests_failed"],
+            },
+            "part_g_d2_case_names_exact": gd2_summary["part_g_d2_case_names_exact"],
+            "diagnostic_events": gd2_summary["diagnostic_events"],
+            "model_fits_executed": gd2_summary["model_fits_executed"],
+            "full_build_executed": gd2_summary["full_build_executed"],
+            "repository_artifacts_written": gd2_summary["repository_artifacts_written"],
+            "real_commits_executed": gd2_summary["real_commits_executed"],
+            "real_pushes_executed": gd2_summary["real_pushes_executed"],
+            "frozen_et_n_jobs": gd2_summary["frozen_et_n_jobs"],
+            "et_prediction_n_jobs": gd2_summary["et_prediction_n_jobs"],
+            "et_restored_n_jobs": gd2_summary["et_restored_n_jobs"],
+            "et_configuration_restored": gd2_summary["et_configuration_restored"],
+            "cross_jm1_validation_byte_equal": gd2_summary["cross_jm1_validation_byte_equal"],
+            "cross_jm1_test_byte_equal": gd2_summary["cross_jm1_test_byte_equal"],
+            "cross_jm1_max_validation_difference": gd2_summary["cross_jm1_max_validation_difference"],
+            "cross_jm1_max_test_difference": gd2_summary["cross_jm1_max_test_difference"],
+            "within_cm1_validation_byte_equal": gd2_summary["within_cm1_validation_byte_equal"],
+            "within_cm1_test_byte_equal": gd2_summary["within_cm1_test_byte_equal"],
+            "within_cm1_max_validation_difference": gd2_summary["within_cm1_max_validation_difference"],
+            "within_cm1_max_test_difference": gd2_summary["within_cm1_max_test_difference"],
+            "cross_jm1_rank_selected_candidate": gd2_summary["cross_jm1_rank_selected_candidate"],
+            "cross_jm1_deterministic_test_roc_auc": gd2_summary["cross_jm1_deterministic_test_roc_auc"],
+            "approved_exception_value_preserved": gd2_summary["approved_exception_value_preserved"],
+            "post_hoc_score_selection_used": gd2_summary["post_hoc_score_selection_used"],
+            "canonical_exception_markdown_rendered": gd2_summary["canonical_exception_markdown_rendered"],
+            "malformed_canonical_test_record_rejected": gd2_summary["malformed_canonical_test_record_rejected"],
+            "semantic_failure_ready_for_final_metadata": gd2_summary["semantic_failure_ready_for_final_metadata"],
+            "semantic_failure_final_audit_called": gd2_summary["semantic_failure_final_audit_called"],
+            "semantic_failure_markdown_called": gd2_summary["semantic_failure_markdown_called"],
+            "semantic_failure_manifest_called": gd2_summary["semantic_failure_manifest_called"],
+            "semantic_failure_git_delivery_called": gd2_summary["semantic_failure_git_delivery_called"],
+            "semantic_failure_exit_code": gd2_summary["semantic_failure_exit_code"],
+            "part3b_complete": gd2_summary["part3b_complete"],
+            "part3c_authorized": gd2_summary["part3c_authorized"],
+        }
+        print(_json_dumps(combined))
+        return 0 if (
+            gd2_all_passed
+            and gd2_summary["tests_executed"] == 8
+            and gd2_summary["tests_failed"] == 0
+            and gd2_summary["model_fits_executed"] == 5
+            and gd2_summary["part_g_d2_case_names_exact"] is True
+        ) else 1
     if known.self_test_persisted_ledger:
         root = repo_root()
         frozen = import_frozen_pipeline(root)
@@ -12026,10 +12732,36 @@ def main():
         post_copy_test_hook=None,
     )
 
+    continuation_readiness = validate_postbuild_integration_ready_for_final_metadata(
+        integration_result
+    )
+    if not continuation_readiness["ready_for_final_metadata"]:
+        semantic_evidence = integration_result.get("semantic_evidence", {})
+        failure_payload = {
+            "production_status": "failed",
+            "failure_stage": "post_integration_continuation_gate",
+            "failure_reason": continuation_readiness["failure_reason"],
+            "semantic_reproducibility_passed": integration_result.get(
+                "semantic_reproducibility_passed"
+            ),
+            "unapproved_differing_artifacts": semantic_evidence.get(
+                "unapproved_differing_artifacts", []
+            ),
+            "missing_required_fields": continuation_readiness["missing_required_fields"],
+            "invalid_required_fields": continuation_readiness["invalid_required_fields"],
+            "repository_artifacts_written": 0,
+            "commit_created": False,
+            "push_succeeded": False,
+            "part3b_complete": False,
+            "part3c_authorized": False,
+            "next_authorized_stage": None,
+            "exit_code": 1,
+        }
+        print(_json_dumps(failure_payload))
+        return 1
+
     semantic_evidence = integration_result.get("semantic_evidence", {})
     semantic_reproducibility_passed = integration_result.get("semantic_reproducibility_passed", False)
-    if not semantic_reproducibility_passed:
-        print(f"\n[WARNING] Semantic reproducibility failed; retaining build roots for diagnosis:\n  {t1}\n  {t2}", flush=True)
 
     validated_audit_json = (
         integration_result.get("final_audit_json_validation", {}).get("normalized_audit_json")
