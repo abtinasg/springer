@@ -1,9 +1,9 @@
 # Part 3B ExtraTrees Reconciliation Policy Specification
 
-**Stage:** Part 3B.2R.1-G.D5
-**Starting commit:** `429eb3f6df0173457b2b8cece69c6f01cbaeaa25`
+**Stage:** Part 3B.2R.1-G.D5.1
+**Starting commit:** `1d82250e8f2ce4467d00f052dad9ea3b31339aa4`
 **Policy ID:** et_rank_metric_reconciliation
-**Policy version:** 1.0.0
+**Policy version:** 1.0.1
 
 ## Purpose and Non-Enforcement Warning
 
@@ -33,6 +33,7 @@ Mechanistic eligibility does **not** change current approval status.
 - **Eligible metric allowlist:** avg_precision, roc_auc
 - **Exact build-value equality:** float64_bit_exact
 - **Exact build-score equality:** byte_exact
+- **Executable equality helper:** float64_bit_equal
 
 ## Predicate: et_rank_metric_reconciliation_eligible
 
@@ -54,9 +55,15 @@ A mismatch row is eligible only when every section below passes.
 - Direct model is `ET_leaf5`, or selected candidate is `ET_leaf5`, or a soft ensemble explicitly contains `ET_leaf5`.
 
 ### D. Accepted-Output Comparison
-- Non-ET validation and test score arrays are byte-identical to accepted tracked arrays.
-- Maximum ET validation/test score absolute difference is at most 1e-15.
-- Missing score evidence causes rejection.
+- Candidate-level non-ET score evidence required for LR_std_C0.1, LR_std_C1, DT_leaf5 with byte-identical validation/test arrays.
+- ET_leaf5 requires Build 1/Build 2 validation and test score arrays byte-identical.
+- Four independent ET score-delta fields must each exist, be finite, and be ≤ 1e-15:
+  - maximum_build1_validation_absolute_score_difference
+  - maximum_build1_test_absolute_score_difference
+  - maximum_build2_validation_absolute_score_difference
+  - maximum_build2_test_absolute_score_difference
+- Aggregate maximum ET score difference is reporting-only and must not substitute.
+- Missing candidate, missing field, or False non-ET byte-equality rejects.
 
 ### E. Metric Classification
 - Eligible metrics: avg_precision, roc_auc.
@@ -83,6 +90,16 @@ A mismatch row is eligible only when every section below passes.
 | mechanistically_eligible_under_frozen_policy | Predicate passes all sections | No |
 | currently_approved_exception | Historical approval in mismatch matrix | No (unchanged) |
 | currently_unapproved_mismatch | Not currently approved | No (unchanged) |
+
+## ET Score-Delta Decision Table
+
+| Field | Independent check | Tolerance | Substitutes aggregate? |
+| --- | --- | --- | --- |
+| maximum_build1_validation_absolute_score_difference | required | ≤ 1e-15 | No |
+| maximum_build1_test_absolute_score_difference | required | ≤ 1e-15 | No |
+| maximum_build2_validation_absolute_score_difference | required | ≤ 1e-15 | No |
+| maximum_build2_test_absolute_score_difference | required | ≤ 1e-15 | No |
+| maximum_et_score_absolute_difference | reporting only | n/a | Must not substitute |
 
 ## Metric Classification Table
 
@@ -115,16 +132,26 @@ A mismatch row is eligible only when every section below passes.
 - unknown_metric
 - build_identity_disagreement
 - one_ulp_build_value_difference
+- positive_zero_negative_zero_build_value_difference
+- float64_byte_representation_difference
 - score_array_byte_difference_between_builds
-- non_et_score_difference_from_accepted_output
-- et_score_delta_above_1e-15
-- metric_delta_above_1e-07
+- missing_non_et_candidate
+- missing_candidate_field
+- unexpected_candidate
+- non_et_byte_inequality
+- et_candidate_build_byte_inequality
+- missing_et_build_split_delta_field
+- et_build_split_delta_above_tolerance
+- aggregate_et_delta_substitution_prohibited
+- metric_delta_above_tolerance
 - threshold_sensitive_metric
 - calibration_metric
 - validation_mismatch
 - selected_candidate_difference
 - selection_mode_difference
 - non_et_derived_row
+- reconciliation_json_sha_mismatch
+- mismatch_matrix_sha_mismatch
 
 ## Prohibited Operations
 
@@ -150,6 +177,10 @@ A mismatch row is eligible only when every section below passes.
 - **Currently approved rows:** 1
 - **Currently unapproved rows:** 8
 
+- **Transactional publication ready:** True
+- **JSON/Markdown consistency:** True
+- **All specification checks passed:** True
+
 ## Regression Fixtures (Nine Rows)
 
 | Seed | Model | Metric | Mechanistically eligible | Currently approved | Currently unapproved | Reason codes |
@@ -168,7 +199,7 @@ A mismatch row is eligible only when every section below passes.
 
 - **Model fits executed:** 0
 - **Prediction calls executed:** 0
-- **Production builds executed:** 0
+- **Production generator executions:** 0
 - **Repository production artifacts published:** 0
 - **Production authorization:** False
 - **Policy enforced:** False

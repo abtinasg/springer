@@ -1,8 +1,8 @@
 {
-  "stage": "Part 3B.2R.1-G.D5",
-  "starting_commit": "429eb3f6df0173457b2b8cece69c6f01cbaeaa25",
+  "stage": "Part 3B.2R.1-G.D5.1",
+  "starting_commit": "1d82250e8f2ce4467d00f052dad9ea3b31339aa4",
   "policy_id": "et_rank_metric_reconciliation",
-  "policy_version": "1.0.0",
+  "policy_version": "1.0.1",
   "policy_status": "specified_not_enforced",
   "production_validator_status": "unchanged",
   "production_authorization": false,
@@ -46,7 +46,14 @@
     ],
     "exact_build_value_equality": "float64_bit_exact",
     "exact_build_score_equality": "byte_exact",
-    "et_leaf5_candidate_literal": "ET_leaf5"
+    "executable_equality_helper": "float64_bit_equal",
+    "et_leaf5_candidate_literal": "ET_leaf5",
+    "required_candidates": [
+      "LR_std_C0.1",
+      "LR_std_C1",
+      "DT_leaf5",
+      "ET_leaf5"
+    ]
   },
   "metric_classifications": [
     {
@@ -146,13 +153,31 @@
       "categorical_mismatch_count"
     ],
     "score_evidence_event": [
-      "non_et_scores_byte_identical",
-      "build1_non_et_scores_byte_identical",
-      "build2_non_et_scores_byte_identical",
-      "maximum_et_score_absolute_difference",
-      "build_score_arrays_byte_exact"
+      "maximum_build1_validation_absolute_score_difference",
+      "maximum_build1_test_absolute_score_difference",
+      "maximum_build2_validation_absolute_score_difference",
+      "maximum_build2_test_absolute_score_difference",
+      "candidate_score_evidence",
+      "build_score_arrays_byte_exact",
+      "maximum_et_score_absolute_difference"
+    ],
+    "score_evidence_candidate_non_et": [
+      "build1_validation_score_byte_equal",
+      "build1_test_score_byte_equal",
+      "build2_validation_score_byte_equal",
+      "build2_test_score_byte_equal"
+    ],
+    "score_evidence_candidate_et": [
+      "build1_build2_validation_score_byte_equal",
+      "build1_build2_test_score_byte_equal",
+      "maximum_build1_validation_absolute_score_difference",
+      "maximum_build1_test_absolute_score_difference",
+      "maximum_build2_validation_absolute_score_difference",
+      "maximum_build2_test_absolute_score_difference"
     ]
   },
+  "transactional_publication_ready": true,
+  "transactional_publication_ready_meaning": "All temporary-file validation, JSON/Markdown consistency checks, and synthetic partial-replacement rollback tests passed before the real report publication attempt.",
   "predicate_definition": {
     "predicate_name": "et_rank_metric_reconciliation_eligible",
     "A_evidence_completeness": {
@@ -265,35 +290,89 @@
       "identity_hardcoding_prohibited": true
     },
     "D_accepted_output_comparison": {
-      "description": "Non-ET scores byte-identical; ET scores within absolute tolerance.",
-      "requirements": [
+      "description": "Candidate-level non-ET byte equality, ET build byte equality, and four independent ET score-delta fields.",
+      "required_event_et_score_delta_fields": [
+        "maximum_build1_validation_absolute_score_difference",
+        "maximum_build1_test_absolute_score_difference",
+        "maximum_build2_validation_absolute_score_difference",
+        "maximum_build2_test_absolute_score_difference"
+      ],
+      "et_score_delta_requirements": [
         {
-          "field": "event.non_et_scores_byte_identical",
-          "operator": "==",
-          "value": true,
-          "source": "score_evidence"
-        },
-        {
-          "field": "event.build1_non_et_scores_byte_identical",
-          "operator": "==",
-          "value": true,
-          "source": "score_evidence"
-        },
-        {
-          "field": "event.build2_non_et_scores_byte_identical",
-          "operator": "==",
-          "value": true,
-          "source": "score_evidence"
-        },
-        {
-          "field": "event.maximum_et_score_absolute_difference",
+          "field": "maximum_build1_validation_absolute_score_difference",
           "operator": "<=",
           "value": 1e-15,
-          "source": "score_evidence"
+          "must_exist": true,
+          "must_be_finite": true,
+          "source": "score_evidence_event"
+        },
+        {
+          "field": "maximum_build1_test_absolute_score_difference",
+          "operator": "<=",
+          "value": 1e-15,
+          "must_exist": true,
+          "must_be_finite": true,
+          "source": "score_evidence_event"
+        },
+        {
+          "field": "maximum_build2_validation_absolute_score_difference",
+          "operator": "<=",
+          "value": 1e-15,
+          "must_exist": true,
+          "must_be_finite": true,
+          "source": "score_evidence_event"
+        },
+        {
+          "field": "maximum_build2_test_absolute_score_difference",
+          "operator": "<=",
+          "value": 1e-15,
+          "must_exist": true,
+          "must_be_finite": true,
+          "source": "score_evidence_event"
         }
       ],
+      "required_candidates": [
+        "LR_std_C0.1",
+        "LR_std_C1",
+        "DT_leaf5",
+        "ET_leaf5"
+      ],
+      "non_et_candidate_byte_equal_fields": [
+        "build1_validation_score_byte_equal",
+        "build1_test_score_byte_equal",
+        "build2_validation_score_byte_equal",
+        "build2_test_score_byte_equal"
+      ],
+      "et_candidate_requirements": [
+        {
+          "field": "build1_build2_validation_score_byte_equal",
+          "operator": "==",
+          "value": true,
+          "candidate": "ET_leaf5"
+        },
+        {
+          "field": "build1_build2_test_score_byte_equal",
+          "operator": "==",
+          "value": true,
+          "candidate": "ET_leaf5"
+        }
+      ],
+      "et_candidate_delta_fields": [
+        "maximum_build1_validation_absolute_score_difference",
+        "maximum_build1_test_absolute_score_difference",
+        "maximum_build2_validation_absolute_score_difference",
+        "maximum_build2_test_absolute_score_difference"
+      ],
+      "aggregate_fields_reporting_only": [
+        "maximum_et_score_absolute_difference",
+        "non_et_scores_byte_identical",
+        "build1_non_et_scores_byte_identical",
+        "build2_non_et_scores_byte_identical"
+      ],
       "et_score_absolute_tolerance": 1e-15,
-      "missing_score_evidence_rejects": true
+      "missing_score_evidence_rejects": true,
+      "missing_candidate_rejects": true,
+      "aggregate_substitution_prohibited": true
     },
     "E_metric_classification": {
       "description": "Metric must be on the exact allowlist.",
@@ -399,16 +478,26 @@
         "unknown_metric",
         "build_identity_disagreement",
         "one_ulp_build_value_difference",
+        "positive_zero_negative_zero_build_value_difference",
+        "float64_byte_representation_difference",
         "score_array_byte_difference_between_builds",
-        "non_et_score_difference_from_accepted_output",
-        "et_score_delta_above_tolerance",
+        "missing_non_et_candidate",
+        "missing_candidate_field",
+        "unexpected_candidate",
+        "non_et_byte_inequality",
+        "et_candidate_build_byte_inequality",
+        "missing_et_build_split_delta_field",
+        "et_build_split_delta_above_tolerance",
+        "aggregate_et_delta_substitution_prohibited",
         "metric_delta_above_tolerance",
         "threshold_sensitive_metric",
         "calibration_metric",
         "validation_mismatch",
         "selected_candidate_difference",
         "selection_mode_difference",
-        "non_et_derived_row"
+        "non_et_derived_row",
+        "reconciliation_json_sha_mismatch",
+        "mismatch_matrix_sha_mismatch"
       ]
     }
   },
@@ -421,7 +510,7 @@
     {
       "step": 2,
       "section": "B_exact_deterministic_equality",
-      "action": "verify_bit_and_byte_exact"
+      "action": "verify_float64_bit_equal_and_byte_exact"
     },
     {
       "step": 3,
@@ -431,7 +520,7 @@
     {
       "step": 4,
       "section": "D_accepted_output_comparison",
-      "action": "verify_score_evidence"
+      "action": "verify_candidate_and_et_score_delta_evidence"
     },
     {
       "step": 5,
@@ -460,16 +549,26 @@
     "unknown_metric",
     "build_identity_disagreement",
     "one_ulp_build_value_difference",
+    "positive_zero_negative_zero_build_value_difference",
+    "float64_byte_representation_difference",
     "score_array_byte_difference_between_builds",
-    "non_et_score_difference_from_accepted_output",
-    "et_score_delta_above_1e-15",
-    "metric_delta_above_1e-07",
+    "missing_non_et_candidate",
+    "missing_candidate_field",
+    "unexpected_candidate",
+    "non_et_byte_inequality",
+    "et_candidate_build_byte_inequality",
+    "missing_et_build_split_delta_field",
+    "et_build_split_delta_above_tolerance",
+    "aggregate_et_delta_substitution_prohibited",
+    "metric_delta_above_tolerance",
     "threshold_sensitive_metric",
     "calibration_metric",
     "validation_mismatch",
     "selected_candidate_difference",
     "selection_mode_difference",
-    "non_et_derived_row"
+    "non_et_derived_row",
+    "reconciliation_json_sha_mismatch",
+    "mismatch_matrix_sha_mismatch"
   ],
   "prohibited_operations": [
     "implement_policy_in_production_validator",
@@ -543,6 +642,11 @@
           "passed": true,
           "checks": [
             {
+              "field": "g_r1_build1_value_vs_g_r1_build2_value",
+              "passed": true,
+              "equality_helper": "float64_bit_equal"
+            },
+            {
               "field": "build_result_reconstruction_sha_equal",
               "passed": true
             },
@@ -578,21 +682,139 @@
           "passed": true,
           "checks": [
             {
-              "field": "non_et_scores_byte_identical",
-              "passed": true
+              "field": "maximum_build1_validation_absolute_score_difference",
+              "passed": true,
+              "observed": 2.220446049250313e-16
             },
             {
-              "field": "build1_non_et_scores_byte_identical",
-              "passed": true
+              "field": "maximum_build1_test_absolute_score_difference",
+              "passed": true,
+              "observed": 3.3306690738754696e-16
             },
             {
-              "field": "build2_non_et_scores_byte_identical",
-              "passed": true
+              "field": "maximum_build2_validation_absolute_score_difference",
+              "passed": true,
+              "observed": 2.220446049250313e-16
+            },
+            {
+              "field": "maximum_build2_test_absolute_score_difference",
+              "passed": true,
+              "observed": 3.3306690738754696e-16
+            },
+            {
+              "candidate": "LR_std_C0.1",
+              "field": "build1_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C0.1",
+              "field": "build1_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C0.1",
+              "field": "build2_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C0.1",
+              "field": "build2_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C1",
+              "field": "build1_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C1",
+              "field": "build1_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C1",
+              "field": "build2_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C1",
+              "field": "build2_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "DT_leaf5",
+              "field": "build1_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "DT_leaf5",
+              "field": "build1_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "DT_leaf5",
+              "field": "build2_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "DT_leaf5",
+              "field": "build2_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "build1_build2_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "build1_build2_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "maximum_build1_validation_absolute_score_difference",
+              "passed": true,
+              "observed": 2.220446049250313e-16
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "maximum_build1_test_absolute_score_difference",
+              "passed": true,
+              "observed": 3.3306690738754696e-16
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "maximum_build2_validation_absolute_score_difference",
+              "passed": true,
+              "observed": 2.220446049250313e-16
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "maximum_build2_test_absolute_score_difference",
+              "passed": true,
+              "observed": 3.3306690738754696e-16
             },
             {
               "field": "maximum_et_score_absolute_difference",
               "passed": true,
-              "observed": 3.3306690738754696e-16
+              "observed": 3.3306690738754696e-16,
+              "derived_from_independent_fields": 3.3306690738754696e-16,
+              "reporting_only": true
             }
           ]
         },
@@ -697,6 +919,11 @@
           "passed": true,
           "checks": [
             {
+              "field": "g_r1_build1_value_vs_g_r1_build2_value",
+              "passed": true,
+              "equality_helper": "float64_bit_equal"
+            },
+            {
               "field": "build_result_reconstruction_sha_equal",
               "passed": true
             },
@@ -732,21 +959,139 @@
           "passed": true,
           "checks": [
             {
-              "field": "non_et_scores_byte_identical",
-              "passed": true
+              "field": "maximum_build1_validation_absolute_score_difference",
+              "passed": true,
+              "observed": 2.220446049250313e-16
             },
             {
-              "field": "build1_non_et_scores_byte_identical",
-              "passed": true
+              "field": "maximum_build1_test_absolute_score_difference",
+              "passed": true,
+              "observed": 3.3306690738754696e-16
             },
             {
-              "field": "build2_non_et_scores_byte_identical",
-              "passed": true
+              "field": "maximum_build2_validation_absolute_score_difference",
+              "passed": true,
+              "observed": 2.220446049250313e-16
+            },
+            {
+              "field": "maximum_build2_test_absolute_score_difference",
+              "passed": true,
+              "observed": 3.3306690738754696e-16
+            },
+            {
+              "candidate": "LR_std_C0.1",
+              "field": "build1_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C0.1",
+              "field": "build1_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C0.1",
+              "field": "build2_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C0.1",
+              "field": "build2_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C1",
+              "field": "build1_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C1",
+              "field": "build1_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C1",
+              "field": "build2_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C1",
+              "field": "build2_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "DT_leaf5",
+              "field": "build1_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "DT_leaf5",
+              "field": "build1_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "DT_leaf5",
+              "field": "build2_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "DT_leaf5",
+              "field": "build2_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "build1_build2_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "build1_build2_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "maximum_build1_validation_absolute_score_difference",
+              "passed": true,
+              "observed": 2.220446049250313e-16
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "maximum_build1_test_absolute_score_difference",
+              "passed": true,
+              "observed": 3.3306690738754696e-16
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "maximum_build2_validation_absolute_score_difference",
+              "passed": true,
+              "observed": 2.220446049250313e-16
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "maximum_build2_test_absolute_score_difference",
+              "passed": true,
+              "observed": 3.3306690738754696e-16
             },
             {
               "field": "maximum_et_score_absolute_difference",
               "passed": true,
-              "observed": 3.3306690738754696e-16
+              "observed": 3.3306690738754696e-16,
+              "derived_from_independent_fields": 3.3306690738754696e-16,
+              "reporting_only": true
             }
           ]
         },
@@ -851,6 +1196,11 @@
           "passed": true,
           "checks": [
             {
+              "field": "g_r1_build1_value_vs_g_r1_build2_value",
+              "passed": true,
+              "equality_helper": "float64_bit_equal"
+            },
+            {
               "field": "build_result_reconstruction_sha_equal",
               "passed": true
             },
@@ -886,21 +1236,139 @@
           "passed": true,
           "checks": [
             {
-              "field": "non_et_scores_byte_identical",
-              "passed": true
+              "field": "maximum_build1_validation_absolute_score_difference",
+              "passed": true,
+              "observed": 2.220446049250313e-16
             },
             {
-              "field": "build1_non_et_scores_byte_identical",
-              "passed": true
+              "field": "maximum_build1_test_absolute_score_difference",
+              "passed": true,
+              "observed": 3.3306690738754696e-16
             },
             {
-              "field": "build2_non_et_scores_byte_identical",
-              "passed": true
+              "field": "maximum_build2_validation_absolute_score_difference",
+              "passed": true,
+              "observed": 2.220446049250313e-16
+            },
+            {
+              "field": "maximum_build2_test_absolute_score_difference",
+              "passed": true,
+              "observed": 3.3306690738754696e-16
+            },
+            {
+              "candidate": "LR_std_C0.1",
+              "field": "build1_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C0.1",
+              "field": "build1_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C0.1",
+              "field": "build2_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C0.1",
+              "field": "build2_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C1",
+              "field": "build1_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C1",
+              "field": "build1_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C1",
+              "field": "build2_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C1",
+              "field": "build2_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "DT_leaf5",
+              "field": "build1_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "DT_leaf5",
+              "field": "build1_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "DT_leaf5",
+              "field": "build2_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "DT_leaf5",
+              "field": "build2_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "build1_build2_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "build1_build2_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "maximum_build1_validation_absolute_score_difference",
+              "passed": true,
+              "observed": 2.220446049250313e-16
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "maximum_build1_test_absolute_score_difference",
+              "passed": true,
+              "observed": 3.3306690738754696e-16
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "maximum_build2_validation_absolute_score_difference",
+              "passed": true,
+              "observed": 2.220446049250313e-16
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "maximum_build2_test_absolute_score_difference",
+              "passed": true,
+              "observed": 3.3306690738754696e-16
             },
             {
               "field": "maximum_et_score_absolute_difference",
               "passed": true,
-              "observed": 3.3306690738754696e-16
+              "observed": 3.3306690738754696e-16,
+              "derived_from_independent_fields": 3.3306690738754696e-16,
+              "reporting_only": true
             }
           ]
         },
@@ -1005,6 +1473,11 @@
           "passed": true,
           "checks": [
             {
+              "field": "g_r1_build1_value_vs_g_r1_build2_value",
+              "passed": true,
+              "equality_helper": "float64_bit_equal"
+            },
+            {
               "field": "build_result_reconstruction_sha_equal",
               "passed": true
             },
@@ -1040,21 +1513,139 @@
           "passed": true,
           "checks": [
             {
-              "field": "non_et_scores_byte_identical",
-              "passed": true
+              "field": "maximum_build1_validation_absolute_score_difference",
+              "passed": true,
+              "observed": 2.220446049250313e-16
             },
             {
-              "field": "build1_non_et_scores_byte_identical",
-              "passed": true
+              "field": "maximum_build1_test_absolute_score_difference",
+              "passed": true,
+              "observed": 3.3306690738754696e-16
             },
             {
-              "field": "build2_non_et_scores_byte_identical",
-              "passed": true
+              "field": "maximum_build2_validation_absolute_score_difference",
+              "passed": true,
+              "observed": 2.220446049250313e-16
+            },
+            {
+              "field": "maximum_build2_test_absolute_score_difference",
+              "passed": true,
+              "observed": 3.3306690738754696e-16
+            },
+            {
+              "candidate": "LR_std_C0.1",
+              "field": "build1_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C0.1",
+              "field": "build1_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C0.1",
+              "field": "build2_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C0.1",
+              "field": "build2_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C1",
+              "field": "build1_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C1",
+              "field": "build1_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C1",
+              "field": "build2_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C1",
+              "field": "build2_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "DT_leaf5",
+              "field": "build1_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "DT_leaf5",
+              "field": "build1_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "DT_leaf5",
+              "field": "build2_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "DT_leaf5",
+              "field": "build2_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "build1_build2_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "build1_build2_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "maximum_build1_validation_absolute_score_difference",
+              "passed": true,
+              "observed": 2.220446049250313e-16
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "maximum_build1_test_absolute_score_difference",
+              "passed": true,
+              "observed": 3.3306690738754696e-16
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "maximum_build2_validation_absolute_score_difference",
+              "passed": true,
+              "observed": 2.220446049250313e-16
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "maximum_build2_test_absolute_score_difference",
+              "passed": true,
+              "observed": 3.3306690738754696e-16
             },
             {
               "field": "maximum_et_score_absolute_difference",
               "passed": true,
-              "observed": 3.3306690738754696e-16
+              "observed": 3.3306690738754696e-16,
+              "derived_from_independent_fields": 3.3306690738754696e-16,
+              "reporting_only": true
             }
           ]
         },
@@ -1159,6 +1750,11 @@
           "passed": true,
           "checks": [
             {
+              "field": "g_r1_build1_value_vs_g_r1_build2_value",
+              "passed": true,
+              "equality_helper": "float64_bit_equal"
+            },
+            {
               "field": "build_result_reconstruction_sha_equal",
               "passed": true
             },
@@ -1194,21 +1790,139 @@
           "passed": true,
           "checks": [
             {
-              "field": "non_et_scores_byte_identical",
-              "passed": true
+              "field": "maximum_build1_validation_absolute_score_difference",
+              "passed": true,
+              "observed": 2.220446049250313e-16
             },
             {
-              "field": "build1_non_et_scores_byte_identical",
-              "passed": true
+              "field": "maximum_build1_test_absolute_score_difference",
+              "passed": true,
+              "observed": 3.3306690738754696e-16
             },
             {
-              "field": "build2_non_et_scores_byte_identical",
-              "passed": true
+              "field": "maximum_build2_validation_absolute_score_difference",
+              "passed": true,
+              "observed": 2.220446049250313e-16
+            },
+            {
+              "field": "maximum_build2_test_absolute_score_difference",
+              "passed": true,
+              "observed": 3.3306690738754696e-16
+            },
+            {
+              "candidate": "LR_std_C0.1",
+              "field": "build1_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C0.1",
+              "field": "build1_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C0.1",
+              "field": "build2_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C0.1",
+              "field": "build2_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C1",
+              "field": "build1_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C1",
+              "field": "build1_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C1",
+              "field": "build2_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C1",
+              "field": "build2_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "DT_leaf5",
+              "field": "build1_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "DT_leaf5",
+              "field": "build1_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "DT_leaf5",
+              "field": "build2_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "DT_leaf5",
+              "field": "build2_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "build1_build2_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "build1_build2_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "maximum_build1_validation_absolute_score_difference",
+              "passed": true,
+              "observed": 2.220446049250313e-16
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "maximum_build1_test_absolute_score_difference",
+              "passed": true,
+              "observed": 3.3306690738754696e-16
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "maximum_build2_validation_absolute_score_difference",
+              "passed": true,
+              "observed": 2.220446049250313e-16
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "maximum_build2_test_absolute_score_difference",
+              "passed": true,
+              "observed": 3.3306690738754696e-16
             },
             {
               "field": "maximum_et_score_absolute_difference",
               "passed": true,
-              "observed": 3.3306690738754696e-16
+              "observed": 3.3306690738754696e-16,
+              "derived_from_independent_fields": 3.3306690738754696e-16,
+              "reporting_only": true
             }
           ]
         },
@@ -1313,6 +2027,11 @@
           "passed": true,
           "checks": [
             {
+              "field": "g_r1_build1_value_vs_g_r1_build2_value",
+              "passed": true,
+              "equality_helper": "float64_bit_equal"
+            },
+            {
               "field": "build_result_reconstruction_sha_equal",
               "passed": true
             },
@@ -1348,21 +2067,139 @@
           "passed": true,
           "checks": [
             {
-              "field": "non_et_scores_byte_identical",
-              "passed": true
+              "field": "maximum_build1_validation_absolute_score_difference",
+              "passed": true,
+              "observed": 2.220446049250313e-16
             },
             {
-              "field": "build1_non_et_scores_byte_identical",
-              "passed": true
+              "field": "maximum_build1_test_absolute_score_difference",
+              "passed": true,
+              "observed": 3.3306690738754696e-16
             },
             {
-              "field": "build2_non_et_scores_byte_identical",
-              "passed": true
+              "field": "maximum_build2_validation_absolute_score_difference",
+              "passed": true,
+              "observed": 2.220446049250313e-16
+            },
+            {
+              "field": "maximum_build2_test_absolute_score_difference",
+              "passed": true,
+              "observed": 3.3306690738754696e-16
+            },
+            {
+              "candidate": "LR_std_C0.1",
+              "field": "build1_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C0.1",
+              "field": "build1_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C0.1",
+              "field": "build2_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C0.1",
+              "field": "build2_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C1",
+              "field": "build1_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C1",
+              "field": "build1_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C1",
+              "field": "build2_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C1",
+              "field": "build2_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "DT_leaf5",
+              "field": "build1_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "DT_leaf5",
+              "field": "build1_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "DT_leaf5",
+              "field": "build2_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "DT_leaf5",
+              "field": "build2_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "build1_build2_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "build1_build2_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "maximum_build1_validation_absolute_score_difference",
+              "passed": true,
+              "observed": 2.220446049250313e-16
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "maximum_build1_test_absolute_score_difference",
+              "passed": true,
+              "observed": 3.3306690738754696e-16
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "maximum_build2_validation_absolute_score_difference",
+              "passed": true,
+              "observed": 2.220446049250313e-16
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "maximum_build2_test_absolute_score_difference",
+              "passed": true,
+              "observed": 3.3306690738754696e-16
             },
             {
               "field": "maximum_et_score_absolute_difference",
               "passed": true,
-              "observed": 3.3306690738754696e-16
+              "observed": 3.3306690738754696e-16,
+              "derived_from_independent_fields": 3.3306690738754696e-16,
+              "reporting_only": true
             }
           ]
         },
@@ -1467,6 +2304,11 @@
           "passed": true,
           "checks": [
             {
+              "field": "g_r1_build1_value_vs_g_r1_build2_value",
+              "passed": true,
+              "equality_helper": "float64_bit_equal"
+            },
+            {
               "field": "build_result_reconstruction_sha_equal",
               "passed": true
             },
@@ -1502,21 +2344,139 @@
           "passed": true,
           "checks": [
             {
-              "field": "non_et_scores_byte_identical",
-              "passed": true
+              "field": "maximum_build1_validation_absolute_score_difference",
+              "passed": true,
+              "observed": 2.220446049250313e-16
             },
             {
-              "field": "build1_non_et_scores_byte_identical",
-              "passed": true
+              "field": "maximum_build1_test_absolute_score_difference",
+              "passed": true,
+              "observed": 3.3306690738754696e-16
             },
             {
-              "field": "build2_non_et_scores_byte_identical",
-              "passed": true
+              "field": "maximum_build2_validation_absolute_score_difference",
+              "passed": true,
+              "observed": 2.220446049250313e-16
+            },
+            {
+              "field": "maximum_build2_test_absolute_score_difference",
+              "passed": true,
+              "observed": 3.3306690738754696e-16
+            },
+            {
+              "candidate": "LR_std_C0.1",
+              "field": "build1_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C0.1",
+              "field": "build1_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C0.1",
+              "field": "build2_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C0.1",
+              "field": "build2_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C1",
+              "field": "build1_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C1",
+              "field": "build1_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C1",
+              "field": "build2_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C1",
+              "field": "build2_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "DT_leaf5",
+              "field": "build1_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "DT_leaf5",
+              "field": "build1_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "DT_leaf5",
+              "field": "build2_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "DT_leaf5",
+              "field": "build2_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "build1_build2_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "build1_build2_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "maximum_build1_validation_absolute_score_difference",
+              "passed": true,
+              "observed": 2.220446049250313e-16
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "maximum_build1_test_absolute_score_difference",
+              "passed": true,
+              "observed": 3.3306690738754696e-16
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "maximum_build2_validation_absolute_score_difference",
+              "passed": true,
+              "observed": 2.220446049250313e-16
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "maximum_build2_test_absolute_score_difference",
+              "passed": true,
+              "observed": 3.3306690738754696e-16
             },
             {
               "field": "maximum_et_score_absolute_difference",
               "passed": true,
-              "observed": 3.3306690738754696e-16
+              "observed": 3.3306690738754696e-16,
+              "derived_from_independent_fields": 3.3306690738754696e-16,
+              "reporting_only": true
             }
           ]
         },
@@ -1621,6 +2581,11 @@
           "passed": true,
           "checks": [
             {
+              "field": "g_r1_build1_value_vs_g_r1_build2_value",
+              "passed": true,
+              "equality_helper": "float64_bit_equal"
+            },
+            {
               "field": "build_result_reconstruction_sha_equal",
               "passed": true
             },
@@ -1656,21 +2621,139 @@
           "passed": true,
           "checks": [
             {
-              "field": "non_et_scores_byte_identical",
-              "passed": true
+              "field": "maximum_build1_validation_absolute_score_difference",
+              "passed": true,
+              "observed": 2.220446049250313e-16
             },
             {
-              "field": "build1_non_et_scores_byte_identical",
-              "passed": true
+              "field": "maximum_build1_test_absolute_score_difference",
+              "passed": true,
+              "observed": 3.3306690738754696e-16
             },
             {
-              "field": "build2_non_et_scores_byte_identical",
-              "passed": true
+              "field": "maximum_build2_validation_absolute_score_difference",
+              "passed": true,
+              "observed": 2.220446049250313e-16
+            },
+            {
+              "field": "maximum_build2_test_absolute_score_difference",
+              "passed": true,
+              "observed": 3.3306690738754696e-16
+            },
+            {
+              "candidate": "LR_std_C0.1",
+              "field": "build1_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C0.1",
+              "field": "build1_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C0.1",
+              "field": "build2_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C0.1",
+              "field": "build2_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C1",
+              "field": "build1_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C1",
+              "field": "build1_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C1",
+              "field": "build2_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C1",
+              "field": "build2_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "DT_leaf5",
+              "field": "build1_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "DT_leaf5",
+              "field": "build1_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "DT_leaf5",
+              "field": "build2_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "DT_leaf5",
+              "field": "build2_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "build1_build2_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "build1_build2_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "maximum_build1_validation_absolute_score_difference",
+              "passed": true,
+              "observed": 2.220446049250313e-16
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "maximum_build1_test_absolute_score_difference",
+              "passed": true,
+              "observed": 3.3306690738754696e-16
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "maximum_build2_validation_absolute_score_difference",
+              "passed": true,
+              "observed": 2.220446049250313e-16
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "maximum_build2_test_absolute_score_difference",
+              "passed": true,
+              "observed": 3.3306690738754696e-16
             },
             {
               "field": "maximum_et_score_absolute_difference",
               "passed": true,
-              "observed": 3.3306690738754696e-16
+              "observed": 3.3306690738754696e-16,
+              "derived_from_independent_fields": 3.3306690738754696e-16,
+              "reporting_only": true
             }
           ]
         },
@@ -1775,6 +2858,11 @@
           "passed": true,
           "checks": [
             {
+              "field": "g_r1_build1_value_vs_g_r1_build2_value",
+              "passed": true,
+              "equality_helper": "float64_bit_equal"
+            },
+            {
               "field": "build_result_reconstruction_sha_equal",
               "passed": true
             },
@@ -1810,21 +2898,139 @@
           "passed": true,
           "checks": [
             {
-              "field": "non_et_scores_byte_identical",
-              "passed": true
+              "field": "maximum_build1_validation_absolute_score_difference",
+              "passed": true,
+              "observed": 2.220446049250313e-16
             },
             {
-              "field": "build1_non_et_scores_byte_identical",
-              "passed": true
+              "field": "maximum_build1_test_absolute_score_difference",
+              "passed": true,
+              "observed": 4.440892098500626e-16
             },
             {
-              "field": "build2_non_et_scores_byte_identical",
-              "passed": true
+              "field": "maximum_build2_validation_absolute_score_difference",
+              "passed": true,
+              "observed": 2.220446049250313e-16
+            },
+            {
+              "field": "maximum_build2_test_absolute_score_difference",
+              "passed": true,
+              "observed": 4.440892098500626e-16
+            },
+            {
+              "candidate": "LR_std_C0.1",
+              "field": "build1_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C0.1",
+              "field": "build1_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C0.1",
+              "field": "build2_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C0.1",
+              "field": "build2_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C1",
+              "field": "build1_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C1",
+              "field": "build1_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C1",
+              "field": "build2_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C1",
+              "field": "build2_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "DT_leaf5",
+              "field": "build1_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "DT_leaf5",
+              "field": "build1_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "DT_leaf5",
+              "field": "build2_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "DT_leaf5",
+              "field": "build2_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "build1_build2_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "build1_build2_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "maximum_build1_validation_absolute_score_difference",
+              "passed": true,
+              "observed": 2.220446049250313e-16
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "maximum_build1_test_absolute_score_difference",
+              "passed": true,
+              "observed": 4.440892098500626e-16
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "maximum_build2_validation_absolute_score_difference",
+              "passed": true,
+              "observed": 2.220446049250313e-16
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "maximum_build2_test_absolute_score_difference",
+              "passed": true,
+              "observed": 4.440892098500626e-16
             },
             {
               "field": "maximum_et_score_absolute_difference",
               "passed": true,
-              "observed": 4.440892098500626e-16
+              "observed": 4.440892098500626e-16,
+              "derived_from_independent_fields": 4.440892098500626e-16,
+              "reporting_only": true
             }
           ]
         },
@@ -1890,7 +3096,7 @@
   "production_activity_counters": {
     "model_fits_executed": 0,
     "prediction_calls_executed": 0,
-    "production_builds_executed": 0,
+    "production_generator_executions": 0,
     "repository_production_artifacts_published": 0
   },
   "authorization_flags": {
@@ -1902,6 +3108,8 @@
     "canonical_file_changed": false
   },
   "specification_integrity_checks": {
+    "reconciliation_json_sha_verified": true,
+    "mismatch_matrix_sha_verified": true,
     "source_evidence_hashes_verified": true,
     "source_evidence_schema_verified": true,
     "matrix_row_count_is_9": true,
@@ -1909,13 +3117,17 @@
     "unapproved_count_is_8": true,
     "eligible_metric_allowlist_exact": true,
     "exact_equality_rules_present": true,
-    "fail_closed_rules_present": true,
+    "float64_bit_equal_helper_is_executable": true,
+    "four_et_score_delta_requirements_present": true,
+    "candidate_level_non_et_checks_present": true,
+    "fail_closed_rules_exact": true,
     "predicate_free_of_identity_hardcoding": true,
     "regression_fixtures_separated_from_predicate": true,
     "all_nine_rows_mechanistically_eligible": true,
     "approval_status_unchanged": true,
     "policy_remains_unenforced": true,
     "production_flags_remain_false": true,
+    "transactional_publication_ready": true,
     "json_markdown_consistency": true,
     "all_specification_checks_passed": true
   }

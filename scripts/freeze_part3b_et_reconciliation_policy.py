@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Part 3B.2R.1-G.D5: Freeze exact ET reconciliation policy as non-enforced specification."""
+"""Part 3B.2R.1-G.D5.1: Close fail-closed gaps in frozen ET reconciliation policy."""
 from __future__ import annotations
 
 import argparse
@@ -10,19 +10,57 @@ import subprocess
 import sys
 import tempfile
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Sequence, Tuple
+from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
 
 import numpy as np
 import pandas as pd
 
-STARTING_COMMIT = "429eb3f6df0173457b2b8cece69c6f01cbaeaa25"
-STAGE = "Part 3B.2R.1-G.D5"
+STARTING_COMMIT = "1d82250e8f2ce4467d00f052dad9ea3b31339aa4"
+STAGE = "Part 3B.2R.1-G.D5.1"
 POLICY_ID = "et_rank_metric_reconciliation"
-POLICY_VERSION = "1.0.0"
+POLICY_VERSION = "1.0.1"
 POLICY_STATUS = "specified_not_enforced"
 
+RECONCILIATION_JSON_SHA256 = (
+    "2c483ceea237c97d5c339ba3ceb438f8e6e2e9beae695dc9410aa5b4b825de0a"
+)
 MATRIX_SHA256 = (
     "25cc88a8785f18668be2e03328a71b80b6e2c66f679a572e1e53656cde4ef908"
+)
+REQUIRED_CANDIDATES = ["LR_std_C0.1", "LR_std_C1", "DT_leaf5", "ET_leaf5"]
+NON_ET_CANDIDATES = ["LR_std_C0.1", "LR_std_C1", "DT_leaf5"]
+ET_SCORE_DELTA_FIELDS = [
+    "maximum_build1_validation_absolute_score_difference",
+    "maximum_build1_test_absolute_score_difference",
+    "maximum_build2_validation_absolute_score_difference",
+    "maximum_build2_test_absolute_score_difference",
+]
+NON_ET_BYTE_EQUAL_FIELDS = [
+    "build1_validation_score_byte_equal",
+    "build1_test_score_byte_equal",
+    "build2_validation_score_byte_equal",
+    "build2_test_score_byte_equal",
+]
+POLICY_OUTPUT_PATHS = [
+    "scripts/freeze_part3b_et_reconciliation_policy.py",
+    "reports/part3b_et_reconciliation_policy.json",
+    "reports/part3b_et_reconciliation_policy.md",
+]
+ML_COUNTED_METHODS = frozenset(
+    {"fit", "fit_transform", "predict", "predict_proba", "decision_function"}
+)
+ML_MODULE_PREFIXES = (
+    "sklearn.",
+    "xgboost.",
+    "lightgbm.",
+    "catboost.",
+    "tensorflow.",
+    "torch.",
+)
+TRANSACTIONAL_PUBLICATION_READY_MEANING = (
+    "All temporary-file validation, JSON/Markdown consistency checks, and "
+    "synthetic partial-replacement rollback tests passed before the real "
+    "report publication attempt."
 )
 RECONCILIATION_JSON_PATH = "reports/part3b_et_canonical_reconciliation.json"
 MATRIX_PATH = "results/part3b_prediction_ledger/et_canonical_mismatch_matrix.csv"
@@ -98,8 +136,91 @@ class NumpyEncoder(json.JSONEncoder):
         return super().default(obj)
 
 
+class ExecutionActivityTracker:
+    """Runtime profiler that counts ML fit/predict activity during self-tests."""
+
+    def __init__(self) -> None:
+        self.model_fits_executed = 0
+        self.prediction_calls_executed = 0
+        self.production_generator_executions = 0
+        self._original_trace: Optional[Callable[..., Any]] = None
+        self._active = False
+
+    def _is_ml_module(self, module_name: str) -> bool:
+        return any(module_name.startswith(prefix) for prefix in ML_MODULE_PREFIXES)
+
+    def _trace(self, frame: Any, event: str, arg: Any) -> Callable[..., Any]:
+        if event == "call":
+            code = frame.f_code
+            if code.co_name in ML_COUNTED_METHODS:
+                module_name = frame.f_globals.get("__name__", "")
+                if self._is_ml_module(str(module_name)):
+                    if code.co_name in ("fit", "fit_transform"):
+                        self.model_fits_executed += 1
+                    else:
+                        self.prediction_calls_executed += 1
+        return self._trace
+
+    def __enter__(self) -> "ExecutionActivityTracker":
+        if not self._active:
+            self._original_trace = sys.gettrace()
+            sys.settrace(self._trace)
+            self._active = True
+        return self
+
+    def __exit__(self, exc_type: Any, exc: Any, tb: Any) -> None:
+        if self._active:
+            sys.settrace(self._original_trace)
+            self._active = False
+
+    def record_production_generator_execution(self) -> None:
+        self.production_generator_executions += 1
+
+
+_ACTIVE_ACTIVITY_TRACKER: Optional[ExecutionActivityTracker] = None
+
+
 def repo_root() -> Path:
     return Path(__file__).resolve().parent.parent
+
+
+def float64_bit_equal(a: Any, b: Any) -> bool:
+    return np.float64(a).tobytes() == np.float64(b).tobytes()
+
+
+def publication_artifact_snapshot(root: Path) -> Dict[str, Optional[str]]:
+    snapshot: Dict[str, Optional[str]] = {}
+    for rel in POLICY_OUTPUT_PATHS:
+        path = root / rel
+        snapshot[rel] = sha256_file(path) if path.is_file() else None
+    return snapshot
+
+
+def count_changed_publication_artifacts(
+    before: Dict[str, Optional[str]],
+    after: Dict[str, Optional[str]],
+) -> int:
+    changed = 0
+    for rel in POLICY_OUTPUT_PATHS:
+        if before.get(rel) != after.get(rel):
+            changed += 1
+    return changed
+
+
+def verify_evidence_file_hashes(root: Path) -> Tuple[str, str]:
+    json_path = root / RECONCILIATION_JSON_PATH
+    matrix_path = root / MATRIX_PATH
+    json_sha = sha256_file(json_path)
+    matrix_sha = sha256_file(matrix_path)
+    if json_sha != RECONCILIATION_JSON_SHA256:
+        raise RuntimeError(
+            f"Reconciliation JSON SHA-256 {json_sha} != required {RECONCILIATION_JSON_SHA256}"
+        )
+    if matrix_sha != MATRIX_SHA256:
+        raise RuntimeError(
+            f"Mismatch matrix SHA-256 {matrix_sha} != required {MATRIX_SHA256}"
+        )
+    return json_sha, matrix_sha
 
 
 def sha256_file(path: Path) -> str:
@@ -241,35 +362,49 @@ def build_predicate_definition() -> Dict[str, Any]:
             "identity_hardcoding_prohibited": True,
         },
         "D_accepted_output_comparison": {
-            "description": "Non-ET scores byte-identical; ET scores within absolute tolerance.",
-            "requirements": [
+            "description": (
+                "Candidate-level non-ET byte equality, ET build byte equality, "
+                "and four independent ET score-delta fields."
+            ),
+            "required_event_et_score_delta_fields": ET_SCORE_DELTA_FIELDS,
+            "et_score_delta_requirements": [
                 {
-                    "field": "event.non_et_scores_byte_identical",
-                    "operator": "==",
-                    "value": True,
-                    "source": "score_evidence",
-                },
-                {
-                    "field": "event.build1_non_et_scores_byte_identical",
-                    "operator": "==",
-                    "value": True,
-                    "source": "score_evidence",
-                },
-                {
-                    "field": "event.build2_non_et_scores_byte_identical",
-                    "operator": "==",
-                    "value": True,
-                    "source": "score_evidence",
-                },
-                {
-                    "field": "event.maximum_et_score_absolute_difference",
+                    "field": field,
                     "operator": "<=",
                     "value": ET_SCORE_ABSOLUTE_TOLERANCE,
-                    "source": "score_evidence",
+                    "must_exist": True,
+                    "must_be_finite": True,
+                    "source": "score_evidence_event",
+                }
+                for field in ET_SCORE_DELTA_FIELDS
+            ],
+            "required_candidates": REQUIRED_CANDIDATES,
+            "non_et_candidate_byte_equal_fields": NON_ET_BYTE_EQUAL_FIELDS,
+            "et_candidate_requirements": [
+                {
+                    "field": "build1_build2_validation_score_byte_equal",
+                    "operator": "==",
+                    "value": True,
+                    "candidate": ET_LEAF5_CANDIDATE,
                 },
+                {
+                    "field": "build1_build2_test_score_byte_equal",
+                    "operator": "==",
+                    "value": True,
+                    "candidate": ET_LEAF5_CANDIDATE,
+                },
+            ],
+            "et_candidate_delta_fields": ET_SCORE_DELTA_FIELDS,
+            "aggregate_fields_reporting_only": [
+                "maximum_et_score_absolute_difference",
+                "non_et_scores_byte_identical",
+                "build1_non_et_scores_byte_identical",
+                "build2_non_et_scores_byte_identical",
             ],
             "et_score_absolute_tolerance": ET_SCORE_ABSOLUTE_TOLERANCE,
             "missing_score_evidence_rejects": True,
+            "missing_candidate_rejects": True,
+            "aggregate_substitution_prohibited": True,
         },
         "E_metric_classification": {
             "description": "Metric must be on the exact allowlist.",
@@ -360,38 +495,9 @@ def build_predicate_definition() -> Dict[str, Any]:
         },
         "H_fail_closed": {
             "description": "Any missing, null, NaN, or disagreement rejects eligibility.",
-            "rejection_conditions": [
-                "missing_field",
-                "null_or_nan_required_field",
-                "unknown_metric",
-                "build_identity_disagreement",
-                "one_ulp_build_value_difference",
-                "score_array_byte_difference_between_builds",
-                "non_et_score_difference_from_accepted_output",
-                "et_score_delta_above_tolerance",
-                "metric_delta_above_tolerance",
-                "threshold_sensitive_metric",
-                "calibration_metric",
-                "validation_mismatch",
-                "selected_candidate_difference",
-                "selection_mode_difference",
-                "non_et_derived_row",
-            ],
+            "rejection_conditions": build_fail_closed_rules(),
         },
     }
-
-
-def build_ordered_evaluation_steps() -> List[Dict[str, Any]]:
-    return [
-        {"step": 1, "section": "A_evidence_completeness", "action": "verify_global_and_row_presence"},
-        {"step": 2, "section": "B_exact_deterministic_equality", "action": "verify_bit_and_byte_exact"},
-        {"step": 3, "section": "C_et_mechanism", "action": "verify_et_derivation"},
-        {"step": 4, "section": "D_accepted_output_comparison", "action": "verify_score_evidence"},
-        {"step": 5, "section": "E_metric_classification", "action": "verify_metric_allowlist"},
-        {"step": 6, "section": "F_metric_delta", "action": "verify_metric_delta"},
-        {"step": 7, "section": "G_validation_and_categorical_invariants", "action": "verify_validation_invariants"},
-        {"step": 8, "section": "H_fail_closed", "action": "aggregate_fail_closed"},
-    ]
 
 
 def build_fail_closed_rules() -> List[str]:
@@ -401,18 +507,48 @@ def build_fail_closed_rules() -> List[str]:
         "unknown_metric",
         "build_identity_disagreement",
         "one_ulp_build_value_difference",
+        "positive_zero_negative_zero_build_value_difference",
+        "float64_byte_representation_difference",
         "score_array_byte_difference_between_builds",
-        "non_et_score_difference_from_accepted_output",
-        f"et_score_delta_above_{ET_SCORE_ABSOLUTE_TOLERANCE}",
-        f"metric_delta_above_{METRIC_ABSOLUTE_TOLERANCE}",
+        "missing_non_et_candidate",
+        "missing_candidate_field",
+        "unexpected_candidate",
+        "non_et_byte_inequality",
+        "et_candidate_build_byte_inequality",
+        "missing_et_build_split_delta_field",
+        "et_build_split_delta_above_tolerance",
+        "aggregate_et_delta_substitution_prohibited",
+        "metric_delta_above_tolerance",
         "threshold_sensitive_metric",
         "calibration_metric",
         "validation_mismatch",
         "selected_candidate_difference",
         "selection_mode_difference",
         "non_et_derived_row",
+        "reconciliation_json_sha_mismatch",
+        "mismatch_matrix_sha_mismatch",
     ]
 
+
+def build_ordered_evaluation_steps() -> List[Dict[str, Any]]:
+    return [
+        {"step": 1, "section": "A_evidence_completeness", "action": "verify_global_and_row_presence"},
+        {
+            "step": 2,
+            "section": "B_exact_deterministic_equality",
+            "action": "verify_float64_bit_equal_and_byte_exact",
+        },
+        {"step": 3, "section": "C_et_mechanism", "action": "verify_et_derivation"},
+        {
+            "step": 4,
+            "section": "D_accepted_output_comparison",
+            "action": "verify_candidate_and_et_score_delta_evidence",
+        },
+        {"step": 5, "section": "E_metric_classification", "action": "verify_metric_allowlist"},
+        {"step": 6, "section": "F_metric_delta", "action": "verify_metric_delta"},
+        {"step": 7, "section": "G_validation_and_categorical_invariants", "action": "verify_validation_invariants"},
+        {"step": 8, "section": "H_fail_closed", "action": "aggregate_fail_closed"},
+    ]
 
 def build_prohibited_operations() -> List[str]:
     return [
@@ -500,6 +636,147 @@ def _compare(operator: str, observed: Any, expected: Any) -> bool:
     raise ValueError(f"Unsupported operator: {operator}")
 
 
+def _is_finite(value: Any) -> bool:
+    if _is_missing(value):
+        return False
+    try:
+        return bool(np.isfinite(float(value)))
+    except (TypeError, ValueError):
+        return False
+
+
+def _evaluate_et_score_delta_fields(
+    event_evidence: Dict[str, Any],
+    reason_codes: List[str],
+) -> Tuple[bool, List[Dict[str, Any]]]:
+    checks: List[Dict[str, Any]] = []
+    passed = True
+    for field in ET_SCORE_DELTA_FIELDS:
+        value = event_evidence.get(field)
+        field_pass = True
+        if _is_missing(value):
+            field_pass = False
+            reason_codes.append(f"D_failed:missing_{field}")
+        elif not _is_finite(value):
+            field_pass = False
+            reason_codes.append(f"D_failed:non_finite_{field}")
+        elif float(value) > ET_SCORE_ABSOLUTE_TOLERANCE:
+            field_pass = False
+            reason_codes.append(f"D_failed:{field}_above_tolerance")
+        if not field_pass:
+            passed = False
+        checks.append({"field": field, "passed": field_pass, "observed": value})
+    return passed, checks
+
+
+def _evaluate_candidate_score_evidence(
+    event_evidence: Dict[str, Any],
+    reason_codes: List[str],
+) -> Tuple[bool, List[Dict[str, Any]]]:
+    checks: List[Dict[str, Any]] = []
+    passed = True
+    candidate_map = event_evidence.get("candidate_score_evidence")
+    if not isinstance(candidate_map, dict):
+        reason_codes.append("D_failed:missing_candidate_score_evidence")
+        return False, checks
+
+    present = set(candidate_map.keys())
+    expected = set(REQUIRED_CANDIDATES)
+    if present != expected:
+        passed = False
+        missing = sorted(expected - present)
+        unexpected = sorted(present - expected)
+        if missing:
+            reason_codes.append("D_failed:missing_non_et_candidate")
+            for cand in missing:
+                reason_codes.append(f"D_failed:missing_candidate:{cand}")
+        if unexpected:
+            reason_codes.append("D_failed:unexpected_candidate")
+            for cand in unexpected:
+                reason_codes.append(f"D_failed:unexpected_candidate:{cand}")
+
+    for cand in NON_ET_CANDIDATES:
+        cand_evidence = candidate_map.get(cand)
+        if not isinstance(cand_evidence, dict):
+            passed = False
+            reason_codes.append(f"D_failed:missing_candidate:{cand}")
+            continue
+        for field in NON_ET_BYTE_EQUAL_FIELDS:
+            value = cand_evidence.get(field)
+            if value is None:
+                passed = False
+                reason_codes.append(f"D_failed:missing_candidate_field:{cand}.{field}")
+                checks.append(
+                    {"candidate": cand, "field": field, "passed": False, "observed": None}
+                )
+                continue
+            field_pass = bool(value)
+            if not field_pass:
+                passed = False
+                reason_codes.append(f"D_failed:non_et_byte_inequality:{cand}.{field}")
+            checks.append(
+                {"candidate": cand, "field": field, "passed": field_pass, "observed": value}
+            )
+
+    et_evidence = candidate_map.get(ET_LEAF5_CANDIDATE)
+    if not isinstance(et_evidence, dict):
+        passed = False
+        reason_codes.append(f"D_failed:missing_candidate:{ET_LEAF5_CANDIDATE}")
+    else:
+        for field in (
+            "build1_build2_validation_score_byte_equal",
+            "build1_build2_test_score_byte_equal",
+        ):
+            value = et_evidence.get(field)
+            if value is None:
+                passed = False
+                reason_codes.append(f"D_failed:missing_candidate_field:{ET_LEAF5_CANDIDATE}.{field}")
+                field_pass = False
+            else:
+                field_pass = bool(value)
+                if not field_pass:
+                    passed = False
+                    reason_codes.append(f"D_failed:et_candidate_build_byte_inequality:{field}")
+            checks.append(
+                {
+                    "candidate": ET_LEAF5_CANDIDATE,
+                    "field": field,
+                    "passed": field_pass,
+                    "observed": value,
+                }
+            )
+        for field in ET_SCORE_DELTA_FIELDS:
+            value = et_evidence.get(field)
+            field_pass = True
+            if _is_missing(value):
+                field_pass = False
+                reason_codes.append(
+                    f"D_failed:missing_et_build_split_delta_field:{ET_LEAF5_CANDIDATE}.{field}"
+                )
+            elif not _is_finite(value):
+                field_pass = False
+                reason_codes.append(
+                    f"D_failed:non_finite_et_build_split_delta:{ET_LEAF5_CANDIDATE}.{field}"
+                )
+            elif float(value) > ET_SCORE_ABSOLUTE_TOLERANCE:
+                field_pass = False
+                reason_codes.append(
+                    f"D_failed:et_build_split_delta_above_tolerance:{ET_LEAF5_CANDIDATE}.{field}"
+                )
+            if not field_pass:
+                passed = False
+            checks.append(
+                {
+                    "candidate": ET_LEAF5_CANDIDATE,
+                    "field": field,
+                    "passed": field_pass,
+                    "observed": value,
+                }
+            )
+
+    return passed, checks
+
+
 def evaluate_predicate(
     row: Dict[str, Any],
     global_ctx: Dict[str, Any],
@@ -532,15 +809,31 @@ def evaluate_predicate(
   # Section B
     b_checks: List[Dict[str, Any]] = []
     b_pass = True
-    if not bool(row.get("build1_build2_value_equal")):
-        b_pass = False
-        reason_codes.append("B_failed:one_ulp_build_value_difference")
     b1 = row.get("g_r1_build1_value")
     b2 = row.get("g_r1_build2_value")
-    if not _is_missing(b1) and not _is_missing(b2):
-        if not np.float64(b1) == np.float64(b2):
+    if _is_missing(b1) or _is_missing(b2):
+        b_pass = False
+        reason_codes.append("B_failed:missing_build_value")
+    else:
+        if not float64_bit_equal(b1, b2):
             b_pass = False
-            reason_codes.append("B_failed:float64_bit_inequality")
+            if float(b1) == float(b2) and not float64_bit_equal(b1, b2):
+                reason_codes.append("B_failed:positive_zero_negative_zero_build_value_difference")
+            elif np.float64(b1) != np.float64(b2):
+                reason_codes.append("B_failed:one_ulp_build_value_difference")
+            else:
+                reason_codes.append("B_failed:float64_byte_representation_difference")
+        b_checks.append(
+            {
+                "field": "g_r1_build1_value_vs_g_r1_build2_value",
+                "passed": float64_bit_equal(b1, b2),
+                "equality_helper": "float64_bit_equal",
+            }
+        )
+    if not bool(row.get("build1_build2_value_equal")):
+        b_pass = False
+        if "B_failed:one_ulp_build_value_difference" not in reason_codes:
+            reason_codes.append("B_failed:build1_build2_value_equal_flag_false")
     for key in [
         "build_result_reconstruction_sha_equal",
         "build_validation_reconstruction_sha_equal",
@@ -593,32 +886,29 @@ def evaluate_predicate(
         d_pass = False
         reason_codes.append("D_failed:missing_score_evidence")
     else:
-        for key in [
-            "non_et_scores_byte_identical",
-            "build1_non_et_scores_byte_identical",
-            "build2_non_et_scores_byte_identical",
-        ]:
-            passed = bool(event_evidence.get(key))
-            if not passed:
-                d_pass = False
-                reason_codes.append(f"D_failed:{key}")
-            d_checks.append({"field": key, "passed": passed})
-        max_et = event_evidence.get("maximum_et_score_absolute_difference")
-        if _is_missing(max_et):
+        delta_pass, delta_checks = _evaluate_et_score_delta_fields(event_evidence, reason_codes)
+        d_checks.extend(delta_checks)
+        if not delta_pass:
             d_pass = False
-            reason_codes.append("D_failed:missing_et_score_delta")
-        else:
-            passed = float(max_et) <= ET_SCORE_ABSOLUTE_TOLERANCE
-            if not passed:
-                d_pass = False
-                reason_codes.append("D_failed:et_score_delta_above_tolerance")
-            d_checks.append(
-                {
-                    "field": "maximum_et_score_absolute_difference",
-                    "passed": passed,
-                    "observed": max_et,
-                }
-            )
+        candidate_pass, candidate_checks = _evaluate_candidate_score_evidence(
+            event_evidence, reason_codes
+        )
+        d_checks.extend(candidate_checks)
+        if not candidate_pass:
+            d_pass = False
+        aggregate_max = event_evidence.get("maximum_et_score_absolute_difference")
+        derived_max = None
+        if all(not _is_missing(event_evidence.get(field)) for field in ET_SCORE_DELTA_FIELDS):
+            derived_max = max(float(event_evidence[field]) for field in ET_SCORE_DELTA_FIELDS)
+        d_checks.append(
+            {
+                "field": "maximum_et_score_absolute_difference",
+                "passed": True,
+                "observed": aggregate_max,
+                "derived_from_independent_fields": derived_max,
+                "reporting_only": True,
+            }
+        )
     sections["D_accepted_output_comparison"] = {"passed": d_pass, "checks": d_checks}
 
   # Section E
@@ -732,15 +1022,9 @@ def validate_reconciliation_json(report: Dict[str, Any]) -> None:
 
 
 def load_evidence(root: Path) -> Tuple[Dict[str, Any], pd.DataFrame, Dict[str, Dict[str, Any]]]:
+    verify_evidence_file_hashes(root)
     json_path = root / RECONCILIATION_JSON_PATH
     matrix_path = root / MATRIX_PATH
-
-    json_sha = sha256_file(json_path)
-    matrix_sha = sha256_file(matrix_path)
-    if matrix_sha != MATRIX_SHA256:
-        raise RuntimeError(
-            f"Mismatch matrix SHA-256 {matrix_sha} != required {MATRIX_SHA256}"
-        )
 
     report = json.loads(json_path.read_text(encoding="utf-8"))
     validate_reconciliation_json(report)
@@ -864,7 +1148,9 @@ def build_policy_specification(
             "eligible_metric_allowlist": ELIGIBLE_METRIC_ALLOWLIST,
             "exact_build_value_equality": "float64_bit_exact",
             "exact_build_score_equality": "byte_exact",
+            "executable_equality_helper": "float64_bit_equal",
             "et_leaf5_candidate_literal": ET_LEAF5_CANDIDATE,
+            "required_candidates": REQUIRED_CANDIDATES,
         },
         "metric_classifications": build_metric_classification_table(),
         "required_fields": {
@@ -897,14 +1183,21 @@ def build_policy_specification(
                 "build1_build2_validation_reconstructions_equal",
                 "categorical_mismatch_count",
             ],
-            "score_evidence_event": [
-                "non_et_scores_byte_identical",
-                "build1_non_et_scores_byte_identical",
-                "build2_non_et_scores_byte_identical",
-                "maximum_et_score_absolute_difference",
+            "score_evidence_event": ET_SCORE_DELTA_FIELDS
+            + [
+                "candidate_score_evidence",
                 "build_score_arrays_byte_exact",
+                "maximum_et_score_absolute_difference",
             ],
+            "score_evidence_candidate_non_et": NON_ET_BYTE_EQUAL_FIELDS,
+            "score_evidence_candidate_et": [
+                "build1_build2_validation_score_byte_equal",
+                "build1_build2_test_score_byte_equal",
+            ]
+            + ET_SCORE_DELTA_FIELDS,
         },
+        "transactional_publication_ready": False,
+        "transactional_publication_ready_meaning": TRANSACTIONAL_PUBLICATION_READY_MEANING,
         "predicate_definition": predicate,
         "ordered_evaluation_steps": build_ordered_evaluation_steps(),
         "fail_closed_rules": build_fail_closed_rules(),
@@ -931,7 +1224,7 @@ def build_policy_specification(
         "production_activity_counters": {
             "model_fits_executed": 0,
             "prediction_calls_executed": 0,
-            "production_builds_executed": 0,
+            "production_generator_executions": 0,
             "repository_production_artifacts_published": 0,
         },
         "authorization_flags": {
@@ -954,33 +1247,56 @@ def validate_specification(
 ) -> Dict[str, bool]:
     checks: Dict[str, bool] = {}
     provenance = spec.get("evidence_provenance", [])
-    checks["source_evidence_hashes_verified"] = (
-        len(provenance) >= 2 and provenance[1].get("sha256") == MATRIX_SHA256
+    reconciliation_sha = (
+        provenance[0].get("sha256") if len(provenance) >= 1 else None
     )
+    matrix_sha = provenance[1].get("sha256") if len(provenance) >= 2 else None
+    checks["reconciliation_json_sha_verified"] = reconciliation_sha == RECONCILIATION_JSON_SHA256
+    checks["mismatch_matrix_sha_verified"] = matrix_sha == MATRIX_SHA256
+    checks["source_evidence_hashes_verified"] = (
+        checks["reconciliation_json_sha_verified"] and checks["mismatch_matrix_sha_verified"]
+    )
+
     if matrix_df is not None and not matrix_df.empty:
         checks["source_evidence_schema_verified"] = list(matrix_df.columns) == MATRIX_COLUMNS
         checks["matrix_row_count_is_9"] = len(matrix_df) == 9
         checks["approved_count_is_1"] = int(matrix_df["currently_approved_exception"].sum()) == 1
         checks["unapproved_count_is_8"] = int(matrix_df["currently_unapproved_mismatch"].sum()) == 8
     else:
-        checks["source_evidence_schema_verified"] = True
-        checks["matrix_row_count_is_9"] = (
-            spec.get("current_classification_counts", {}).get("matrix_row_count") == 9
+        matrix_provenance = provenance[1] if len(provenance) >= 2 else {}
+        checks["source_evidence_schema_verified"] = (
+            matrix_provenance.get("column_count") == len(MATRIX_COLUMNS)
         )
-        checks["approved_count_is_1"] = (
-            spec.get("current_classification_counts", {}).get("currently_approved_rows") == 1
-        )
-        checks["unapproved_count_is_8"] = (
-            spec.get("current_classification_counts", {}).get("currently_unapproved_rows") == 8
-        )
+        checks["matrix_row_count_is_9"] = matrix_provenance.get("row_count") == 9
+        counts = spec.get("current_classification_counts", {})
+        checks["approved_count_is_1"] = counts.get("currently_approved_rows") == 1
+        checks["unapproved_count_is_8"] = counts.get("currently_unapproved_rows") == 8
+
     checks["eligible_metric_allowlist_exact"] = (
         spec["exact_constants"]["eligible_metric_allowlist"] == ELIGIBLE_METRIC_ALLOWLIST
     )
     checks["exact_equality_rules_present"] = (
         spec["exact_constants"]["exact_build_value_equality"] == "float64_bit_exact"
         and spec["exact_constants"]["exact_build_score_equality"] == "byte_exact"
+        and spec["exact_constants"].get("executable_equality_helper") == "float64_bit_equal"
     )
-    checks["fail_closed_rules_present"] = len(spec["fail_closed_rules"]) >= 10
+    checks["float64_bit_equal_helper_is_executable"] = (
+        spec["exact_constants"].get("executable_equality_helper") == "float64_bit_equal"
+    )
+    required_fields = spec.get("required_fields", {})
+    checks["four_et_score_delta_requirements_present"] = (
+        required_fields.get("score_evidence_event", [])[:4] == ET_SCORE_DELTA_FIELDS
+        and ET_SCORE_DELTA_FIELDS
+        == spec["predicate_definition"]["D_accepted_output_comparison"][
+            "required_event_et_score_delta_fields"
+        ]
+    )
+    checks["candidate_level_non_et_checks_present"] = (
+        required_fields.get("score_evidence_candidate_non_et") == NON_ET_BYTE_EQUAL_FIELDS
+        and spec["predicate_definition"]["D_accepted_output_comparison"]["required_candidates"]
+        == REQUIRED_CANDIDATES
+    )
+    checks["fail_closed_rules_exact"] = spec.get("fail_closed_rules") == build_fail_closed_rules()
     checks["predicate_free_of_identity_hardcoding"] = not predicate_contains_hardcoded_identities(
         spec["predicate_definition"]
     )
@@ -1002,6 +1318,7 @@ def validate_specification(
         and spec["part3b_complete"] is False
         and spec["part3c_authorized"] is False
     )
+    checks["transactional_publication_ready"] = spec.get("transactional_publication_ready") is True
     if markdown_text is not None:
         expected_md = render_markdown(spec)
         checks["json_markdown_consistency"] = markdown_text == expected_md
@@ -1076,6 +1393,7 @@ def render_markdown(spec: Dict[str, Any]) -> str:
             f"- **Eligible metric allowlist:** {', '.join(constants['eligible_metric_allowlist'])}",
             f"- **Exact build-value equality:** {constants['exact_build_value_equality']}",
             f"- **Exact build-score equality:** {constants['exact_build_score_equality']}",
+            f"- **Executable equality helper:** {constants['executable_equality_helper']}",
             "",
             "## Predicate: et_rank_metric_reconciliation_eligible",
             "",
@@ -1098,9 +1416,17 @@ def render_markdown(spec: Dict[str, Any]) -> str:
             f"or a soft ensemble explicitly contains `{ET_LEAF5_CANDIDATE}`.",
             "",
             "### D. Accepted-Output Comparison",
-            f"- Non-ET validation and test score arrays are byte-identical to accepted tracked arrays.",
-            f"- Maximum ET validation/test score absolute difference is at most {ET_SCORE_ABSOLUTE_TOLERANCE}.",
-            "- Missing score evidence causes rejection.",
+            "- Candidate-level non-ET score evidence required for "
+            f"{', '.join(NON_ET_CANDIDATES)} with byte-identical validation/test arrays.",
+            "- ET_leaf5 requires Build 1/Build 2 validation and test score arrays byte-identical.",
+            "- Four independent ET score-delta fields must each exist, be finite, and be "
+            f"≤ {ET_SCORE_ABSOLUTE_TOLERANCE}:",
+            f"  - {ET_SCORE_DELTA_FIELDS[0]}",
+            f"  - {ET_SCORE_DELTA_FIELDS[1]}",
+            f"  - {ET_SCORE_DELTA_FIELDS[2]}",
+            f"  - {ET_SCORE_DELTA_FIELDS[3]}",
+            "- Aggregate maximum ET score difference is reporting-only and must not substitute.",
+            "- Missing candidate, missing field, or False non-ET byte-equality rejects.",
             "",
             "### E. Metric Classification",
             f"- Eligible metrics: {', '.join(ELIGIBLE_METRIC_ALLOWLIST)}.",
@@ -1128,6 +1454,20 @@ def render_markdown(spec: Dict[str, Any]) -> str:
             "| mechanistically_eligible_under_frozen_policy | Predicate passes all sections | No |",
             "| currently_approved_exception | Historical approval in mismatch matrix | No (unchanged) |",
             "| currently_unapproved_mismatch | Not currently approved | No (unchanged) |",
+            "",
+            "## ET Score-Delta Decision Table",
+            "",
+            "| Field | Independent check | Tolerance | Substitutes aggregate? |",
+            "| --- | --- | --- | --- |",
+        ]
+    )
+    for field in ET_SCORE_DELTA_FIELDS:
+        lines.append(
+            f"| {field} | required | ≤ {ET_SCORE_ABSOLUTE_TOLERANCE} | No |"
+        )
+    lines.extend(
+        [
+            f"| maximum_et_score_absolute_difference | reporting only | n/a | Must not substitute |",
             "",
             "## Metric Classification Table",
             "",
@@ -1169,6 +1509,10 @@ def render_markdown(spec: Dict[str, Any]) -> str:
             f"- **Currently approved rows:** {counts['currently_approved_rows']}",
             f"- **Currently unapproved rows:** {counts['currently_unapproved_rows']}",
             "",
+            f"- **Transactional publication ready:** {spec.get('transactional_publication_ready')}",
+            f"- **JSON/Markdown consistency:** {spec.get('specification_integrity_checks', {}).get('json_markdown_consistency', 'pending')}",
+            f"- **All specification checks passed:** {spec.get('specification_integrity_checks', {}).get('all_specification_checks_passed', 'pending')}",
+            "",
             "## Regression Fixtures (Nine Rows)",
             "",
             "| Seed | Model | Metric | Mechanistically eligible | Currently approved | "
@@ -1195,7 +1539,7 @@ def render_markdown(spec: Dict[str, Any]) -> str:
             "",
             f"- **Model fits executed:** {spec['production_activity_counters']['model_fits_executed']}",
             f"- **Prediction calls executed:** {spec['production_activity_counters']['prediction_calls_executed']}",
-            f"- **Production builds executed:** {spec['production_activity_counters']['production_builds_executed']}",
+            f"- **Production generator executions:** {spec['production_activity_counters']['production_generator_executions']}",
             "- **Repository production artifacts published:** "
             f"{spec['production_activity_counters']['repository_production_artifacts_published']}",
             f"- **Production authorization:** {spec['authorization_flags']['production_authorization']}",
@@ -1283,7 +1627,6 @@ def publish_outputs_transactionally(
         return {
             "json_published": True,
             "markdown_published": True,
-            "transactional_publication_passed": True,
         }
     except Exception:
         if replaced_json and backup_json_path is not None and backup_json_path.exists():
@@ -1313,25 +1656,62 @@ def publish_outputs_transactionally(
         raise
 
 
+def _run_transactional_readiness_self_tests() -> Dict[str, Any]:
+    readiness_tests = [
+        ("markdown_json_disagreement_rejected", _self_test_markdown_json_disagreement_rejected),
+        ("partial_publication_failure_rolls_back", _self_test_partial_publication_failure_rolls_back),
+        ("temporary_and_backup_cleanup_verified", _self_test_temporary_and_backup_cleanup_verified),
+    ]
+    results = [{"test_name": name, "passed": bool(fn())} for name, fn in readiness_tests]
+    passed = sum(1 for item in results if item["passed"])
+    return {
+        "tests": results,
+        "passed": passed,
+        "expected": len(readiness_tests),
+        "failed": len(readiness_tests) - passed,
+        "all_passed": passed == len(readiness_tests),
+    }
+
+
 def generate_policy(root: Optional[Path] = None) -> Dict[str, Any]:
     root = root or repo_root()
-    starting_commit = git_starting_commit()
-    report, matrix_df, event_map = load_evidence(root)
-    spec = build_policy_specification(root, starting_commit, report, matrix_df, event_map)
-    md_text = render_markdown(spec)
-    integrity = validate_specification(spec, matrix_df, md_text)
-    spec["specification_integrity_checks"] = integrity
-    if not integrity["all_specification_checks_passed"]:
-        failed = [key for key, value in integrity.items() if not value]
-        raise RuntimeError(f"Pre-publication validation failed: {failed}")
+    tracker = ExecutionActivityTracker()
+    with tracker:
+        starting_commit = git_starting_commit()
+        report, matrix_df, event_map = load_evidence(root)
+        spec = build_policy_specification(root, starting_commit, report, matrix_df, event_map)
+        readiness = _run_transactional_readiness_self_tests()
+        if not readiness["all_passed"]:
+            failed = [item["test_name"] for item in readiness["tests"] if not item["passed"]]
+            raise RuntimeError(f"Transactional readiness self-tests failed: {failed}")
+        spec["transactional_publication_ready"] = True
+        md_text = render_markdown(spec)
+        integrity = validate_specification(spec, matrix_df, md_text)
+        spec["specification_integrity_checks"] = integrity
+        if not integrity["all_specification_checks_passed"]:
+            failed = [key for key, value in integrity.items() if not value]
+            raise RuntimeError(f"Pre-publication validation failed: {failed}")
 
-    json_path = root / JSON_OUTPUT_PATH
-    md_path = root / MD_OUTPUT_PATH
-    publication = publish_outputs_transactionally(spec, json_path, md_path)
-    spec["specification_integrity_checks"]["transactional_publication_passed"] = publication[
-        "transactional_publication_passed"
-    ]
-    return spec
+        spec["production_activity_counters"] = {
+            "model_fits_executed": tracker.model_fits_executed,
+            "prediction_calls_executed": tracker.prediction_calls_executed,
+            "production_generator_executions": tracker.production_generator_executions,
+            "repository_production_artifacts_published": 0,
+        }
+        md_text = render_markdown(spec)
+        integrity = validate_specification(spec, matrix_df, md_text)
+        spec["specification_integrity_checks"] = integrity
+        if not integrity["all_specification_checks_passed"]:
+            failed = [key for key, value in integrity.items() if not value]
+            raise RuntimeError(f"Pre-publication validation failed after counters: {failed}")
+
+        json_path = root / JSON_OUTPUT_PATH
+        md_path = root / MD_OUTPUT_PATH
+        publication = publish_outputs_transactionally(spec, json_path, md_path)
+    return {
+        **spec,
+        "publication_result": publication,
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -1364,13 +1744,52 @@ def _synthetic_global_ctx(**overrides: Any) -> Dict[str, Any]:
     return base
 
 
-def _synthetic_event_evidence(**overrides: Any) -> Dict[str, Any]:
+def _synthetic_candidate_evidence(**overrides: Any) -> Dict[str, Any]:
     base = {
+        "build1_validation_score_byte_equal": True,
+        "build1_test_score_byte_equal": True,
+        "build2_validation_score_byte_equal": True,
+        "build2_test_score_byte_equal": True,
+        "build1_build2_validation_score_byte_equal": True,
+        "build1_build2_test_score_byte_equal": True,
+        "maximum_build1_validation_absolute_score_difference": 0.0,
+        "maximum_build1_test_absolute_score_difference": 0.0,
+        "maximum_build2_validation_absolute_score_difference": 0.0,
+        "maximum_build2_test_absolute_score_difference": 0.0,
+    }
+    base.update(overrides)
+    return base
+
+
+def _synthetic_event_evidence(**overrides: Any) -> Dict[str, Any]:
+    candidate_score_evidence = {
+        "LR_std_C0.1": _synthetic_candidate_evidence(),
+        "LR_std_C1": _synthetic_candidate_evidence(),
+        "DT_leaf5": _synthetic_candidate_evidence(),
+        "ET_leaf5": _synthetic_candidate_evidence(
+            build1_validation_score_byte_equal=False,
+            build1_test_score_byte_equal=False,
+            build2_validation_score_byte_equal=False,
+            build2_test_score_byte_equal=False,
+            maximum_build1_validation_absolute_score_difference=2.220446049250313e-16,
+            maximum_build1_test_absolute_score_difference=3.3306690738754696e-16,
+            maximum_build2_validation_absolute_score_difference=2.220446049250313e-16,
+            maximum_build2_test_absolute_score_difference=3.3306690738754696e-16,
+        ),
+    }
+    if "candidate_score_evidence" in overrides:
+        candidate_score_evidence = overrides.pop("candidate_score_evidence")
+    base = {
+        "candidate_score_evidence": candidate_score_evidence,
+        "maximum_build1_validation_absolute_score_difference": 2.220446049250313e-16,
+        "maximum_build1_test_absolute_score_difference": 3.3306690738754696e-16,
+        "maximum_build2_validation_absolute_score_difference": 2.220446049250313e-16,
+        "maximum_build2_test_absolute_score_difference": 3.3306690738754696e-16,
+        "maximum_et_score_absolute_difference": 3.3306690738754696e-16,
+        "build_score_arrays_byte_exact": True,
         "non_et_scores_byte_identical": True,
         "build1_non_et_scores_byte_identical": True,
         "build2_non_et_scores_byte_identical": True,
-        "maximum_et_score_absolute_difference": 4.440892098500626e-16,
-        "build_score_arrays_byte_exact": True,
     }
     base.update(overrides)
     return base
@@ -1445,22 +1864,133 @@ def _self_test_build_score_array_difference_rejected() -> bool:
     return result["eligible"] is False
 
 
-def _self_test_non_et_accepted_score_difference_rejected() -> bool:
+def _self_test_positive_zero_negative_zero_rejected() -> bool:
     result = evaluate_predicate(
-        _synthetic_row(),
+        _synthetic_row(
+            g_r1_build1_value=0.0,
+            g_r1_build2_value=-0.0,
+            build1_build2_value_equal=True,
+        ),
         _synthetic_global_ctx(),
-        _synthetic_event_evidence(non_et_scores_byte_identical=False),
+        _synthetic_event_evidence(),
     )
+    return result["eligible"] is False and float64_bit_equal(0.0, -0.0) is False
+
+
+def _self_test_float64_byte_representation_difference_rejected() -> bool:
+    a = np.float64(0.0)
+    b = np.float64(-0.0)
+    if float64_bit_equal(a, b):
+        return False
+    result = evaluate_predicate(
+        _synthetic_row(
+            g_r1_build1_value=float(a),
+            g_r1_build2_value=float(b),
+            build1_build2_value_equal=float(a) == float(b),
+        ),
+        _synthetic_global_ctx(),
+        _synthetic_event_evidence(),
+    )
+    return result["eligible"] is False
+
+
+def _self_test_missing_non_et_candidate_rejected() -> bool:
+    evidence = _synthetic_event_evidence()
+    del evidence["candidate_score_evidence"]["DT_leaf5"]
+    result = evaluate_predicate(_synthetic_row(), _synthetic_global_ctx(), evidence)
+    return result["eligible"] is False
+
+
+def _self_test_missing_candidate_field_rejected() -> bool:
+    evidence = _synthetic_event_evidence()
+    del evidence["candidate_score_evidence"]["LR_std_C0.1"]["build2_test_score_byte_equal"]
+    result = evaluate_predicate(_synthetic_row(), _synthetic_global_ctx(), evidence)
+    return result["eligible"] is False
+
+
+def _self_test_non_et_build2_test_difference_rejected() -> bool:
+    evidence = _synthetic_event_evidence()
+    evidence["candidate_score_evidence"]["LR_std_C1"]["build2_test_score_byte_equal"] = False
+    result = evaluate_predicate(_synthetic_row(), _synthetic_global_ctx(), evidence)
+    return result["eligible"] is False
+
+
+def _self_test_missing_et_build1_validation_delta_rejected() -> bool:
+    evidence = _synthetic_event_evidence()
+    del evidence["maximum_build1_validation_absolute_score_difference"]
+    result = evaluate_predicate(_synthetic_row(), _synthetic_global_ctx(), evidence)
+    return result["eligible"] is False
+
+
+def _self_test_et_build_split_delta_above_tolerance_rejected() -> bool:
+    for field in ET_SCORE_DELTA_FIELDS:
+        evidence = _synthetic_event_evidence(**{field: 2e-15})
+        result = evaluate_predicate(_synthetic_row(), _synthetic_global_ctx(), evidence)
+        if result["eligible"] is not False:
+            return False
+    return True
+
+
+def _self_test_aggregate_ok_but_independent_field_fails_rejected() -> bool:
+    evidence = _synthetic_event_evidence(
+        maximum_et_score_absolute_difference=1e-16,
+        maximum_build2_test_absolute_score_difference=2e-15,
+    )
+    result = evaluate_predicate(_synthetic_row(), _synthetic_global_ctx(), evidence)
+    return result["eligible"] is False
+
+
+def _self_test_et_build_test_byte_difference_rejected() -> bool:
+    evidence = _synthetic_event_evidence()
+    evidence["candidate_score_evidence"]["ET_leaf5"]["build1_build2_test_score_byte_equal"] = False
+    result = evaluate_predicate(_synthetic_row(), _synthetic_global_ctx(), evidence)
+    return result["eligible"] is False
+
+
+def _self_test_altered_reconciliation_json_sha_rejected() -> bool:
+    with tempfile.TemporaryDirectory() as tmp:
+        tmp_dir = Path(tmp)
+        (tmp_dir / RECONCILIATION_JSON_PATH).parent.mkdir(parents=True, exist_ok=True)
+        (tmp_dir / MATRIX_PATH).parent.mkdir(parents=True, exist_ok=True)
+        (tmp_dir / RECONCILIATION_JSON_PATH).write_bytes(b"{}\n")
+        source_matrix = repo_root() / MATRIX_PATH
+        (tmp_dir / MATRIX_PATH).write_bytes(source_matrix.read_bytes())
+        try:
+            verify_evidence_file_hashes(tmp_dir)
+            return False
+        except RuntimeError as exc:
+            return "Reconciliation JSON SHA-256" in str(exc)
+
+
+def _self_test_temporary_and_backup_cleanup_verified() -> bool:
+    with tempfile.TemporaryDirectory() as tmp:
+        tmp_dir = Path(tmp)
+        for name in ("policy.json", "policy.md"):
+            (tmp_dir / name).write_text("existing\n", encoding="utf-8")
+        leftovers_before = {path.name for path in tmp_dir.iterdir()}
+        spec = _synthetic_minimal_publish_spec()
+        try:
+            publish_outputs_transactionally(spec, tmp_dir / "policy.json", tmp_dir / "policy.md")
+        except Exception:
+            return False
+        leftovers_after = {path.name for path in tmp_dir.iterdir()}
+        if leftovers_after - leftovers_before - {"policy.json", "policy.md"}:
+            return False
+        for path in tmp_dir.iterdir():
+            if "pubbak" in path.name or path.name.startswith("tmp"):
+                return False
+        return True
+
+
+def _self_test_non_et_accepted_score_difference_rejected() -> bool:
+    evidence = _synthetic_event_evidence()
+    evidence["candidate_score_evidence"]["DT_leaf5"]["build1_validation_score_byte_equal"] = False
+    result = evaluate_predicate(_synthetic_row(), _synthetic_global_ctx(), evidence)
     return result["eligible"] is False
 
 
 def _self_test_et_score_delta_above_tolerance_rejected() -> bool:
-    result = evaluate_predicate(
-        _synthetic_row(),
-        _synthetic_global_ctx(),
-        _synthetic_event_evidence(maximum_et_score_absolute_difference=2e-15),
-    )
-    return result["eligible"] is False
+    return _self_test_et_build_split_delta_above_tolerance_rejected()
 
 
 def _self_test_metric_delta_above_tolerance_rejected() -> bool:
@@ -1621,7 +2151,7 @@ def _synthetic_minimal_publish_spec() -> Dict[str, Any]:
         "evidence_provenance": [
             {
                 "repository_relative_path": RECONCILIATION_JSON_PATH,
-                "sha256": "0" * 64,
+                "sha256": RECONCILIATION_JSON_SHA256,
                 "row_count": None,
                 "column_count": None,
                 "role_in_policy_derivation": "synthetic",
@@ -1640,10 +2170,27 @@ def _synthetic_minimal_publish_spec() -> Dict[str, Any]:
             "eligible_metric_allowlist": ELIGIBLE_METRIC_ALLOWLIST,
             "exact_build_value_equality": "float64_bit_exact",
             "exact_build_score_equality": "byte_exact",
+            "executable_equality_helper": "float64_bit_equal",
             "et_leaf5_candidate_literal": ET_LEAF5_CANDIDATE,
+            "required_candidates": REQUIRED_CANDIDATES,
         },
         "metric_classifications": build_metric_classification_table(),
-        "required_fields": {},
+        "required_fields": {
+            "matrix_row": [],
+            "reconciliation_json_global": [],
+            "score_evidence_event": ET_SCORE_DELTA_FIELDS
+            + [
+                "candidate_score_evidence",
+                "build_score_arrays_byte_exact",
+                "maximum_et_score_absolute_difference",
+            ],
+            "score_evidence_candidate_non_et": NON_ET_BYTE_EQUAL_FIELDS,
+            "score_evidence_candidate_et": [
+                "build1_build2_validation_score_byte_equal",
+                "build1_build2_test_score_byte_equal",
+            ]
+            + ET_SCORE_DELTA_FIELDS,
+        },
         "predicate_definition": build_predicate_definition(),
         "ordered_evaluation_steps": build_ordered_evaluation_steps(),
         "fail_closed_rules": build_fail_closed_rules(),
@@ -1656,10 +2203,12 @@ def _synthetic_minimal_publish_spec() -> Dict[str, Any]:
             "currently_unapproved_rows": 8,
             "matrix_row_count": 9,
         },
+        "transactional_publication_ready": True,
+        "transactional_publication_ready_meaning": TRANSACTIONAL_PUBLICATION_READY_MEANING,
         "production_activity_counters": {
             "model_fits_executed": 0,
             "prediction_calls_executed": 0,
-            "production_builds_executed": 0,
+            "production_generator_executions": 0,
             "repository_production_artifacts_published": 0,
         },
         "authorization_flags": {
@@ -1670,7 +2219,10 @@ def _synthetic_minimal_publish_spec() -> Dict[str, Any]:
             "production_validator_changed": False,
             "canonical_file_changed": False,
         },
-        "specification_integrity_checks": {},
+        "specification_integrity_checks": {
+            "json_markdown_consistency": True,
+            "all_specification_checks_passed": True,
+        },
     }
 
 
@@ -1728,9 +2280,17 @@ def run_self_tests() -> Dict[str, Any]:
         ("valid_et_roc_auc_row_accepted", _self_test_valid_et_roc_auc_accepted),
         ("valid_et_avg_precision_row_accepted", _self_test_valid_et_avg_precision_accepted),
         ("one_ulp_build_value_difference_rejected", _self_test_one_ulp_build_value_difference_rejected),
+        ("positive_zero_negative_zero_rejected", _self_test_positive_zero_negative_zero_rejected),
+        ("float64_byte_representation_difference_rejected", _self_test_float64_byte_representation_difference_rejected),
         ("build_score_array_difference_rejected", _self_test_build_score_array_difference_rejected),
+        ("missing_non_et_candidate_rejected", _self_test_missing_non_et_candidate_rejected),
+        ("missing_candidate_field_rejected", _self_test_missing_candidate_field_rejected),
+        ("non_et_build2_test_difference_rejected", _self_test_non_et_build2_test_difference_rejected),
+        ("missing_et_build1_validation_delta_rejected", _self_test_missing_et_build1_validation_delta_rejected),
+        ("et_build_split_delta_above_tolerance_rejected", _self_test_et_build_split_delta_above_tolerance_rejected),
+        ("aggregate_ok_but_independent_field_fails_rejected", _self_test_aggregate_ok_but_independent_field_fails_rejected),
+        ("et_build_test_byte_difference_rejected", _self_test_et_build_test_byte_difference_rejected),
         ("non_et_accepted_score_difference_rejected", _self_test_non_et_accepted_score_difference_rejected),
-        ("et_score_delta_above_tolerance_rejected", _self_test_et_score_delta_above_tolerance_rejected),
         ("metric_delta_above_tolerance_rejected", _self_test_metric_delta_above_tolerance_rejected),
         ("brier_rejected", _self_test_brier_rejected),
         ("threshold_sensitive_metric_rejected", _self_test_threshold_sensitive_metric_rejected),
@@ -1741,21 +2301,39 @@ def run_self_tests() -> Dict[str, Any]:
         ("validation_mismatch_rejected", _self_test_validation_mismatch_rejected),
         ("non_et_derived_row_rejected", _self_test_non_et_derived_row_rejected),
         ("project_seed_independent_equivalent_row_accepted", _self_test_project_seed_independent_equivalent_row_accepted),
+        ("altered_reconciliation_json_sha_rejected", _self_test_altered_reconciliation_json_sha_rejected),
         ("markdown_json_disagreement_rejected", _self_test_markdown_json_disagreement_rejected),
         ("partial_publication_failure_rolls_back", _self_test_partial_publication_failure_rolls_back),
+        ("temporary_and_backup_cleanup_verified", _self_test_temporary_and_backup_cleanup_verified),
     ]
-    results = [{"test_name": name, "passed": bool(fn())} for name, fn in tests]
-    passed = sum(1 for item in results if item["passed"])
+    root = repo_root()
+    before_snapshot = publication_artifact_snapshot(root)
+    tracker = ExecutionActivityTracker()
+    global _ACTIVE_ACTIVITY_TRACKER
+    _ACTIVE_ACTIVITY_TRACKER = tracker
+    results: List[Dict[str, Any]] = []
+    try:
+        with tracker:
+            for name, fn in tests:
+                passed = bool(fn())
+                results.append({"test_name": name, "passed": passed})
+    finally:
+        _ACTIVE_ACTIVITY_TRACKER = None
+    after_snapshot = publication_artifact_snapshot(root)
+    passed_count = sum(1 for item in results if item["passed"])
     return {
         "tests": results,
-        "passed": passed,
+        "passed": passed_count,
         "expected": len(tests),
-        "failed": len(tests) - passed,
+        "failed": len(tests) - passed_count,
         "total": len(tests),
-        "model_fits_executed": 0,
-        "prediction_calls_executed": 0,
-        "production_builds_executed": 0,
-        "repository_production_artifacts_published": 0,
+        "model_fits_executed": tracker.model_fits_executed,
+        "prediction_calls_executed": tracker.prediction_calls_executed,
+        "production_generator_executions": tracker.production_generator_executions,
+        "repository_production_artifacts_published": count_changed_publication_artifacts(
+            before_snapshot,
+            after_snapshot,
+        ),
     }
 
 
@@ -1784,7 +2362,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                     ),
                     "model_fits_executed": summary["model_fits_executed"],
                     "prediction_calls_executed": summary["prediction_calls_executed"],
-                    "production_builds_executed": summary["production_builds_executed"],
+                    "production_generator_executions": summary["production_generator_executions"],
                     "repository_production_artifacts_published": summary[
                         "repository_production_artifacts_published"
                     ],
@@ -1795,7 +2373,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         )
         return 0 if summary["failed"] == 0 else 1
 
-    spec = generate_policy()
+    result = generate_policy()
+    spec = result if "stage" in result else result
     print(
         json.dumps(
             {
@@ -1810,9 +2389,11 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                 "currently_unapproved_rows": spec["current_classification_counts"][
                     "currently_unapproved_rows"
                 ],
+                "transactional_publication_ready": spec.get("transactional_publication_ready"),
                 "all_specification_checks_passed": spec["specification_integrity_checks"][
                     "all_specification_checks_passed"
                 ],
+                "publication_result": spec.get("publication_result"),
             },
             indent=2,
         )
