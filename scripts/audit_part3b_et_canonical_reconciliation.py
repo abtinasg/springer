@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Part 3B.2R.1-G.D4.1: Exact fail-closed ExtraTrees canonical-reconciliation audit."""
+"""Part 3B.2R.1-G.D4.1.1: Transactional ET canonical-reconciliation audit."""
 from __future__ import annotations
 
 import argparse
@@ -9,14 +9,15 @@ import re
 import subprocess
 import sys
 import tempfile
+import unittest.mock
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 import numpy as np
 import pandas as pd
 
-STARTING_COMMIT = "b62af5623b571cd3e683c767e55ede1691d65fca"
-STAGE = "Part 3B.2R.1-G.D4.1"
+STARTING_COMMIT = "3b87873e851fb84f361a88736c0188b106f7f2c2"
+STAGE = "Part 3B.2R.1-G.D4.1.1"
 MATRIX_SHA256 = (
     "25cc88a8785f18668be2e03328a71b80b6e2c66f679a572e1e53656cde4ef908"
 )
@@ -730,6 +731,296 @@ def validate_source_role_contract(source_provenance: List[Dict[str, Any]]) -> Di
     }
 
 
+def require_build_mismatch_values_bit_exact(
+    b1_mismatches: List[Dict[str, Any]],
+    b2_mismatches: List[Dict[str, Any]],
+) -> None:
+    b1_identities = {mismatch_identity(m) for m in b1_mismatches}
+    b2_identities = {mismatch_identity(m) for m in b2_mismatches}
+    if b1_identities != b2_identities:
+        raise RuntimeError("Build 1 and Build 2 mismatch identity sets differ")
+    for m1, m2 in zip(
+        sorted(b1_mismatches, key=lambda m: mismatch_identity(m)),
+        sorted(b2_mismatches, key=lambda m: mismatch_identity(m)),
+    ):
+        if not float64_bit_equal(m1["build1_value"], m2["build2_value"]):
+            raise RuntimeError(
+                f"Build mismatch values not bit-exact for {mismatch_identity(m1)}"
+            )
+
+
+def require_build_score_arrays_byte_exact(
+    b1_pred_within: pd.DataFrame,
+    b2_pred_within: pd.DataFrame,
+    b1_pred_cross: pd.DataFrame,
+    b2_pred_cross: pd.DataFrame,
+    score_level_evidence: List[Dict[str, Any]],
+) -> None:
+    if not b1_pred_within.equals(b2_pred_within):
+        raise RuntimeError("Build 1 and Build 2 prediction-within score arrays are not byte-exact")
+    if not b1_pred_cross.equals(b2_pred_cross):
+        raise RuntimeError("Build 1 and Build 2 prediction-cross score arrays are not byte-exact")
+    if not all(item["build_score_arrays_byte_exact"] for item in score_level_evidence):
+        raise RuntimeError("Build score arrays are not byte-exact for one or more affected events")
+
+
+def require_validation_exact(
+    val1: Dict[str, Any],
+    val2: Dict[str, Any],
+    build1_build2_validation_equal: bool,
+) -> None:
+    if val1["validation_categorical_mismatch_count"] != 0:
+        raise RuntimeError(
+            f"Build 1 validation categorical mismatches "
+            f"{val1['validation_categorical_mismatch_count']} != 0"
+        )
+    if val2["validation_categorical_mismatch_count"] != 0:
+        raise RuntimeError(
+            f"Build 2 validation categorical mismatches "
+            f"{val2['validation_categorical_mismatch_count']} != 0"
+        )
+    if val1["validation_numeric_mismatch_count"] != 0:
+        raise RuntimeError(
+            f"Build 1 validation numeric mismatches "
+            f"{val1['validation_numeric_mismatch_count']} != 0"
+        )
+    if val2["validation_numeric_mismatch_count"] != 0:
+        raise RuntimeError(
+            f"Build 2 validation numeric mismatches "
+            f"{val2['validation_numeric_mismatch_count']} != 0"
+        )
+    if not build1_build2_validation_equal:
+        raise RuntimeError("Build 1 and Build 2 validation reconstructions are not exactly equal")
+
+
+def require_source_role_contract(source_provenance: List[Dict[str, Any]]) -> None:
+    contract = validate_source_role_contract(source_provenance)
+    if contract["errors"]:
+        raise RuntimeError(
+            "Source-role contract failed:\n- " + "\n- ".join(contract["errors"])
+        )
+    if not contract["exact_source_role_set_passed"]:
+        raise RuntimeError("Source-role contract exact role set check failed")
+
+
+def require_markdown_json_consistency(report: Dict[str, Any], markdown_text: str) -> None:
+    expected_md = render_markdown(report)
+    if markdown_text != expected_md:
+        raise RuntimeError("Markdown does not match JSON-backed report content")
+
+
+def _validate_publication_candidates(
+    matrix_df: pd.DataFrame,
+    tmp_csv_path: Path,
+    tmp_json_path: Path,
+    tmp_md_path: Path,
+    existing_matrix_bytes: bytes,
+) -> Dict[str, bool]:
+    reread_csv_df = read_csv_round_trip(tmp_csv_path)
+    reread_json = json.loads(tmp_json_path.read_text(encoding="utf-8"))
+    expected_md = render_markdown(reread_json)
+    actual_md = tmp_md_path.read_text(encoding="utf-8")
+
+    if not matrix_df.equals(reread_csv_df):
+        raise RuntimeError("Temporary CSV does not equal in-memory matrix")
+
+    if actual_md != expected_md:
+        raise RuntimeError("Temporary Markdown does not match Markdown regenerated from JSON")
+
+    recomputed = recompute_matrix_summaries(reread_csv_df)
+    summary_fields = [
+        "strict_mismatch_count",
+        "strict_mismatch_count_build1",
+        "strict_mismatch_count_build2",
+        "approved_existing_exception_count",
+        "unapproved_systematic_difference_count",
+        "build_mismatch_values_equal",
+        "maximum_metric_absolute_difference",
+        "maximum_metric_relative_difference",
+    ]
+    for field in summary_fields:
+        if reread_json.get(field) != recomputed[field]:
+            raise RuntimeError(
+                f"JSON field {field}={reread_json.get(field)!r} "
+                f"!= recomputed {recomputed[field]!r}"
+            )
+
+    md_checks = {
+        "strict_mismatch_count_build1": str(reread_json["strict_mismatch_count_build1"]),
+        "approved_existing_exception_count": str(
+            reread_json["approved_existing_exception_count"]
+        ),
+        "all_validation_checks_passed": str(reread_json["all_validation_checks_passed"]),
+    }
+    for label, value in md_checks.items():
+        if value not in actual_md:
+            raise RuntimeError(f"Markdown missing JSON-backed value for {label}")
+
+    tmp_csv_bytes = tmp_csv_path.read_bytes()
+    if hashlib.sha256(tmp_csv_bytes).hexdigest() != MATRIX_SHA256:
+        raise RuntimeError(
+            f"Temporary CSV SHA-256 {hashlib.sha256(tmp_csv_bytes).hexdigest()} "
+            f"!= required {MATRIX_SHA256}"
+        )
+    if tmp_csv_bytes != existing_matrix_bytes:
+        raise RuntimeError("Temporary CSV bytes differ from existing final matrix bytes")
+
+    return {
+        "matrix_matches_in_memory": matrix_df.equals(reread_csv_df),
+        "json_matches_matrix": all(
+            reread_json.get(field) == recomputed[field] for field in summary_fields
+        ),
+        "markdown_matches_json": actual_md == expected_md,
+        "transactional_publication_ready": True,
+    }
+
+
+def _cleanup_publication_artifacts(*paths: Optional[Path]) -> None:
+    for path in paths:
+        if path is not None and path.exists():
+            path.unlink()
+
+
+def _write_temp_file(parent: Path, content: str) -> Path:
+    with tempfile.NamedTemporaryFile(
+        mode="w", encoding="utf-8", newline="", dir=str(parent), delete=False
+    ) as handle:
+        handle.write(content)
+        return Path(handle.name)
+
+
+def validate_publication_readiness(
+    matrix_df: pd.DataFrame,
+    report: Dict[str, Any],
+    matrix_path: Path,
+    reports_dir: Path,
+) -> Dict[str, bool]:
+    existing_matrix_bytes = matrix_path.read_bytes() if matrix_path.is_file() else b""
+    tmp_csv_path = _write_temp_file(matrix_path.parent, matrix_to_csv_text(matrix_df))
+    tmp_json_path = _write_temp_file(
+        reports_dir,
+        json.dumps(report, indent=2, cls=NumpyEncoder) + "\n",
+    )
+    tmp_md_path = _write_temp_file(reports_dir, render_markdown(report))
+    try:
+        return _validate_publication_candidates(
+            matrix_df,
+            tmp_csv_path,
+            tmp_json_path,
+            tmp_md_path,
+            existing_matrix_bytes,
+        )
+    finally:
+        _cleanup_publication_artifacts(tmp_csv_path, tmp_json_path, tmp_md_path)
+
+
+def publish_outputs_transactionally(
+    matrix_df: pd.DataFrame,
+    report: Dict[str, Any],
+    matrix_path: Path,
+    json_path: Path,
+    md_path: Path,
+) -> Dict[str, bool]:
+    matrix_path.parent.mkdir(parents=True, exist_ok=True)
+    json_path.parent.mkdir(parents=True, exist_ok=True)
+    md_path.parent.mkdir(parents=True, exist_ok=True)
+
+    existing_matrix_bytes = matrix_path.read_bytes() if matrix_path.is_file() else b""
+    existing_json_bytes = json_path.read_bytes() if json_path.is_file() else b""
+    existing_md_bytes = md_path.read_bytes() if md_path.is_file() else b""
+
+    matrix_csv = matrix_to_csv_text(matrix_df)
+    json_text = json.dumps(report, indent=2, cls=NumpyEncoder) + "\n"
+    md_text = render_markdown(report)
+
+    with tempfile.NamedTemporaryFile(
+        mode="w", encoding="utf-8", newline="", dir=str(matrix_path.parent), delete=False
+    ) as tmp_csv:
+        tmp_csv.write(matrix_csv)
+        tmp_csv_path = Path(tmp_csv.name)
+    with tempfile.NamedTemporaryFile(
+        mode="w", encoding="utf-8", newline="", dir=str(json_path.parent), delete=False
+    ) as tmp_json:
+        tmp_json.write(json_text)
+        tmp_json_path = Path(tmp_json.name)
+    with tempfile.NamedTemporaryFile(
+        mode="w", encoding="utf-8", newline="", dir=str(md_path.parent), delete=False
+    ) as tmp_md:
+        tmp_md.write(md_text)
+        tmp_md_path = Path(tmp_md.name)
+
+    backup_csv_path: Optional[Path] = None
+    backup_json_path: Optional[Path] = None
+    backup_md_path: Optional[Path] = None
+    replaced_matrix = False
+    replaced_json = False
+    replaced_md = False
+
+    try:
+        checks = _validate_publication_candidates(
+            matrix_df,
+            tmp_csv_path,
+            tmp_json_path,
+            tmp_md_path,
+            existing_matrix_bytes,
+        )
+
+        if matrix_path.is_file():
+            backup_csv_path = matrix_path.with_name(f".{matrix_path.name}.pubbak")
+            backup_csv_path.write_bytes(existing_matrix_bytes)
+        if json_path.is_file():
+            backup_json_path = json_path.with_name(f".{json_path.name}.pubbak")
+            backup_json_path.write_bytes(existing_json_bytes)
+        if md_path.is_file():
+            backup_md_path = md_path.with_name(f".{md_path.name}.pubbak")
+            backup_md_path.write_bytes(existing_md_bytes)
+
+        tmp_csv_path.replace(matrix_path)
+        replaced_matrix = True
+        tmp_json_path.replace(json_path)
+        replaced_json = True
+        tmp_md_path.replace(md_path)
+        replaced_md = True
+
+        _cleanup_publication_artifacts(backup_csv_path, backup_json_path, backup_md_path)
+        return checks
+    except Exception:
+        if replaced_matrix or replaced_json or replaced_md:
+            if backup_csv_path is not None and backup_csv_path.is_file():
+                backup_csv_path.replace(matrix_path)
+                if matrix_path.read_bytes() != existing_matrix_bytes:
+                    raise RuntimeError("Restored matrix is not byte-identical to pre-publication state")
+            if backup_json_path is not None and backup_json_path.is_file():
+                backup_json_path.replace(json_path)
+                if json_path.read_bytes() != existing_json_bytes:
+                    raise RuntimeError("Restored JSON is not byte-identical to pre-publication state")
+            if backup_md_path is not None and backup_md_path.is_file():
+                backup_md_path.replace(md_path)
+                if md_path.read_bytes() != existing_md_bytes:
+                    raise RuntimeError("Restored Markdown is not byte-identical to pre-publication state")
+            elif not md_path.is_file() and existing_md_bytes:
+                md_path.write_bytes(existing_md_bytes)
+                if md_path.read_bytes() != existing_md_bytes:
+                    raise RuntimeError("Restored Markdown is not byte-identical to pre-publication state")
+
+        if matrix_path.is_file() and matrix_path.read_bytes() != existing_matrix_bytes:
+            raise RuntimeError("Final matrix bytes changed after failed publication")
+        if json_path.is_file() and json_path.read_bytes() != existing_json_bytes:
+            raise RuntimeError("Final JSON bytes changed after failed publication")
+        if md_path.is_file() and md_path.read_bytes() != existing_md_bytes:
+            raise RuntimeError("Final Markdown bytes changed after failed publication")
+
+        _cleanup_publication_artifacts(
+            tmp_csv_path if not replaced_matrix else None,
+            tmp_json_path if not replaced_json else None,
+            tmp_md_path if not replaced_md else None,
+            backup_csv_path,
+            backup_json_path,
+            backup_md_path,
+        )
+        raise
+
+
 def render_markdown(report: Dict[str, Any]) -> str:
     integrity = report["audit_integrity_checks"]
     lines = [
@@ -789,7 +1080,7 @@ def render_markdown(report: Dict[str, Any]) -> str:
         f"- **Source-role contract passed:** {integrity['exact_source_role_set_passed']}",
         f"- **Matrix/JSON consistency passed:** {integrity['json_matches_matrix']}",
         f"- **Markdown/JSON consistency passed:** {integrity['markdown_matches_json']}",
-        f"- **Atomic publication validation passed:** {integrity['atomic_publication_ready']}",
+        f"- **Transactional publication validation passed:** {integrity['transactional_publication_ready']}",
         f"- **Audit-integrity checks passed:** {integrity['all_audit_integrity_checks_passed']}",
         "",
         "## Score-Level Mechanism",
@@ -973,101 +1264,6 @@ def verify_starting_commit() -> None:
         raise RuntimeError(f"HEAD {head} != required starting commit {STARTING_COMMIT}")
 
 
-def publish_outputs_fail_closed(
-    matrix_df: pd.DataFrame,
-    report: Dict[str, Any],
-    matrix_path: Path,
-    json_path: Path,
-    md_path: Path,
-) -> Dict[str, bool]:
-    existing_matrix_bytes = matrix_path.read_bytes()
-    if sha256_file(matrix_path) != MATRIX_SHA256:
-        raise RuntimeError("Existing mismatch matrix SHA-256 changed before publication")
-
-    matrix_csv = matrix_to_csv_text(matrix_df)
-    if existing_matrix_bytes != matrix_csv.encode("utf-8"):
-        raise RuntimeError("In-memory mismatch matrix differs from persisted matrix bytes")
-
-    json_text = json.dumps(report, indent=2, cls=NumpyEncoder) + "\n"
-    md_text = render_markdown(report)
-
-    with tempfile.NamedTemporaryFile(
-        mode="w", encoding="utf-8", newline="", dir=str(matrix_path.parent), delete=False
-    ) as tmp_csv:
-        tmp_csv.write(matrix_csv)
-        tmp_csv_path = Path(tmp_csv.name)
-    with tempfile.NamedTemporaryFile(
-        mode="w", encoding="utf-8", newline="", dir=str(json_path.parent), delete=False
-    ) as tmp_json:
-        tmp_json.write(json_text)
-        tmp_json_path = Path(tmp_json.name)
-    with tempfile.NamedTemporaryFile(
-        mode="w", encoding="utf-8", newline="", dir=str(md_path.parent), delete=False
-    ) as tmp_md:
-        tmp_md.write(md_text)
-        tmp_md_path = Path(tmp_md.name)
-
-    try:
-        reread_csv_df = read_csv_round_trip(tmp_csv_path)
-        if not matrix_df.equals(reread_csv_df):
-            raise RuntimeError("Temporary CSV does not equal in-memory matrix")
-
-        reread_json = json.loads(tmp_json_path.read_text(encoding="utf-8"))
-        expected_md = render_markdown(reread_json)
-        actual_md = tmp_md_path.read_text(encoding="utf-8")
-        if actual_md != expected_md:
-            raise RuntimeError("Temporary Markdown does not match Markdown regenerated from JSON")
-
-        recomputed = recompute_matrix_summaries(reread_csv_df)
-        summary_fields = [
-            "strict_mismatch_count",
-            "strict_mismatch_count_build1",
-            "strict_mismatch_count_build2",
-            "approved_existing_exception_count",
-            "unapproved_systematic_difference_count",
-            "build_mismatch_values_equal",
-            "maximum_metric_absolute_difference",
-            "maximum_metric_relative_difference",
-        ]
-        for field in summary_fields:
-            if reread_json.get(field) != recomputed[field]:
-                raise RuntimeError(
-                    f"JSON field {field}={reread_json.get(field)!r} "
-                    f"!= recomputed {recomputed[field]!r}"
-                )
-
-        md_checks = {
-            "strict_mismatch_count_build1": str(reread_json["strict_mismatch_count_build1"]),
-            "approved_existing_exception_count": str(
-                reread_json["approved_existing_exception_count"]
-            ),
-            "all_validation_checks_passed": str(reread_json["all_validation_checks_passed"]),
-        }
-        for label, value in md_checks.items():
-            if value not in actual_md:
-                raise RuntimeError(f"Markdown missing JSON-backed value for {label}")
-
-        checks = {
-            "matrix_matches_in_memory": matrix_df.equals(reread_csv_df),
-            "json_matches_matrix": all(
-                reread_json.get(field) == recomputed[field] for field in summary_fields
-            ),
-            "markdown_matches_json": actual_md == expected_md,
-            "atomic_publication_ready": True,
-        }
-        json_path.parent.mkdir(parents=True, exist_ok=True)
-        md_path.parent.mkdir(parents=True, exist_ok=True)
-        tmp_json_path.replace(json_path)
-        tmp_md_path.replace(md_path)
-        tmp_csv_path.unlink()
-        return checks
-    except Exception:
-        for path in (tmp_csv_path, tmp_json_path, tmp_md_path):
-            if path.exists():
-                path.unlink()
-        raise
-
-
 def run_audit(build1_root: Path, build2_root: Path, *, verify_commit: bool = True) -> Dict[str, Any]:
     if verify_commit:
         verify_starting_commit()
@@ -1097,11 +1293,8 @@ def run_audit(build1_root: Path, build2_root: Path, *, verify_commit: bool = Tru
     ]
     source_provenance = [source_record(role, path) for role, path in source_specs]
     source_hashes = {item["source_role"]: item["sha256"] for item in source_provenance}
+    require_source_role_contract(source_provenance)
     source_contract = validate_source_role_contract(source_provenance)
-    if source_contract["errors"]:
-        raise RuntimeError(
-            "Source-role contract failed:\n- " + "\n- ".join(source_contract["errors"])
-        )
 
     canonical_results = read_csv_round_trip(canonical_results_path)
     canonical_validation = read_csv_round_trip(canonical_validation_path)
@@ -1314,6 +1507,43 @@ def run_audit(build1_root: Path, build2_root: Path, *, verify_commit: bool = Tru
         report,
     )
 
+    require_build_mismatch_values_bit_exact(b1_mismatches, b2_mismatches)
+    require_build_score_arrays_byte_exact(
+        b1_pred_within,
+        b2_pred_within,
+        b1_pred_cross,
+        b2_pred_cross,
+        score_level_evidence,
+    )
+    require_validation_exact(val1, val2, build1_build2_validation_equal)
+
+    reports_dir = root / "reports"
+    provisional_integrity = {
+        "exact_source_role_set_passed": source_contract["exact_source_role_set_passed"],
+        "build_source_hash_pairs_equal": source_contract["build_source_hash_pairs_equal"],
+        "build_mismatch_values_bit_exact": build_mismatch_values_bit_exact,
+        "build_score_arrays_byte_exact": build_score_arrays_byte_exact,
+        "validation_build1_exact": validation_build1_exact,
+        "validation_build2_exact": validation_build2_exact,
+        "validation_builds_exactly_equal": build1_build2_validation_equal,
+        "matrix_matches_in_memory": True,
+        "json_matches_matrix": True,
+        "markdown_matches_json": True,
+        "transactional_publication_ready": True,
+        "all_audit_integrity_checks_passed": True,
+    }
+    report_for_validation = {
+        **report,
+        "audit_integrity_checks": provisional_integrity,
+        "all_validation_checks_passed": True,
+    }
+    publication_checks = validate_publication_readiness(
+        matrix_df,
+        report_for_validation,
+        matrix_path,
+        reports_dir,
+    )
+
     audit_integrity_checks = {
         "exact_source_role_set_passed": source_contract["exact_source_role_set_passed"],
         "build_source_hash_pairs_equal": source_contract["build_source_hash_pairs_equal"],
@@ -1322,23 +1552,16 @@ def run_audit(build1_root: Path, build2_root: Path, *, verify_commit: bool = Tru
         "validation_build1_exact": validation_build1_exact,
         "validation_build2_exact": validation_build2_exact,
         "validation_builds_exactly_equal": build1_build2_validation_equal,
-        "matrix_matches_in_memory": False,
-        "json_matches_matrix": False,
-        "markdown_matches_json": False,
-        "atomic_publication_ready": False,
-        "all_audit_integrity_checks_passed": False,
+        "matrix_matches_in_memory": publication_checks["matrix_matches_in_memory"],
+        "json_matches_matrix": publication_checks["json_matches_matrix"],
+        "markdown_matches_json": publication_checks["markdown_matches_json"],
+        "transactional_publication_ready": publication_checks["transactional_publication_ready"],
+        "all_audit_integrity_checks_passed": True,
     }
     report["audit_integrity_checks"] = audit_integrity_checks
+    report["all_validation_checks_passed"] = True
 
-    publication_checks = publish_outputs_fail_closed(
-        matrix_df,
-        report,
-        matrix_path,
-        root / "reports/part3b_et_canonical_reconciliation.json",
-        root / "reports/part3b_et_canonical_reconciliation.md",
-    )
-    audit_integrity_checks.update(publication_checks)
-    audit_integrity_checks["all_audit_integrity_checks_passed"] = all(
+    if not all(
         audit_integrity_checks[key]
         for key in (
             "exact_source_role_set_passed",
@@ -1351,39 +1574,85 @@ def run_audit(build1_root: Path, build2_root: Path, *, verify_commit: bool = Tru
             "matrix_matches_in_memory",
             "json_matches_matrix",
             "markdown_matches_json",
-            "atomic_publication_ready",
+            "transactional_publication_ready",
         )
-    )
-    report["audit_integrity_checks"] = audit_integrity_checks
-    report["all_validation_checks_passed"] = audit_integrity_checks["all_audit_integrity_checks_passed"]
+    ):
+        raise RuntimeError("Audit integrity checks failed before publication")
 
-    if not report["all_validation_checks_passed"]:
-        raise RuntimeError("Audit integrity checks failed")
-
-    final_publication = publish_outputs_fail_closed(
+    publish_outputs_transactionally(
         matrix_df,
         report,
         matrix_path,
         root / "reports/part3b_et_canonical_reconciliation.json",
         root / "reports/part3b_et_canonical_reconciliation.md",
     )
-    if not all(final_publication.values()):
-        raise RuntimeError("Final publication consistency checks failed")
 
     return report
 
 
 def _self_test_one_ulp_build_value_difference_rejected() -> bool:
-    b1 = {"build1_value": 1.0}
-    b2 = {"build2_value": np.nextafter(np.float64(1.0), np.float64(2.0))}
-    return not float64_bit_equal(b1["build1_value"], b2["build2_value"])
+    identity = {
+        "experiment": "cross_project",
+        "target_project": "JM1",
+        "seed": 42,
+        "model": "ET_leaf5",
+        "selected_candidate": "ET_leaf5",
+        "selection_mode": "single_candidate_balanced_threshold",
+        "column": "roc_auc",
+    }
+    b1_mismatches = [{**identity, "build1_value": 1.0}]
+    b2_mismatches = [
+        {
+            **identity,
+            "build2_value": float(np.nextafter(np.float64(1.0), np.float64(2.0))),
+        }
+    ]
+    try:
+        require_build_mismatch_values_bit_exact(b1_mismatches, b2_mismatches)
+        return False
+    except RuntimeError:
+        return True
 
 
 def _self_test_build2_score_difference_rejected() -> bool:
-    a = np.array([0.1, 0.2], dtype=np.float64)
-    b = a.copy()
-    b[0] = np.nextafter(b[0], np.float64(1.0))
-    return a.tobytes() != b.tobytes()
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp)
+        build1, build2 = _write_synthetic_bundle(root)
+        b1_within = read_gz_round_trip(
+            build1 / "results/part3b_prediction_ledger/prediction_ledger_within.csv.gz"
+        )
+        b2_within = read_gz_round_trip(
+            build2 / "results/part3b_prediction_ledger/prediction_ledger_within.csv.gz"
+        )
+        b1_cross = read_gz_round_trip(
+            build1 / "results/part3b_prediction_ledger/prediction_ledger_cross.csv.gz"
+        )
+        b2_cross = read_gz_round_trip(
+            build2 / "results/part3b_prediction_ledger/prediction_ledger_cross.csv.gz"
+        )
+        b2_cross.loc[0, "score__ET_leaf5"] = float(
+            np.nextafter(np.float64(b2_cross.loc[0, "score__ET_leaf5"]), np.float64(1.0))
+        )
+        accepted_cross = b1_cross.copy()
+        score_evidence = [
+            compare_prediction_scores_dual(
+                b1_cross,
+                b2_cross,
+                accepted_cross,
+                "cross_project__JM1__seed_013",
+            )
+        ]
+        try:
+            require_build_score_arrays_byte_exact(
+                b1_within,
+                b2_within,
+                b1_cross,
+                b2_cross,
+                score_evidence,
+            )
+            return False
+        except RuntimeError:
+            return True
 
 
 def _self_test_validation_categorical_difference_rejected() -> bool:
@@ -1392,11 +1661,17 @@ def _self_test_validation_categorical_difference_rejected() -> bool:
         _write_synthetic_bundle(root)
         canon_val = root / "canonical/validation_log.csv"
         build_val = root / "build1/results/part3b_prediction_ledger/validation_reconstruction.csv"
+        build2_val = root / "build2/results/part3b_prediction_ledger/validation_reconstruction.csv"
         df = read_csv_round_trip(build_val)
         df.loc[0, "candidate"] = "MUTATED"
         df.to_csv(build_val, index=False, lineterminator="\n")
-        val = compare_validation(read_csv_round_trip(build_val), read_csv_round_trip(canon_val))
-        return val["validation_categorical_mismatch_count"] > 0
+        val1 = compare_validation(read_csv_round_trip(build_val), read_csv_round_trip(canon_val))
+        val2 = compare_validation(read_csv_round_trip(build2_val), read_csv_round_trip(canon_val))
+        try:
+            require_validation_exact(val1, val2, True)
+            return False
+        except RuntimeError:
+            return True
 
 
 def _self_test_missing_source_role_rejected() -> bool:
@@ -1410,14 +1685,81 @@ def _self_test_missing_source_role_rejected() -> bool:
         }
         for role in EXPECTED_SOURCE_ROLES[:-1]
     ]
-    contract = validate_source_role_contract(provenance)
-    return not contract["exact_source_role_set_passed"]
+    try:
+        require_source_role_contract(provenance)
+        return False
+    except RuntimeError:
+        return True
 
 
 def _self_test_markdown_json_disagreement_rejected() -> bool:
-    report = {
+    with tempfile.TemporaryDirectory() as tmp:
+        tmp_dir = Path(tmp)
+        matrix_path = tmp_dir / "et_canonical_mismatch_matrix.csv"
+        json_path = tmp_dir / "part3b_et_canonical_reconciliation.json"
+        md_path = tmp_dir / "part3b_et_canonical_reconciliation.md"
+
+        repo_matrix_path = (
+            repo_root() / "results/part3b_prediction_ledger/et_canonical_mismatch_matrix.csv"
+        )
+        matrix_bytes = repo_matrix_path.read_bytes()
+        matrix_path.write_bytes(matrix_bytes)
+        matrix_df = read_csv_round_trip(matrix_path)
+
+        report = _self_test_publication_report()
+        json_path.write_bytes((json.dumps(report, indent=2, cls=NumpyEncoder) + "\n").encode("utf-8"))
+        md_path.write_bytes(render_markdown(report).encode("utf-8"))
+
+        orig_matrix = matrix_path.read_bytes()
+        orig_json = json_path.read_bytes()
+        orig_md = md_path.read_bytes()
+
+        render_calls = {"count": 0}
+        original_render = render_markdown
+
+        def corrupt_first_render(payload: Dict[str, Any]) -> str:
+            text = original_render(payload)
+            render_calls["count"] += 1
+            if render_calls["count"] == 1:
+                return text + "\n<!-- markdown-json disagreement -->"
+            return text
+
+        rejected = False
+        with unittest.mock.patch(
+            f"{__name__}.render_markdown",
+            side_effect=corrupt_first_render,
+        ):
+            try:
+                publish_outputs_transactionally(matrix_df, report, matrix_path, json_path, md_path)
+            except RuntimeError:
+                rejected = True
+
+        if not rejected:
+            return False
+        if matrix_path.read_bytes() != orig_matrix:
+            return False
+        if json_path.read_bytes() != orig_json:
+            return False
+        if md_path.read_bytes() != orig_md:
+            return False
+
+        leftovers = list(tmp_dir.glob(".*")) + [
+            p for p in tmp_dir.iterdir() if p.name.startswith(".") or "pubbak" in p.name
+        ]
+        for path in tmp_dir.iterdir():
+            if path.name.startswith(".") or path.suffix == ".pubbak" or "pubbak" in path.name:
+                return False
+        for path in tmp_dir.parent.glob(f"{tmp_dir.name}*"):
+            if path.is_file():
+                return False
+        return True
+
+
+def _self_test_publication_report() -> Dict[str, Any]:
+    return {
         "stage": STAGE,
         "starting_commit": STARTING_COMMIT,
+        "strict_mismatch_count": 9,
         "strict_mismatch_count_build1": 9,
         "strict_mismatch_count_build2": 9,
         "approved_existing_exception_count": 1,
@@ -1426,9 +1768,9 @@ def _self_test_markdown_json_disagreement_rejected() -> bool:
         "build_mismatch_values_equal": True,
         "categorical_mismatch_count": 0,
         "validation_numeric_mismatch_count": 0,
-        "maximum_metric_absolute_difference": 0.0,
-        "maximum_metric_relative_difference": 0.0,
-        "maximum_et_score_absolute_difference": 0.0,
+        "maximum_metric_absolute_difference": 4.283498555857079e-08,
+        "maximum_metric_relative_difference": 9.938014065509184e-08,
+        "maximum_et_score_absolute_difference": 4.440892098500626e-16,
         "non_et_scores_byte_identical": True,
         "all_unapproved_rows_et_derived": True,
         "all_unapproved_rows_rank_sensitive": True,
@@ -1437,9 +1779,9 @@ def _self_test_markdown_json_disagreement_rejected() -> bool:
         "production_validator_changed": False,
         "canonical_file_changed": False,
         "all_validation_checks_passed": True,
-        "affected_events": [],
-        "affected_models": [],
-        "affected_columns": [],
+        "affected_events": ["cross_project__JM1__seed_013"],
+        "affected_models": ["ET_leaf5"],
+        "affected_columns": ["avg_precision", "roc_auc"],
         "build1_build2_validation_reconstructions_equal": True,
         "validation_categorical_mismatch_count_build1": 0,
         "validation_categorical_mismatch_count_build2": 0,
@@ -1475,13 +1817,10 @@ def _self_test_markdown_json_disagreement_rejected() -> bool:
             "matrix_matches_in_memory": True,
             "json_matches_matrix": True,
             "markdown_matches_json": True,
-            "atomic_publication_ready": True,
+            "transactional_publication_ready": True,
             "all_audit_integrity_checks_passed": True,
         },
     }
-    md = render_markdown(report)
-    report["strict_mismatch_count_build1"] = 8
-    return md != render_markdown(report)
 
 
 def _write_synthetic_bundle(root: Path) -> Tuple[Path, Path]:
@@ -1627,9 +1966,11 @@ def run_self_tests() -> Dict[str, Any]:
         results.append({"test_name": name, "passed": passed})
     passed_count = sum(1 for item in results if item["passed"])
     failed_count = len(results) - passed_count
+    expected_count = len(results)
     return {
         "tests": results,
         "passed": passed_count,
+        "expected": expected_count,
         "failed": failed_count,
         "total": len(results),
         "model_fits_executed": 0,
@@ -1667,7 +2008,10 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         print(
             json.dumps(
                 {
-                    "self_tests": f"{summary['passed']} / {summary['total']} / {summary['total']} / {summary['failed']}",
+                    "self_tests": (
+                        f"{summary['passed']} / {summary['expected']} / "
+                        f"{summary['total']} / {summary['failed']}"
+                    ),
                     "model_fits_executed": summary["model_fits_executed"],
                     "prediction_calls_executed": summary["prediction_calls_executed"],
                     "repository_production_artifacts_published": summary[

@@ -1,7 +1,7 @@
 # Part 3B ExtraTrees Canonical Reconciliation Audit
 
-**Stage:** Part 3B.2R.1-G.D4.1
-**Starting commit:** `b62af5623b571cd3e683c767e55ede1691d65fca`
+**Stage:** Part 3B.2R.1-G.D4.1.1
+**Starting commit:** `3b87873e851fb84f361a88736c0188b106f7f2c2`
 
 ## Summary
 
@@ -54,7 +54,7 @@
 - **Source-role contract passed:** True
 - **Matrix/JSON consistency passed:** True
 - **Markdown/JSON consistency passed:** True
-- **Atomic publication validation passed:** True
+- **Transactional publication validation passed:** True
 - **Audit-integrity checks passed:** True
 
 ## Score-Level Mechanism

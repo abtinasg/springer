@@ -1,6 +1,6 @@
 {
-  "stage": "Part 3B.2R.1-G.D4.1",
-  "starting_commit": "b62af5623b571cd3e683c767e55ede1691d65fca",
+  "stage": "Part 3B.2R.1-G.D4.1.1",
+  "starting_commit": "3b87873e851fb84f361a88736c0188b106f7f2c2",
   "source_provenance": [
     {
       "source_role": "g_r1_build1_result_reconstruction",
@@ -506,7 +506,7 @@
     "matrix_matches_in_memory": true,
     "json_matches_matrix": true,
     "markdown_matches_json": true,
-    "atomic_publication_ready": true,
+    "transactional_publication_ready": true,
     "all_audit_integrity_checks_passed": true
   }
 }
