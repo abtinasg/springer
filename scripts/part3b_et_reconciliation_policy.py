@@ -10,9 +10,9 @@ from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 import numpy as np
 
-STAGE = "Part 3B.2R.1-G.D6.2"
+STAGE = "Part 3B.2R.1-G.D6.3"
 POLICY_SPEC_STAGE = "Part 3B.2R.1-G.D5.2"
-STARTING_COMMIT = "7b8aba3ac836de312d0d95596c4bf853238ae2ba"
+STARTING_COMMIT = "27d103b6fa14c6810d0e33a1141d4739e5f7e34b"
 POLICY_ID = "et_rank_metric_reconciliation"
 POLICY_STATUS = "specified_not_enforced"
 FROZEN_POLICY_JSON_PATH = "reports/part3b_et_reconciliation_policy.json"

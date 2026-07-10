@@ -1,14 +1,14 @@
 {
-  "stage": "Part 3B.2R.1-G.D6.2",
-  "starting_commit": "7b8aba3ac836de312d0d95596c4bf853238ae2ba",
-  "current_commit": "7b8aba3ac836de312d0d95596c4bf853238ae2ba",
+  "stage": "Part 3B.2R.1-G.D6.3",
+  "starting_commit": "27d103b6fa14c6810d0e33a1141d4739e5f7e34b",
+  "current_commit": "27d103b6fa14c6810d0e33a1141d4739e5f7e34b",
   "starting_commit_verified": true,
   "frozen_policy_path": "reports/part3b_et_reconciliation_policy.json",
   "frozen_policy_sha256": "6bc043b7c890256fd369eb8747f54dd9f2f1944b03b0dd1c70b5f6d85b8719f5",
   "frozen_policy_contract_verified": true,
-  "implementation_module_sha256": "df930ec2e69242f4fbc0b7968835a950aefe11dc3da2900125015f1e917c7cce",
+  "implementation_module_sha256": "9e572121f4f1cad54f0811a1ff7cd96a921cb696f19eb4604eed0a4a3ad1c3ce",
   "production_validator_sha_before": "d269bb2eb9b6b4959c9bccb287314249b08da52ad895fa6285ec2af9b6abce49",
-  "production_validator_sha_after": "1340960df1440ec25a7e98e451eff8816032abaa79a89ea3fdd9796df2788d8e",
+  "production_validator_sha_after": "1fb18f08430c4401a7344c90d5e6be54848994935879c82c7e636951681d567e",
   "production_validator_code_changed": true,
   "production_authorization_remains_false": true,
   "implemented_constants": {
@@ -2072,37 +2072,109 @@
         "test_name": "rollback_before_any_replacement_neither_exist",
         "passed": true,
         "failure_point": "before_any_replacement",
-        "both_exist": false
+        "initial_state": "neither_exist",
+        "exception_observed": true,
+        "final_state_restored": true,
+        "json_existence_restored": true,
+        "markdown_existence_restored": true,
+        "json_bytes_restored": true,
+        "markdown_bytes_restored": true,
+        "directory_file_set_restored": true,
+        "directory_file_hashes_restored": true,
+        "path_types_restored": true,
+        "temporary_files_remaining": [],
+        "backup_files_remaining": [],
+        "unexpected_files_remaining": []
       },
       {
         "test_name": "rollback_before_any_replacement_both_exist",
         "passed": true,
         "failure_point": "before_any_replacement",
-        "both_exist": true
+        "initial_state": "both_exist",
+        "exception_observed": true,
+        "final_state_restored": true,
+        "json_existence_restored": true,
+        "markdown_existence_restored": true,
+        "json_bytes_restored": true,
+        "markdown_bytes_restored": true,
+        "directory_file_set_restored": true,
+        "directory_file_hashes_restored": true,
+        "path_types_restored": true,
+        "temporary_files_remaining": [],
+        "backup_files_remaining": [],
+        "unexpected_files_remaining": []
       },
       {
         "test_name": "rollback_after_json_before_md_neither_exist",
         "passed": true,
         "failure_point": "after_json_before_md",
-        "both_exist": false
+        "initial_state": "neither_exist",
+        "exception_observed": true,
+        "final_state_restored": true,
+        "json_existence_restored": true,
+        "markdown_existence_restored": true,
+        "json_bytes_restored": true,
+        "markdown_bytes_restored": true,
+        "directory_file_set_restored": true,
+        "directory_file_hashes_restored": true,
+        "path_types_restored": true,
+        "temporary_files_remaining": [],
+        "backup_files_remaining": [],
+        "unexpected_files_remaining": []
       },
       {
         "test_name": "rollback_after_json_before_md_both_exist",
         "passed": true,
         "failure_point": "after_json_before_md",
-        "both_exist": true
+        "initial_state": "both_exist",
+        "exception_observed": true,
+        "final_state_restored": true,
+        "json_existence_restored": true,
+        "markdown_existence_restored": true,
+        "json_bytes_restored": true,
+        "markdown_bytes_restored": true,
+        "directory_file_set_restored": true,
+        "directory_file_hashes_restored": true,
+        "path_types_restored": true,
+        "temporary_files_remaining": [],
+        "backup_files_remaining": [],
+        "unexpected_files_remaining": []
       },
       {
         "test_name": "rollback_after_md_backup_before_md_replace_neither_exist",
         "passed": true,
         "failure_point": "after_md_backup_before_md_replace",
-        "both_exist": false
+        "initial_state": "neither_exist",
+        "exception_observed": true,
+        "final_state_restored": true,
+        "json_existence_restored": true,
+        "markdown_existence_restored": true,
+        "json_bytes_restored": true,
+        "markdown_bytes_restored": true,
+        "directory_file_set_restored": true,
+        "directory_file_hashes_restored": true,
+        "path_types_restored": true,
+        "temporary_files_remaining": [],
+        "backup_files_remaining": [],
+        "unexpected_files_remaining": []
       },
       {
         "test_name": "rollback_after_md_backup_before_md_replace_both_exist",
         "passed": true,
         "failure_point": "after_md_backup_before_md_replace",
-        "both_exist": true
+        "initial_state": "both_exist",
+        "exception_observed": true,
+        "final_state_restored": true,
+        "json_existence_restored": true,
+        "markdown_existence_restored": true,
+        "json_bytes_restored": true,
+        "markdown_bytes_restored": true,
+        "directory_file_set_restored": true,
+        "directory_file_hashes_restored": true,
+        "path_types_restored": true,
+        "temporary_files_remaining": [],
+        "backup_files_remaining": [],
+        "unexpected_files_remaining": []
       },
       {
         "test_name": "successful_first_publication",
@@ -2129,7 +2201,251 @@
     "tests_executed": 11,
     "tests_passed": 11,
     "tests_failed": 0,
-    "all_passed": true
+    "all_passed": true,
+    "scenario_records": [
+      {
+        "failure_point": "before_any_replacement",
+        "initial_state": "neither_exist",
+        "exception_observed": true,
+        "final_state_restored": true,
+        "json_existence_restored": true,
+        "markdown_existence_restored": true,
+        "json_bytes_restored": true,
+        "markdown_bytes_restored": true,
+        "directory_file_set_restored": true,
+        "directory_file_hashes_restored": true,
+        "path_types_restored": true,
+        "temporary_files_remaining": [],
+        "backup_files_remaining": [],
+        "unexpected_files_remaining": [],
+        "passed": true
+      },
+      {
+        "failure_point": "before_any_replacement",
+        "initial_state": "both_exist",
+        "exception_observed": true,
+        "final_state_restored": true,
+        "json_existence_restored": true,
+        "markdown_existence_restored": true,
+        "json_bytes_restored": true,
+        "markdown_bytes_restored": true,
+        "directory_file_set_restored": true,
+        "directory_file_hashes_restored": true,
+        "path_types_restored": true,
+        "temporary_files_remaining": [],
+        "backup_files_remaining": [],
+        "unexpected_files_remaining": [],
+        "passed": true
+      },
+      {
+        "failure_point": "after_json_before_md",
+        "initial_state": "neither_exist",
+        "exception_observed": true,
+        "final_state_restored": true,
+        "json_existence_restored": true,
+        "markdown_existence_restored": true,
+        "json_bytes_restored": true,
+        "markdown_bytes_restored": true,
+        "directory_file_set_restored": true,
+        "directory_file_hashes_restored": true,
+        "path_types_restored": true,
+        "temporary_files_remaining": [],
+        "backup_files_remaining": [],
+        "unexpected_files_remaining": [],
+        "passed": true
+      },
+      {
+        "failure_point": "after_json_before_md",
+        "initial_state": "both_exist",
+        "exception_observed": true,
+        "final_state_restored": true,
+        "json_existence_restored": true,
+        "markdown_existence_restored": true,
+        "json_bytes_restored": true,
+        "markdown_bytes_restored": true,
+        "directory_file_set_restored": true,
+        "directory_file_hashes_restored": true,
+        "path_types_restored": true,
+        "temporary_files_remaining": [],
+        "backup_files_remaining": [],
+        "unexpected_files_remaining": [],
+        "passed": true
+      },
+      {
+        "failure_point": "after_md_backup_before_md_replace",
+        "initial_state": "neither_exist",
+        "exception_observed": true,
+        "final_state_restored": true,
+        "json_existence_restored": true,
+        "markdown_existence_restored": true,
+        "json_bytes_restored": true,
+        "markdown_bytes_restored": true,
+        "directory_file_set_restored": true,
+        "directory_file_hashes_restored": true,
+        "path_types_restored": true,
+        "temporary_files_remaining": [],
+        "backup_files_remaining": [],
+        "unexpected_files_remaining": [],
+        "passed": true
+      },
+      {
+        "failure_point": "after_md_backup_before_md_replace",
+        "initial_state": "both_exist",
+        "exception_observed": true,
+        "final_state_restored": true,
+        "json_existence_restored": true,
+        "markdown_existence_restored": true,
+        "json_bytes_restored": true,
+        "markdown_bytes_restored": true,
+        "directory_file_set_restored": true,
+        "directory_file_hashes_restored": true,
+        "path_types_restored": true,
+        "temporary_files_remaining": [],
+        "backup_files_remaining": [],
+        "unexpected_files_remaining": [],
+        "passed": true
+      }
+    ],
+    "rollback_verifier_mutations": [
+      {
+        "mutation_name": "extensionless_temp_leftover",
+        "verifier_rejected": true,
+        "passed": true,
+        "detail": {
+          "final_state_restored": false,
+          "json_existence_restored": true,
+          "markdown_existence_restored": true,
+          "json_bytes_restored": true,
+          "markdown_bytes_restored": true,
+          "directory_file_set_restored": false,
+          "directory_file_hashes_restored": true,
+          "path_types_restored": false,
+          "temporary_files_remaining": [
+            "tmpabc123"
+          ],
+          "backup_files_remaining": [],
+          "unexpected_files_remaining": []
+        }
+      },
+      {
+        "mutation_name": "pubbak_leftover",
+        "verifier_rejected": true,
+        "passed": true,
+        "detail": {
+          "final_state_restored": false,
+          "json_existence_restored": true,
+          "markdown_existence_restored": true,
+          "json_bytes_restored": true,
+          "markdown_bytes_restored": true,
+          "directory_file_set_restored": false,
+          "directory_file_hashes_restored": true,
+          "path_types_restored": false,
+          "temporary_files_remaining": [],
+          "backup_files_remaining": [
+            "report.json.pubbak"
+          ],
+          "unexpected_files_remaining": []
+        }
+      },
+      {
+        "mutation_name": "unexpected_extra_file",
+        "verifier_rejected": true,
+        "passed": true,
+        "detail": {
+          "final_state_restored": false,
+          "json_existence_restored": true,
+          "markdown_existence_restored": true,
+          "json_bytes_restored": true,
+          "markdown_bytes_restored": true,
+          "directory_file_set_restored": false,
+          "directory_file_hashes_restored": true,
+          "path_types_restored": false,
+          "temporary_files_remaining": [],
+          "backup_files_remaining": [],
+          "unexpected_files_remaining": [
+            "unexpected_file.txt"
+          ]
+        }
+      },
+      {
+        "mutation_name": "modified_original_json",
+        "verifier_rejected": true,
+        "passed": true,
+        "detail": {
+          "final_state_restored": false,
+          "json_existence_restored": true,
+          "markdown_existence_restored": true,
+          "json_bytes_restored": false,
+          "markdown_bytes_restored": true,
+          "directory_file_set_restored": true,
+          "directory_file_hashes_restored": false,
+          "path_types_restored": true,
+          "temporary_files_remaining": [],
+          "backup_files_remaining": [],
+          "unexpected_files_remaining": [
+            "report.json"
+          ]
+        }
+      },
+      {
+        "mutation_name": "modified_original_markdown",
+        "verifier_rejected": true,
+        "passed": true,
+        "detail": {
+          "final_state_restored": false,
+          "json_existence_restored": true,
+          "markdown_existence_restored": true,
+          "json_bytes_restored": true,
+          "markdown_bytes_restored": false,
+          "directory_file_set_restored": true,
+          "directory_file_hashes_restored": false,
+          "path_types_restored": true,
+          "temporary_files_remaining": [],
+          "backup_files_remaining": [],
+          "unexpected_files_remaining": [
+            "report.md"
+          ]
+        }
+      },
+      {
+        "mutation_name": "deleted_original_file",
+        "verifier_rejected": true,
+        "passed": true,
+        "detail": {
+          "final_state_restored": false,
+          "json_existence_restored": false,
+          "markdown_existence_restored": true,
+          "json_bytes_restored": false,
+          "markdown_bytes_restored": true,
+          "directory_file_set_restored": false,
+          "directory_file_hashes_restored": false,
+          "path_types_restored": false,
+          "temporary_files_remaining": [],
+          "backup_files_remaining": [],
+          "unexpected_files_remaining": []
+        }
+      },
+      {
+        "mutation_name": "path_type_change",
+        "verifier_rejected": true,
+        "passed": true,
+        "detail": {
+          "final_state_restored": false,
+          "json_existence_restored": false,
+          "markdown_existence_restored": true,
+          "json_bytes_restored": false,
+          "markdown_bytes_restored": true,
+          "directory_file_set_restored": true,
+          "directory_file_hashes_restored": false,
+          "path_types_restored": false,
+          "temporary_files_remaining": [],
+          "backup_files_remaining": [],
+          "unexpected_files_remaining": [
+            "report.json"
+          ]
+        }
+      }
+    ]
   },
   "measured_activity_counters": {
     "model_fits_executed": 0,
@@ -2728,9 +3044,160 @@
     "all_globals_restored": true,
     "tracker_inactive": true,
     "no_repository_file_changed": true,
+    "restoration_map": {
+      "sys_profile_restored": true,
+      "builtins_open_restored": true,
+      "io_open_restored": true,
+      "path_open_restored": true,
+      "path_write_text_restored": true,
+      "path_write_bytes_restored": true,
+      "path_touch_restored": true,
+      "path_replace_restored": true,
+      "path_rename_restored": true,
+      "os_open_restored": true,
+      "os_replace_restored": true,
+      "os_rename_restored": true,
+      "shutil_copy_restored": true,
+      "shutil_copy2_restored": true,
+      "shutil_copyfile_restored": true,
+      "shutil_move_restored": true,
+      "build_core_bundle_restored": true,
+      "fit_event_candidates_restored": true,
+      "build_prediction_rows_restored": true,
+      "execute_postbuild_integration_restored": true
+    },
+    "restoration_keys_match": true,
+    "restoration_field_count": 20,
+    "expected_restoration_field_count": 20,
+    "files_added": 0,
+    "files_removed": 0,
+    "files_modified": 0,
+    "path_type_changes": 0,
+    "before_file_count": 2,
+    "after_file_count": 2,
+    "exact_snapshot_equality": true,
+    "pre_snapshot": {
+      "entries": {
+        "results/part3b_prediction_ledger/et_canonical_mismatch_matrix.csv": {
+          "exists": true,
+          "sha256": "d280fe1924e4f0e0afde2be24eb67d4dc46e3f3f03a60f325e6be8b9b4976741",
+          "is_dir": false
+        },
+        "reports/part3b_et_reconciliation_policy.json": {
+          "exists": true,
+          "sha256": "e3d4e59bab932e2eff7c22699b592d5fc6f02ce19d78af77a0a9addb945aae01",
+          "is_dir": false
+        },
+        "reports/part3b_et_reconciliation_policy.md": {
+          "exists": false,
+          "sha256": null,
+          "is_dir": false
+        },
+        "reports/part3b_et_canonical_reconciliation.json": {
+          "exists": false,
+          "sha256": null,
+          "is_dir": false
+        },
+        "reports/part3b_et_canonical_reconciliation.md": {
+          "exists": false,
+          "sha256": null,
+          "is_dir": false
+        },
+        "scripts/freeze_part3b_et_reconciliation_policy.py": {
+          "exists": false,
+          "sha256": null,
+          "is_dir": false
+        },
+        "scripts/audit_part3b_et_canonical_reconciliation.py": {
+          "exists": false,
+          "sha256": null,
+          "is_dir": false
+        }
+      },
+      "file_count": 2
+    },
+    "post_snapshot": {
+      "entries": {
+        "results/part3b_prediction_ledger/et_canonical_mismatch_matrix.csv": {
+          "exists": true,
+          "sha256": "d280fe1924e4f0e0afde2be24eb67d4dc46e3f3f03a60f325e6be8b9b4976741",
+          "is_dir": false
+        },
+        "reports/part3b_et_reconciliation_policy.json": {
+          "exists": true,
+          "sha256": "e3d4e59bab932e2eff7c22699b592d5fc6f02ce19d78af77a0a9addb945aae01",
+          "is_dir": false
+        },
+        "reports/part3b_et_reconciliation_policy.md": {
+          "exists": false,
+          "sha256": null,
+          "is_dir": false
+        },
+        "reports/part3b_et_canonical_reconciliation.json": {
+          "exists": false,
+          "sha256": null,
+          "is_dir": false
+        },
+        "reports/part3b_et_canonical_reconciliation.md": {
+          "exists": false,
+          "sha256": null,
+          "is_dir": false
+        },
+        "scripts/freeze_part3b_et_reconciliation_policy.py": {
+          "exists": false,
+          "sha256": null,
+          "is_dir": false
+        },
+        "scripts/audit_part3b_et_canonical_reconciliation.py": {
+          "exists": false,
+          "sha256": null,
+          "is_dir": false
+        }
+      },
+      "file_count": 2
+    },
+    "snapshot_diff": {
+      "added": 0,
+      "removed": 0,
+      "modified": 0,
+      "path_type_changed": 0,
+      "changed": 0,
+      "before_file_count": 2,
+      "after_file_count": 2
+    },
+    "counters_derived": true,
     "passed": true
   },
   "forced_exception_test_passed": true,
+  "forced_exception_restoration_keys_match": true,
+  "forced_exception_restoration_field_count": 20,
+  "forced_exception_expected_field_count": 20,
+  "forced_exception_exact_snapshot_equality": true,
+  "forced_exception_counters_derived": true,
+  "forced_exception_all_globals_restored": true,
+  "forced_exception_no_repo_file_changed": true,
+  "forced_exception_files_added": 0,
+  "forced_exception_files_removed": 0,
+  "forced_exception_files_modified": 0,
+  "forced_exception_path_type_changes": 0,
+  "rollback_scenarios_count": 6,
+  "rollback_all_scenarios_passed": true,
+  "rollback_all_scenarios_final_state_restored": true,
+  "rollback_all_scenarios_zero_temp_files": true,
+  "rollback_all_scenarios_zero_backup_files": true,
+  "rollback_all_scenarios_zero_unexpected_files": true,
+  "rollback_scenarios_no_missing": true,
+  "rollback_scenarios_no_duplicates": true,
+  "rollback_scenarios_all_fields_present": true,
+  "rollback_scenarios_all_exceptions_observed": true,
+  "rollback_scenarios_all_json_restored": true,
+  "rollback_scenarios_all_md_restored": true,
+  "rollback_scenarios_all_dir_set_restored": true,
+  "rollback_scenarios_all_hashes_restored": true,
+  "rollback_scenarios_all_path_types_restored": true,
+  "rollback_mutations_count": 7,
+  "rollback_all_mutations_rejected": true,
+  "rollback_all_mutations_passed": true,
   "recursive_snapshot_changed": 0,
   "recursive_snapshot_added": 0,
   "recursive_snapshot_removed": 0,
@@ -2818,7 +3285,7 @@
   "publication_result": {
     "json_path": "reports/part3b_et_policy_implementation.json",
     "md_path": "reports/part3b_et_policy_implementation.md",
-    "json_sha256": "3ccfd37c4c461af04e3e583c220d5f8e5c3eda175d3087deffccd0f14217fc59",
-    "md_sha256": "418efbf3cf775e6ab2e79f49a7e98f0c4d4ba18f5b0b00b42eb10fb338559fd1"
+    "json_sha256": "c2feb29e5edcaf7c83e5437beed1736ebe83a49a30e6204ab43254885aeefd5a",
+    "md_sha256": "0293fe44ae44c5969c41dc0f3ee367f19c341144c9813dde2a1b649a8d5593f5"
   }
 }

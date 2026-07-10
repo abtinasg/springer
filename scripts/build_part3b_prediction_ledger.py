@@ -12114,7 +12114,7 @@ def _gd6_count_recursive_changes(
 
 
 class _Gd6RuntimeActivityTracker:
-    """Runtime profiler for G.D6.2 self-test activity measurement."""
+    """Runtime profiler for G.D6.3 self-test activity measurement."""
 
     def __init__(self, root: Path) -> None:
         self.root = root.resolve()
@@ -12685,18 +12685,83 @@ def _gd6_run_production_entry_point_positive_controls() -> Dict[str, Any]:
     }
 
 
+_GD6_FORCED_EXCEPTION_RESTORATION_KEYS = [
+    "sys_profile_restored",
+    "builtins_open_restored",
+    "io_open_restored",
+    "path_open_restored",
+    "path_write_text_restored",
+    "path_write_bytes_restored",
+    "path_touch_restored",
+    "path_replace_restored",
+    "path_rename_restored",
+    "os_open_restored",
+    "os_replace_restored",
+    "os_rename_restored",
+    "shutil_copy_restored",
+    "shutil_copy2_restored",
+    "shutil_copyfile_restored",
+    "shutil_move_restored",
+    "build_core_bundle_restored",
+    "fit_event_candidates_restored",
+    "build_prediction_rows_restored",
+    "execute_postbuild_integration_restored",
+]
+
+
 def _gd6_run_forced_exception_restoration_test() -> Dict[str, Any]:
-    """Test that tracker restoration occurs even when a synthetic test raises."""
-    with tempfile.TemporaryDirectory(prefix="gd62_exc_") as temp_dir:
+    """Test that tracker restoration occurs even when a synthetic test raises.
+
+    Creates a synthetic temporary repository root, populates representative
+    protected files, captures a full recursive pre-exception snapshot,
+    starts the real tracker, raises an intentional exception inside the
+    guarded region, stops the tracker in ``finally``, captures the
+    post-exception recursive snapshot, and compares the snapshots mechanically.
+    Also captures exact object identity for all 20 patched objects before
+    and after, and persists a restoration map.
+    """
+    with tempfile.TemporaryDirectory(prefix="gd63_exc_") as temp_dir:
         synthetic_root = Path(temp_dir)
-        (synthetic_root / "results").mkdir()
+
+        # Populate representative protected files
+        protected_files = {
+            "reports/part3b_et_reconciliation_policy.json": '{"frozen": true}\n',
+            "results/part3b_prediction_ledger/et_canonical_mismatch_matrix.csv": "col\nval\n",
+            "reports/part3b_et_policy_implementation.json": '{"stage": "test"}\n',
+        }
+        for rel, content in protected_files.items():
+            p = synthetic_root / rel
+            p.parent.mkdir(parents=True, exist_ok=True)
+            p.write_text(content, encoding="utf-8")
+
+        # Capture a full recursive pre-exception snapshot
+        pre_snapshot = _gd6_recursive_snapshot(synthetic_root)
+
+        # Capture exact object identity for all 20 patched objects
+        saved_objects = {
+            "sys_profile": sys.getprofile(),
+            "builtins_open": builtins.open,
+            "io_open": io.open,
+            "path_open": Path.open,
+            "path_write_text": Path.write_text,
+            "path_write_bytes": Path.write_bytes,
+            "path_touch": Path.touch,
+            "path_replace": Path.replace,
+            "path_rename": Path.rename,
+            "os_open": os.open,
+            "os_replace": os.replace,
+            "os_rename": os.rename,
+            "shutil_copy": shutil.copy,
+            "shutil_copy2": shutil.copy2,
+            "shutil_copyfile": shutil.copyfile,
+            "shutil_move": shutil.move,
+            "build_core_bundle": globals().get("build_core_bundle"),
+            "fit_event_candidates": globals().get("fit_event_candidates"),
+            "build_prediction_rows": globals().get("build_prediction_rows"),
+            "execute_postbuild_integration": globals().get("execute_postbuild_integration"),
+        }
+
         tracker = _Gd6RuntimeActivityTracker(synthetic_root)
-        saved_builtins_open = builtins.open
-        saved_io_open = io.open
-        saved_path_open = Path.open
-        saved_path_write_text = Path.write_text
-        saved_os_open = os.open
-        saved_shutil_copy = shutil.copy
         tracker.start()
         raised = False
         try:
@@ -12705,30 +12770,100 @@ def _gd6_run_forced_exception_restoration_test() -> Dict[str, Any]:
             raised = True
         finally:
             tracker.stop()
-        restored = (
-            builtins.open is saved_builtins_open
-            and io.open is saved_io_open
-            and Path.open is saved_path_open
-            and Path.write_text is saved_path_write_text
-            and os.open is saved_os_open
-            and shutil.copy is saved_shutil_copy
+
+        # Capture the post-exception recursive snapshot
+        post_snapshot = _gd6_recursive_snapshot(synthetic_root)
+
+        # Compare snapshots mechanically
+        snapshot_diff = _gd6_count_recursive_changes(pre_snapshot, post_snapshot)
+        files_added = snapshot_diff["added"]
+        files_removed = snapshot_diff["removed"]
+        files_modified = snapshot_diff["modified"]
+        path_type_changes = snapshot_diff["path_type_changed"]
+        before_file_count = snapshot_diff["before_file_count"]
+        after_file_count = snapshot_diff["after_file_count"]
+        exact_snapshot_equality = (
+            files_added == 0
+            and files_removed == 0
+            and files_modified == 0
+            and path_type_changes == 0
+            and before_file_count == after_file_count
+            and pre_snapshot == post_snapshot
         )
+
+        # Compare every object using identity equality
+        restoration_map = {
+            "sys_profile_restored": sys.getprofile() is saved_objects["sys_profile"],
+            "builtins_open_restored": builtins.open is saved_objects["builtins_open"],
+            "io_open_restored": io.open is saved_objects["io_open"],
+            "path_open_restored": Path.open is saved_objects["path_open"],
+            "path_write_text_restored": Path.write_text is saved_objects["path_write_text"],
+            "path_write_bytes_restored": Path.write_bytes is saved_objects["path_write_bytes"],
+            "path_touch_restored": Path.touch is saved_objects["path_touch"],
+            "path_replace_restored": Path.replace is saved_objects["path_replace"],
+            "path_rename_restored": Path.rename is saved_objects["path_rename"],
+            "os_open_restored": os.open is saved_objects["os_open"],
+            "os_replace_restored": os.replace is saved_objects["os_replace"],
+            "os_rename_restored": os.rename is saved_objects["os_rename"],
+            "shutil_copy_restored": shutil.copy is saved_objects["shutil_copy"],
+            "shutil_copy2_restored": shutil.copy2 is saved_objects["shutil_copy2"],
+            "shutil_copyfile_restored": shutil.copyfile is saved_objects["shutil_copyfile"],
+            "shutil_move_restored": shutil.move is saved_objects["shutil_move"],
+            "build_core_bundle_restored": globals().get("build_core_bundle") is saved_objects["build_core_bundle"],
+            "fit_event_candidates_restored": globals().get("fit_event_candidates") is saved_objects["fit_event_candidates"],
+            "build_prediction_rows_restored": globals().get("build_prediction_rows") is saved_objects["build_prediction_rows"],
+            "execute_postbuild_integration_restored": globals().get("execute_postbuild_integration") is saved_objects["execute_postbuild_integration"],
+        }
+
+        # Verify exact restoration-key set
+        restoration_keys = sorted(restoration_map.keys())
+        expected_keys = sorted(_GD6_FORCED_EXCEPTION_RESTORATION_KEYS)
+        restoration_keys_match = restoration_keys == expected_keys
+        restoration_field_count = len(restoration_map)
+        expected_restoration_field_count = len(_GD6_FORCED_EXCEPTION_RESTORATION_KEYS)
+
+        all_globals_restored = all(restoration_map.values())
         tracker_inactive = tracker.active is False
-        no_repo_file_changed = True
-        for child in Path(temp_dir).rglob("*"):
-            if child.is_file() and child.name not in ("",):
-                no_repo_file_changed = no_repo_file_changed
+        counters_derived = tracker.counters_derived is True
+
+        no_repository_file_changed = exact_snapshot_equality
+
+        passed = (
+            raised
+            and all_globals_restored
+            and tracker_inactive
+            and no_repository_file_changed
+            and restoration_keys_match
+            and restoration_field_count == expected_restoration_field_count
+            and counters_derived
+        )
+
     return {
         "forced_exception_raised": raised,
-        "all_globals_restored": restored,
+        "all_globals_restored": all_globals_restored,
         "tracker_inactive": tracker_inactive,
-        "no_repository_file_changed": no_repo_file_changed,
-        "passed": raised and restored and tracker_inactive and no_repo_file_changed,
+        "no_repository_file_changed": no_repository_file_changed,
+        "restoration_map": restoration_map,
+        "restoration_keys_match": restoration_keys_match,
+        "restoration_field_count": restoration_field_count,
+        "expected_restoration_field_count": expected_restoration_field_count,
+        "files_added": files_added,
+        "files_removed": files_removed,
+        "files_modified": files_modified,
+        "path_type_changes": path_type_changes,
+        "before_file_count": before_file_count,
+        "after_file_count": after_file_count,
+        "exact_snapshot_equality": exact_snapshot_equality,
+        "pre_snapshot": pre_snapshot,
+        "post_snapshot": post_snapshot,
+        "snapshot_diff": snapshot_diff,
+        "counters_derived": counters_derived,
+        "passed": passed,
     }
 
 
 def run_et_reconciliation_policy_self_tests() -> Dict[str, Any]:
-    """Synthetic self-tests for frozen ET reconciliation policy (G.D6.2)."""
+    """Synthetic self-tests for frozen ET reconciliation policy (G.D6.3)."""
     policy = import_et_reconciliation_policy()
     root = repo_root()
     tracker = _Gd6RuntimeActivityTracker(root)

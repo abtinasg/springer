@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Part 3B.2R.1-G.D6.2: Audit frozen ET reconciliation policy implementation."""
+"""Part 3B.2R.1-G.D6.3: Audit frozen ET reconciliation policy implementation."""
 from __future__ import annotations
 
 import argparse
@@ -13,8 +13,8 @@ import tempfile
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
-STAGE = "Part 3B.2R.1-G.D6.2"
-STARTING_COMMIT = "7b8aba3ac836de312d0d95596c4bf853238ae2ba"
+STAGE = "Part 3B.2R.1-G.D6.3"
+STARTING_COMMIT = "27d103b6fa14c6810d0e33a1141d4739e5f7e34b"
 JSON_OUTPUT_PATH = "reports/part3b_et_policy_implementation.json"
 MD_OUTPUT_PATH = "reports/part3b_et_policy_implementation.md"
 FROZEN_POLICY_JSON_PATH = "reports/part3b_et_reconciliation_policy.json"
@@ -236,7 +236,26 @@ def render_markdown(report: Dict[str, Any]) -> str:
             f"- **All globals restored:** {report.get('forced_exception_restoration', {}).get('all_globals_restored')}",
             f"- **Tracker inactive after exception:** {report.get('forced_exception_restoration', {}).get('tracker_inactive')}",
             f"- **No repository file changed:** {report.get('forced_exception_restoration', {}).get('no_repository_file_changed')}",
+            f"- **Restoration keys match:** {report.get('forced_exception_restoration', {}).get('restoration_keys_match')}",
+            f"- **Restoration field count:** {report.get('forced_exception_restoration', {}).get('restoration_field_count')}",
+            f"- **Expected restoration field count:** {report.get('forced_exception_restoration', {}).get('expected_restoration_field_count')}",
+            f"- **Files added:** {report.get('forced_exception_restoration', {}).get('files_added')}",
+            f"- **Files removed:** {report.get('forced_exception_restoration', {}).get('files_removed')}",
+            f"- **Files modified:** {report.get('forced_exception_restoration', {}).get('files_modified')}",
+            f"- **Path type changes:** {report.get('forced_exception_restoration', {}).get('path_type_changes')}",
+            f"- **Exact snapshot equality:** {report.get('forced_exception_restoration', {}).get('exact_snapshot_equality')}",
+            f"- **Counters derived:** {report.get('forced_exception_restoration', {}).get('counters_derived')}",
             f"- **Forced exception test passed:** {report.get('forced_exception_restoration', {}).get('passed')}",
+            "",
+            "### Forced-Exception Restoration Map",
+            "",
+        ]
+    )
+    restoration_map = report.get('forced_exception_restoration', {}).get('restoration_map', {})
+    for key, value in sorted(restoration_map.items()):
+        lines.append(f"- **{key}:** {value}")
+    lines.extend(
+        [
             "",
             "## Recursive Snapshot Verification",
             "",
@@ -275,35 +294,157 @@ def render_markdown(report: Dict[str, Any]) -> str:
             f"- **Tests passed:** {report.get('transactional_rollback_tests', {}).get('tests_passed')}",
             f"- **Tests failed:** {report.get('transactional_rollback_tests', {}).get('tests_failed')}",
             f"- **All passed:** {report.get('transactional_rollback_tests', {}).get('all_passed')}",
+            "",
+            "### Per-Scenario Rollback Evidence",
+            "",
         ]
     )
+    for sr in report.get('transactional_rollback_tests', {}).get('scenario_records', []):
+        lines.append(f"- **{sr.get('failure_point')} / {sr.get('initial_state')}:** passed={sr.get('passed')}, final_state_restored={sr.get('final_state_restored')}, path_types_restored={sr.get('path_types_restored')}, temp_files={sr.get('temporary_files_remaining')}, backup_files={sr.get('backup_files_remaining')}, unexpected_files={sr.get('unexpected_files_remaining')}")
+    lines.extend(
+        [
+            "",
+            "### Rollback Verifier Mutation Tests",
+            "",
+        ]
+    )
+    for mut in report.get('transactional_rollback_tests', {}).get('rollback_verifier_mutations', []):
+        lines.append(f"- **{mut.get('mutation_name')}:** verifier_rejected={mut.get('verifier_rejected')}, passed={mut.get('passed')}")
+    lines.append("")
     return "\n".join(lines) + "\n"
 
 
+def _sha256_bytes(data: bytes) -> str:
+    return hashlib.sha256(data).hexdigest()
+
+
+def _capture_directory_state(directory: Path) -> Dict[str, Any]:
+    """Capture exact set of filenames, bytes hashes, and file types in a directory."""
+    entries: Dict[str, Dict[str, Any]] = {}
+    if directory.is_dir():
+        for child in sorted(directory.iterdir()):
+            if child.is_file():
+                entries[child.name] = {
+                    "type": "file",
+                    "sha256": _sha256_bytes(child.read_bytes()),
+                }
+            elif child.is_dir():
+                entries[child.name] = {
+                    "type": "dir",
+                    "sha256": None,
+                }
+    return entries
+
+
 def _capture_pre_publication_state(json_path: Path, md_path: Path) -> Dict[str, Any]:
+    directory = json_path.parent
+    dir_entries = _capture_directory_state(directory)
     return {
         "json_existed": json_path.is_file(),
         "md_existed": md_path.is_file(),
         "json_bytes": json_path.read_bytes() if json_path.is_file() else None,
         "md_bytes": md_path.read_bytes() if md_path.is_file() else None,
+        "json_sha256": _sha256_bytes(json_path.read_bytes()) if json_path.is_file() else None,
+        "md_sha256": _sha256_bytes(md_path.read_bytes()) if md_path.is_file() else None,
+        "directory_file_set": sorted(dir_entries.keys()),
+        "directory_entries": dir_entries,
     }
+
+
+def _detect_temp_and_unexpected(
+    directory: Path,
+    pre_state: Dict[str, Any],
+    json_path: Path,
+    md_path: Path,
+) -> Tuple[List[str], List[str], List[str]]:
+    """Detect temporary, backup, and unexpected files by exact directory-set comparison."""
+    current_entries = _capture_directory_state(directory)
+    pre_entries = pre_state.get("directory_entries", {})
+    pre_names = set(pre_entries.keys())
+    current_names = set(current_entries.keys())
+
+    temp_files: List[str] = []
+    backup_files: List[str] = []
+    unexpected_files: List[str] = []
+
+    for name in sorted(current_names - pre_names):
+        if name.endswith(".pubbak"):
+            backup_files.append(name)
+        elif name.startswith("tmp") or name.startswith(".part3b_et_policy_"):
+            temp_files.append(name)
+        else:
+            unexpected_files.append(name)
+
+    for name in sorted(current_names & pre_names):
+        if current_entries[name].get("sha256") != pre_entries[name].get("sha256"):
+            unexpected_files.append(name)
+
+    return temp_files, backup_files, unexpected_files
 
 
 def _publication_state_matches(
     json_path: Path,
     md_path: Path,
     pre_state: Dict[str, Any],
-) -> bool:
-    json_ok = json_path.is_file() == pre_state["json_existed"]
-    md_ok = md_path.is_file() == pre_state["md_existed"]
+) -> Tuple[bool, Dict[str, Any]]:
+    json_existence_restored = json_path.is_file() == pre_state["json_existed"]
+    md_existence_restored = md_path.is_file() == pre_state["md_existed"]
+    json_bytes_restored = True
+    md_bytes_restored = True
     if pre_state["json_existed"]:
-        json_ok = json_ok and json_path.read_bytes() == pre_state["json_bytes"]
+        json_bytes_restored = json_path.is_file() and json_path.read_bytes() == pre_state["json_bytes"]
+    else:
+        json_bytes_restored = not json_path.is_file()
     if pre_state["md_existed"]:
-        md_ok = md_ok and md_path.read_bytes() == pre_state["md_bytes"]
-    pubbak_json = json_path.with_suffix(json_path.suffix + ".pubbak")
-    pubbak_md = md_path.with_suffix(md_path.suffix + ".pubbak")
-    no_backups = not pubbak_json.exists() and not pubbak_md.exists()
-    return json_ok and md_ok and no_backups
+        md_bytes_restored = md_path.is_file() and md_path.read_bytes() == pre_state["md_bytes"]
+    else:
+        md_bytes_restored = not md_path.is_file()
+
+    directory = json_path.parent
+    current_dir_entries = _capture_directory_state(directory)
+    pre_dir_entries = pre_state.get("directory_entries", {})
+    directory_file_set_restored = sorted(current_dir_entries.keys()) == pre_state.get("directory_file_set", [])
+    directory_file_hashes_restored = all(
+        current_dir_entries.get(name, {}).get("sha256") == pre_dir_entries.get(name, {}).get("sha256")
+        for name in pre_dir_entries
+    )
+    all_entry_names = set(current_dir_entries.keys()) | set(pre_dir_entries.keys())
+    path_types_restored = all(
+        current_dir_entries.get(name, {}).get("type") == pre_dir_entries.get(name, {}).get("type")
+        for name in all_entry_names
+    )
+
+    temp_files, backup_files, unexpected_files = _detect_temp_and_unexpected(
+        directory, pre_state, json_path, md_path
+    )
+
+    final_state_restored = (
+        json_existence_restored
+        and md_existence_restored
+        and json_bytes_restored
+        and md_bytes_restored
+        and directory_file_set_restored
+        and directory_file_hashes_restored
+        and path_types_restored
+        and len(temp_files) == 0
+        and len(backup_files) == 0
+        and len(unexpected_files) == 0
+    )
+
+    detail = {
+        "final_state_restored": final_state_restored,
+        "json_existence_restored": json_existence_restored,
+        "markdown_existence_restored": md_existence_restored,
+        "json_bytes_restored": json_bytes_restored,
+        "markdown_bytes_restored": md_bytes_restored,
+        "directory_file_set_restored": directory_file_set_restored,
+        "directory_file_hashes_restored": directory_file_hashes_restored,
+        "path_types_restored": path_types_restored,
+        "temporary_files_remaining": temp_files,
+        "backup_files_remaining": backup_files,
+        "unexpected_files_remaining": unexpected_files,
+    }
+    return final_state_restored, detail
 
 
 def _cleanup_publication_artifacts(
@@ -432,7 +573,8 @@ def publish_outputs_transactionally(
     finally:
         _cleanup_publication_artifacts(json_path, md_path, tmp_json_path, tmp_md_path)
 
-    if not _publication_state_matches(json_path, md_path, pre_state) and inject_failure is None:
+    _matches, _detail = _publication_state_matches(json_path, md_path, pre_state)
+    if not _matches and inject_failure is None:
         # Successful publication should differ from pre-state when content changed
         pass
 
@@ -461,6 +603,7 @@ def _test_detail_passed(summary: Dict[str, Any], test_name: str) -> bool:
 def run_transactional_rollback_tests() -> Dict[str, Any]:
     root = repo_root()
     tests: List[Dict[str, Any]] = []
+    scenario_records: List[Dict[str, Any]] = []
 
     def _record(name: str, passed: bool, **extra: Any) -> None:
         tests.append({"test_name": name, "passed": passed, **extra})
@@ -514,7 +657,7 @@ def run_transactional_rollback_tests() -> Dict[str, Any]:
         ("rollback_after_md_backup_before_md_replace", "after_md_backup_before_md_replace"),
     ]
 
-    with tempfile.TemporaryDirectory(prefix="gd61_pub_") as temp_dir:
+    with tempfile.TemporaryDirectory(prefix="gd63_pub_") as temp_dir:
         base = Path(temp_dir)
 
         for case_name, failure_point in scenarios:
@@ -526,7 +669,8 @@ def run_transactional_rollback_tests() -> Dict[str, Any]:
                     json_path.write_text('{"existing":"json"}\n', encoding="utf-8")
                     md_path.write_text("# existing md\n", encoding="utf-8")
                 pre_state = _capture_pre_publication_state(json_path, md_path)
-                rolled_back = False
+                exception_observed = False
+                detail: Dict[str, Any] = {}
                 try:
                     publish_outputs_transactionally(
                         sample_report,
@@ -535,8 +679,30 @@ def run_transactional_rollback_tests() -> Dict[str, Any]:
                         inject_failure=failure_point,
                     )
                 except RuntimeError:
-                    rolled_back = _publication_state_matches(json_path, md_path, pre_state)
-                _record(label, rolled_back, failure_point=failure_point, both_exist=both_exist)
+                    exception_observed = True
+                    rolled_back, detail = _publication_state_matches(json_path, md_path, pre_state)
+                scenario_record = {
+                    "failure_point": failure_point,
+                    "initial_state": "both_exist" if both_exist else "neither_exist",
+                    "exception_observed": exception_observed,
+                    "final_state_restored": detail.get("final_state_restored", False),
+                    "json_existence_restored": detail.get("json_existence_restored", False),
+                    "markdown_existence_restored": detail.get("markdown_existence_restored", False),
+                    "json_bytes_restored": detail.get("json_bytes_restored", False),
+                    "markdown_bytes_restored": detail.get("markdown_bytes_restored", False),
+                    "directory_file_set_restored": detail.get("directory_file_set_restored", False),
+                    "directory_file_hashes_restored": detail.get("directory_file_hashes_restored", False),
+                    "path_types_restored": detail.get("path_types_restored", False),
+                    "temporary_files_remaining": detail.get("temporary_files_remaining", []),
+                    "backup_files_remaining": detail.get("backup_files_remaining", []),
+                    "unexpected_files_remaining": detail.get("unexpected_files_remaining", []),
+                    "passed": (
+                        exception_observed
+                        and detail.get("final_state_restored", False)
+                    ),
+                }
+                scenario_records.append(scenario_record)
+                _record(label, scenario_record["passed"], **{k: v for k, v in scenario_record.items() if k != "passed"})
 
         json_path = base / "successful_first_publication.json"
         md_path = base / "successful_first_publication.md"
@@ -581,7 +747,7 @@ def run_transactional_rollback_tests() -> Dict[str, Any]:
                 inject_failure="after_json_before_md",
             )
         except RuntimeError:
-            overwrite_rolled_back = _publication_state_matches(json_path, md_path, pre_state)
+            overwrite_rolled_back, _ = _publication_state_matches(json_path, md_path, pre_state)
         _record("overwrite_failure_restores_original_content", overwrite_rolled_back)
 
         json_path = base / "no_backup_leftover.json"
@@ -609,24 +775,168 @@ def run_transactional_rollback_tests() -> Dict[str, Any]:
                 inject_failure="before_any_replacement",
             )
         except RuntimeError:
-            siblings = list(json_path.parent.iterdir())
-            temp_files = [
-                f for f in siblings
-                if f.name.startswith("tmp") and f.suffix in (".json", ".md")
-            ]
-            temp_cleaned = len(temp_files) == 0
+            pre_state = _capture_pre_publication_state(json_path, md_path)
+            temp_files, backup_files, unexpected_files = _detect_temp_and_unexpected(
+                json_path.parent, pre_state, json_path, md_path
+            )
+            temp_cleaned = len(temp_files) == 0 and len(backup_files) == 0 and len(unexpected_files) == 0
         _record("temp_files_cleaned_after_rollback", temp_cleaned)
+
+    mutation_results = _run_rollback_verifier_mutations()
 
     passed = sum(1 for item in tests if item["passed"])
     failed = len(tests) - passed
+    all_passed = failed == 0 and all(m.get("verifier_rejected") for m in mutation_results)
     return {
         "tests": tests,
         "tests_expected": len(tests),
         "tests_executed": len(tests),
         "tests_passed": passed,
         "tests_failed": failed,
-        "all_passed": failed == 0,
+        "all_passed": all_passed,
+        "scenario_records": scenario_records,
+        "rollback_verifier_mutations": mutation_results,
     }
+
+
+def _run_rollback_verifier_mutations() -> List[Dict[str, Any]]:
+    """Seven rollback-verifier mutation tests using temporary synthetic directories."""
+    results: List[Dict[str, Any]] = []
+
+    with tempfile.TemporaryDirectory(prefix="gd63_mut_") as temp_dir:
+        base = Path(temp_dir)
+
+        # 1. Extensionless leftover temporary file causes failure
+        d = base / "mut_extless"
+        d.mkdir()
+        json_p = d / "report.json"
+        md_p = d / "report.md"
+        json_p.write_text('{"x":1}\n', encoding="utf-8")
+        md_p.write_text("# x\n", encoding="utf-8")
+        pre = _capture_pre_publication_state(json_p, md_p)
+        (d / "tmpabc123").write_text("leftover\n", encoding="utf-8")
+        matched, detail = _publication_state_matches(json_p, md_p, pre)
+        rejected = not matched and len(detail.get("temporary_files_remaining", [])) > 0
+        results.append({
+            "mutation_name": "extensionless_temp_leftover",
+            "verifier_rejected": rejected,
+            "passed": rejected,
+            "detail": detail,
+        })
+        (d / "tmpabc123").unlink(missing_ok=True)
+
+        # 2. .pubbak leftover causes failure
+        d = base / "mut_pubbak"
+        d.mkdir()
+        json_p = d / "report.json"
+        md_p = d / "report.md"
+        json_p.write_text('{"x":1}\n', encoding="utf-8")
+        md_p.write_text("# x\n", encoding="utf-8")
+        pre = _capture_pre_publication_state(json_p, md_p)
+        (d / "report.json.pubbak").write_text("backup\n", encoding="utf-8")
+        matched, detail = _publication_state_matches(json_p, md_p, pre)
+        rejected = not matched and len(detail.get("backup_files_remaining", [])) > 0
+        results.append({
+            "mutation_name": "pubbak_leftover",
+            "verifier_rejected": rejected,
+            "passed": rejected,
+            "detail": detail,
+        })
+        (d / "report.json.pubbak").unlink(missing_ok=True)
+
+        # 3. Unexpected extra file causes failure
+        d = base / "mut_unexpected"
+        d.mkdir()
+        json_p = d / "report.json"
+        md_p = d / "report.md"
+        json_p.write_text('{"x":1}\n', encoding="utf-8")
+        md_p.write_text("# x\n", encoding="utf-8")
+        pre = _capture_pre_publication_state(json_p, md_p)
+        (d / "unexpected_file.txt").write_text("extra\n", encoding="utf-8")
+        matched, detail = _publication_state_matches(json_p, md_p, pre)
+        rejected = not matched and len(detail.get("unexpected_files_remaining", [])) > 0
+        results.append({
+            "mutation_name": "unexpected_extra_file",
+            "verifier_rejected": rejected,
+            "passed": rejected,
+            "detail": detail,
+        })
+        (d / "unexpected_file.txt").unlink(missing_ok=True)
+
+        # 4. Modified original JSON causes failure
+        d = base / "mut_json_mod"
+        d.mkdir()
+        json_p = d / "report.json"
+        md_p = d / "report.md"
+        json_p.write_text('{"x":1}\n', encoding="utf-8")
+        md_p.write_text("# x\n", encoding="utf-8")
+        pre = _capture_pre_publication_state(json_p, md_p)
+        json_p.write_text('{"x":2}\n', encoding="utf-8")
+        matched, detail = _publication_state_matches(json_p, md_p, pre)
+        rejected = not matched
+        results.append({
+            "mutation_name": "modified_original_json",
+            "verifier_rejected": rejected,
+            "passed": rejected,
+            "detail": detail,
+        })
+
+        # 5. Modified original Markdown causes failure
+        d = base / "mut_md_mod"
+        d.mkdir()
+        json_p = d / "report.json"
+        md_p = d / "report.md"
+        json_p.write_text('{"x":1}\n', encoding="utf-8")
+        md_p.write_text("# x\n", encoding="utf-8")
+        pre = _capture_pre_publication_state(json_p, md_p)
+        md_p.write_text("# y\n", encoding="utf-8")
+        matched, detail = _publication_state_matches(json_p, md_p, pre)
+        rejected = not matched
+        results.append({
+            "mutation_name": "modified_original_markdown",
+            "verifier_rejected": rejected,
+            "passed": rejected,
+            "detail": detail,
+        })
+
+        # 6. Deleted original file causes failure
+        d = base / "mut_deleted"
+        d.mkdir()
+        json_p = d / "report.json"
+        md_p = d / "report.md"
+        json_p.write_text('{"x":1}\n', encoding="utf-8")
+        md_p.write_text("# x\n", encoding="utf-8")
+        pre = _capture_pre_publication_state(json_p, md_p)
+        json_p.unlink()
+        matched, detail = _publication_state_matches(json_p, md_p, pre)
+        rejected = not matched
+        results.append({
+            "mutation_name": "deleted_original_file",
+            "verifier_rejected": rejected,
+            "passed": rejected,
+            "detail": detail,
+        })
+
+        # 7. Path-type change causes failure
+        d = base / "mut_typechange"
+        d.mkdir()
+        json_p = d / "report.json"
+        md_p = d / "report.md"
+        json_p.write_text('{"x":1}\n', encoding="utf-8")
+        md_p.write_text("# x\n", encoding="utf-8")
+        pre = _capture_pre_publication_state(json_p, md_p)
+        json_p.unlink()
+        json_p.mkdir()
+        matched, detail = _publication_state_matches(json_p, md_p, pre)
+        rejected = not matched
+        results.append({
+            "mutation_name": "path_type_change",
+            "verifier_rejected": rejected,
+            "passed": rejected,
+            "detail": detail,
+        })
+
+    return results
 
 
 def _derive_executable_policy_checks(
@@ -769,6 +1079,79 @@ def run_audit() -> Dict[str, Any]:
 
     forced_exception_restoration = synthetic_summary.get("forced_exception_restoration_test", {})
     forced_exception_test_passed = forced_exception_restoration.get("passed") is True
+    forced_exception_restoration_map = forced_exception_restoration.get("restoration_map", {})
+    forced_exception_restoration_keys_match = forced_exception_restoration.get("restoration_keys_match") is True
+    forced_exception_restoration_field_count = forced_exception_restoration.get("restoration_field_count", 0)
+    forced_exception_expected_field_count = forced_exception_restoration.get("expected_restoration_field_count", 0)
+    forced_exception_exact_snapshot_equality = forced_exception_restoration.get("exact_snapshot_equality") is True
+    forced_exception_counters_derived = forced_exception_restoration.get("counters_derived") is True
+    forced_exception_all_globals_restored = forced_exception_restoration.get("all_globals_restored") is True
+    forced_exception_no_repo_file_changed = forced_exception_restoration.get("no_repository_file_changed") is True
+    forced_exception_files_added = forced_exception_restoration.get("files_added", -1)
+    forced_exception_files_removed = forced_exception_restoration.get("files_removed", -1)
+    forced_exception_files_modified = forced_exception_restoration.get("files_modified", -1)
+    forced_exception_path_type_changes = forced_exception_restoration.get("path_type_changes", -1)
+
+    rollback_scenario_records = rollback_summary.get("scenario_records", [])
+    rollback_scenarios_count = len(rollback_scenario_records)
+    rollback_all_scenarios_passed = all(sr.get("passed") for sr in rollback_scenario_records)
+    rollback_all_scenarios_final_state_restored = all(sr.get("final_state_restored") for sr in rollback_scenario_records)
+    rollback_all_scenarios_zero_temp_files = all(len(sr.get("temporary_files_remaining", [])) == 0 for sr in rollback_scenario_records)
+    rollback_all_scenarios_zero_backup_files = all(len(sr.get("backup_files_remaining", [])) == 0 for sr in rollback_scenario_records)
+    rollback_all_scenarios_zero_unexpected_files = all(len(sr.get("unexpected_files_remaining", [])) == 0 for sr in rollback_scenario_records)
+
+    _REQUIRED_SCENARIO_FIELDS = [
+        "failure_point", "initial_state", "exception_observed",
+        "final_state_restored", "json_existence_restored",
+        "markdown_existence_restored", "json_bytes_restored",
+        "markdown_bytes_restored", "directory_file_set_restored",
+        "directory_file_hashes_restored", "path_types_restored",
+        "temporary_files_remaining", "backup_files_remaining",
+        "unexpected_files_remaining", "passed",
+    ]
+    _REQUIRED_SCENARIO_KEYS = {
+        ("before_any_replacement", "neither_exist"),
+        ("before_any_replacement", "both_exist"),
+        ("after_json_before_md", "neither_exist"),
+        ("after_json_before_md", "both_exist"),
+        ("after_md_backup_before_md_replace", "neither_exist"),
+        ("after_md_backup_before_md_replace", "both_exist"),
+    }
+    _observed_scenario_keys = {
+        (sr.get("failure_point"), sr.get("initial_state"))
+        for sr in rollback_scenario_records
+    }
+    rollback_scenarios_no_missing = _observed_scenario_keys == _REQUIRED_SCENARIO_KEYS
+    rollback_scenarios_no_duplicates = len(_observed_scenario_keys) == len(rollback_scenario_records)
+    rollback_scenarios_all_fields_present = all(
+        all(field in sr for field in _REQUIRED_SCENARIO_FIELDS)
+        for sr in rollback_scenario_records
+    )
+    rollback_scenarios_all_exceptions_observed = all(
+        sr.get("exception_observed") is True for sr in rollback_scenario_records
+    )
+    rollback_scenarios_all_json_restored = all(
+        sr.get("json_existence_restored") is True and sr.get("json_bytes_restored") is True
+        for sr in rollback_scenario_records
+    )
+    rollback_scenarios_all_md_restored = all(
+        sr.get("markdown_existence_restored") is True and sr.get("markdown_bytes_restored") is True
+        for sr in rollback_scenario_records
+    )
+    rollback_scenarios_all_dir_set_restored = all(
+        sr.get("directory_file_set_restored") is True for sr in rollback_scenario_records
+    )
+    rollback_scenarios_all_hashes_restored = all(
+        sr.get("directory_file_hashes_restored") is True for sr in rollback_scenario_records
+    )
+    rollback_scenarios_all_path_types_restored = all(
+        sr.get("path_types_restored") is True for sr in rollback_scenario_records
+    )
+
+    rollback_mutations = rollback_summary.get("rollback_verifier_mutations", [])
+    rollback_mutations_count = len(rollback_mutations)
+    rollback_all_mutations_rejected = all(m.get("verifier_rejected") for m in rollback_mutations)
+    rollback_all_mutations_passed = all(m.get("passed") for m in rollback_mutations)
 
     recursive_snapshot_changed = synthetic_summary.get("recursive_snapshot_changed", -1)
     recursive_snapshot_added = synthetic_summary.get("protected_files_added", 0)
@@ -895,6 +1278,35 @@ def run_audit() -> Dict[str, Any]:
         "production_entry_controls_passed": production_entry_controls_passed,
         "forced_exception_restoration": forced_exception_restoration,
         "forced_exception_test_passed": forced_exception_test_passed,
+        "forced_exception_restoration_keys_match": forced_exception_restoration_keys_match,
+        "forced_exception_restoration_field_count": forced_exception_restoration_field_count,
+        "forced_exception_expected_field_count": forced_exception_expected_field_count,
+        "forced_exception_exact_snapshot_equality": forced_exception_exact_snapshot_equality,
+        "forced_exception_counters_derived": forced_exception_counters_derived,
+        "forced_exception_all_globals_restored": forced_exception_all_globals_restored,
+        "forced_exception_no_repo_file_changed": forced_exception_no_repo_file_changed,
+        "forced_exception_files_added": forced_exception_files_added,
+        "forced_exception_files_removed": forced_exception_files_removed,
+        "forced_exception_files_modified": forced_exception_files_modified,
+        "forced_exception_path_type_changes": forced_exception_path_type_changes,
+        "rollback_scenarios_count": rollback_scenarios_count,
+        "rollback_all_scenarios_passed": rollback_all_scenarios_passed,
+        "rollback_all_scenarios_final_state_restored": rollback_all_scenarios_final_state_restored,
+        "rollback_all_scenarios_zero_temp_files": rollback_all_scenarios_zero_temp_files,
+        "rollback_all_scenarios_zero_backup_files": rollback_all_scenarios_zero_backup_files,
+        "rollback_all_scenarios_zero_unexpected_files": rollback_all_scenarios_zero_unexpected_files,
+        "rollback_scenarios_no_missing": rollback_scenarios_no_missing,
+        "rollback_scenarios_no_duplicates": rollback_scenarios_no_duplicates,
+        "rollback_scenarios_all_fields_present": rollback_scenarios_all_fields_present,
+        "rollback_scenarios_all_exceptions_observed": rollback_scenarios_all_exceptions_observed,
+        "rollback_scenarios_all_json_restored": rollback_scenarios_all_json_restored,
+        "rollback_scenarios_all_md_restored": rollback_scenarios_all_md_restored,
+        "rollback_scenarios_all_dir_set_restored": rollback_scenarios_all_dir_set_restored,
+        "rollback_scenarios_all_hashes_restored": rollback_scenarios_all_hashes_restored,
+        "rollback_scenarios_all_path_types_restored": rollback_scenarios_all_path_types_restored,
+        "rollback_mutations_count": rollback_mutations_count,
+        "rollback_all_mutations_rejected": rollback_all_mutations_rejected,
+        "rollback_all_mutations_passed": rollback_all_mutations_passed,
         "recursive_snapshot_changed": recursive_snapshot_changed,
         "recursive_snapshot_added": recursive_snapshot_added,
         "recursive_snapshot_removed": recursive_snapshot_removed,
@@ -961,6 +1373,34 @@ def run_audit() -> Dict[str, Any]:
         and production_entry_controls_passed
         and all_production_entry_points_present
         and forced_exception_test_passed
+        and forced_exception_restoration_keys_match
+        and forced_exception_restoration_field_count == forced_exception_expected_field_count
+        and forced_exception_exact_snapshot_equality
+        and forced_exception_counters_derived
+        and forced_exception_all_globals_restored
+        and forced_exception_no_repo_file_changed
+        and forced_exception_files_added == 0
+        and forced_exception_files_removed == 0
+        and forced_exception_files_modified == 0
+        and forced_exception_path_type_changes == 0
+        and rollback_scenarios_count == 6
+        and rollback_all_scenarios_passed
+        and rollback_all_scenarios_final_state_restored
+        and rollback_all_scenarios_zero_temp_files
+        and rollback_all_scenarios_zero_backup_files
+        and rollback_all_scenarios_zero_unexpected_files
+        and rollback_scenarios_no_missing
+        and rollback_scenarios_no_duplicates
+        and rollback_scenarios_all_fields_present
+        and rollback_scenarios_all_exceptions_observed
+        and rollback_scenarios_all_json_restored
+        and rollback_scenarios_all_md_restored
+        and rollback_scenarios_all_dir_set_restored
+        and rollback_scenarios_all_hashes_restored
+        and rollback_scenarios_all_path_types_restored
+        and rollback_mutations_count == 7
+        and rollback_all_mutations_rejected
+        and rollback_all_mutations_passed
         and executable_checks["missing_dual_build_context_rejected"]
         and executable_checks["dual_build_evidence_required"]
         and executable_checks["single_build_final_approval_prohibited"]

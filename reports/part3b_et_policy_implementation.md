@@ -1,19 +1,19 @@
 # Part 3B ET Reconciliation Policy Implementation Report
 
-**Stage:** Part 3B.2R.1-G.D6.2
-**Starting commit:** `7b8aba3ac836de312d0d95596c4bf853238ae2ba`
+**Stage:** Part 3B.2R.1-G.D6.3
+**Starting commit:** `27d103b6fa14c6810d0e33a1141d4739e5f7e34b`
 
 ## Policy Specification
 
 - **Frozen policy path:** `reports/part3b_et_reconciliation_policy.json`
 - **Frozen policy SHA-256:** `6bc043b7c890256fd369eb8747f54dd9f2f1944b03b0dd1c70b5f6d85b8719f5`
 - **Frozen policy contract verified:** True
-- **Implementation module SHA-256:** `df930ec2e69242f4fbc0b7968835a950aefe11dc3da2900125015f1e917c7cce`
+- **Implementation module SHA-256:** `9e572121f4f1cad54f0811a1ff7cd96a921cb696f19eb4604eed0a4a3ad1c3ce`
 
 ## Production Validator
 
 - **Production validator SHA before:** `d269bb2eb9b6b4959c9bccb287314249b08da52ad895fa6285ec2af9b6abce49`
-- **Production validator SHA after:** `1340960df1440ec25a7e98e451eff8816032abaa79a89ea3fdd9796df2788d8e`
+- **Production validator SHA after:** `1fb18f08430c4401a7344c90d5e6be54848994935879c82c7e636951681d567e`
 - **Production validator code changed:** True
 - **Production authorization remains false:** True
 
@@ -120,7 +120,39 @@
 - **All globals restored:** True
 - **Tracker inactive after exception:** True
 - **No repository file changed:** True
+- **Restoration keys match:** True
+- **Restoration field count:** 20
+- **Expected restoration field count:** 20
+- **Files added:** 0
+- **Files removed:** 0
+- **Files modified:** 0
+- **Path type changes:** 0
+- **Exact snapshot equality:** True
+- **Counters derived:** True
 - **Forced exception test passed:** True
+
+### Forced-Exception Restoration Map
+
+- **build_core_bundle_restored:** True
+- **build_prediction_rows_restored:** True
+- **builtins_open_restored:** True
+- **execute_postbuild_integration_restored:** True
+- **fit_event_candidates_restored:** True
+- **io_open_restored:** True
+- **os_open_restored:** True
+- **os_rename_restored:** True
+- **os_replace_restored:** True
+- **path_open_restored:** True
+- **path_rename_restored:** True
+- **path_replace_restored:** True
+- **path_touch_restored:** True
+- **path_write_bytes_restored:** True
+- **path_write_text_restored:** True
+- **shutil_copy2_restored:** True
+- **shutil_copy_restored:** True
+- **shutil_copyfile_restored:** True
+- **shutil_move_restored:** True
+- **sys_profile_restored:** True
 
 ## Recursive Snapshot Verification
 
@@ -159,3 +191,23 @@
 - **Tests passed:** 11
 - **Tests failed:** 0
 - **All passed:** True
+
+### Per-Scenario Rollback Evidence
+
+- **before_any_replacement / neither_exist:** passed=True, final_state_restored=True, path_types_restored=True, temp_files=[], backup_files=[], unexpected_files=[]
+- **before_any_replacement / both_exist:** passed=True, final_state_restored=True, path_types_restored=True, temp_files=[], backup_files=[], unexpected_files=[]
+- **after_json_before_md / neither_exist:** passed=True, final_state_restored=True, path_types_restored=True, temp_files=[], backup_files=[], unexpected_files=[]
+- **after_json_before_md / both_exist:** passed=True, final_state_restored=True, path_types_restored=True, temp_files=[], backup_files=[], unexpected_files=[]
+- **after_md_backup_before_md_replace / neither_exist:** passed=True, final_state_restored=True, path_types_restored=True, temp_files=[], backup_files=[], unexpected_files=[]
+- **after_md_backup_before_md_replace / both_exist:** passed=True, final_state_restored=True, path_types_restored=True, temp_files=[], backup_files=[], unexpected_files=[]
+
+### Rollback Verifier Mutation Tests
+
+- **extensionless_temp_leftover:** verifier_rejected=True, passed=True
+- **pubbak_leftover:** verifier_rejected=True, passed=True
+- **unexpected_extra_file:** verifier_rejected=True, passed=True
+- **modified_original_json:** verifier_rejected=True, passed=True
+- **modified_original_markdown:** verifier_rejected=True, passed=True
+- **deleted_original_file:** verifier_rejected=True, passed=True
+- **path_type_change:** verifier_rejected=True, passed=True
+
