@@ -1,7 +1,7 @@
 # Part 3B ExtraTrees Reconciliation Policy Specification
 
-**Stage:** Part 3B.2R.1-G.D5.1
-**Starting commit:** `1d82250e8f2ce4467d00f052dad9ea3b31339aa4`
+**Stage:** Part 3B.2R.1-G.D5.2
+**Starting commit:** `3b62c0a66331dc26809641fbd4e6466f499c31f0`
 **Policy ID:** et_rank_metric_reconciliation
 **Policy version:** 1.0.1
 
@@ -199,7 +199,8 @@ A mismatch row is eligible only when every section below passes.
 
 - **Model fits executed:** 0
 - **Prediction calls executed:** 0
-- **Production generator executions:** 0
+- **Specification generator executions:** 1
+- **Production model/evaluation builds executed:** 0
 - **Repository production artifacts published:** 0
 - **Production authorization:** False
 - **Policy enforced:** False

@@ -1,6 +1,6 @@
 {
-  "stage": "Part 3B.2R.1-G.D5.1",
-  "starting_commit": "1d82250e8f2ce4467d00f052dad9ea3b31339aa4",
+  "stage": "Part 3B.2R.1-G.D5.2",
+  "starting_commit": "3b62c0a66331dc26809641fbd4e6466f499c31f0",
   "policy_id": "et_rank_metric_reconciliation",
   "policy_version": "1.0.1",
   "policy_status": "specified_not_enforced",
@@ -3096,7 +3096,8 @@
   "production_activity_counters": {
     "model_fits_executed": 0,
     "prediction_calls_executed": 0,
-    "production_generator_executions": 0,
+    "specification_generator_executions": 1,
+    "production_model_evaluation_builds_executed": 0,
     "repository_production_artifacts_published": 0
   },
   "authorization_flags": {

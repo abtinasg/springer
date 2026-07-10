@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Part 3B.2R.1-G.D5.1: Close fail-closed gaps in frozen ET reconciliation policy."""
+"""Part 3B.2R.1-G.D5.2: Make G.D5 self-tests fully synthetic and measure generator activity."""
 from __future__ import annotations
 
 import argparse
@@ -15,8 +15,8 @@ from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
 import numpy as np
 import pandas as pd
 
-STARTING_COMMIT = "1d82250e8f2ce4467d00f052dad9ea3b31339aa4"
-STAGE = "Part 3B.2R.1-G.D5.1"
+STARTING_COMMIT = "3b62c0a66331dc26809641fbd4e6466f499c31f0"
+STAGE = "Part 3B.2R.1-G.D5.2"
 POLICY_ID = "et_rank_metric_reconciliation"
 POLICY_VERSION = "1.0.1"
 POLICY_STATUS = "specified_not_enforced"
@@ -137,12 +137,13 @@ class NumpyEncoder(json.JSONEncoder):
 
 
 class ExecutionActivityTracker:
-    """Runtime profiler that counts ML fit/predict activity during self-tests."""
+    """Runtime profiler that counts ML fit/predict and generator activity."""
 
     def __init__(self) -> None:
         self.model_fits_executed = 0
         self.prediction_calls_executed = 0
-        self.production_generator_executions = 0
+        self.specification_generator_executions = 0
+        self.production_model_evaluation_builds_executed = 0
         self._original_trace: Optional[Callable[..., Any]] = None
         self._active = False
 
@@ -174,7 +175,7 @@ class ExecutionActivityTracker:
             self._active = False
 
     def record_production_generator_execution(self) -> None:
-        self.production_generator_executions += 1
+        self.specification_generator_executions += 1
 
 
 _ACTIVE_ACTIVITY_TRACKER: Optional[ExecutionActivityTracker] = None
@@ -207,18 +208,24 @@ def count_changed_publication_artifacts(
     return changed
 
 
-def verify_evidence_file_hashes(root: Path) -> Tuple[str, str]:
+def verify_evidence_file_hashes(
+    root: Path,
+    *,
+    expected_reconciliation_json_sha256: str = RECONCILIATION_JSON_SHA256,
+    expected_matrix_sha256: str = MATRIX_SHA256,
+) -> Tuple[str, str]:
     json_path = root / RECONCILIATION_JSON_PATH
     matrix_path = root / MATRIX_PATH
     json_sha = sha256_file(json_path)
     matrix_sha = sha256_file(matrix_path)
-    if json_sha != RECONCILIATION_JSON_SHA256:
+    if json_sha != expected_reconciliation_json_sha256:
         raise RuntimeError(
-            f"Reconciliation JSON SHA-256 {json_sha} != required {RECONCILIATION_JSON_SHA256}"
+            "Reconciliation JSON SHA-256 "
+            f"{json_sha} != required {expected_reconciliation_json_sha256}"
         )
-    if matrix_sha != MATRIX_SHA256:
+    if matrix_sha != expected_matrix_sha256:
         raise RuntimeError(
-            f"Mismatch matrix SHA-256 {matrix_sha} != required {MATRIX_SHA256}"
+            f"Mismatch matrix SHA-256 {matrix_sha} != required {expected_matrix_sha256}"
         )
     return json_sha, matrix_sha
 
@@ -1224,7 +1231,8 @@ def build_policy_specification(
         "production_activity_counters": {
             "model_fits_executed": 0,
             "prediction_calls_executed": 0,
-            "production_generator_executions": 0,
+            "specification_generator_executions": 0,
+            "production_model_evaluation_builds_executed": 0,
             "repository_production_artifacts_published": 0,
         },
         "authorization_flags": {
@@ -1539,7 +1547,10 @@ def render_markdown(spec: Dict[str, Any]) -> str:
             "",
             f"- **Model fits executed:** {spec['production_activity_counters']['model_fits_executed']}",
             f"- **Prediction calls executed:** {spec['production_activity_counters']['prediction_calls_executed']}",
-            f"- **Production generator executions:** {spec['production_activity_counters']['production_generator_executions']}",
+            "- **Specification generator executions:** "
+            f"{spec['production_activity_counters']['specification_generator_executions']}",
+            "- **Production model/evaluation builds executed:** "
+            f"{spec['production_activity_counters']['production_model_evaluation_builds_executed']}",
             "- **Repository production artifacts published:** "
             f"{spec['production_activity_counters']['repository_production_artifacts_published']}",
             f"- **Production authorization:** {spec['authorization_flags']['production_authorization']}",
@@ -1676,38 +1687,47 @@ def _run_transactional_readiness_self_tests() -> Dict[str, Any]:
 def generate_policy(root: Optional[Path] = None) -> Dict[str, Any]:
     root = root or repo_root()
     tracker = ExecutionActivityTracker()
-    with tracker:
-        starting_commit = git_starting_commit()
-        report, matrix_df, event_map = load_evidence(root)
-        spec = build_policy_specification(root, starting_commit, report, matrix_df, event_map)
-        readiness = _run_transactional_readiness_self_tests()
-        if not readiness["all_passed"]:
-            failed = [item["test_name"] for item in readiness["tests"] if not item["passed"]]
-            raise RuntimeError(f"Transactional readiness self-tests failed: {failed}")
-        spec["transactional_publication_ready"] = True
-        md_text = render_markdown(spec)
-        integrity = validate_specification(spec, matrix_df, md_text)
-        spec["specification_integrity_checks"] = integrity
-        if not integrity["all_specification_checks_passed"]:
-            failed = [key for key, value in integrity.items() if not value]
-            raise RuntimeError(f"Pre-publication validation failed: {failed}")
+    global _ACTIVE_ACTIVITY_TRACKER
+    _ACTIVE_ACTIVITY_TRACKER = tracker
+    try:
+        with tracker:
+            tracker.record_production_generator_execution()
+            starting_commit = git_starting_commit()
+            report, matrix_df, event_map = load_evidence(root)
+            spec = build_policy_specification(root, starting_commit, report, matrix_df, event_map)
+            readiness = _run_transactional_readiness_self_tests()
+            if not readiness["all_passed"]:
+                failed = [item["test_name"] for item in readiness["tests"] if not item["passed"]]
+                raise RuntimeError(f"Transactional readiness self-tests failed: {failed}")
+            spec["transactional_publication_ready"] = True
+            md_text = render_markdown(spec)
+            integrity = validate_specification(spec, matrix_df, md_text)
+            spec["specification_integrity_checks"] = integrity
+            if not integrity["all_specification_checks_passed"]:
+                failed = [key for key, value in integrity.items() if not value]
+                raise RuntimeError(f"Pre-publication validation failed: {failed}")
 
-        spec["production_activity_counters"] = {
-            "model_fits_executed": tracker.model_fits_executed,
-            "prediction_calls_executed": tracker.prediction_calls_executed,
-            "production_generator_executions": tracker.production_generator_executions,
-            "repository_production_artifacts_published": 0,
-        }
-        md_text = render_markdown(spec)
-        integrity = validate_specification(spec, matrix_df, md_text)
-        spec["specification_integrity_checks"] = integrity
-        if not integrity["all_specification_checks_passed"]:
-            failed = [key for key, value in integrity.items() if not value]
-            raise RuntimeError(f"Pre-publication validation failed after counters: {failed}")
+            spec["production_activity_counters"] = {
+                "model_fits_executed": tracker.model_fits_executed,
+                "prediction_calls_executed": tracker.prediction_calls_executed,
+                "specification_generator_executions": tracker.specification_generator_executions,
+                "production_model_evaluation_builds_executed": (
+                    tracker.production_model_evaluation_builds_executed
+                ),
+                "repository_production_artifacts_published": 0,
+            }
+            md_text = render_markdown(spec)
+            integrity = validate_specification(spec, matrix_df, md_text)
+            spec["specification_integrity_checks"] = integrity
+            if not integrity["all_specification_checks_passed"]:
+                failed = [key for key, value in integrity.items() if not value]
+                raise RuntimeError(f"Pre-publication validation failed after counters: {failed}")
 
-        json_path = root / JSON_OUTPUT_PATH
-        md_path = root / MD_OUTPUT_PATH
-        publication = publish_outputs_transactionally(spec, json_path, md_path)
+            json_path = root / JSON_OUTPUT_PATH
+            md_path = root / MD_OUTPUT_PATH
+            publication = publish_outputs_transactionally(spec, json_path, md_path)
+    finally:
+        _ACTIVE_ACTIVITY_TRACKER = None
     return {
         **spec,
         "publication_result": publication,
@@ -1950,13 +1970,25 @@ def _self_test_et_build_test_byte_difference_rejected() -> bool:
 def _self_test_altered_reconciliation_json_sha_rejected() -> bool:
     with tempfile.TemporaryDirectory() as tmp:
         tmp_dir = Path(tmp)
-        (tmp_dir / RECONCILIATION_JSON_PATH).parent.mkdir(parents=True, exist_ok=True)
-        (tmp_dir / MATRIX_PATH).parent.mkdir(parents=True, exist_ok=True)
-        (tmp_dir / RECONCILIATION_JSON_PATH).write_bytes(b"{}\n")
-        source_matrix = repo_root() / MATRIX_PATH
-        (tmp_dir / MATRIX_PATH).write_bytes(source_matrix.read_bytes())
+        json_path = tmp_dir / RECONCILIATION_JSON_PATH
+        matrix_path = tmp_dir / MATRIX_PATH
+        json_path.parent.mkdir(parents=True, exist_ok=True)
+        matrix_path.parent.mkdir(parents=True, exist_ok=True)
+        baseline_json = b'{"synthetic_reconciliation": true}\n'
+        baseline_matrix = b"mismatch_status,experiment\nsynthetic,true\n"
+        json_path.write_bytes(baseline_json)
+        matrix_path.write_bytes(baseline_matrix)
+        expected_json_sha = sha256_file(json_path)
+        expected_matrix_sha = sha256_file(matrix_path)
+        mutated = bytearray(baseline_json)
+        mutated[1] ^= 0x01
+        json_path.write_bytes(bytes(mutated))
         try:
-            verify_evidence_file_hashes(tmp_dir)
+            verify_evidence_file_hashes(
+                tmp_dir,
+                expected_reconciliation_json_sha256=expected_json_sha,
+                expected_matrix_sha256=expected_matrix_sha,
+            )
             return False
         except RuntimeError as exc:
             return "Reconciliation JSON SHA-256" in str(exc)
@@ -2208,7 +2240,8 @@ def _synthetic_minimal_publish_spec() -> Dict[str, Any]:
         "production_activity_counters": {
             "model_fits_executed": 0,
             "prediction_calls_executed": 0,
-            "production_generator_executions": 0,
+            "specification_generator_executions": 0,
+            "production_model_evaluation_builds_executed": 0,
             "repository_production_artifacts_published": 0,
         },
         "authorization_flags": {
@@ -2246,6 +2279,27 @@ def _self_test_markdown_json_disagreement_rejected() -> bool:
         return json_path.read_bytes() == before_json and md_path.read_bytes() == before_md
 
 
+def _publication_related_leftovers(directory: Path) -> List[Path]:
+    leftovers: List[Path] = []
+    for path in directory.iterdir():
+        name = path.name
+        if name.endswith(".pubbak"):
+            leftovers.append(path)
+            continue
+        if name.startswith("."):
+            leftovers.append(path)
+            continue
+        if path.is_file() and path.suffix in {".json", ".md"} and name not in {
+            "policy.json",
+            "policy.md",
+        }:
+            leftovers.append(path)
+            continue
+        if path.is_file() and "tmp" in name.lower():
+            leftovers.append(path)
+    return leftovers
+
+
 def _self_test_partial_publication_failure_rolls_back() -> bool:
     with tempfile.TemporaryDirectory() as tmp:
         tmp_dir = Path(tmp)
@@ -2255,6 +2309,7 @@ def _self_test_partial_publication_failure_rolls_back() -> bool:
         md_path.write_text("# existing\n", encoding="utf-8")
         before_json = json_path.read_bytes()
         before_md = md_path.read_bytes()
+        before_files = {path.name for path in tmp_dir.iterdir()}
         spec = _synthetic_minimal_publish_spec()
         original_replace = Path.replace
 
@@ -2272,7 +2327,22 @@ def _self_test_partial_publication_failure_rolls_back() -> bool:
                 pass
         finally:
             Path.replace = original_replace  # type: ignore[method-assign]
-        return json_path.read_bytes() == before_json and md_path.read_bytes() == before_md
+
+        if json_path.read_bytes() != before_json:
+            return False
+        if md_path.read_bytes() != before_md:
+            return False
+        if _publication_related_leftovers(tmp_dir):
+            return False
+        after_files = {path.name for path in tmp_dir.iterdir()}
+        if after_files != before_files:
+            return False
+        for path in tmp_dir.iterdir():
+            if path.name.endswith(".pubbak"):
+                return False
+            if path.name.startswith("tmp") or "tmp" in path.name.lower():
+                return False
+        return True
 
 
 def run_self_tests() -> Dict[str, Any]:
@@ -2301,7 +2371,7 @@ def run_self_tests() -> Dict[str, Any]:
         ("validation_mismatch_rejected", _self_test_validation_mismatch_rejected),
         ("non_et_derived_row_rejected", _self_test_non_et_derived_row_rejected),
         ("project_seed_independent_equivalent_row_accepted", _self_test_project_seed_independent_equivalent_row_accepted),
-        ("altered_reconciliation_json_sha_rejected", _self_test_altered_reconciliation_json_sha_rejected),
+        ("fully_synthetic_reconciliation_json_sha_mutation_rejected", _self_test_altered_reconciliation_json_sha_rejected),
         ("markdown_json_disagreement_rejected", _self_test_markdown_json_disagreement_rejected),
         ("partial_publication_failure_rolls_back", _self_test_partial_publication_failure_rolls_back),
         ("temporary_and_backup_cleanup_verified", _self_test_temporary_and_backup_cleanup_verified),
@@ -2329,7 +2399,10 @@ def run_self_tests() -> Dict[str, Any]:
         "total": len(tests),
         "model_fits_executed": tracker.model_fits_executed,
         "prediction_calls_executed": tracker.prediction_calls_executed,
-        "production_generator_executions": tracker.production_generator_executions,
+        "specification_generator_executions": tracker.specification_generator_executions,
+        "production_model_evaluation_builds_executed": (
+            tracker.production_model_evaluation_builds_executed
+        ),
         "repository_production_artifacts_published": count_changed_publication_artifacts(
             before_snapshot,
             after_snapshot,
@@ -2362,7 +2435,12 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                     ),
                     "model_fits_executed": summary["model_fits_executed"],
                     "prediction_calls_executed": summary["prediction_calls_executed"],
-                    "production_generator_executions": summary["production_generator_executions"],
+                    "specification_generator_executions": summary[
+                        "specification_generator_executions"
+                    ],
+                    "production_model_evaluation_builds_executed": summary[
+                        "production_model_evaluation_builds_executed"
+                    ],
                     "repository_production_artifacts_published": summary[
                         "repository_production_artifacts_published"
                     ],
