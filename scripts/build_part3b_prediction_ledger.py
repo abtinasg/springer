@@ -14,6 +14,7 @@ d16e28488aa0936014f020c05466181eff219af6
 from __future__ import annotations
 
 import argparse
+import builtins
 import copy
 import csv
 import gzip
@@ -194,11 +195,13 @@ def validate_dual_build_et_rank_metric_reconciliation(
     classification = policy.classify_dual_build_mismatches(dual_build_context, policy_spec)
     return {
         **classification,
+        "accepted": False,
+        "final_approval_prohibited": True,
+        "policy_enforced": False,
         "production_run_executed": False,
         "policy_executed_on_production_artifacts": False,
         "part3b_complete": False,
         "part3c_authorized": False,
-        "policy_enforced": False,
     }
 
 
@@ -11990,20 +11993,219 @@ def _gd6_count_changed_artifacts(
     return changed
 
 
+def _gd6_count_changed_artifacts(
+    before: Dict[str, Optional[str]],
+    after: Dict[str, Optional[str]],
+) -> int:
+    changed = 0
+    for rel in GD6_PROTECTED_ARTIFACT_PATHS:
+        if before.get(rel) != after.get(rel):
+            changed += 1
+    return changed
+
+
+_GD6_RUNTIME_TRACKED_ML_METHODS = frozenset(
+    {"fit", "fit_transform", "predict", "predict_proba", "decision_function"}
+)
+_GD6_RUNTIME_ML_MODULE_PREFIXES = ("sklearn.",)
+_GD6_RUNTIME_REPOSITORY_WRITE_PATHS = (
+    list(GD6_PROTECTED_ARTIFACT_PATHS)
+    + list(CANONICAL_OUTPUT_PATHS)
+    + [
+        "reports/part3b_et_policy_implementation.json",
+        "reports/part3b_et_policy_implementation.md",
+        "results/part3b_prediction_ledger",
+    ]
+)
+
+
+class _Gd6RuntimeActivityTracker:
+    """Runtime profiler for G.D6.1 self-test activity measurement."""
+
+    def __init__(self, root: Path) -> None:
+        self.root = root.resolve()
+        self.active = False
+        self.covered_all_tests = False
+        self.counters_derived = False
+        self.production_builder_guard_active = False
+        self.repository_write_guard_active = False
+        self.model_fits_executed = 0
+        self.prediction_calls_executed = 0
+        self.production_builder_entries = 0
+        self.production_model_evaluation_builds_executed = 0
+        self.production_artifact_writes = 0
+        self.canonical_file_writes = 0
+        self.protected_artifacts_changed = 0
+        self._before_snapshot: Dict[str, Optional[str]] = {}
+        self._after_snapshot: Dict[str, Optional[str]] = {}
+        self._original_profile: Any = None
+        self._original_open: Any = None
+        self._original_build_core_bundle: Any = None
+        self._original_execute_postbuild_integration: Any = None
+        self._original_fit_event_candidates: Any = None
+        self._allowed_temp_dirs: List[Path] = []
+        self._tests_started = False
+        self._tests_finished = False
+
+    def _is_under_allowed_temp(self, path: Path) -> bool:
+        resolved = path.resolve()
+        for temp_dir in self._allowed_temp_dirs:
+            try:
+                resolved.relative_to(temp_dir.resolve())
+                return True
+            except ValueError:
+                continue
+        return False
+
+    def _repository_relative(self, path: Path) -> Optional[str]:
+        try:
+            return str(path.resolve().relative_to(self.root))
+        except ValueError:
+            return None
+
+    def _is_protected_repository_write(self, path: Path) -> bool:
+        if self._is_under_allowed_temp(path):
+            return False
+        rel = self._repository_relative(path)
+        if rel is None:
+            return False
+        for protected in _GD6_RUNTIME_REPOSITORY_WRITE_PATHS:
+            if rel == protected or rel.startswith(protected.rstrip("/") + "/"):
+                return True
+        return False
+
+    def _profile_hook(self, frame: Any, event: str, arg: Any) -> None:
+        if event != "call":
+            return
+        code = frame.f_code
+        method = code.co_name
+        if method not in _GD6_RUNTIME_TRACKED_ML_METHODS:
+            return
+        module_name = frame.f_globals.get("__name__", "")
+        if not any(module_name.startswith(prefix) for prefix in _GD6_RUNTIME_ML_MODULE_PREFIXES):
+            return
+        if method in ("fit", "fit_transform"):
+            self.model_fits_executed += 1
+        else:
+            self.prediction_calls_executed += 1
+
+    def _guarded_open(self, file: Any, mode: str = "r", *args: Any, **kwargs: Any) -> Any:
+        path = Path(file)
+        if any(flag in mode for flag in ("w", "a", "x", "+")):
+            if self._is_protected_repository_write(path):
+                rel = self._repository_relative(path) or str(path)
+                if rel.startswith("results/part1_full_reproduction"):
+                    self.canonical_file_writes += 1
+                else:
+                    self.production_artifact_writes += 1
+                raise PermissionError(
+                    f"repository write blocked during G.D6 self-test: {rel}"
+                )
+        return self._original_open(file, mode, *args, **kwargs)
+
+    def _guarded_build_core_bundle(self, *args: Any, **kwargs: Any) -> Any:
+        self.production_builder_entries += 1
+        self.production_model_evaluation_builds_executed += 1
+        raise AssertionError("build_core_bundle entered during G.D6 self-test")
+
+    def _guarded_execute_postbuild_integration(self, *args: Any, **kwargs: Any) -> Any:
+        self.production_builder_entries += 1
+        self.production_model_evaluation_builds_executed += 1
+        raise AssertionError("execute_postbuild_integration entered during G.D6 self-test")
+
+    def _guarded_fit_event_candidates(self, *args: Any, **kwargs: Any) -> Any:
+        self.production_builder_entries += 1
+        self.production_model_evaluation_builds_executed += 1
+        raise AssertionError("fit_event_candidates entered during G.D6 self-test")
+
+    def _take_snapshot(self) -> Dict[str, Optional[str]]:
+        return _gd6_protected_artifact_snapshot(self.root)
+
+    def start(self, *, allowed_temp_dirs: Optional[Sequence[Path]] = None) -> None:
+        if self.active:
+            raise RuntimeError("runtime activity tracker already active")
+        self._allowed_temp_dirs = [Path(p).resolve() for p in (allowed_temp_dirs or [])]
+        self._before_snapshot = self._take_snapshot()
+        self._original_profile = sys.getprofile()
+        self._original_open = builtins.open
+        self._original_build_core_bundle = globals().get("build_core_bundle")
+        self._original_execute_postbuild_integration = globals().get("execute_postbuild_integration")
+        self._original_fit_event_candidates = globals().get("fit_event_candidates")
+        builtins.open = self._guarded_open
+        if callable(self._original_build_core_bundle):
+            globals()["build_core_bundle"] = self._guarded_build_core_bundle
+        if callable(self._original_execute_postbuild_integration):
+            globals()["execute_postbuild_integration"] = self._guarded_execute_postbuild_integration
+        if callable(self._original_fit_event_candidates):
+            globals()["fit_event_candidates"] = self._guarded_fit_event_candidates
+        sys.setprofile(self._profile_hook)
+        self.active = True
+        self.production_builder_guard_active = True
+        self.repository_write_guard_active = True
+        self._tests_started = True
+
+    def stop(self) -> None:
+        if not self.active:
+            raise RuntimeError("runtime activity tracker not active")
+        sys.setprofile(self._original_profile)
+        builtins.open = self._original_open
+        if self._original_build_core_bundle is not None:
+            globals()["build_core_bundle"] = self._original_build_core_bundle
+        if self._original_execute_postbuild_integration is not None:
+            globals()["execute_postbuild_integration"] = self._original_execute_postbuild_integration
+        if self._original_fit_event_candidates is not None:
+            globals()["fit_event_candidates"] = self._original_fit_event_candidates
+        self._after_snapshot = self._take_snapshot()
+        self.protected_artifacts_changed = _gd6_count_changed_artifacts(
+            self._before_snapshot, self._after_snapshot
+        )
+        self.counters_derived = True
+        self.active = False
+        self._tests_finished = True
+        self.covered_all_tests = self._tests_started and self._tests_finished
+
+    def as_summary(self) -> Dict[str, Any]:
+        return {
+            "runtime_activity_tracker_active": self._tests_started,
+            "runtime_activity_tracker_covered_all_tests": self.covered_all_tests,
+            "runtime_activity_counters_derived": self.counters_derived,
+            "production_builder_guard_active": self.production_builder_guard_active,
+            "repository_write_guard_active": self.repository_write_guard_active,
+            "model_fits_executed": self.model_fits_executed,
+            "prediction_calls_executed": self.prediction_calls_executed,
+            "production_model_evaluation_builds_executed": self.production_model_evaluation_builds_executed,
+            "production_builder_entries": self.production_builder_entries,
+            "production_artifact_writes": self.production_artifact_writes,
+            "canonical_file_writes": self.canonical_file_writes,
+            "protected_artifacts_changed": self.protected_artifacts_changed,
+        }
+
+    def assert_zero_activity(self) -> None:
+        counters = [
+            self.model_fits_executed,
+            self.prediction_calls_executed,
+            self.production_model_evaluation_builds_executed,
+            self.production_builder_entries,
+            self.production_artifact_writes,
+            self.canonical_file_writes,
+            self.protected_artifacts_changed,
+        ]
+        if any(value != 0 for value in counters):
+            raise RuntimeError(
+                "G.D6 self-test runtime activity counters must remain zero: "
+                + json.dumps(self.as_summary())
+            )
+
+
 def run_et_reconciliation_policy_self_tests() -> Dict[str, Any]:
-    """Synthetic self-tests for frozen ET reconciliation policy (G.D6)."""
+    """Synthetic self-tests for frozen ET reconciliation policy (G.D6.1)."""
     policy = import_et_reconciliation_policy()
     root = repo_root()
-    before_snapshot = _gd6_protected_artifact_snapshot(root)
+    tracker = _Gd6RuntimeActivityTracker(root)
+    allowed_temp_dirs: List[Path] = []
+    tracker.start(allowed_temp_dirs=allowed_temp_dirs)
 
-    model_fits_executed = 0
-    prediction_calls_executed = 0
-    production_model_evaluation_builds_executed = 0
-    production_artifact_writes = 0
-    canonical_file_writes = 0
-    production_builder_entered = False
-
-  # Synthetic evidence helpers (in-memory only)
+    # Synthetic evidence helpers (in-memory only)
     def _synthetic_global_ctx(**overrides: Any) -> Dict[str, Any]:
         base = {
             "strict_mismatch_count_build1": 9,
@@ -12095,6 +12297,38 @@ def run_et_reconciliation_policy_self_tests() -> Dict[str, Any]:
         }
         base.update(overrides)
         return base
+
+    def _synthetic_reconciliation_json(**overrides: Any) -> Dict[str, Any]:
+        base = _synthetic_global_ctx()
+        base["audit_integrity_checks"] = base.get("audit_integrity_checks", {})
+        base.update(overrides)
+        return base
+
+    def _synthetic_dual_build_context(
+        rows: Sequence[Dict[str, Any]],
+        *,
+        reconciliation_overrides: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
+        matrix_rows: List[Dict[str, Any]] = []
+        event_evidence_by_id: Dict[str, Any] = {}
+        for row_spec in rows:
+            row_overrides = dict(row_spec)
+            event_overrides = row_overrides.pop("event_evidence_overrides", {})
+            row = _synthetic_row(**row_overrides)
+            matrix_rows.append(row)
+            event_id = policy.event_id_from_row(row)
+            event_evidence_by_id[event_id] = _synthetic_event_evidence(**event_overrides)
+        reconciliation_json = _synthetic_reconciliation_json(
+            **(reconciliation_overrides or {})
+        )
+        return {
+            "dual_build_evidence_complete": True,
+            "build1_present": True,
+            "build2_present": True,
+            "reconciliation_json": reconciliation_json,
+            "matrix_rows": matrix_rows,
+            "event_evidence_by_id": event_evidence_by_id,
+        }
 
     def _evaluate(**kwargs: Any) -> Dict[str, Any]:
         return policy.evaluate_et_rank_metric_reconciliation_eligibility(**kwargs)
@@ -12389,6 +12623,84 @@ def run_et_reconciliation_policy_self_tests() -> Dict[str, Any]:
         and single_build["eligible"] is False
         and single_build["final_approval_prohibited"] is True,
     )
+
+    all_eligible_context = _synthetic_dual_build_context(
+        [{"seed": 11}, {"seed": 12, "column": "avg_precision"}]
+    )
+    all_eligible_result = policy.classify_dual_build_mismatches(all_eligible_context)
+    _record(
+        "dual_build_all_eligible_classification_no_final_approval",
+        all_eligible_result.get("classification_completed") is True
+        and all_eligible_result.get("all_rows_mechanistically_eligible") is True
+        and all_eligible_result.get("accepted") is False
+        and all_eligible_result.get("final_approval_prohibited") is True
+        and all_eligible_result.get("policy_enforced") is False,
+        classification_result=all_eligible_result,
+    )
+
+    one_ineligible_context = _synthetic_dual_build_context(
+        [
+            {"seed": 21},
+            {
+                "seed": 22,
+                "column": "f1",
+                "threshold_sensitive_metric": True,
+            },
+        ]
+    )
+    one_ineligible_result = policy.classify_dual_build_mismatches(one_ineligible_context)
+    _record(
+        "dual_build_one_ineligible_classification_no_final_approval",
+        one_ineligible_result.get("classification_completed") is True
+        and one_ineligible_result.get("all_rows_mechanistically_eligible") is False
+        and one_ineligible_result.get("ineligible_count") == 1
+        and one_ineligible_result.get("accepted") is False
+        and one_ineligible_result.get("final_approval_prohibited") is True,
+        classification_result=one_ineligible_result,
+    )
+
+    unknown_metric_context = _synthetic_dual_build_context([{"seed": 31, "column": "unknown_metric"}])
+    unknown_metric_result = policy.classify_dual_build_mismatches(unknown_metric_context)
+    unknown_metric_row = unknown_metric_result.get("classifications", [{}])[0]
+    _record(
+        "dual_build_unknown_metric_classification_no_final_approval",
+        unknown_metric_result.get("classification_completed") is True
+        and unknown_metric_row.get("eligible") is False
+        and unknown_metric_result.get("accepted") is False
+        and unknown_metric_result.get("final_approval_prohibited") is True,
+        classification_result=unknown_metric_result,
+    )
+
+    missing_delta_context = _synthetic_dual_build_context(
+        [
+            {
+                "seed": 41,
+                "event_evidence_overrides": {
+                    "maximum_build2_test_absolute_score_difference": None,
+                },
+            }
+        ]
+    )
+    missing_delta_result = policy.classify_dual_build_mismatches(missing_delta_context)
+    missing_delta_row = missing_delta_result.get("classifications", [{}])[0]
+    _record(
+        "dual_build_missing_et_delta_classification_no_final_approval",
+        missing_delta_result.get("classification_completed") is True
+        and missing_delta_row.get("eligible") is False
+        and missing_delta_result.get("accepted") is False
+        and missing_delta_result.get("final_approval_prohibited") is True,
+        classification_result=missing_delta_result,
+    )
+
+    validator_single_build = validate_dual_build_et_rank_metric_reconciliation(None)
+    _record(
+        "validator_single_build_pending_no_final_approval",
+        validator_single_build.get("accepted") is False
+        and validator_single_build.get("final_approval_prohibited") is True
+        and validator_single_build.get("dual_build_evidence_provided") is False,
+        validator_result=validator_single_build,
+    )
+
     sha_mismatch_rejected = False
     try:
         with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as handle:
@@ -12478,33 +12790,33 @@ def run_et_reconciliation_policy_self_tests() -> Dict[str, Any]:
         fixture_details=fixture_details,
     )
 
-    after_snapshot = _gd6_protected_artifact_snapshot(root)
-    protected_artifacts_changed = _gd6_count_changed_artifacts(before_snapshot, after_snapshot)
+    tracker.stop()
+    tracker.assert_zero_activity()
+    runtime_summary = tracker.as_summary()
 
     passed_count = sum(1 for item in tests if item["passed"])
     failed_count = len(tests) - passed_count
-    all_passed = failed_count == 0 and protected_artifacts_changed == 0
+    all_passed = failed_count == 0 and runtime_summary["protected_artifacts_changed"] == 0
 
     return {
         "tests": tests,
-        "tests_expected": 30,
+        "tests_expected": 35,
         "tests_executed": len(tests),
         "tests_passed": passed_count,
         "tests_failed": failed_count,
         "all_passed": all_passed,
         "fixture_parity_results": fixture_details,
-        "model_fits_executed": model_fits_executed,
-        "prediction_calls_executed": prediction_calls_executed,
-        "production_model_evaluation_builds_executed": production_model_evaluation_builds_executed,
-        "production_artifact_writes": production_artifact_writes,
-        "canonical_file_writes": canonical_file_writes,
-        "production_builder_entered": production_builder_entered,
-        "protected_artifacts_changed": protected_artifacts_changed,
+        "dual_build_all_eligible_classification_result": all_eligible_result,
+        "dual_build_one_ineligible_classification_result": one_ineligible_result,
+        **runtime_summary,
+        "production_builder_entered": runtime_summary["production_builder_entries"] > 0,
         "production_run_executed": False,
         "policy_executed_on_production_artifacts": False,
         "part3b_complete": False,
         "part3c_authorized": False,
         "production_execution_authorized": FINAL_PRODUCTION_EXECUTION_AUTHORIZED,
+        "policy_approved": False,
+        "policy_enforced": False,
     }
 
 

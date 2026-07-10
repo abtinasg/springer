@@ -1,19 +1,19 @@
 # Part 3B ET Reconciliation Policy Implementation Report
 
-**Stage:** Part 3B.2R.1-G.D6
-**Starting commit:** `2cdc97470765ca0b93054d84b7f34294f4384d83`
+**Stage:** Part 3B.2R.1-G.D6.1
+**Starting commit:** `69f60b84e2e20b3ac3a89aa93e10269a7b6c773c`
 
 ## Policy Specification
 
 - **Frozen policy path:** `reports/part3b_et_reconciliation_policy.json`
 - **Frozen policy SHA-256:** `6bc043b7c890256fd369eb8747f54dd9f2f1944b03b0dd1c70b5f6d85b8719f5`
 - **Frozen policy contract verified:** True
-- **Implementation module SHA-256:** `e55d6cdf5047ed55cf755bb0385c478d3666b4c73f557333ef3c035f4c800649`
+- **Implementation module SHA-256:** `0e7865746579705d2d219128d329143c22ba39ca126558d3bb8d496edae48918`
 
 ## Production Validator
 
-- **Production validator SHA before:** `a18e4b5c559011ab508a988f4dfe6d91a7d878ec2ef7249d59dd5796d3473b39`
-- **Production validator SHA after:** `d269bb2eb9b6b4959c9bccb287314249b08da52ad895fa6285ec2af9b6abce49`
+- **Production validator SHA before:** `d269bb2eb9b6b4959c9bccb287314249b08da52ad895fa6285ec2af9b6abce49`
+- **Production validator SHA after:** `f8c070b962cebfeeb0d54f7a065126ffc333c548df42660994edcf40720804a8`
 - **Production validator code changed:** True
 - **Production authorization remains false:** True
 
@@ -63,19 +63,37 @@
 
 ## Synthetic Tests
 
-- **Tests expected:** 30
-- **Tests executed:** 30
-- **Tests passed:** 30
+- **Tests expected:** 35
+- **Tests executed:** 35
+- **Tests passed:** 35
 - **Tests failed:** 0
 - **All passed:** True
+
+## Dual-Build Classification Semantics
+
+- **Classification completed (all-eligible case):** True
+- **All rows mechanically eligible (all-eligible case):** True
+- **Policy approved:** False
+- **Policy enforced:** False
+- **Production execution authorized:** False
+
+## Runtime Activity Measurement
+
+- **Runtime activity tracker active:** True
+- **Runtime tracker covered all tests:** True
+- **Runtime activity counters derived:** True
+- **Production builder guard active:** True
+- **Repository write guard active:** True
 
 ## Measured Activity Counters
 
 - **model_fits_executed:** 0
 - **prediction_calls_executed:** 0
 - **production_model_evaluation_builds_executed:** 0
+- **production_builder_entries:** 0
 - **production_artifact_writes:** 0
 - **canonical_file_writes:** 0
+- **protected_artifacts_changed:** 0
 
 ## Protected File Verification
 
@@ -95,4 +113,5 @@
 ## Transactional Publication
 
 - **Transactional report publication:** True
+- **Transactional report publication ready:** True
 - **Implementation report JSON/Markdown consistency:** True

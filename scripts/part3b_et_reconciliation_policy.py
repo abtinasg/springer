@@ -10,9 +10,9 @@ from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 import numpy as np
 
-STAGE = "Part 3B.2R.1-G.D6"
+STAGE = "Part 3B.2R.1-G.D6.1"
 POLICY_SPEC_STAGE = "Part 3B.2R.1-G.D5.2"
-STARTING_COMMIT = "2cdc97470765ca0b93054d84b7f34294f4384d83"
+STARTING_COMMIT = "69f60b84e2e20b3ac3a89aa93e10269a7b6c773c"
 POLICY_ID = "et_rank_metric_reconciliation"
 POLICY_STATUS = "specified_not_enforced"
 FROZEN_POLICY_JSON_PATH = "reports/part3b_et_reconciliation_policy.json"
@@ -712,6 +712,7 @@ def classify_dual_build_mismatches(
     ctx_validation = validate_dual_build_reconciliation_context(context, policy_spec)
     if not ctx_validation["valid"]:
         return {
+            "classification_completed": False,
             "accepted": False,
             "dual_build_context_valid": False,
             "final_approval_prohibited": True,
@@ -759,13 +760,17 @@ def classify_dual_build_mismatches(
             }
         )
 
+    row_count = len(classifications)
     return {
-        "accepted": True,
+        "classification_completed": True,
         "dual_build_context_valid": True,
-        "final_approval_prohibited": False,
-        "classifications": classifications,
+        "all_rows_mechanistically_eligible": eligible_count == row_count,
         "eligible_count": eligible_count,
-        "row_count": len(classifications),
+        "ineligible_count": row_count - eligible_count,
+        "row_count": row_count,
+        "classifications": classifications,
+        "accepted": False,
+        "final_approval_prohibited": True,
         "policy_id": policy_spec.get("policy_id"),
         "policy_status": policy_spec.get("policy_status"),
         "policy_enforced": False,

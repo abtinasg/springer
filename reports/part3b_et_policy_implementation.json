@@ -1,14 +1,14 @@
 {
-  "stage": "Part 3B.2R.1-G.D6",
-  "starting_commit": "2cdc97470765ca0b93054d84b7f34294f4384d83",
-  "current_commit": "2cdc97470765ca0b93054d84b7f34294f4384d83",
+  "stage": "Part 3B.2R.1-G.D6.1",
+  "starting_commit": "69f60b84e2e20b3ac3a89aa93e10269a7b6c773c",
+  "current_commit": "69f60b84e2e20b3ac3a89aa93e10269a7b6c773c",
   "starting_commit_verified": true,
   "frozen_policy_path": "reports/part3b_et_reconciliation_policy.json",
   "frozen_policy_sha256": "6bc043b7c890256fd369eb8747f54dd9f2f1944b03b0dd1c70b5f6d85b8719f5",
   "frozen_policy_contract_verified": true,
-  "implementation_module_sha256": "e55d6cdf5047ed55cf755bb0385c478d3666b4c73f557333ef3c035f4c800649",
-  "production_validator_sha_before": "a18e4b5c559011ab508a988f4dfe6d91a7d878ec2ef7249d59dd5796d3473b39",
-  "production_validator_sha_after": "d269bb2eb9b6b4959c9bccb287314249b08da52ad895fa6285ec2af9b6abce49",
+  "implementation_module_sha256": "0e7865746579705d2d219128d329143c22ba39ca126558d3bb8d496edae48918",
+  "production_validator_sha_before": "d269bb2eb9b6b4959c9bccb287314249b08da52ad895fa6285ec2af9b6abce49",
+  "production_validator_sha_after": "f8c070b962cebfeeb0d54f7a065126ffc333c548df42660994edcf40720804a8",
   "production_validator_code_changed": true,
   "production_authorization_remains_false": true,
   "implemented_constants": {
@@ -51,8 +51,27 @@
     "FINAL_PRODUCTION_EXECUTION_AUTHORIZED remains False"
   ],
   "production_validator_imports_policy_module": true,
+  "missing_dual_build_context_rejected": true,
   "dual_build_evidence_required": true,
   "single_build_final_approval_prohibited": true,
+  "valid_dual_build_classification_grants_final_approval": false,
+  "ineligible_dual_build_row_grants_final_approval": false,
+  "dual_build_classification": {
+    "all_eligible": {
+      "classification_completed": true,
+      "all_rows_mechanistically_eligible": true,
+      "accepted": false,
+      "final_approval_prohibited": true,
+      "policy_enforced": false
+    },
+    "one_ineligible": {
+      "classification_completed": true,
+      "all_rows_mechanistically_eligible": false,
+      "ineligible_count": 1,
+      "accepted": false,
+      "final_approval_prohibited": true
+    }
+  },
   "predicate_identity_hardcoding_detected": false,
   "candidate_set": [
     "LR_std_C0.1",
@@ -121,9 +140,9 @@
     }
   ],
   "synthetic_tests": {
-    "tests_expected": 30,
-    "tests_executed": 30,
-    "tests_passed": 30,
+    "tests_expected": 35,
+    "tests_executed": 35,
+    "tests_passed": 35,
     "tests_failed": 0,
     "all_passed": true,
     "test_details": [
@@ -232,6 +251,1748 @@
         "passed": true
       },
       {
+        "test_name": "dual_build_all_eligible_classification_no_final_approval",
+        "passed": true,
+        "classification_result": {
+          "classification_completed": true,
+          "dual_build_context_valid": true,
+          "all_rows_mechanistically_eligible": true,
+          "eligible_count": 2,
+          "ineligible_count": 0,
+          "row_count": 2,
+          "classifications": [
+            {
+              "event_id": "cross_project__SYNTH__seed_011",
+              "experiment": "cross_project",
+              "target_project": "SYNTH",
+              "seed": 11,
+              "model": "ET_leaf5",
+              "column": "roc_auc",
+              "final_status": "mechanistically_eligible",
+              "eligible": true,
+              "reason_codes": [],
+              "predicate_results": {
+                "A_evidence_completeness": {
+                  "passed": true,
+                  "checks": [
+                    {
+                      "field": "global.strict_mismatch_count_build1",
+                      "passed": true,
+                      "observed": 9
+                    },
+                    {
+                      "field": "global.strict_mismatch_count_build2",
+                      "passed": true,
+                      "observed": 9
+                    },
+                    {
+                      "field": "global.build_mismatch_identity_sets_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "field": "global.audit_integrity_checks.exact_source_role_set_passed",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "field": "global.audit_integrity_checks.all_audit_integrity_checks_passed",
+                      "passed": true,
+                      "observed": true
+                    }
+                  ]
+                },
+                "B_exact_deterministic_equality": {
+                  "passed": true,
+                  "checks": [
+                    {
+                      "field": "g_r1_build1_value_vs_g_r1_build2_value",
+                      "passed": true,
+                      "equality_helper": "float64_bit_equal"
+                    },
+                    {
+                      "field": "build_result_reconstruction_sha_equal",
+                      "passed": true
+                    },
+                    {
+                      "field": "build_validation_reconstruction_sha_equal",
+                      "passed": true
+                    },
+                    {
+                      "field": "build_prediction_within_sha_equal",
+                      "passed": true
+                    },
+                    {
+                      "field": "build_prediction_cross_sha_equal",
+                      "passed": true
+                    },
+                    {
+                      "field": "build_mismatch_values_bit_exact",
+                      "passed": true
+                    },
+                    {
+                      "field": "build_score_arrays_byte_exact",
+                      "passed": true
+                    }
+                  ]
+                },
+                "C_et_mechanism": {
+                  "passed": true,
+                  "direct_et_model": true,
+                  "selected_candidate_is_et": true,
+                  "soft_ensemble_contains_et": false
+                },
+                "D_accepted_output_comparison": {
+                  "passed": true,
+                  "checks": [
+                    {
+                      "field": "maximum_build1_validation_absolute_score_difference",
+                      "passed": true,
+                      "observed": 2.220446049250313e-16
+                    },
+                    {
+                      "field": "maximum_build1_test_absolute_score_difference",
+                      "passed": true,
+                      "observed": 3.3306690738754696e-16
+                    },
+                    {
+                      "field": "maximum_build2_validation_absolute_score_difference",
+                      "passed": true,
+                      "observed": 2.220446049250313e-16
+                    },
+                    {
+                      "field": "maximum_build2_test_absolute_score_difference",
+                      "passed": true,
+                      "observed": 3.3306690738754696e-16
+                    },
+                    {
+                      "candidate": "LR_std_C0.1",
+                      "field": "build1_validation_score_byte_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "candidate": "LR_std_C0.1",
+                      "field": "build1_test_score_byte_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "candidate": "LR_std_C0.1",
+                      "field": "build2_validation_score_byte_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "candidate": "LR_std_C0.1",
+                      "field": "build2_test_score_byte_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "candidate": "LR_std_C1",
+                      "field": "build1_validation_score_byte_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "candidate": "LR_std_C1",
+                      "field": "build1_test_score_byte_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "candidate": "LR_std_C1",
+                      "field": "build2_validation_score_byte_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "candidate": "LR_std_C1",
+                      "field": "build2_test_score_byte_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "candidate": "DT_leaf5",
+                      "field": "build1_validation_score_byte_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "candidate": "DT_leaf5",
+                      "field": "build1_test_score_byte_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "candidate": "DT_leaf5",
+                      "field": "build2_validation_score_byte_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "candidate": "DT_leaf5",
+                      "field": "build2_test_score_byte_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "candidate": "ET_leaf5",
+                      "field": "build1_build2_validation_score_byte_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "candidate": "ET_leaf5",
+                      "field": "build1_build2_test_score_byte_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "candidate": "ET_leaf5",
+                      "field": "maximum_build1_validation_absolute_score_difference",
+                      "passed": true,
+                      "observed": 2.220446049250313e-16
+                    },
+                    {
+                      "candidate": "ET_leaf5",
+                      "field": "maximum_build1_test_absolute_score_difference",
+                      "passed": true,
+                      "observed": 3.3306690738754696e-16
+                    },
+                    {
+                      "candidate": "ET_leaf5",
+                      "field": "maximum_build2_validation_absolute_score_difference",
+                      "passed": true,
+                      "observed": 2.220446049250313e-16
+                    },
+                    {
+                      "candidate": "ET_leaf5",
+                      "field": "maximum_build2_test_absolute_score_difference",
+                      "passed": true,
+                      "observed": 3.3306690738754696e-16
+                    },
+                    {
+                      "field": "maximum_et_score_absolute_difference",
+                      "passed": true,
+                      "observed": 3.3306690738754696e-16,
+                      "derived_from_independent_fields": 3.3306690738754696e-16,
+                      "reporting_only": true
+                    }
+                  ]
+                },
+                "E_metric_classification": {
+                  "passed": true,
+                  "metric": "roc_auc",
+                  "eligible_metric_allowlist": [
+                    "avg_precision",
+                    "roc_auc"
+                  ]
+                },
+                "F_metric_delta": {
+                  "passed": true,
+                  "absolute_difference_build1": 1e-08,
+                  "absolute_difference_build2": 1e-08,
+                  "relative_difference_build1": 1e-08,
+                  "relative_difference_build2": 1e-08,
+                  "metric_absolute_tolerance": 1e-07
+                },
+                "G_validation_and_categorical_invariants": {
+                  "passed": true,
+                  "checks": [
+                    {
+                      "field": "validation_categorical_mismatch_count_build1",
+                      "passed": true,
+                      "observed": 0
+                    },
+                    {
+                      "field": "validation_categorical_mismatch_count_build2",
+                      "passed": true,
+                      "observed": 0
+                    },
+                    {
+                      "field": "validation_numeric_mismatch_count_build1",
+                      "passed": true,
+                      "observed": 0
+                    },
+                    {
+                      "field": "validation_numeric_mismatch_count_build2",
+                      "passed": true,
+                      "observed": 0
+                    },
+                    {
+                      "field": "categorical_mismatch_count",
+                      "passed": true,
+                      "observed": 0
+                    }
+                  ]
+                },
+                "H_fail_closed": {
+                  "passed": true,
+                  "reason_codes": []
+                }
+              }
+            },
+            {
+              "event_id": "cross_project__SYNTH__seed_012",
+              "experiment": "cross_project",
+              "target_project": "SYNTH",
+              "seed": 12,
+              "model": "ET_leaf5",
+              "column": "avg_precision",
+              "final_status": "mechanistically_eligible",
+              "eligible": true,
+              "reason_codes": [],
+              "predicate_results": {
+                "A_evidence_completeness": {
+                  "passed": true,
+                  "checks": [
+                    {
+                      "field": "global.strict_mismatch_count_build1",
+                      "passed": true,
+                      "observed": 9
+                    },
+                    {
+                      "field": "global.strict_mismatch_count_build2",
+                      "passed": true,
+                      "observed": 9
+                    },
+                    {
+                      "field": "global.build_mismatch_identity_sets_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "field": "global.audit_integrity_checks.exact_source_role_set_passed",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "field": "global.audit_integrity_checks.all_audit_integrity_checks_passed",
+                      "passed": true,
+                      "observed": true
+                    }
+                  ]
+                },
+                "B_exact_deterministic_equality": {
+                  "passed": true,
+                  "checks": [
+                    {
+                      "field": "g_r1_build1_value_vs_g_r1_build2_value",
+                      "passed": true,
+                      "equality_helper": "float64_bit_equal"
+                    },
+                    {
+                      "field": "build_result_reconstruction_sha_equal",
+                      "passed": true
+                    },
+                    {
+                      "field": "build_validation_reconstruction_sha_equal",
+                      "passed": true
+                    },
+                    {
+                      "field": "build_prediction_within_sha_equal",
+                      "passed": true
+                    },
+                    {
+                      "field": "build_prediction_cross_sha_equal",
+                      "passed": true
+                    },
+                    {
+                      "field": "build_mismatch_values_bit_exact",
+                      "passed": true
+                    },
+                    {
+                      "field": "build_score_arrays_byte_exact",
+                      "passed": true
+                    }
+                  ]
+                },
+                "C_et_mechanism": {
+                  "passed": true,
+                  "direct_et_model": true,
+                  "selected_candidate_is_et": true,
+                  "soft_ensemble_contains_et": false
+                },
+                "D_accepted_output_comparison": {
+                  "passed": true,
+                  "checks": [
+                    {
+                      "field": "maximum_build1_validation_absolute_score_difference",
+                      "passed": true,
+                      "observed": 2.220446049250313e-16
+                    },
+                    {
+                      "field": "maximum_build1_test_absolute_score_difference",
+                      "passed": true,
+                      "observed": 3.3306690738754696e-16
+                    },
+                    {
+                      "field": "maximum_build2_validation_absolute_score_difference",
+                      "passed": true,
+                      "observed": 2.220446049250313e-16
+                    },
+                    {
+                      "field": "maximum_build2_test_absolute_score_difference",
+                      "passed": true,
+                      "observed": 3.3306690738754696e-16
+                    },
+                    {
+                      "candidate": "LR_std_C0.1",
+                      "field": "build1_validation_score_byte_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "candidate": "LR_std_C0.1",
+                      "field": "build1_test_score_byte_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "candidate": "LR_std_C0.1",
+                      "field": "build2_validation_score_byte_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "candidate": "LR_std_C0.1",
+                      "field": "build2_test_score_byte_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "candidate": "LR_std_C1",
+                      "field": "build1_validation_score_byte_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "candidate": "LR_std_C1",
+                      "field": "build1_test_score_byte_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "candidate": "LR_std_C1",
+                      "field": "build2_validation_score_byte_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "candidate": "LR_std_C1",
+                      "field": "build2_test_score_byte_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "candidate": "DT_leaf5",
+                      "field": "build1_validation_score_byte_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "candidate": "DT_leaf5",
+                      "field": "build1_test_score_byte_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "candidate": "DT_leaf5",
+                      "field": "build2_validation_score_byte_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "candidate": "DT_leaf5",
+                      "field": "build2_test_score_byte_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "candidate": "ET_leaf5",
+                      "field": "build1_build2_validation_score_byte_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "candidate": "ET_leaf5",
+                      "field": "build1_build2_test_score_byte_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "candidate": "ET_leaf5",
+                      "field": "maximum_build1_validation_absolute_score_difference",
+                      "passed": true,
+                      "observed": 2.220446049250313e-16
+                    },
+                    {
+                      "candidate": "ET_leaf5",
+                      "field": "maximum_build1_test_absolute_score_difference",
+                      "passed": true,
+                      "observed": 3.3306690738754696e-16
+                    },
+                    {
+                      "candidate": "ET_leaf5",
+                      "field": "maximum_build2_validation_absolute_score_difference",
+                      "passed": true,
+                      "observed": 2.220446049250313e-16
+                    },
+                    {
+                      "candidate": "ET_leaf5",
+                      "field": "maximum_build2_test_absolute_score_difference",
+                      "passed": true,
+                      "observed": 3.3306690738754696e-16
+                    },
+                    {
+                      "field": "maximum_et_score_absolute_difference",
+                      "passed": true,
+                      "observed": 3.3306690738754696e-16,
+                      "derived_from_independent_fields": 3.3306690738754696e-16,
+                      "reporting_only": true
+                    }
+                  ]
+                },
+                "E_metric_classification": {
+                  "passed": true,
+                  "metric": "avg_precision",
+                  "eligible_metric_allowlist": [
+                    "avg_precision",
+                    "roc_auc"
+                  ]
+                },
+                "F_metric_delta": {
+                  "passed": true,
+                  "absolute_difference_build1": 1e-08,
+                  "absolute_difference_build2": 1e-08,
+                  "relative_difference_build1": 1e-08,
+                  "relative_difference_build2": 1e-08,
+                  "metric_absolute_tolerance": 1e-07
+                },
+                "G_validation_and_categorical_invariants": {
+                  "passed": true,
+                  "checks": [
+                    {
+                      "field": "validation_categorical_mismatch_count_build1",
+                      "passed": true,
+                      "observed": 0
+                    },
+                    {
+                      "field": "validation_categorical_mismatch_count_build2",
+                      "passed": true,
+                      "observed": 0
+                    },
+                    {
+                      "field": "validation_numeric_mismatch_count_build1",
+                      "passed": true,
+                      "observed": 0
+                    },
+                    {
+                      "field": "validation_numeric_mismatch_count_build2",
+                      "passed": true,
+                      "observed": 0
+                    },
+                    {
+                      "field": "categorical_mismatch_count",
+                      "passed": true,
+                      "observed": 0
+                    }
+                  ]
+                },
+                "H_fail_closed": {
+                  "passed": true,
+                  "reason_codes": []
+                }
+              }
+            }
+          ],
+          "accepted": false,
+          "final_approval_prohibited": true,
+          "policy_id": "et_rank_metric_reconciliation",
+          "policy_status": "specified_not_enforced",
+          "policy_enforced": false
+        }
+      },
+      {
+        "test_name": "dual_build_one_ineligible_classification_no_final_approval",
+        "passed": true,
+        "classification_result": {
+          "classification_completed": true,
+          "dual_build_context_valid": true,
+          "all_rows_mechanistically_eligible": false,
+          "eligible_count": 1,
+          "ineligible_count": 1,
+          "row_count": 2,
+          "classifications": [
+            {
+              "event_id": "cross_project__SYNTH__seed_021",
+              "experiment": "cross_project",
+              "target_project": "SYNTH",
+              "seed": 21,
+              "model": "ET_leaf5",
+              "column": "roc_auc",
+              "final_status": "mechanistically_eligible",
+              "eligible": true,
+              "reason_codes": [],
+              "predicate_results": {
+                "A_evidence_completeness": {
+                  "passed": true,
+                  "checks": [
+                    {
+                      "field": "global.strict_mismatch_count_build1",
+                      "passed": true,
+                      "observed": 9
+                    },
+                    {
+                      "field": "global.strict_mismatch_count_build2",
+                      "passed": true,
+                      "observed": 9
+                    },
+                    {
+                      "field": "global.build_mismatch_identity_sets_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "field": "global.audit_integrity_checks.exact_source_role_set_passed",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "field": "global.audit_integrity_checks.all_audit_integrity_checks_passed",
+                      "passed": true,
+                      "observed": true
+                    }
+                  ]
+                },
+                "B_exact_deterministic_equality": {
+                  "passed": true,
+                  "checks": [
+                    {
+                      "field": "g_r1_build1_value_vs_g_r1_build2_value",
+                      "passed": true,
+                      "equality_helper": "float64_bit_equal"
+                    },
+                    {
+                      "field": "build_result_reconstruction_sha_equal",
+                      "passed": true
+                    },
+                    {
+                      "field": "build_validation_reconstruction_sha_equal",
+                      "passed": true
+                    },
+                    {
+                      "field": "build_prediction_within_sha_equal",
+                      "passed": true
+                    },
+                    {
+                      "field": "build_prediction_cross_sha_equal",
+                      "passed": true
+                    },
+                    {
+                      "field": "build_mismatch_values_bit_exact",
+                      "passed": true
+                    },
+                    {
+                      "field": "build_score_arrays_byte_exact",
+                      "passed": true
+                    }
+                  ]
+                },
+                "C_et_mechanism": {
+                  "passed": true,
+                  "direct_et_model": true,
+                  "selected_candidate_is_et": true,
+                  "soft_ensemble_contains_et": false
+                },
+                "D_accepted_output_comparison": {
+                  "passed": true,
+                  "checks": [
+                    {
+                      "field": "maximum_build1_validation_absolute_score_difference",
+                      "passed": true,
+                      "observed": 2.220446049250313e-16
+                    },
+                    {
+                      "field": "maximum_build1_test_absolute_score_difference",
+                      "passed": true,
+                      "observed": 3.3306690738754696e-16
+                    },
+                    {
+                      "field": "maximum_build2_validation_absolute_score_difference",
+                      "passed": true,
+                      "observed": 2.220446049250313e-16
+                    },
+                    {
+                      "field": "maximum_build2_test_absolute_score_difference",
+                      "passed": true,
+                      "observed": 3.3306690738754696e-16
+                    },
+                    {
+                      "candidate": "LR_std_C0.1",
+                      "field": "build1_validation_score_byte_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "candidate": "LR_std_C0.1",
+                      "field": "build1_test_score_byte_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "candidate": "LR_std_C0.1",
+                      "field": "build2_validation_score_byte_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "candidate": "LR_std_C0.1",
+                      "field": "build2_test_score_byte_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "candidate": "LR_std_C1",
+                      "field": "build1_validation_score_byte_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "candidate": "LR_std_C1",
+                      "field": "build1_test_score_byte_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "candidate": "LR_std_C1",
+                      "field": "build2_validation_score_byte_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "candidate": "LR_std_C1",
+                      "field": "build2_test_score_byte_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "candidate": "DT_leaf5",
+                      "field": "build1_validation_score_byte_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "candidate": "DT_leaf5",
+                      "field": "build1_test_score_byte_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "candidate": "DT_leaf5",
+                      "field": "build2_validation_score_byte_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "candidate": "DT_leaf5",
+                      "field": "build2_test_score_byte_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "candidate": "ET_leaf5",
+                      "field": "build1_build2_validation_score_byte_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "candidate": "ET_leaf5",
+                      "field": "build1_build2_test_score_byte_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "candidate": "ET_leaf5",
+                      "field": "maximum_build1_validation_absolute_score_difference",
+                      "passed": true,
+                      "observed": 2.220446049250313e-16
+                    },
+                    {
+                      "candidate": "ET_leaf5",
+                      "field": "maximum_build1_test_absolute_score_difference",
+                      "passed": true,
+                      "observed": 3.3306690738754696e-16
+                    },
+                    {
+                      "candidate": "ET_leaf5",
+                      "field": "maximum_build2_validation_absolute_score_difference",
+                      "passed": true,
+                      "observed": 2.220446049250313e-16
+                    },
+                    {
+                      "candidate": "ET_leaf5",
+                      "field": "maximum_build2_test_absolute_score_difference",
+                      "passed": true,
+                      "observed": 3.3306690738754696e-16
+                    },
+                    {
+                      "field": "maximum_et_score_absolute_difference",
+                      "passed": true,
+                      "observed": 3.3306690738754696e-16,
+                      "derived_from_independent_fields": 3.3306690738754696e-16,
+                      "reporting_only": true
+                    }
+                  ]
+                },
+                "E_metric_classification": {
+                  "passed": true,
+                  "metric": "roc_auc",
+                  "eligible_metric_allowlist": [
+                    "avg_precision",
+                    "roc_auc"
+                  ]
+                },
+                "F_metric_delta": {
+                  "passed": true,
+                  "absolute_difference_build1": 1e-08,
+                  "absolute_difference_build2": 1e-08,
+                  "relative_difference_build1": 1e-08,
+                  "relative_difference_build2": 1e-08,
+                  "metric_absolute_tolerance": 1e-07
+                },
+                "G_validation_and_categorical_invariants": {
+                  "passed": true,
+                  "checks": [
+                    {
+                      "field": "validation_categorical_mismatch_count_build1",
+                      "passed": true,
+                      "observed": 0
+                    },
+                    {
+                      "field": "validation_categorical_mismatch_count_build2",
+                      "passed": true,
+                      "observed": 0
+                    },
+                    {
+                      "field": "validation_numeric_mismatch_count_build1",
+                      "passed": true,
+                      "observed": 0
+                    },
+                    {
+                      "field": "validation_numeric_mismatch_count_build2",
+                      "passed": true,
+                      "observed": 0
+                    },
+                    {
+                      "field": "categorical_mismatch_count",
+                      "passed": true,
+                      "observed": 0
+                    }
+                  ]
+                },
+                "H_fail_closed": {
+                  "passed": true,
+                  "reason_codes": []
+                }
+              }
+            },
+            {
+              "event_id": "cross_project__SYNTH__seed_022",
+              "experiment": "cross_project",
+              "target_project": "SYNTH",
+              "seed": 22,
+              "model": "ET_leaf5",
+              "column": "f1",
+              "final_status": "ineligible",
+              "eligible": false,
+              "reason_codes": [
+                "E_failed:unknown_or_ineligible_metric",
+                "E_failed:threshold_sensitive_metric"
+              ],
+              "predicate_results": {
+                "A_evidence_completeness": {
+                  "passed": true,
+                  "checks": [
+                    {
+                      "field": "global.strict_mismatch_count_build1",
+                      "passed": true,
+                      "observed": 9
+                    },
+                    {
+                      "field": "global.strict_mismatch_count_build2",
+                      "passed": true,
+                      "observed": 9
+                    },
+                    {
+                      "field": "global.build_mismatch_identity_sets_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "field": "global.audit_integrity_checks.exact_source_role_set_passed",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "field": "global.audit_integrity_checks.all_audit_integrity_checks_passed",
+                      "passed": true,
+                      "observed": true
+                    }
+                  ]
+                },
+                "B_exact_deterministic_equality": {
+                  "passed": true,
+                  "checks": [
+                    {
+                      "field": "g_r1_build1_value_vs_g_r1_build2_value",
+                      "passed": true,
+                      "equality_helper": "float64_bit_equal"
+                    },
+                    {
+                      "field": "build_result_reconstruction_sha_equal",
+                      "passed": true
+                    },
+                    {
+                      "field": "build_validation_reconstruction_sha_equal",
+                      "passed": true
+                    },
+                    {
+                      "field": "build_prediction_within_sha_equal",
+                      "passed": true
+                    },
+                    {
+                      "field": "build_prediction_cross_sha_equal",
+                      "passed": true
+                    },
+                    {
+                      "field": "build_mismatch_values_bit_exact",
+                      "passed": true
+                    },
+                    {
+                      "field": "build_score_arrays_byte_exact",
+                      "passed": true
+                    }
+                  ]
+                },
+                "C_et_mechanism": {
+                  "passed": true,
+                  "direct_et_model": true,
+                  "selected_candidate_is_et": true,
+                  "soft_ensemble_contains_et": false
+                },
+                "D_accepted_output_comparison": {
+                  "passed": true,
+                  "checks": [
+                    {
+                      "field": "maximum_build1_validation_absolute_score_difference",
+                      "passed": true,
+                      "observed": 2.220446049250313e-16
+                    },
+                    {
+                      "field": "maximum_build1_test_absolute_score_difference",
+                      "passed": true,
+                      "observed": 3.3306690738754696e-16
+                    },
+                    {
+                      "field": "maximum_build2_validation_absolute_score_difference",
+                      "passed": true,
+                      "observed": 2.220446049250313e-16
+                    },
+                    {
+                      "field": "maximum_build2_test_absolute_score_difference",
+                      "passed": true,
+                      "observed": 3.3306690738754696e-16
+                    },
+                    {
+                      "candidate": "LR_std_C0.1",
+                      "field": "build1_validation_score_byte_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "candidate": "LR_std_C0.1",
+                      "field": "build1_test_score_byte_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "candidate": "LR_std_C0.1",
+                      "field": "build2_validation_score_byte_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "candidate": "LR_std_C0.1",
+                      "field": "build2_test_score_byte_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "candidate": "LR_std_C1",
+                      "field": "build1_validation_score_byte_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "candidate": "LR_std_C1",
+                      "field": "build1_test_score_byte_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "candidate": "LR_std_C1",
+                      "field": "build2_validation_score_byte_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "candidate": "LR_std_C1",
+                      "field": "build2_test_score_byte_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "candidate": "DT_leaf5",
+                      "field": "build1_validation_score_byte_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "candidate": "DT_leaf5",
+                      "field": "build1_test_score_byte_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "candidate": "DT_leaf5",
+                      "field": "build2_validation_score_byte_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "candidate": "DT_leaf5",
+                      "field": "build2_test_score_byte_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "candidate": "ET_leaf5",
+                      "field": "build1_build2_validation_score_byte_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "candidate": "ET_leaf5",
+                      "field": "build1_build2_test_score_byte_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "candidate": "ET_leaf5",
+                      "field": "maximum_build1_validation_absolute_score_difference",
+                      "passed": true,
+                      "observed": 2.220446049250313e-16
+                    },
+                    {
+                      "candidate": "ET_leaf5",
+                      "field": "maximum_build1_test_absolute_score_difference",
+                      "passed": true,
+                      "observed": 3.3306690738754696e-16
+                    },
+                    {
+                      "candidate": "ET_leaf5",
+                      "field": "maximum_build2_validation_absolute_score_difference",
+                      "passed": true,
+                      "observed": 2.220446049250313e-16
+                    },
+                    {
+                      "candidate": "ET_leaf5",
+                      "field": "maximum_build2_test_absolute_score_difference",
+                      "passed": true,
+                      "observed": 3.3306690738754696e-16
+                    },
+                    {
+                      "field": "maximum_et_score_absolute_difference",
+                      "passed": true,
+                      "observed": 3.3306690738754696e-16,
+                      "derived_from_independent_fields": 3.3306690738754696e-16,
+                      "reporting_only": true
+                    }
+                  ]
+                },
+                "E_metric_classification": {
+                  "passed": false,
+                  "metric": "f1",
+                  "eligible_metric_allowlist": [
+                    "avg_precision",
+                    "roc_auc"
+                  ]
+                },
+                "F_metric_delta": {
+                  "passed": true,
+                  "absolute_difference_build1": 1e-08,
+                  "absolute_difference_build2": 1e-08,
+                  "relative_difference_build1": 1e-08,
+                  "relative_difference_build2": 1e-08,
+                  "metric_absolute_tolerance": 1e-07
+                },
+                "G_validation_and_categorical_invariants": {
+                  "passed": true,
+                  "checks": [
+                    {
+                      "field": "validation_categorical_mismatch_count_build1",
+                      "passed": true,
+                      "observed": 0
+                    },
+                    {
+                      "field": "validation_categorical_mismatch_count_build2",
+                      "passed": true,
+                      "observed": 0
+                    },
+                    {
+                      "field": "validation_numeric_mismatch_count_build1",
+                      "passed": true,
+                      "observed": 0
+                    },
+                    {
+                      "field": "validation_numeric_mismatch_count_build2",
+                      "passed": true,
+                      "observed": 0
+                    },
+                    {
+                      "field": "categorical_mismatch_count",
+                      "passed": true,
+                      "observed": 0
+                    }
+                  ]
+                },
+                "H_fail_closed": {
+                  "passed": false,
+                  "reason_codes": [
+                    "E_failed:unknown_or_ineligible_metric",
+                    "E_failed:threshold_sensitive_metric"
+                  ]
+                }
+              }
+            }
+          ],
+          "accepted": false,
+          "final_approval_prohibited": true,
+          "policy_id": "et_rank_metric_reconciliation",
+          "policy_status": "specified_not_enforced",
+          "policy_enforced": false
+        }
+      },
+      {
+        "test_name": "dual_build_unknown_metric_classification_no_final_approval",
+        "passed": true,
+        "classification_result": {
+          "classification_completed": true,
+          "dual_build_context_valid": true,
+          "all_rows_mechanistically_eligible": false,
+          "eligible_count": 0,
+          "ineligible_count": 1,
+          "row_count": 1,
+          "classifications": [
+            {
+              "event_id": "cross_project__SYNTH__seed_031",
+              "experiment": "cross_project",
+              "target_project": "SYNTH",
+              "seed": 31,
+              "model": "ET_leaf5",
+              "column": "unknown_metric",
+              "final_status": "ineligible",
+              "eligible": false,
+              "reason_codes": [
+                "E_failed:unknown_or_ineligible_metric"
+              ],
+              "predicate_results": {
+                "A_evidence_completeness": {
+                  "passed": true,
+                  "checks": [
+                    {
+                      "field": "global.strict_mismatch_count_build1",
+                      "passed": true,
+                      "observed": 9
+                    },
+                    {
+                      "field": "global.strict_mismatch_count_build2",
+                      "passed": true,
+                      "observed": 9
+                    },
+                    {
+                      "field": "global.build_mismatch_identity_sets_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "field": "global.audit_integrity_checks.exact_source_role_set_passed",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "field": "global.audit_integrity_checks.all_audit_integrity_checks_passed",
+                      "passed": true,
+                      "observed": true
+                    }
+                  ]
+                },
+                "B_exact_deterministic_equality": {
+                  "passed": true,
+                  "checks": [
+                    {
+                      "field": "g_r1_build1_value_vs_g_r1_build2_value",
+                      "passed": true,
+                      "equality_helper": "float64_bit_equal"
+                    },
+                    {
+                      "field": "build_result_reconstruction_sha_equal",
+                      "passed": true
+                    },
+                    {
+                      "field": "build_validation_reconstruction_sha_equal",
+                      "passed": true
+                    },
+                    {
+                      "field": "build_prediction_within_sha_equal",
+                      "passed": true
+                    },
+                    {
+                      "field": "build_prediction_cross_sha_equal",
+                      "passed": true
+                    },
+                    {
+                      "field": "build_mismatch_values_bit_exact",
+                      "passed": true
+                    },
+                    {
+                      "field": "build_score_arrays_byte_exact",
+                      "passed": true
+                    }
+                  ]
+                },
+                "C_et_mechanism": {
+                  "passed": true,
+                  "direct_et_model": true,
+                  "selected_candidate_is_et": true,
+                  "soft_ensemble_contains_et": false
+                },
+                "D_accepted_output_comparison": {
+                  "passed": true,
+                  "checks": [
+                    {
+                      "field": "maximum_build1_validation_absolute_score_difference",
+                      "passed": true,
+                      "observed": 2.220446049250313e-16
+                    },
+                    {
+                      "field": "maximum_build1_test_absolute_score_difference",
+                      "passed": true,
+                      "observed": 3.3306690738754696e-16
+                    },
+                    {
+                      "field": "maximum_build2_validation_absolute_score_difference",
+                      "passed": true,
+                      "observed": 2.220446049250313e-16
+                    },
+                    {
+                      "field": "maximum_build2_test_absolute_score_difference",
+                      "passed": true,
+                      "observed": 3.3306690738754696e-16
+                    },
+                    {
+                      "candidate": "LR_std_C0.1",
+                      "field": "build1_validation_score_byte_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "candidate": "LR_std_C0.1",
+                      "field": "build1_test_score_byte_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "candidate": "LR_std_C0.1",
+                      "field": "build2_validation_score_byte_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "candidate": "LR_std_C0.1",
+                      "field": "build2_test_score_byte_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "candidate": "LR_std_C1",
+                      "field": "build1_validation_score_byte_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "candidate": "LR_std_C1",
+                      "field": "build1_test_score_byte_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "candidate": "LR_std_C1",
+                      "field": "build2_validation_score_byte_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "candidate": "LR_std_C1",
+                      "field": "build2_test_score_byte_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "candidate": "DT_leaf5",
+                      "field": "build1_validation_score_byte_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "candidate": "DT_leaf5",
+                      "field": "build1_test_score_byte_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "candidate": "DT_leaf5",
+                      "field": "build2_validation_score_byte_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "candidate": "DT_leaf5",
+                      "field": "build2_test_score_byte_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "candidate": "ET_leaf5",
+                      "field": "build1_build2_validation_score_byte_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "candidate": "ET_leaf5",
+                      "field": "build1_build2_test_score_byte_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "candidate": "ET_leaf5",
+                      "field": "maximum_build1_validation_absolute_score_difference",
+                      "passed": true,
+                      "observed": 2.220446049250313e-16
+                    },
+                    {
+                      "candidate": "ET_leaf5",
+                      "field": "maximum_build1_test_absolute_score_difference",
+                      "passed": true,
+                      "observed": 3.3306690738754696e-16
+                    },
+                    {
+                      "candidate": "ET_leaf5",
+                      "field": "maximum_build2_validation_absolute_score_difference",
+                      "passed": true,
+                      "observed": 2.220446049250313e-16
+                    },
+                    {
+                      "candidate": "ET_leaf5",
+                      "field": "maximum_build2_test_absolute_score_difference",
+                      "passed": true,
+                      "observed": 3.3306690738754696e-16
+                    },
+                    {
+                      "field": "maximum_et_score_absolute_difference",
+                      "passed": true,
+                      "observed": 3.3306690738754696e-16,
+                      "derived_from_independent_fields": 3.3306690738754696e-16,
+                      "reporting_only": true
+                    }
+                  ]
+                },
+                "E_metric_classification": {
+                  "passed": false,
+                  "metric": "unknown_metric",
+                  "eligible_metric_allowlist": [
+                    "avg_precision",
+                    "roc_auc"
+                  ]
+                },
+                "F_metric_delta": {
+                  "passed": true,
+                  "absolute_difference_build1": 1e-08,
+                  "absolute_difference_build2": 1e-08,
+                  "relative_difference_build1": 1e-08,
+                  "relative_difference_build2": 1e-08,
+                  "metric_absolute_tolerance": 1e-07
+                },
+                "G_validation_and_categorical_invariants": {
+                  "passed": true,
+                  "checks": [
+                    {
+                      "field": "validation_categorical_mismatch_count_build1",
+                      "passed": true,
+                      "observed": 0
+                    },
+                    {
+                      "field": "validation_categorical_mismatch_count_build2",
+                      "passed": true,
+                      "observed": 0
+                    },
+                    {
+                      "field": "validation_numeric_mismatch_count_build1",
+                      "passed": true,
+                      "observed": 0
+                    },
+                    {
+                      "field": "validation_numeric_mismatch_count_build2",
+                      "passed": true,
+                      "observed": 0
+                    },
+                    {
+                      "field": "categorical_mismatch_count",
+                      "passed": true,
+                      "observed": 0
+                    }
+                  ]
+                },
+                "H_fail_closed": {
+                  "passed": false,
+                  "reason_codes": [
+                    "E_failed:unknown_or_ineligible_metric"
+                  ]
+                }
+              }
+            }
+          ],
+          "accepted": false,
+          "final_approval_prohibited": true,
+          "policy_id": "et_rank_metric_reconciliation",
+          "policy_status": "specified_not_enforced",
+          "policy_enforced": false
+        }
+      },
+      {
+        "test_name": "dual_build_missing_et_delta_classification_no_final_approval",
+        "passed": true,
+        "classification_result": {
+          "classification_completed": true,
+          "dual_build_context_valid": true,
+          "all_rows_mechanistically_eligible": false,
+          "eligible_count": 0,
+          "ineligible_count": 1,
+          "row_count": 1,
+          "classifications": [
+            {
+              "event_id": "cross_project__SYNTH__seed_041",
+              "experiment": "cross_project",
+              "target_project": "SYNTH",
+              "seed": 41,
+              "model": "ET_leaf5",
+              "column": "roc_auc",
+              "final_status": "ineligible",
+              "eligible": false,
+              "reason_codes": [
+                "D_failed:missing_maximum_build2_test_absolute_score_difference"
+              ],
+              "predicate_results": {
+                "A_evidence_completeness": {
+                  "passed": true,
+                  "checks": [
+                    {
+                      "field": "global.strict_mismatch_count_build1",
+                      "passed": true,
+                      "observed": 9
+                    },
+                    {
+                      "field": "global.strict_mismatch_count_build2",
+                      "passed": true,
+                      "observed": 9
+                    },
+                    {
+                      "field": "global.build_mismatch_identity_sets_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "field": "global.audit_integrity_checks.exact_source_role_set_passed",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "field": "global.audit_integrity_checks.all_audit_integrity_checks_passed",
+                      "passed": true,
+                      "observed": true
+                    }
+                  ]
+                },
+                "B_exact_deterministic_equality": {
+                  "passed": true,
+                  "checks": [
+                    {
+                      "field": "g_r1_build1_value_vs_g_r1_build2_value",
+                      "passed": true,
+                      "equality_helper": "float64_bit_equal"
+                    },
+                    {
+                      "field": "build_result_reconstruction_sha_equal",
+                      "passed": true
+                    },
+                    {
+                      "field": "build_validation_reconstruction_sha_equal",
+                      "passed": true
+                    },
+                    {
+                      "field": "build_prediction_within_sha_equal",
+                      "passed": true
+                    },
+                    {
+                      "field": "build_prediction_cross_sha_equal",
+                      "passed": true
+                    },
+                    {
+                      "field": "build_mismatch_values_bit_exact",
+                      "passed": true
+                    },
+                    {
+                      "field": "build_score_arrays_byte_exact",
+                      "passed": true
+                    }
+                  ]
+                },
+                "C_et_mechanism": {
+                  "passed": true,
+                  "direct_et_model": true,
+                  "selected_candidate_is_et": true,
+                  "soft_ensemble_contains_et": false
+                },
+                "D_accepted_output_comparison": {
+                  "passed": false,
+                  "checks": [
+                    {
+                      "field": "maximum_build1_validation_absolute_score_difference",
+                      "passed": true,
+                      "observed": 2.220446049250313e-16
+                    },
+                    {
+                      "field": "maximum_build1_test_absolute_score_difference",
+                      "passed": true,
+                      "observed": 3.3306690738754696e-16
+                    },
+                    {
+                      "field": "maximum_build2_validation_absolute_score_difference",
+                      "passed": true,
+                      "observed": 2.220446049250313e-16
+                    },
+                    {
+                      "field": "maximum_build2_test_absolute_score_difference",
+                      "passed": false,
+                      "observed": null
+                    },
+                    {
+                      "candidate": "LR_std_C0.1",
+                      "field": "build1_validation_score_byte_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "candidate": "LR_std_C0.1",
+                      "field": "build1_test_score_byte_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "candidate": "LR_std_C0.1",
+                      "field": "build2_validation_score_byte_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "candidate": "LR_std_C0.1",
+                      "field": "build2_test_score_byte_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "candidate": "LR_std_C1",
+                      "field": "build1_validation_score_byte_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "candidate": "LR_std_C1",
+                      "field": "build1_test_score_byte_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "candidate": "LR_std_C1",
+                      "field": "build2_validation_score_byte_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "candidate": "LR_std_C1",
+                      "field": "build2_test_score_byte_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "candidate": "DT_leaf5",
+                      "field": "build1_validation_score_byte_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "candidate": "DT_leaf5",
+                      "field": "build1_test_score_byte_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "candidate": "DT_leaf5",
+                      "field": "build2_validation_score_byte_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "candidate": "DT_leaf5",
+                      "field": "build2_test_score_byte_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "candidate": "ET_leaf5",
+                      "field": "build1_build2_validation_score_byte_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "candidate": "ET_leaf5",
+                      "field": "build1_build2_test_score_byte_equal",
+                      "passed": true,
+                      "observed": true
+                    },
+                    {
+                      "candidate": "ET_leaf5",
+                      "field": "maximum_build1_validation_absolute_score_difference",
+                      "passed": true,
+                      "observed": 2.220446049250313e-16
+                    },
+                    {
+                      "candidate": "ET_leaf5",
+                      "field": "maximum_build1_test_absolute_score_difference",
+                      "passed": true,
+                      "observed": 3.3306690738754696e-16
+                    },
+                    {
+                      "candidate": "ET_leaf5",
+                      "field": "maximum_build2_validation_absolute_score_difference",
+                      "passed": true,
+                      "observed": 2.220446049250313e-16
+                    },
+                    {
+                      "candidate": "ET_leaf5",
+                      "field": "maximum_build2_test_absolute_score_difference",
+                      "passed": true,
+                      "observed": 3.3306690738754696e-16
+                    },
+                    {
+                      "field": "maximum_et_score_absolute_difference",
+                      "passed": true,
+                      "observed": 3.3306690738754696e-16,
+                      "derived_from_independent_fields": null,
+                      "reporting_only": true
+                    }
+                  ]
+                },
+                "E_metric_classification": {
+                  "passed": true,
+                  "metric": "roc_auc",
+                  "eligible_metric_allowlist": [
+                    "avg_precision",
+                    "roc_auc"
+                  ]
+                },
+                "F_metric_delta": {
+                  "passed": true,
+                  "absolute_difference_build1": 1e-08,
+                  "absolute_difference_build2": 1e-08,
+                  "relative_difference_build1": 1e-08,
+                  "relative_difference_build2": 1e-08,
+                  "metric_absolute_tolerance": 1e-07
+                },
+                "G_validation_and_categorical_invariants": {
+                  "passed": true,
+                  "checks": [
+                    {
+                      "field": "validation_categorical_mismatch_count_build1",
+                      "passed": true,
+                      "observed": 0
+                    },
+                    {
+                      "field": "validation_categorical_mismatch_count_build2",
+                      "passed": true,
+                      "observed": 0
+                    },
+                    {
+                      "field": "validation_numeric_mismatch_count_build1",
+                      "passed": true,
+                      "observed": 0
+                    },
+                    {
+                      "field": "validation_numeric_mismatch_count_build2",
+                      "passed": true,
+                      "observed": 0
+                    },
+                    {
+                      "field": "categorical_mismatch_count",
+                      "passed": true,
+                      "observed": 0
+                    }
+                  ]
+                },
+                "H_fail_closed": {
+                  "passed": false,
+                  "reason_codes": [
+                    "D_failed:missing_maximum_build2_test_absolute_score_difference"
+                  ]
+                }
+              }
+            }
+          ],
+          "accepted": false,
+          "final_approval_prohibited": true,
+          "policy_id": "et_rank_metric_reconciliation",
+          "policy_status": "specified_not_enforced",
+          "policy_enforced": false
+        }
+      },
+      {
+        "test_name": "validator_single_build_pending_no_final_approval",
+        "passed": true,
+        "validator_result": {
+          "accepted": false,
+          "dual_build_evidence_provided": false,
+          "production_run_executed": false,
+          "policy_executed_on_production_artifacts": false,
+          "reason": "missing_dual_build_context",
+          "final_approval_prohibited": true,
+          "part3b_complete": false,
+          "part3c_authorized": false
+        }
+      },
+      {
         "test_name": "policy_specification_sha_mismatch_rejected",
         "passed": true
       },
@@ -305,13 +2066,73 @@
       }
     ]
   },
+  "transactional_rollback_tests": {
+    "tests": [
+      {
+        "test_name": "rollback_before_any_replacement_neither_exist",
+        "passed": true,
+        "failure_point": "before_any_replacement",
+        "both_exist": false
+      },
+      {
+        "test_name": "rollback_before_any_replacement_both_exist",
+        "passed": true,
+        "failure_point": "before_any_replacement",
+        "both_exist": true
+      },
+      {
+        "test_name": "rollback_after_json_before_md_neither_exist",
+        "passed": true,
+        "failure_point": "after_json_before_md",
+        "both_exist": false
+      },
+      {
+        "test_name": "rollback_after_json_before_md_both_exist",
+        "passed": true,
+        "failure_point": "after_json_before_md",
+        "both_exist": true
+      },
+      {
+        "test_name": "rollback_after_md_backup_before_md_replace_neither_exist",
+        "passed": true,
+        "failure_point": "after_md_backup_before_md_replace",
+        "both_exist": false
+      },
+      {
+        "test_name": "rollback_after_md_backup_before_md_replace_both_exist",
+        "passed": true,
+        "failure_point": "after_md_backup_before_md_replace",
+        "both_exist": true
+      },
+      {
+        "test_name": "successful_first_publication",
+        "passed": true
+      },
+      {
+        "test_name": "successful_replacement_publication",
+        "passed": true
+      }
+    ],
+    "tests_expected": 8,
+    "tests_executed": 8,
+    "tests_passed": 8,
+    "tests_failed": 0,
+    "all_passed": true
+  },
   "measured_activity_counters": {
     "model_fits_executed": 0,
     "prediction_calls_executed": 0,
     "production_model_evaluation_builds_executed": 0,
+    "production_builder_entries": 0,
     "production_artifact_writes": 0,
-    "canonical_file_writes": 0
+    "canonical_file_writes": 0,
+    "protected_artifacts_changed": 0
   },
+  "runtime_activity_tracker_active": true,
+  "runtime_activity_tracker_covered_all_tests": true,
+  "runtime_activity_counters_derived": true,
+  "production_builder_guard_active": true,
+  "repository_write_guard_active": true,
   "protected_file_verification": {
     "paths": [
       "scripts/freeze_part3b_et_reconciliation_policy.py",
@@ -372,6 +2193,9 @@
   "protected_files_unchanged": true,
   "policy_implementation_present": true,
   "policy_specification_loaded_and_verified": true,
+  "policy_approved": false,
+  "policy_enforced": false,
+  "production_execution_authorized": false,
   "policy_executed_on_production_artifacts": false,
   "production_run_executed": false,
   "canonical_files_changed": false,
@@ -380,11 +2204,12 @@
   "part3c_authorized": false,
   "implementation_report_json_markdown_consistency": true,
   "transactional_report_publication": true,
+  "transactional_report_publication_ready": true,
   "audit_passed": true,
   "publication_result": {
-    "json_path": "/Users/aliehpourdast/Desktop/springer/springer/reports/part3b_et_policy_implementation.json",
-    "md_path": "/Users/aliehpourdast/Desktop/springer/springer/reports/part3b_et_policy_implementation.md",
-    "json_sha256": "0ada20bac055ac0dcf28399dac5d8ded30224e41c848ccf1a598228e418be775",
-    "md_sha256": "a1f1d04844f11c0ef52ea2986ad6ab99c50a22dd8911fb8a1297d3d07d6cfe9a"
+    "json_path": "reports/part3b_et_policy_implementation.json",
+    "md_path": "reports/part3b_et_policy_implementation.md",
+    "json_sha256": "62e884059e756394eabdb24f20ca0d0eb2b509cc92aa2f5395c41868d6925e9d",
+    "md_sha256": "fa15a89f8523e67bade1a1ae66bf64aa45eea6cc47b57c7cbd13965856609b6f"
   }
 }
