@@ -114,6 +114,95 @@ ET_SCORE_ATOL = 1e-15
 ET_RANK_METRIC_ATOL = 1e-7
 
 # ---------------------------------------------------------------------------
+# Frozen ET reconciliation policy (G.D6; specified, not enforced on production)
+# ---------------------------------------------------------------------------
+PRODUCTION_VALIDATOR_SHA_BEFORE_GD6 = (
+    "a18e4b5c559011ab508a988f4dfe6d91a7d878ec2ef7249d59dd5796d3473b39"
+)
+GD6_PROTECTED_ARTIFACT_PATHS = [
+    "scripts/freeze_part3b_et_reconciliation_policy.py",
+    "reports/part3b_et_reconciliation_policy.json",
+    "reports/part3b_et_reconciliation_policy.md",
+    "scripts/audit_part3b_et_canonical_reconciliation.py",
+    "reports/part3b_et_canonical_reconciliation.json",
+    "reports/part3b_et_canonical_reconciliation.md",
+    "results/part3b_prediction_ledger/et_canonical_mismatch_matrix.csv",
+    "results/part3b_prediction_ledger/sample_registry.csv",
+    "results/part3b_prediction_ledger/split_membership_within.csv.gz",
+    "results/part3b_prediction_ledger/canonical_result_reconstruction.csv",
+    "results/part3b_prediction_ledger/ledger_manifest.json",
+    "results/part3b_prediction_ledger/prediction_ledger_within.csv.gz",
+    "results/part3b_prediction_ledger/split_membership_cross.csv.gz",
+    "results/part3b_prediction_ledger/event_manifest.csv",
+    "results/part3b_prediction_ledger/prediction_ledger_cross.csv.gz",
+    "results/part3b_prediction_ledger/validation_reconstruction.csv",
+]
+GD6_REQUIRED_RECONCILIATION_JSON_SHA256 = (
+    "2c483ceea237c97d5c339ba3ceb438f8e6e2e9beae695dc9410aa5b4b825de0a"
+)
+GD6_REQUIRED_MATRIX_SHA256 = (
+    "25cc88a8785f18668be2e03328a71b80b6e2c66f679a572e1e53656cde4ef908"
+)
+
+
+def import_et_reconciliation_policy() -> Any:
+    path = repo_root() / "scripts" / "part3b_et_reconciliation_policy.py"
+    if not path.exists():
+        raise FileNotFoundError(f"ET reconciliation policy module not found: {path}")
+    spec = importlib.util.spec_from_file_location(
+        "part3b_et_reconciliation_policy", str(path), submodule_search_locations=None
+    )
+    if spec is None or spec.loader is None:
+        raise ImportError(f"Unable to load ET reconciliation policy module from {path}")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def validate_dual_build_et_rank_metric_reconciliation(
+    dual_build_context: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
+    """Dual-build ET reconciliation validator entry point for future G.R2 (fail-closed)."""
+    policy = import_et_reconciliation_policy()
+    if dual_build_context is None:
+        return {
+            "accepted": False,
+            "dual_build_evidence_provided": False,
+            "production_run_executed": False,
+            "policy_executed_on_production_artifacts": False,
+            "reason": "missing_dual_build_context",
+            "final_approval_prohibited": True,
+            "part3b_complete": False,
+            "part3c_authorized": False,
+        }
+    policy_spec = policy.load_and_verify_frozen_policy(repo_root())
+    ctx_validation = policy.validate_dual_build_reconciliation_context(
+        dual_build_context, policy_spec
+    )
+    if not ctx_validation.get("valid"):
+        return {
+            "accepted": False,
+            "dual_build_evidence_provided": False,
+            "dual_build_context_valid": False,
+            "production_run_executed": False,
+            "policy_executed_on_production_artifacts": False,
+            "reason_codes": ctx_validation.get("reason_codes", []),
+            "final_approval_prohibited": True,
+            "part3b_complete": False,
+            "part3c_authorized": False,
+        }
+    classification = policy.classify_dual_build_mismatches(dual_build_context, policy_spec)
+    return {
+        **classification,
+        "production_run_executed": False,
+        "policy_executed_on_production_artifacts": False,
+        "part3b_complete": False,
+        "part3c_authorized": False,
+        "policy_enforced": False,
+    }
+
+
+# ---------------------------------------------------------------------------
 # Historical canonical nondeterminism exception (validated, not broadened)
 # ---------------------------------------------------------------------------
 APPROVED_EXCEPTION_EVENT = {
@@ -11878,7 +11967,545 @@ SUPPORTED_SELF_TEST_FLAGS = {
     "--self-test-integration-dry-run",
     "--self-test-gd2-recovery",
     "--self-test-gd3-publication-gate",
+    "--self-test-et-reconciliation-policy",
 }
+
+
+def _gd6_protected_artifact_snapshot(root: Path) -> Dict[str, Optional[str]]:
+    snapshot: Dict[str, Optional[str]] = {}
+    for rel in GD6_PROTECTED_ARTIFACT_PATHS:
+        path = root / rel
+        snapshot[rel] = sha256_file(path) if path.is_file() else None
+    return snapshot
+
+
+def _gd6_count_changed_artifacts(
+    before: Dict[str, Optional[str]],
+    after: Dict[str, Optional[str]],
+) -> int:
+    changed = 0
+    for rel in GD6_PROTECTED_ARTIFACT_PATHS:
+        if before.get(rel) != after.get(rel):
+            changed += 1
+    return changed
+
+
+def run_et_reconciliation_policy_self_tests() -> Dict[str, Any]:
+    """Synthetic self-tests for frozen ET reconciliation policy (G.D6)."""
+    policy = import_et_reconciliation_policy()
+    root = repo_root()
+    before_snapshot = _gd6_protected_artifact_snapshot(root)
+
+    model_fits_executed = 0
+    prediction_calls_executed = 0
+    production_model_evaluation_builds_executed = 0
+    production_artifact_writes = 0
+    canonical_file_writes = 0
+    production_builder_entered = False
+
+  # Synthetic evidence helpers (in-memory only)
+    def _synthetic_global_ctx(**overrides: Any) -> Dict[str, Any]:
+        base = {
+            "strict_mismatch_count_build1": 9,
+            "strict_mismatch_count_build2": 9,
+            "build_mismatch_identity_sets_equal": True,
+            "build_result_reconstruction_sha_equal": True,
+            "build_validation_reconstruction_sha_equal": True,
+            "build_prediction_within_sha_equal": True,
+            "build_prediction_cross_sha_equal": True,
+            "validation_categorical_mismatch_count_build1": 0,
+            "validation_categorical_mismatch_count_build2": 0,
+            "validation_numeric_mismatch_count_build1": 0,
+            "validation_numeric_mismatch_count_build2": 0,
+            "build1_build2_validation_reconstructions_equal": True,
+            "categorical_mismatch_count": 0,
+            "audit_integrity_checks": {
+                "exact_source_role_set_passed": True,
+                "all_audit_integrity_checks_passed": True,
+                "build_mismatch_values_bit_exact": True,
+            },
+        }
+        base.update(overrides)
+        return base
+
+    def _synthetic_candidate_evidence(**overrides: Any) -> Dict[str, Any]:
+        base = {
+            "build1_validation_score_byte_equal": True,
+            "build1_test_score_byte_equal": True,
+            "build2_validation_score_byte_equal": True,
+            "build2_test_score_byte_equal": True,
+            "build1_build2_validation_score_byte_equal": True,
+            "build1_build2_test_score_byte_equal": True,
+            "maximum_build1_validation_absolute_score_difference": 0.0,
+            "maximum_build1_test_absolute_score_difference": 0.0,
+            "maximum_build2_validation_absolute_score_difference": 0.0,
+            "maximum_build2_test_absolute_score_difference": 0.0,
+        }
+        base.update(overrides)
+        return base
+
+    def _synthetic_event_evidence(**overrides: Any) -> Dict[str, Any]:
+        candidate_score_evidence = {
+            "LR_std_C0.1": _synthetic_candidate_evidence(),
+            "LR_std_C1": _synthetic_candidate_evidence(),
+            "DT_leaf5": _synthetic_candidate_evidence(),
+            "ET_leaf5": _synthetic_candidate_evidence(
+                maximum_build1_validation_absolute_score_difference=2.220446049250313e-16,
+                maximum_build1_test_absolute_score_difference=3.3306690738754696e-16,
+                maximum_build2_validation_absolute_score_difference=2.220446049250313e-16,
+                maximum_build2_test_absolute_score_difference=3.3306690738754696e-16,
+            ),
+        }
+        if "candidate_score_evidence" in overrides:
+            candidate_score_evidence = overrides.pop("candidate_score_evidence")
+        base = {
+            "candidate_score_evidence": candidate_score_evidence,
+            "maximum_build1_validation_absolute_score_difference": 2.220446049250313e-16,
+            "maximum_build1_test_absolute_score_difference": 3.3306690738754696e-16,
+            "maximum_build2_validation_absolute_score_difference": 2.220446049250313e-16,
+            "maximum_build2_test_absolute_score_difference": 3.3306690738754696e-16,
+            "maximum_et_score_absolute_difference": 3.3306690738754696e-16,
+            "build_score_arrays_byte_exact": True,
+        }
+        base.update(overrides)
+        return base
+
+    def _synthetic_row(**overrides: Any) -> Dict[str, Any]:
+        base = {
+            "experiment": "cross_project",
+            "target_project": "SYNTH",
+            "seed": 99,
+            "model": "ET_leaf5",
+            "selected_candidate": "ET_leaf5",
+            "selection_mode": "single_candidate_balanced_threshold",
+            "column": "roc_auc",
+            "g_r1_build1_value": 0.5,
+            "g_r1_build2_value": 0.5,
+            "build1_build2_value_equal": True,
+            "absolute_difference_build1": 1e-8,
+            "absolute_difference_build2": 1e-8,
+            "relative_difference_build1": 1e-8,
+            "relative_difference_build2": 1e-8,
+            "direct_et_model": True,
+            "selected_candidate_is_et": True,
+            "soft_ensemble_contains_et": False,
+            "et_derived_row": True,
+            "threshold_sensitive_metric": False,
+            "calibration_metric": False,
+        }
+        base.update(overrides)
+        return base
+
+    def _evaluate(**kwargs: Any) -> Dict[str, Any]:
+        return policy.evaluate_et_rank_metric_reconciliation_eligibility(**kwargs)
+
+    tests: List[Dict[str, Any]] = []
+
+    def _record(name: str, passed: bool, **extra: Any) -> None:
+        tests.append({"test_name": name, "passed": passed, **extra})
+
+    _record(
+        "valid_roc_auc_row_accepted",
+        _evaluate(
+            row=_synthetic_row(column="roc_auc"),
+            global_ctx=_synthetic_global_ctx(),
+            event_evidence=_synthetic_event_evidence(),
+        )["eligible"]
+        is True,
+    )
+    _record(
+        "valid_avg_precision_row_accepted",
+        _evaluate(
+            row=_synthetic_row(column="avg_precision"),
+            global_ctx=_synthetic_global_ctx(),
+            event_evidence=_synthetic_event_evidence(),
+        )["eligible"]
+        is True,
+    )
+    _record(
+        "project_seed_independent_equivalent_row_accepted",
+        _evaluate(
+            row=_synthetic_row(
+                target_project="OTHER",
+                seed=7,
+                model="AQRPE_v2_synth",
+                selected_candidate="ET_leaf5",
+                direct_et_model=False,
+                selected_candidate_is_et=True,
+            ),
+            global_ctx=_synthetic_global_ctx(),
+            event_evidence=_synthetic_event_evidence(),
+        )["eligible"]
+        is True,
+    )
+    value = np.float64(0.5)
+    ulp = float(np.nextafter(value, np.float64(1.0)))
+    _record(
+        "one_ulp_build_mismatch_rejected",
+        _evaluate(
+            row=_synthetic_row(
+                g_r1_build1_value=float(value),
+                g_r1_build2_value=ulp,
+                build1_build2_value_equal=False,
+            ),
+            global_ctx=_synthetic_global_ctx(),
+            event_evidence=_synthetic_event_evidence(),
+        )["eligible"]
+        is False,
+    )
+    _record(
+        "positive_zero_negative_zero_rejected",
+        _evaluate(
+            row=_synthetic_row(
+                g_r1_build1_value=0.0,
+                g_r1_build2_value=-0.0,
+                build1_build2_value_equal=True,
+            ),
+            global_ctx=_synthetic_global_ctx(),
+            event_evidence=_synthetic_event_evidence(),
+        )["eligible"]
+        is False
+        and policy.float64_bit_equal(0.0, -0.0) is False,
+    )
+    _record(
+        "build_score_byte_difference_rejected",
+        _evaluate(
+            row=_synthetic_row(),
+            global_ctx=_synthetic_global_ctx(),
+            event_evidence=_synthetic_event_evidence(build_score_arrays_byte_exact=False),
+        )["eligible"]
+        is False,
+    )
+    evidence_missing_cand = _synthetic_event_evidence()
+    del evidence_missing_cand["candidate_score_evidence"]["DT_leaf5"]
+    _record(
+        "missing_candidate_rejected",
+        _evaluate(
+            row=_synthetic_row(),
+            global_ctx=_synthetic_global_ctx(),
+            event_evidence=evidence_missing_cand,
+        )["eligible"]
+        is False,
+    )
+    evidence_unexpected = _synthetic_event_evidence()
+    evidence_unexpected["candidate_score_evidence"]["EXTRA"] = _synthetic_candidate_evidence()
+    _record(
+        "unexpected_candidate_rejected",
+        _evaluate(
+            row=_synthetic_row(),
+            global_ctx=_synthetic_global_ctx(),
+            event_evidence=evidence_unexpected,
+        )["eligible"]
+        is False,
+    )
+    evidence_missing_field = _synthetic_event_evidence()
+    del evidence_missing_field["candidate_score_evidence"]["LR_std_C0.1"][
+        "build2_test_score_byte_equal"
+    ]
+    _record(
+        "missing_candidate_field_rejected",
+        _evaluate(
+            row=_synthetic_row(),
+            global_ctx=_synthetic_global_ctx(),
+            event_evidence=evidence_missing_field,
+        )["eligible"]
+        is False,
+    )
+    evidence_non_et_b1 = _synthetic_event_evidence()
+    evidence_non_et_b1["candidate_score_evidence"]["DT_leaf5"][
+        "build1_validation_score_byte_equal"
+    ] = False
+    _record(
+        "non_et_build1_validation_difference_rejected",
+        _evaluate(
+            row=_synthetic_row(),
+            global_ctx=_synthetic_global_ctx(),
+            event_evidence=evidence_non_et_b1,
+        )["eligible"]
+        is False,
+    )
+    evidence_non_et_b2 = _synthetic_event_evidence()
+    evidence_non_et_b2["candidate_score_evidence"]["LR_std_C1"]["build2_test_score_byte_equal"] = (
+        False
+    )
+    _record(
+        "non_et_build2_test_difference_rejected",
+        _evaluate(
+            row=_synthetic_row(),
+            global_ctx=_synthetic_global_ctx(),
+            event_evidence=evidence_non_et_b2,
+        )["eligible"]
+        is False,
+    )
+    evidence_et_val = _synthetic_event_evidence()
+    evidence_et_val["candidate_score_evidence"]["ET_leaf5"][
+        "build1_build2_validation_score_byte_equal"
+    ] = False
+    _record(
+        "et_validation_build_byte_difference_rejected",
+        _evaluate(
+            row=_synthetic_row(),
+            global_ctx=_synthetic_global_ctx(),
+            event_evidence=evidence_et_val,
+        )["eligible"]
+        is False,
+    )
+    evidence_et_test = _synthetic_event_evidence()
+    evidence_et_test["candidate_score_evidence"]["ET_leaf5"][
+        "build1_build2_test_score_byte_equal"
+    ] = False
+    _record(
+        "et_test_build_byte_difference_rejected",
+        _evaluate(
+            row=_synthetic_row(),
+            global_ctx=_synthetic_global_ctx(),
+            event_evidence=evidence_et_test,
+        )["eligible"]
+        is False,
+    )
+    et_delta_independent_pass = True
+    for field in policy.ET_SCORE_DELTA_FIELDS:
+        evidence_delta = _synthetic_event_evidence(**{field: 2e-15})
+        if (
+            _evaluate(
+                row=_synthetic_row(),
+                global_ctx=_synthetic_global_ctx(),
+                event_evidence=evidence_delta,
+            )["eligible"]
+            is not False
+        ):
+            et_delta_independent_pass = False
+            break
+    _record("et_delta_above_tolerance_rejected_independently", et_delta_independent_pass)
+    _record(
+        "aggregate_maximum_cannot_substitute_for_independent_fields",
+        _evaluate(
+            row=_synthetic_row(),
+            global_ctx=_synthetic_global_ctx(),
+            event_evidence=_synthetic_event_evidence(
+                maximum_et_score_absolute_difference=1e-16,
+                maximum_build2_test_absolute_score_difference=2e-15,
+            ),
+        )["eligible"]
+        is False,
+    )
+    _record(
+        "metric_build1_delta_above_tolerance_rejected",
+        _evaluate(
+            row=_synthetic_row(
+                absolute_difference_build1=2e-7,
+                absolute_difference_build2=1e-8,
+            ),
+            global_ctx=_synthetic_global_ctx(),
+            event_evidence=_synthetic_event_evidence(),
+        )["eligible"]
+        is False,
+    )
+    _record(
+        "metric_build2_delta_above_tolerance_rejected",
+        _evaluate(
+            row=_synthetic_row(
+                absolute_difference_build1=1e-8,
+                absolute_difference_build2=2e-7,
+            ),
+            global_ctx=_synthetic_global_ctx(),
+            event_evidence=_synthetic_event_evidence(),
+        )["eligible"]
+        is False,
+    )
+    _record(
+        "brier_rejected",
+        _evaluate(
+            row=_synthetic_row(column="brier", calibration_metric=True),
+            global_ctx=_synthetic_global_ctx(),
+            event_evidence=_synthetic_event_evidence(),
+        )["eligible"]
+        is False,
+    )
+    _record(
+        "threshold_sensitive_metric_rejected",
+        _evaluate(
+            row=_synthetic_row(column="f1", threshold_sensitive_metric=True),
+            global_ctx=_synthetic_global_ctx(),
+            event_evidence=_synthetic_event_evidence(),
+        )["eligible"]
+        is False,
+    )
+    _record(
+        "unknown_metric_rejected",
+        _evaluate(
+            row=_synthetic_row(column="unknown_metric"),
+            global_ctx=_synthetic_global_ctx(),
+            event_evidence=_synthetic_event_evidence(),
+        )["eligible"]
+        is False,
+    )
+    _record(
+        "validation_categorical_mismatch_rejected",
+        _evaluate(
+            row=_synthetic_row(),
+            global_ctx=_synthetic_global_ctx(validation_categorical_mismatch_count_build1=1),
+            event_evidence=_synthetic_event_evidence(),
+        )["eligible"]
+        is False,
+    )
+    _record(
+        "validation_numeric_mismatch_rejected",
+        _evaluate(
+            row=_synthetic_row(),
+            global_ctx=_synthetic_global_ctx(validation_numeric_mismatch_count_build2=1),
+            event_evidence=_synthetic_event_evidence(),
+        )["eligible"]
+        is False,
+    )
+    _record(
+        "selected_candidate_difference_rejected",
+        _evaluate(
+            row=_synthetic_row(),
+            global_ctx=_synthetic_global_ctx(),
+            event_evidence=_synthetic_event_evidence(),
+            selected_candidate_differs=True,
+        )["eligible"]
+        is False,
+    )
+    _record(
+        "selection_mode_difference_rejected",
+        _evaluate(
+            row=_synthetic_row(),
+            global_ctx=_synthetic_global_ctx(),
+            event_evidence=_synthetic_event_evidence(),
+            selection_mode_differs=True,
+        )["eligible"]
+        is False,
+    )
+    _record(
+        "missing_dual_build_context_rejected",
+        policy.validate_dual_build_reconciliation_context(None)["valid"] is False,
+    )
+    single_build = policy.classify_single_build_mismatch_pending(_synthetic_row())
+    _record(
+        "single_build_evidence_cannot_produce_final_approval",
+        single_build["final_status"] == "pending_dual_build_reconciliation"
+        and single_build["eligible"] is False
+        and single_build["final_approval_prohibited"] is True,
+    )
+    sha_mismatch_rejected = False
+    try:
+        with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as handle:
+            handle.write('{"mutated": true}\n')
+            temp_path = Path(handle.name)
+        try:
+            policy.load_and_verify_frozen_policy(policy_path=temp_path)
+        except RuntimeError as exc:
+            sha_mismatch_rejected = "SHA-256" in str(exc)
+        finally:
+            temp_path.unlink(missing_ok=True)
+    except Exception:
+        sha_mismatch_rejected = False
+    _record("policy_specification_sha_mismatch_rejected", sha_mismatch_rejected)
+    contract_mutation_rejected = False
+    try:
+        spec = policy.load_and_verify_frozen_policy(root)
+        mutated = copy.deepcopy(spec)
+        mutated["policy_status"] = "enforced"
+        policy._verify_policy_contract(mutated)
+    except RuntimeError:
+        contract_mutation_rejected = True
+    _record("policy_specification_contract_mutation_rejected", contract_mutation_rejected)
+    policy_source = (root / "scripts" / "part3b_et_reconciliation_policy.py").read_text(
+        encoding="utf-8"
+    )
+    _record(
+        "identity_hardcoded_implementation_detector_passes",
+        policy.implementation_contains_hardcoded_identities(policy_source) is False,
+    )
+
+    fixture_parity_passed = True
+    fixture_details: List[Dict[str, Any]] = []
+    try:
+        frozen_spec = policy.load_and_verify_frozen_policy(root)
+        reconciliation_path = root / "reports" / "part3b_et_canonical_reconciliation.json"
+        matrix_path = root / "results" / "part3b_prediction_ledger" / "et_canonical_mismatch_matrix.csv"
+        if sha256_file(reconciliation_path) != GD6_REQUIRED_RECONCILIATION_JSON_SHA256:
+            fixture_parity_passed = False
+        elif sha256_file(matrix_path) != GD6_REQUIRED_MATRIX_SHA256:
+            fixture_parity_passed = False
+        else:
+            reconciliation_json = json.loads(reconciliation_path.read_text(encoding="utf-8"))
+            matrix_df = pd.read_csv(matrix_path)
+            event_map = {
+                item["event_id"]: item
+                for item in reconciliation_json.get("score_level_evidence", [])
+            }
+            global_ctx = policy._extract_global_context(reconciliation_json)
+            for fixture in frozen_spec.get("regression_fixtures", []):
+                row_match = matrix_df[
+                    (matrix_df["experiment"] == fixture["experiment"])
+                    & (matrix_df["target_project"] == fixture["target_project"])
+                    & (matrix_df["seed"] == fixture["seed"])
+                    & (matrix_df["model"] == fixture["model"])
+                    & (matrix_df["column"] == fixture["column"])
+                ]
+                if len(row_match) != 1:
+                    fixture_parity_passed = False
+                    fixture_details.append(
+                        {"event_id": fixture.get("event_id"), "passed": False, "reason": "row_not_found"}
+                    )
+                    continue
+                row = row_match.iloc[0].to_dict()
+                event_id = policy.event_id_from_row(row)
+                evaluation = policy.evaluate_et_rank_metric_reconciliation_eligibility(
+                    row, global_ctx, event_map.get(event_id)
+                )
+                expected = fixture["mechanistically_eligible_under_frozen_policy"]
+                passed = evaluation["eligible"] == expected
+                if not passed:
+                    fixture_parity_passed = False
+                fixture_details.append(
+                    {
+                        "event_id": event_id,
+                        "expected": expected,
+                        "observed": evaluation["eligible"],
+                        "passed": passed,
+                    }
+                )
+    except Exception as exc:
+        fixture_parity_passed = False
+        fixture_details.append({"passed": False, "reason": str(exc)})
+    _record(
+        "frozen_nine_fixture_parity_with_gd5_2",
+        fixture_parity_passed,
+        fixture_details=fixture_details,
+    )
+
+    after_snapshot = _gd6_protected_artifact_snapshot(root)
+    protected_artifacts_changed = _gd6_count_changed_artifacts(before_snapshot, after_snapshot)
+
+    passed_count = sum(1 for item in tests if item["passed"])
+    failed_count = len(tests) - passed_count
+    all_passed = failed_count == 0 and protected_artifacts_changed == 0
+
+    return {
+        "tests": tests,
+        "tests_expected": 30,
+        "tests_executed": len(tests),
+        "tests_passed": passed_count,
+        "tests_failed": failed_count,
+        "all_passed": all_passed,
+        "fixture_parity_results": fixture_details,
+        "model_fits_executed": model_fits_executed,
+        "prediction_calls_executed": prediction_calls_executed,
+        "production_model_evaluation_builds_executed": production_model_evaluation_builds_executed,
+        "production_artifact_writes": production_artifact_writes,
+        "canonical_file_writes": canonical_file_writes,
+        "production_builder_entered": production_builder_entered,
+        "protected_artifacts_changed": protected_artifacts_changed,
+        "production_run_executed": False,
+        "policy_executed_on_production_artifacts": False,
+        "part3b_complete": False,
+        "part3c_authorized": False,
+        "production_execution_authorized": FINAL_PRODUCTION_EXECUTION_AUTHORIZED,
+    }
 
 
 def validate_self_test_arguments(args: List[str]) -> Dict[str, Any]:
@@ -11996,6 +12623,7 @@ def main():
     parser.add_argument("--self-test-integration-dry-run", action="store_true", default=False)
     parser.add_argument("--self-test-gd2-recovery", action="store_true", default=False)
     parser.add_argument("--self-test-gd3-publication-gate", action="store_true", default=False)
+    parser.add_argument("--self-test-et-reconciliation-policy", action="store_true", default=False)
     known, _ = parser.parse_known_args()
     if known.self_test_integration_dry_run:
         global _PART_F_BUILD_CORE_BUNDLE_CALLS, _PART_F_FIT_EVENT_CANDIDATES_CALLS, _PART_F_BUILD_PREDICTION_ROWS_CALLS
@@ -12919,6 +13547,24 @@ def main():
             and schema_ok is True
             and gate_ok is True
             and all_critical is True
+        ) else 1
+        return exit_code
+
+    if known.self_test_et_reconciliation_policy:
+        summary = run_et_reconciliation_policy_self_tests()
+        print(_json_dumps(summary))
+        exit_code = 0 if (
+            summary.get("all_passed") is True
+            and summary.get("tests_executed") == summary.get("tests_expected")
+            and summary.get("tests_failed") == 0
+            and summary.get("protected_artifacts_changed") == 0
+            and summary.get("model_fits_executed") == 0
+            and summary.get("prediction_calls_executed") == 0
+            and summary.get("production_model_evaluation_builds_executed") == 0
+            and summary.get("production_artifact_writes") == 0
+            and summary.get("canonical_file_writes") == 0
+            and summary.get("production_builder_entered") is False
+            and summary.get("production_run_executed") is False
         ) else 1
         return exit_code
 

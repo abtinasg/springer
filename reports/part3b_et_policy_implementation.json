@@ -1,0 +1,390 @@
+{
+  "stage": "Part 3B.2R.1-G.D6",
+  "starting_commit": "2cdc97470765ca0b93054d84b7f34294f4384d83",
+  "current_commit": "2cdc97470765ca0b93054d84b7f34294f4384d83",
+  "starting_commit_verified": true,
+  "frozen_policy_path": "reports/part3b_et_reconciliation_policy.json",
+  "frozen_policy_sha256": "6bc043b7c890256fd369eb8747f54dd9f2f1944b03b0dd1c70b5f6d85b8719f5",
+  "frozen_policy_contract_verified": true,
+  "implementation_module_sha256": "e55d6cdf5047ed55cf755bb0385c478d3666b4c73f557333ef3c035f4c800649",
+  "production_validator_sha_before": "a18e4b5c559011ab508a988f4dfe6d91a7d878ec2ef7249d59dd5796d3473b39",
+  "production_validator_sha_after": "d269bb2eb9b6b4959c9bccb287314249b08da52ad895fa6285ec2af9b6abce49",
+  "production_validator_code_changed": true,
+  "production_authorization_remains_false": true,
+  "implemented_constants": {
+    "et_score_absolute_tolerance": 1e-15,
+    "metric_absolute_tolerance": 1e-07,
+    "eligible_metric_allowlist": [
+      "avg_precision",
+      "roc_auc"
+    ],
+    "required_candidates": [
+      "LR_std_C0.1",
+      "LR_std_C1",
+      "DT_leaf5",
+      "ET_leaf5"
+    ],
+    "exact_build_value_equality": "float64_bit_exact",
+    "exact_build_score_equality": "byte_exact",
+    "executable_equality_helper": "float64_bit_equal",
+    "frozen_policy_json_sha256": "6bc043b7c890256fd369eb8747f54dd9f2f1944b03b0dd1c70b5f6d85b8719f5"
+  },
+  "public_functions": [
+    "load_and_verify_frozen_policy",
+    "float64_bit_equal",
+    "evaluate_et_rank_metric_reconciliation_eligibility",
+    "validate_dual_build_reconciliation_context",
+    "classify_dual_build_mismatches"
+  ],
+  "public_functions_present": {
+    "load_and_verify_frozen_policy": true,
+    "float64_bit_equal": true,
+    "evaluate_et_rank_metric_reconciliation_eligibility": true,
+    "validate_dual_build_reconciliation_context": true,
+    "classify_dual_build_mismatches": true
+  },
+  "all_public_functions_present": true,
+  "integration_points": [
+    "import_et_reconciliation_policy() loads scripts/part3b_et_reconciliation_policy.py",
+    "validate_dual_build_et_rank_metric_reconciliation() dual-build entry point (fail-closed)",
+    "--self-test-et-reconciliation-policy synthetic self-test mode",
+    "FINAL_PRODUCTION_EXECUTION_AUTHORIZED remains False"
+  ],
+  "production_validator_imports_policy_module": true,
+  "dual_build_evidence_required": true,
+  "single_build_final_approval_prohibited": true,
+  "predicate_identity_hardcoding_detected": false,
+  "candidate_set": [
+    "LR_std_C0.1",
+    "LR_std_C1",
+    "DT_leaf5",
+    "ET_leaf5"
+  ],
+  "eligible_metric_allowlist": [
+    "avg_precision",
+    "roc_auc"
+  ],
+  "fixture_parity_results": [
+    {
+      "event_id": "cross_project__JM1__seed_013",
+      "expected": true,
+      "observed": true,
+      "passed": true
+    },
+    {
+      "event_id": "cross_project__JM1__seed_013",
+      "expected": true,
+      "observed": true,
+      "passed": true
+    },
+    {
+      "event_id": "cross_project__JM1__seed_013",
+      "expected": true,
+      "observed": true,
+      "passed": true
+    },
+    {
+      "event_id": "cross_project__JM1__seed_013",
+      "expected": true,
+      "observed": true,
+      "passed": true
+    },
+    {
+      "event_id": "cross_project__JM1__seed_013",
+      "expected": true,
+      "observed": true,
+      "passed": true
+    },
+    {
+      "event_id": "cross_project__JM1__seed_013",
+      "expected": true,
+      "observed": true,
+      "passed": true
+    },
+    {
+      "event_id": "cross_project__JM1__seed_013",
+      "expected": true,
+      "observed": true,
+      "passed": true
+    },
+    {
+      "event_id": "cross_project__JM1__seed_013",
+      "expected": true,
+      "observed": true,
+      "passed": true
+    },
+    {
+      "event_id": "cross_project__JM1__seed_042",
+      "expected": true,
+      "observed": true,
+      "passed": true
+    }
+  ],
+  "synthetic_tests": {
+    "tests_expected": 30,
+    "tests_executed": 30,
+    "tests_passed": 30,
+    "tests_failed": 0,
+    "all_passed": true,
+    "test_details": [
+      {
+        "test_name": "valid_roc_auc_row_accepted",
+        "passed": true
+      },
+      {
+        "test_name": "valid_avg_precision_row_accepted",
+        "passed": true
+      },
+      {
+        "test_name": "project_seed_independent_equivalent_row_accepted",
+        "passed": true
+      },
+      {
+        "test_name": "one_ulp_build_mismatch_rejected",
+        "passed": true
+      },
+      {
+        "test_name": "positive_zero_negative_zero_rejected",
+        "passed": true
+      },
+      {
+        "test_name": "build_score_byte_difference_rejected",
+        "passed": true
+      },
+      {
+        "test_name": "missing_candidate_rejected",
+        "passed": true
+      },
+      {
+        "test_name": "unexpected_candidate_rejected",
+        "passed": true
+      },
+      {
+        "test_name": "missing_candidate_field_rejected",
+        "passed": true
+      },
+      {
+        "test_name": "non_et_build1_validation_difference_rejected",
+        "passed": true
+      },
+      {
+        "test_name": "non_et_build2_test_difference_rejected",
+        "passed": true
+      },
+      {
+        "test_name": "et_validation_build_byte_difference_rejected",
+        "passed": true
+      },
+      {
+        "test_name": "et_test_build_byte_difference_rejected",
+        "passed": true
+      },
+      {
+        "test_name": "et_delta_above_tolerance_rejected_independently",
+        "passed": true
+      },
+      {
+        "test_name": "aggregate_maximum_cannot_substitute_for_independent_fields",
+        "passed": true
+      },
+      {
+        "test_name": "metric_build1_delta_above_tolerance_rejected",
+        "passed": true
+      },
+      {
+        "test_name": "metric_build2_delta_above_tolerance_rejected",
+        "passed": true
+      },
+      {
+        "test_name": "brier_rejected",
+        "passed": true
+      },
+      {
+        "test_name": "threshold_sensitive_metric_rejected",
+        "passed": true
+      },
+      {
+        "test_name": "unknown_metric_rejected",
+        "passed": true
+      },
+      {
+        "test_name": "validation_categorical_mismatch_rejected",
+        "passed": true
+      },
+      {
+        "test_name": "validation_numeric_mismatch_rejected",
+        "passed": true
+      },
+      {
+        "test_name": "selected_candidate_difference_rejected",
+        "passed": true
+      },
+      {
+        "test_name": "selection_mode_difference_rejected",
+        "passed": true
+      },
+      {
+        "test_name": "missing_dual_build_context_rejected",
+        "passed": true
+      },
+      {
+        "test_name": "single_build_evidence_cannot_produce_final_approval",
+        "passed": true
+      },
+      {
+        "test_name": "policy_specification_sha_mismatch_rejected",
+        "passed": true
+      },
+      {
+        "test_name": "policy_specification_contract_mutation_rejected",
+        "passed": true
+      },
+      {
+        "test_name": "identity_hardcoded_implementation_detector_passes",
+        "passed": true
+      },
+      {
+        "test_name": "frozen_nine_fixture_parity_with_gd5_2",
+        "passed": true,
+        "fixture_details": [
+          {
+            "event_id": "cross_project__JM1__seed_013",
+            "expected": true,
+            "observed": true,
+            "passed": true
+          },
+          {
+            "event_id": "cross_project__JM1__seed_013",
+            "expected": true,
+            "observed": true,
+            "passed": true
+          },
+          {
+            "event_id": "cross_project__JM1__seed_013",
+            "expected": true,
+            "observed": true,
+            "passed": true
+          },
+          {
+            "event_id": "cross_project__JM1__seed_013",
+            "expected": true,
+            "observed": true,
+            "passed": true
+          },
+          {
+            "event_id": "cross_project__JM1__seed_013",
+            "expected": true,
+            "observed": true,
+            "passed": true
+          },
+          {
+            "event_id": "cross_project__JM1__seed_013",
+            "expected": true,
+            "observed": true,
+            "passed": true
+          },
+          {
+            "event_id": "cross_project__JM1__seed_013",
+            "expected": true,
+            "observed": true,
+            "passed": true
+          },
+          {
+            "event_id": "cross_project__JM1__seed_013",
+            "expected": true,
+            "observed": true,
+            "passed": true
+          },
+          {
+            "event_id": "cross_project__JM1__seed_042",
+            "expected": true,
+            "observed": true,
+            "passed": true
+          }
+        ]
+      }
+    ]
+  },
+  "measured_activity_counters": {
+    "model_fits_executed": 0,
+    "prediction_calls_executed": 0,
+    "production_model_evaluation_builds_executed": 0,
+    "production_artifact_writes": 0,
+    "canonical_file_writes": 0
+  },
+  "protected_file_verification": {
+    "paths": [
+      "scripts/freeze_part3b_et_reconciliation_policy.py",
+      "reports/part3b_et_reconciliation_policy.json",
+      "reports/part3b_et_reconciliation_policy.md",
+      "scripts/audit_part3b_et_canonical_reconciliation.py",
+      "reports/part3b_et_canonical_reconciliation.json",
+      "reports/part3b_et_canonical_reconciliation.md",
+      "results/part3b_prediction_ledger/et_canonical_mismatch_matrix.csv",
+      "results/part3b_prediction_ledger/sample_registry.csv",
+      "results/part3b_prediction_ledger/split_membership_within.csv.gz",
+      "results/part3b_prediction_ledger/canonical_result_reconstruction.csv",
+      "results/part3b_prediction_ledger/ledger_manifest.json",
+      "results/part3b_prediction_ledger/prediction_ledger_within.csv.gz",
+      "results/part3b_prediction_ledger/split_membership_cross.csv.gz",
+      "results/part3b_prediction_ledger/event_manifest.csv",
+      "results/part3b_prediction_ledger/prediction_ledger_cross.csv.gz",
+      "results/part3b_prediction_ledger/validation_reconstruction.csv"
+    ],
+    "before": {
+      "scripts/freeze_part3b_et_reconciliation_policy.py": "015d963b13cc0f2e9f6b3002c7f702f2622781e1e23b394e33557ef2b80e3d01",
+      "reports/part3b_et_reconciliation_policy.json": "6bc043b7c890256fd369eb8747f54dd9f2f1944b03b0dd1c70b5f6d85b8719f5",
+      "reports/part3b_et_reconciliation_policy.md": "38778184b996f0ceec87e1b2989120e43c24b9a13d8c8fb4e9d6fa33d0199038",
+      "scripts/audit_part3b_et_canonical_reconciliation.py": "2ad7fa3a2065f56d3111d91aba6f22ab3b80a867f3f704955d10d2547938ed8f",
+      "reports/part3b_et_canonical_reconciliation.json": "2c483ceea237c97d5c339ba3ceb438f8e6e2e9beae695dc9410aa5b4b825de0a",
+      "reports/part3b_et_canonical_reconciliation.md": "00edd04f06c16381f6af1b83edc44a0036a92a938ae09056d3b2118927e6c683",
+      "results/part3b_prediction_ledger/et_canonical_mismatch_matrix.csv": "25cc88a8785f18668be2e03328a71b80b6e2c66f679a572e1e53656cde4ef908",
+      "results/part3b_prediction_ledger/sample_registry.csv": "c877c8e2589e895ffca9ca953e6309cc07105c9b142edfd8d103de8b9dbf44fd",
+      "results/part3b_prediction_ledger/split_membership_within.csv.gz": "cc9e8c99a79a7c8b880531a50419fdc6c460089cd5e5d684cd7ef4c8f77ed01d",
+      "results/part3b_prediction_ledger/canonical_result_reconstruction.csv": "bcd1ec1e1ff3ec1e80775201d26633ff84b15a1025837d1658f1fb9d120fb045",
+      "results/part3b_prediction_ledger/ledger_manifest.json": "9fac75591b440f3b3f4e2899d9f9c1beb77dd9c70cef16378880f7cb0f77ffde",
+      "results/part3b_prediction_ledger/prediction_ledger_within.csv.gz": "03079b85039a934b2783b4473045fcdd273abdb326f163193370f2bdef6ce5f1",
+      "results/part3b_prediction_ledger/split_membership_cross.csv.gz": "1478568991c0b9661fdbc80e7b7731cc984b1e418ca9bdba07910f41e8a869ad",
+      "results/part3b_prediction_ledger/event_manifest.csv": "89f80b9045bae96b75a074caa5d2ccc4ad0cae59f72a4c84079ceae2e7a76431",
+      "results/part3b_prediction_ledger/prediction_ledger_cross.csv.gz": "d17de9576bdc9ce7d9e4332631e87496af5856796b36c16d3b60ae472fd0618e",
+      "results/part3b_prediction_ledger/validation_reconstruction.csv": "f15958ccbcb5368b869e91965de82ef4332f11ed2960878ed9b630b58603d77a"
+    },
+    "after": {
+      "scripts/freeze_part3b_et_reconciliation_policy.py": "015d963b13cc0f2e9f6b3002c7f702f2622781e1e23b394e33557ef2b80e3d01",
+      "reports/part3b_et_reconciliation_policy.json": "6bc043b7c890256fd369eb8747f54dd9f2f1944b03b0dd1c70b5f6d85b8719f5",
+      "reports/part3b_et_reconciliation_policy.md": "38778184b996f0ceec87e1b2989120e43c24b9a13d8c8fb4e9d6fa33d0199038",
+      "scripts/audit_part3b_et_canonical_reconciliation.py": "2ad7fa3a2065f56d3111d91aba6f22ab3b80a867f3f704955d10d2547938ed8f",
+      "reports/part3b_et_canonical_reconciliation.json": "2c483ceea237c97d5c339ba3ceb438f8e6e2e9beae695dc9410aa5b4b825de0a",
+      "reports/part3b_et_canonical_reconciliation.md": "00edd04f06c16381f6af1b83edc44a0036a92a938ae09056d3b2118927e6c683",
+      "results/part3b_prediction_ledger/et_canonical_mismatch_matrix.csv": "25cc88a8785f18668be2e03328a71b80b6e2c66f679a572e1e53656cde4ef908",
+      "results/part3b_prediction_ledger/sample_registry.csv": "c877c8e2589e895ffca9ca953e6309cc07105c9b142edfd8d103de8b9dbf44fd",
+      "results/part3b_prediction_ledger/split_membership_within.csv.gz": "cc9e8c99a79a7c8b880531a50419fdc6c460089cd5e5d684cd7ef4c8f77ed01d",
+      "results/part3b_prediction_ledger/canonical_result_reconstruction.csv": "bcd1ec1e1ff3ec1e80775201d26633ff84b15a1025837d1658f1fb9d120fb045",
+      "results/part3b_prediction_ledger/ledger_manifest.json": "9fac75591b440f3b3f4e2899d9f9c1beb77dd9c70cef16378880f7cb0f77ffde",
+      "results/part3b_prediction_ledger/prediction_ledger_within.csv.gz": "03079b85039a934b2783b4473045fcdd273abdb326f163193370f2bdef6ce5f1",
+      "results/part3b_prediction_ledger/split_membership_cross.csv.gz": "1478568991c0b9661fdbc80e7b7731cc984b1e418ca9bdba07910f41e8a869ad",
+      "results/part3b_prediction_ledger/event_manifest.csv": "89f80b9045bae96b75a074caa5d2ccc4ad0cae59f72a4c84079ceae2e7a76431",
+      "results/part3b_prediction_ledger/prediction_ledger_cross.csv.gz": "d17de9576bdc9ce7d9e4332631e87496af5856796b36c16d3b60ae472fd0618e",
+      "results/part3b_prediction_ledger/validation_reconstruction.csv": "f15958ccbcb5368b869e91965de82ef4332f11ed2960878ed9b630b58603d77a"
+    },
+    "unchanged": true
+  },
+  "protected_files_unchanged": true,
+  "policy_implementation_present": true,
+  "policy_specification_loaded_and_verified": true,
+  "policy_executed_on_production_artifacts": false,
+  "production_run_executed": false,
+  "canonical_files_changed": false,
+  "existing_part3b_artifacts_changed": false,
+  "part3b_complete": false,
+  "part3c_authorized": false,
+  "implementation_report_json_markdown_consistency": true,
+  "transactional_report_publication": true,
+  "audit_passed": true,
+  "publication_result": {
+    "json_path": "/Users/aliehpourdast/Desktop/springer/springer/reports/part3b_et_policy_implementation.json",
+    "md_path": "/Users/aliehpourdast/Desktop/springer/springer/reports/part3b_et_policy_implementation.md",
+    "json_sha256": "0ada20bac055ac0dcf28399dac5d8ded30224e41c848ccf1a598228e418be775",
+    "md_sha256": "a1f1d04844f11c0ef52ea2986ad6ab99c50a22dd8911fb8a1297d3d07d6cfe9a"
+  }
+}
