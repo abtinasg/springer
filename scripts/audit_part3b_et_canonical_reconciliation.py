@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Part 3B.2R.1-G.D4.1.1: Transactional ET canonical-reconciliation audit."""
+"""Part 3B.2R.1-G.D4.1.2: Transactional ET canonical-reconciliation audit."""
 from __future__ import annotations
 
 import argparse
@@ -11,13 +11,13 @@ import sys
 import tempfile
 import unittest.mock
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Sequence, Tuple
+from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
 
 import numpy as np
 import pandas as pd
 
-STARTING_COMMIT = "3b87873e851fb84f361a88736c0188b106f7f2c2"
-STAGE = "Part 3B.2R.1-G.D4.1.1"
+STARTING_COMMIT = "ed689c5f28f4f5c54835a1db31779ed61040e643"
+STAGE = "Part 3B.2R.1-G.D4.1.2"
 MATRIX_SHA256 = (
     "25cc88a8785f18668be2e03328a71b80b6e2c66f679a572e1e53656cde4ef908"
 )
@@ -255,6 +255,87 @@ BUILD_SOURCE_HASH_PAIRS = [
     ("g_r1_build1_prediction_within", "g_r1_build2_prediction_within"),
     ("g_r1_build1_prediction_cross", "g_r1_build2_prediction_cross"),
 ]
+
+PUBLICATION_ARTIFACT_PATHS = [
+    "results/part3b_prediction_ledger/et_canonical_mismatch_matrix.csv",
+    "reports/part3b_et_canonical_reconciliation.json",
+    "reports/part3b_et_canonical_reconciliation.md",
+]
+
+ML_COUNTED_METHODS = frozenset(
+    {"fit", "fit_transform", "predict", "predict_proba", "decision_function"}
+)
+ML_MODULE_PREFIXES = (
+    "sklearn.",
+    "xgboost.",
+    "lightgbm.",
+    "models.",
+    "model_building.",
+    "part3b.",
+)
+
+
+class ExecutionActivityTracker:
+    """Runtime profiler that counts ML fit/predict and production-build activity."""
+
+    def __init__(self) -> None:
+        self.model_fits_executed = 0
+        self.prediction_calls_executed = 0
+        self.production_builds_executed = 0
+        self._original_trace: Optional[Callable[..., Any]] = None
+        self._active = False
+
+    def _is_ml_module(self, module_name: str) -> bool:
+        return any(module_name.startswith(prefix) for prefix in ML_MODULE_PREFIXES)
+
+    def _trace(self, frame: Any, event: str, arg: Any) -> Callable[..., Any]:
+        if event == "call":
+            code = frame.f_code
+            if code.co_name in ML_COUNTED_METHODS:
+                module_name = frame.f_globals.get("__name__", "")
+                if self._is_ml_module(str(module_name)):
+                    if code.co_name in ("fit", "fit_transform"):
+                        self.model_fits_executed += 1
+                    else:
+                        self.prediction_calls_executed += 1
+        return self._trace
+
+    def __enter__(self) -> "ExecutionActivityTracker":
+        if not self._active:
+            self._original_trace = sys.gettrace()
+            sys.settrace(self._trace)
+            self._active = True
+        return self
+
+    def __exit__(self, exc_type: Any, exc: Any, tb: Any) -> None:
+        if self._active:
+            sys.settrace(self._original_trace)
+            self._active = False
+
+    def record_production_build(self) -> None:
+        self.production_builds_executed += 1
+
+
+def publication_artifact_snapshot(root: Path) -> Dict[str, Optional[str]]:
+    snapshot: Dict[str, Optional[str]] = {}
+    for rel in PUBLICATION_ARTIFACT_PATHS:
+        path = root / rel
+        if path.is_file():
+            snapshot[rel] = sha256_file(path)
+        else:
+            snapshot[rel] = None
+    return snapshot
+
+
+def count_changed_publication_artifacts(
+    before: Dict[str, Optional[str]],
+    after: Dict[str, Optional[str]],
+) -> int:
+    changed = 0
+    for rel in PUBLICATION_ARTIFACT_PATHS:
+        if before.get(rel) != after.get(rel):
+            changed += 1
+    return changed
 
 
 class NumpyEncoder(json.JSONEncoder):
@@ -815,6 +896,7 @@ def _validate_publication_candidates(
     tmp_json_path: Path,
     tmp_md_path: Path,
     existing_matrix_bytes: bytes,
+    expected_matrix_sha256: str,
 ) -> Dict[str, bool]:
     reread_csv_df = read_csv_round_trip(tmp_csv_path)
     reread_json = json.loads(tmp_json_path.read_text(encoding="utf-8"))
@@ -857,10 +939,10 @@ def _validate_publication_candidates(
             raise RuntimeError(f"Markdown missing JSON-backed value for {label}")
 
     tmp_csv_bytes = tmp_csv_path.read_bytes()
-    if hashlib.sha256(tmp_csv_bytes).hexdigest() != MATRIX_SHA256:
+    if hashlib.sha256(tmp_csv_bytes).hexdigest() != expected_matrix_sha256:
         raise RuntimeError(
             f"Temporary CSV SHA-256 {hashlib.sha256(tmp_csv_bytes).hexdigest()} "
-            f"!= required {MATRIX_SHA256}"
+            f"!= required {expected_matrix_sha256}"
         )
     if tmp_csv_bytes != existing_matrix_bytes:
         raise RuntimeError("Temporary CSV bytes differ from existing final matrix bytes")
@@ -894,6 +976,7 @@ def validate_publication_readiness(
     report: Dict[str, Any],
     matrix_path: Path,
     reports_dir: Path,
+    expected_matrix_sha256: str = MATRIX_SHA256,
 ) -> Dict[str, bool]:
     existing_matrix_bytes = matrix_path.read_bytes() if matrix_path.is_file() else b""
     tmp_csv_path = _write_temp_file(matrix_path.parent, matrix_to_csv_text(matrix_df))
@@ -909,6 +992,7 @@ def validate_publication_readiness(
             tmp_json_path,
             tmp_md_path,
             existing_matrix_bytes,
+            expected_matrix_sha256,
         )
     finally:
         _cleanup_publication_artifacts(tmp_csv_path, tmp_json_path, tmp_md_path)
@@ -920,6 +1004,7 @@ def publish_outputs_transactionally(
     matrix_path: Path,
     json_path: Path,
     md_path: Path,
+    expected_matrix_sha256: str = MATRIX_SHA256,
 ) -> Dict[str, bool]:
     matrix_path.parent.mkdir(parents=True, exist_ok=True)
     json_path.parent.mkdir(parents=True, exist_ok=True)
@@ -963,6 +1048,7 @@ def publish_outputs_transactionally(
             tmp_json_path,
             tmp_md_path,
             existing_matrix_bytes,
+            expected_matrix_sha256,
         )
 
         if matrix_path.is_file():
@@ -1265,6 +1351,8 @@ def verify_starting_commit() -> None:
 
 
 def run_audit(build1_root: Path, build2_root: Path, *, verify_commit: bool = True) -> Dict[str, Any]:
+    if _ACTIVE_ACTIVITY_TRACKER is not None:
+        _ACTIVE_ACTIVITY_TRACKER.record_production_build()
     if verify_commit:
         verify_starting_commit()
     root = repo_root()
@@ -1590,28 +1678,200 @@ def run_audit(build1_root: Path, build2_root: Path, *, verify_commit: bool = Tru
     return report
 
 
-def _self_test_one_ulp_build_value_difference_rejected() -> bool:
-    identity = {
+_ACTIVE_ACTIVITY_TRACKER: Optional[ExecutionActivityTracker] = None
+
+
+def _self_test_synthetic_matrix_df() -> pd.DataFrame:
+  rows: List[Dict[str, Any]] = []
+  for idx in range(8):
+    rows.append(
+      {
+        "mismatch_status": "unapproved_systematic_et_difference",
         "experiment": "cross_project",
         "target_project": "JM1",
-        "seed": 42,
+        "seed": 13,
         "model": "ET_leaf5",
         "selected_candidate": "ET_leaf5",
         "selection_mode": "single_candidate_balanced_threshold",
-        "column": "roc_auc",
+        "column": "roc_auc" if idx % 2 == 0 else "avg_precision",
+        "canonical_value": 0.6693121125388155,
+        "g_r1_build1_value": 0.66931206970383,
+        "g_r1_build2_value": 0.66931206970383,
+        "accepted_tracked_part3b_value": 0.66931206970383,
+        "build1_build2_value_equal": True,
+        "absolute_difference_build1": 4.283498555857079e-08,
+        "absolute_difference_build2": 4.283498555857079e-08,
+        "relative_difference_build1": 9.938014065509184e-08,
+        "relative_difference_build2": 9.938014065509184e-08,
+        "g_r1_vs_accepted_absolute_difference": 0.0,
+        "direct_et_model": True,
+        "selected_candidate_is_et": True,
+        "soft_ensemble_contains_et": False,
+        "et_derived_row": True,
+        "rank_sensitive_metric": True,
+        "threshold_sensitive_metric": False,
+        "calibration_metric": False,
+        "within_1e_7": True,
+        "currently_approved_exception": False,
+        "currently_unapproved_mismatch": True,
+      }
+    )
+  rows.append(
+    {
+      "mismatch_status": "approved_existing_exception",
+      "experiment": "cross_project",
+      "target_project": "JM1",
+      "seed": 42,
+      "model": "AQRPE_v2_rank",
+      "selected_candidate": "ET_leaf5",
+      "selection_mode": "rank_objective_fixed_threshold",
+      "column": "roc_auc",
+      "canonical_value": APPROVED_EXCEPTION_CANONICAL_VALUE,
+      "g_r1_build1_value": APPROVED_EXCEPTION_RECON_VALUE,
+      "g_r1_build2_value": APPROVED_EXCEPTION_RECON_VALUE,
+      "accepted_tracked_part3b_value": APPROVED_EXCEPTION_RECON_VALUE,
+      "build1_build2_value_equal": True,
+      "absolute_difference_build1": abs(
+        APPROVED_EXCEPTION_CANONICAL_VALUE - APPROVED_EXCEPTION_RECON_VALUE
+      ),
+      "absolute_difference_build2": abs(
+        APPROVED_EXCEPTION_CANONICAL_VALUE - APPROVED_EXCEPTION_RECON_VALUE
+      ),
+      "relative_difference_build1": abs(
+        APPROVED_EXCEPTION_CANONICAL_VALUE - APPROVED_EXCEPTION_RECON_VALUE
+      )
+      / abs(APPROVED_EXCEPTION_CANONICAL_VALUE),
+      "relative_difference_build2": abs(
+        APPROVED_EXCEPTION_CANONICAL_VALUE - APPROVED_EXCEPTION_RECON_VALUE
+      )
+      / abs(APPROVED_EXCEPTION_CANONICAL_VALUE),
+      "g_r1_vs_accepted_absolute_difference": 0.0,
+      "direct_et_model": False,
+      "selected_candidate_is_et": True,
+      "soft_ensemble_contains_et": False,
+      "et_derived_row": True,
+      "rank_sensitive_metric": True,
+      "threshold_sensitive_metric": False,
+      "calibration_metric": False,
+      "within_1e_7": True,
+      "currently_approved_exception": True,
+      "currently_unapproved_mismatch": False,
     }
-    b1_mismatches = [{**identity, "build1_value": 1.0}]
-    b2_mismatches = [
-        {
-            **identity,
-            "build2_value": float(np.nextafter(np.float64(1.0), np.float64(2.0))),
-        }
-    ]
-    try:
-        require_build_mismatch_values_bit_exact(b1_mismatches, b2_mismatches)
-        return False
-    except RuntimeError:
-        return True
+  )
+  return pd.DataFrame(rows)[MATRIX_COLUMNS]
+
+
+def _self_test_publication_report_from_matrix(matrix_df: pd.DataFrame) -> Dict[str, Any]:
+  summaries = recompute_matrix_summaries(matrix_df)
+  return {
+    "stage": STAGE,
+    "starting_commit": STARTING_COMMIT,
+    **summaries,
+    "build_mismatch_identity_sets_equal": True,
+    "categorical_mismatch_count": 0,
+    "validation_numeric_mismatch_count": 0,
+    "maximum_et_score_absolute_difference": 4.440892098500626e-16,
+    "non_et_scores_byte_identical": True,
+    "all_unapproved_rows_et_derived": True,
+    "all_unapproved_rows_rank_sensitive": True,
+    "all_unapproved_rows_within_1e_7": True,
+    "policy_enforced": False,
+    "production_validator_changed": False,
+    "canonical_file_changed": False,
+    "all_validation_checks_passed": True,
+    "affected_events": ["cross_project__JM1__seed_013"],
+    "affected_models": ["ET_leaf5"],
+    "affected_columns": ["avg_precision", "roc_auc"],
+    "build1_build2_validation_reconstructions_equal": True,
+    "validation_categorical_mismatch_count_build1": 0,
+    "validation_categorical_mismatch_count_build2": 0,
+    "validation_numeric_mismatch_count_build1": 0,
+    "validation_numeric_mismatch_count_build2": 0,
+    "build_result_reconstruction_sha_equal": True,
+    "build_validation_reconstruction_sha_equal": True,
+    "build_prediction_within_sha_equal": True,
+    "build_prediction_cross_sha_equal": True,
+    "score_level_evidence": [],
+    "proposed_et_rank_metric_reconciliation_policy": {
+      "policy_enforced": False,
+      "production_validator_changed": False,
+      "canonical_file_changed": False,
+      "mechanistically_explainable": [],
+      "currently_approved": [],
+      "currently_unapproved": [],
+    },
+    "model_fits_executed": 0,
+    "prediction_calls_executed": 0,
+    "build_core_bundle_calls": 0,
+    "repository_production_artifacts_published": 0,
+    "part3b_complete": False,
+    "part3c_authorized": False,
+    "audit_integrity_checks": {
+      "exact_source_role_set_passed": True,
+      "build_source_hash_pairs_equal": True,
+      "build_mismatch_values_bit_exact": True,
+      "build_score_arrays_byte_exact": True,
+      "validation_build1_exact": True,
+      "validation_build2_exact": True,
+      "validation_builds_exactly_equal": True,
+      "matrix_matches_in_memory": True,
+      "json_matches_matrix": True,
+      "markdown_matches_json": True,
+      "transactional_publication_ready": True,
+      "all_audit_integrity_checks_passed": True,
+    },
+  }
+
+
+def _self_test_write_consistent_publication_files(
+  tmp_dir: Path,
+) -> Tuple[pd.DataFrame, Dict[str, Any], Path, Path, Path, str, bytes]:
+  matrix_path = tmp_dir / "et_canonical_mismatch_matrix.csv"
+  json_path = tmp_dir / "part3b_et_canonical_reconciliation.json"
+  md_path = tmp_dir / "part3b_et_canonical_reconciliation.md"
+  matrix_df = _self_test_synthetic_matrix_df()
+  matrix_csv = matrix_to_csv_text(matrix_df)
+  matrix_path.write_text(matrix_csv, encoding="utf-8", newline="")
+  matrix_bytes = matrix_path.read_bytes()
+  expected_matrix_sha256 = hashlib.sha256(matrix_bytes).hexdigest()
+  report = _self_test_publication_report_from_matrix(matrix_df)
+  json_path.write_bytes((json.dumps(report, indent=2, cls=NumpyEncoder) + "\n").encode("utf-8"))
+  md_path.write_bytes(render_markdown(report).encode("utf-8"))
+  return matrix_df, report, matrix_path, json_path, md_path, expected_matrix_sha256, matrix_bytes
+
+
+def _self_test_no_publication_leftovers(directory: Path) -> bool:
+  for path in directory.rglob("*"):
+    if not path.is_file():
+      continue
+    name = path.name
+    if name.startswith(".") or "pubbak" in name:
+      return False
+  return True
+
+
+def _self_test_one_ulp_build_value_difference_rejected() -> bool:
+  identity = {
+    "experiment": "cross_project",
+    "target_project": "JM1",
+    "seed": 42,
+    "model": "ET_leaf5",
+    "selected_candidate": "ET_leaf5",
+    "selection_mode": "single_candidate_balanced_threshold",
+    "column": "roc_auc",
+  }
+  b1_mismatches = [{**identity, "build1_value": 1.0}]
+  b2_mismatches = [
+    {
+      **identity,
+      "build2_value": float(np.nextafter(np.float64(1.0), np.float64(2.0))),
+    }
+  ]
+  try:
+    require_build_mismatch_values_bit_exact(b1_mismatches, b2_mismatches)
+    return False
+  except RuntimeError:
+    return True
 
 
 def _self_test_build2_score_difference_rejected() -> bool:
@@ -1693,134 +1953,115 @@ def _self_test_missing_source_role_rejected() -> bool:
 
 
 def _self_test_markdown_json_disagreement_rejected() -> bool:
-    with tempfile.TemporaryDirectory() as tmp:
-        tmp_dir = Path(tmp)
-        matrix_path = tmp_dir / "et_canonical_mismatch_matrix.csv"
-        json_path = tmp_dir / "part3b_et_canonical_reconciliation.json"
-        md_path = tmp_dir / "part3b_et_canonical_reconciliation.md"
+  return (
+    _self_test_markdown_json_disagreement_subcase_a()
+    and _self_test_markdown_json_disagreement_subcase_b()
+  )
 
-        repo_matrix_path = (
-            repo_root() / "results/part3b_prediction_ledger/et_canonical_mismatch_matrix.csv"
+
+def _self_test_markdown_json_disagreement_subcase_a() -> bool:
+  with tempfile.TemporaryDirectory() as tmp:
+    tmp_dir = Path(tmp)
+    (
+      matrix_df,
+      report,
+      matrix_path,
+      json_path,
+      md_path,
+      expected_matrix_sha256,
+      _,
+    ) = _self_test_write_consistent_publication_files(tmp_dir)
+
+    orig_matrix = matrix_path.read_bytes()
+    orig_json = json_path.read_bytes()
+    orig_md = md_path.read_bytes()
+
+    render_calls = {"count": 0}
+    original_render = render_markdown
+
+    def corrupt_first_render(payload: Dict[str, Any]) -> str:
+      text = original_render(payload)
+      render_calls["count"] += 1
+      if render_calls["count"] == 1:
+        return text + "\n<!-- markdown-json disagreement -->"
+      return text
+
+    rejected = False
+    with unittest.mock.patch(f"{__name__}.render_markdown", side_effect=corrupt_first_render):
+      try:
+        publish_outputs_transactionally(
+          matrix_df,
+          report,
+          matrix_path,
+          json_path,
+          md_path,
+          expected_matrix_sha256=expected_matrix_sha256,
         )
-        matrix_bytes = repo_matrix_path.read_bytes()
-        matrix_path.write_bytes(matrix_bytes)
-        matrix_df = read_csv_round_trip(matrix_path)
+      except RuntimeError:
+        rejected = True
 
-        report = _self_test_publication_report()
-        json_path.write_bytes((json.dumps(report, indent=2, cls=NumpyEncoder) + "\n").encode("utf-8"))
-        md_path.write_bytes(render_markdown(report).encode("utf-8"))
-
-        orig_matrix = matrix_path.read_bytes()
-        orig_json = json_path.read_bytes()
-        orig_md = md_path.read_bytes()
-
-        render_calls = {"count": 0}
-        original_render = render_markdown
-
-        def corrupt_first_render(payload: Dict[str, Any]) -> str:
-            text = original_render(payload)
-            render_calls["count"] += 1
-            if render_calls["count"] == 1:
-                return text + "\n<!-- markdown-json disagreement -->"
-            return text
-
-        rejected = False
-        with unittest.mock.patch(
-            f"{__name__}.render_markdown",
-            side_effect=corrupt_first_render,
-        ):
-            try:
-                publish_outputs_transactionally(matrix_df, report, matrix_path, json_path, md_path)
-            except RuntimeError:
-                rejected = True
-
-        if not rejected:
-            return False
-        if matrix_path.read_bytes() != orig_matrix:
-            return False
-        if json_path.read_bytes() != orig_json:
-            return False
-        if md_path.read_bytes() != orig_md:
-            return False
-
-        leftovers = list(tmp_dir.glob(".*")) + [
-            p for p in tmp_dir.iterdir() if p.name.startswith(".") or "pubbak" in p.name
-        ]
-        for path in tmp_dir.iterdir():
-            if path.name.startswith(".") or path.suffix == ".pubbak" or "pubbak" in path.name:
-                return False
-        for path in tmp_dir.parent.glob(f"{tmp_dir.name}*"):
-            if path.is_file():
-                return False
-        return True
+    if not rejected:
+      return False
+    if matrix_path.read_bytes() != orig_matrix:
+      return False
+    if json_path.read_bytes() != orig_json:
+      return False
+    if md_path.read_bytes() != orig_md:
+      return False
+    return _self_test_no_publication_leftovers(tmp_dir)
 
 
-def _self_test_publication_report() -> Dict[str, Any]:
-    return {
-        "stage": STAGE,
-        "starting_commit": STARTING_COMMIT,
-        "strict_mismatch_count": 9,
-        "strict_mismatch_count_build1": 9,
-        "strict_mismatch_count_build2": 9,
-        "approved_existing_exception_count": 1,
-        "unapproved_systematic_difference_count": 8,
-        "build_mismatch_identity_sets_equal": True,
-        "build_mismatch_values_equal": True,
-        "categorical_mismatch_count": 0,
-        "validation_numeric_mismatch_count": 0,
-        "maximum_metric_absolute_difference": 4.283498555857079e-08,
-        "maximum_metric_relative_difference": 9.938014065509184e-08,
-        "maximum_et_score_absolute_difference": 4.440892098500626e-16,
-        "non_et_scores_byte_identical": True,
-        "all_unapproved_rows_et_derived": True,
-        "all_unapproved_rows_rank_sensitive": True,
-        "all_unapproved_rows_within_1e_7": True,
-        "policy_enforced": False,
-        "production_validator_changed": False,
-        "canonical_file_changed": False,
-        "all_validation_checks_passed": True,
-        "affected_events": ["cross_project__JM1__seed_013"],
-        "affected_models": ["ET_leaf5"],
-        "affected_columns": ["avg_precision", "roc_auc"],
-        "build1_build2_validation_reconstructions_equal": True,
-        "validation_categorical_mismatch_count_build1": 0,
-        "validation_categorical_mismatch_count_build2": 0,
-        "validation_numeric_mismatch_count_build1": 0,
-        "validation_numeric_mismatch_count_build2": 0,
-        "build_result_reconstruction_sha_equal": True,
-        "build_validation_reconstruction_sha_equal": True,
-        "build_prediction_within_sha_equal": True,
-        "build_prediction_cross_sha_equal": True,
-        "score_level_evidence": [],
-        "proposed_et_rank_metric_reconciliation_policy": {
-            "policy_enforced": False,
-            "production_validator_changed": False,
-            "canonical_file_changed": False,
-            "mechanistically_explainable": [],
-            "currently_approved": [],
-            "currently_unapproved": [],
-        },
-        "model_fits_executed": 0,
-        "prediction_calls_executed": 0,
-        "build_core_bundle_calls": 0,
-        "repository_production_artifacts_published": 0,
-        "part3b_complete": False,
-        "part3c_authorized": False,
-        "audit_integrity_checks": {
-            "exact_source_role_set_passed": True,
-            "build_source_hash_pairs_equal": True,
-            "build_mismatch_values_bit_exact": True,
-            "build_score_arrays_byte_exact": True,
-            "validation_build1_exact": True,
-            "validation_build2_exact": True,
-            "validation_builds_exactly_equal": True,
-            "matrix_matches_in_memory": True,
-            "json_matches_matrix": True,
-            "markdown_matches_json": True,
-            "transactional_publication_ready": True,
-            "all_audit_integrity_checks_passed": True,
-        },
-    }
+def _self_test_markdown_json_disagreement_subcase_b() -> bool:
+  with tempfile.TemporaryDirectory() as tmp:
+    tmp_dir = Path(tmp)
+    (
+      matrix_df,
+      report,
+      matrix_path,
+      json_path,
+      md_path,
+      expected_matrix_sha256,
+      _,
+    ) = _self_test_write_consistent_publication_files(tmp_dir)
+
+    orig_matrix = matrix_path.read_bytes()
+    orig_json = json_path.read_bytes()
+    orig_md = md_path.read_bytes()
+
+    original_replace = Path.replace
+    replace_count = {"count": 0}
+
+    def failing_replace(self: Path, target: Path) -> Path:
+      replace_count["count"] += 1
+      if replace_count["count"] == 2:
+        raise OSError("injected partial replacement failure")
+      return original_replace(self, target)
+
+    rejected = False
+    with unittest.mock.patch.object(Path, "replace", failing_replace):
+      try:
+        publish_outputs_transactionally(
+          matrix_df,
+          report,
+          matrix_path,
+          json_path,
+          md_path,
+          expected_matrix_sha256=expected_matrix_sha256,
+        )
+      except (RuntimeError, OSError):
+        rejected = True
+
+    if not rejected:
+      return False
+    if replace_count["count"] < 2:
+      return False
+    if matrix_path.read_bytes() != orig_matrix:
+      return False
+    if json_path.read_bytes() != orig_json:
+      return False
+    if md_path.read_bytes() != orig_md:
+      return False
+    return _self_test_no_publication_leftovers(tmp_dir)
 
 
 def _write_synthetic_bundle(root: Path) -> Tuple[Path, Path]:
@@ -1953,30 +2194,44 @@ def _write_synthetic_bundle(root: Path) -> Tuple[Path, Path]:
 
 
 def run_self_tests() -> Dict[str, Any]:
-    tests = [
-        ("one_ulp_build_value_difference_rejected", _self_test_one_ulp_build_value_difference_rejected),
-        ("build2_score_difference_rejected", _self_test_build2_score_difference_rejected),
-        ("validation_categorical_difference_rejected", _self_test_validation_categorical_difference_rejected),
-        ("missing_source_role_rejected", _self_test_missing_source_role_rejected),
-        ("markdown_json_disagreement_rejected", _self_test_markdown_json_disagreement_rejected),
-    ]
-    results: List[Dict[str, Any]] = []
-    for name, fn in tests:
+  global _ACTIVE_ACTIVITY_TRACKER
+  tests = [
+    ("one_ulp_build_value_difference_rejected", _self_test_one_ulp_build_value_difference_rejected),
+    ("build2_score_difference_rejected", _self_test_build2_score_difference_rejected),
+    ("validation_categorical_difference_rejected", _self_test_validation_categorical_difference_rejected),
+    ("missing_source_role_rejected", _self_test_missing_source_role_rejected),
+    ("markdown_json_disagreement_rejected", _self_test_markdown_json_disagreement_rejected),
+  ]
+  root = repo_root()
+  before_snapshot = publication_artifact_snapshot(root)
+  tracker = ExecutionActivityTracker()
+  _ACTIVE_ACTIVITY_TRACKER = tracker
+  results: List[Dict[str, Any]] = []
+  try:
+    with tracker:
+      for name, fn in tests:
         passed = bool(fn())
         results.append({"test_name": name, "passed": passed})
-    passed_count = sum(1 for item in results if item["passed"])
-    failed_count = len(results) - passed_count
-    expected_count = len(results)
-    return {
-        "tests": results,
-        "passed": passed_count,
-        "expected": expected_count,
-        "failed": failed_count,
-        "total": len(results),
-        "model_fits_executed": 0,
-        "prediction_calls_executed": 0,
-        "repository_production_artifacts_published": 0,
-    }
+  finally:
+    _ACTIVE_ACTIVITY_TRACKER = None
+  after_snapshot = publication_artifact_snapshot(root)
+  passed_count = sum(1 for item in results if item["passed"])
+  failed_count = len(results) - passed_count
+  expected_count = len(results)
+  return {
+    "tests": results,
+    "passed": passed_count,
+    "expected": expected_count,
+    "failed": failed_count,
+    "total": len(results),
+    "model_fits_executed": tracker.model_fits_executed,
+    "prediction_calls_executed": tracker.prediction_calls_executed,
+    "production_builds_executed": tracker.production_builds_executed,
+    "repository_production_artifacts_published": count_changed_publication_artifacts(
+      before_snapshot,
+      after_snapshot,
+    ),
+  }
 
 
 def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
@@ -2014,6 +2269,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                     ),
                     "model_fits_executed": summary["model_fits_executed"],
                     "prediction_calls_executed": summary["prediction_calls_executed"],
+                    "production_builds_executed": summary["production_builds_executed"],
                     "repository_production_artifacts_published": summary[
                         "repository_production_artifacts_published"
                     ],
