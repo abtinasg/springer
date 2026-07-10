@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Part 3B.2R.1-G.D6.1: Audit frozen ET reconciliation policy implementation."""
+"""Part 3B.2R.1-G.D6.2: Audit frozen ET reconciliation policy implementation."""
 from __future__ import annotations
 
 import argparse
@@ -13,8 +13,8 @@ import tempfile
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
-STAGE = "Part 3B.2R.1-G.D6.1"
-STARTING_COMMIT = "69f60b84e2e20b3ac3a89aa93e10269a7b6c773c"
+STAGE = "Part 3B.2R.1-G.D6.2"
+STARTING_COMMIT = "7b8aba3ac836de312d0d95596c4bf853238ae2ba"
 JSON_OUTPUT_PATH = "reports/part3b_et_policy_implementation.json"
 MD_OUTPUT_PATH = "reports/part3b_et_policy_implementation.md"
 FROZEN_POLICY_JSON_PATH = "reports/part3b_et_reconciliation_policy.json"
@@ -23,6 +23,29 @@ PRODUCTION_VALIDATOR_PATH = "scripts/build_part3b_prediction_ledger.py"
 PRODUCTION_VALIDATOR_SHA_BEFORE = (
     "d269bb2eb9b6b4959c9bccb287314249b08da52ad895fa6285ec2af9b6abce49"
 )
+EXPECTED_WRITE_GUARD_MECHANISMS = [
+    "builtins_open",
+    "io_open",
+    "path_open",
+    "path_write_text",
+    "path_write_bytes",
+    "path_touch",
+    "path_replace",
+    "path_rename",
+    "os_open",
+    "os_replace",
+    "os_rename",
+    "shutil_copy",
+    "shutil_copy2",
+    "shutil_copyfile",
+    "shutil_move",
+]
+EXPECTED_PRODUCTION_ENTRY_POINTS = [
+    "build_core_bundle",
+    "fit_event_candidates",
+    "build_prediction_rows",
+    "execute_postbuild_integration",
+]
 
 PROTECTED_PATHS = [
     "scripts/freeze_part3b_et_reconciliation_policy.py",
@@ -191,6 +214,39 @@ def render_markdown(report: Dict[str, Any]) -> str:
     lines.extend(
         [
             "",
+            "## Write-Guard Positive Controls",
+            "",
+            f"- **All write-guard controls passed:** {report.get('write_guard_controls', {}).get('all_passed')}",
+            f"- **Total controls:** {report.get('write_guard_controls', {}).get('total')}",
+            f"- **Passed controls:** {report.get('write_guard_controls', {}).get('passed_count')}",
+            f"- **Mechanisms covered:** {', '.join(report.get('write_guard_mechanisms_covered', []))}",
+            f"- **All expected mechanisms present:** {report.get('all_write_guard_mechanisms_present')}",
+            "",
+            "## Production Entry-Point Positive Controls",
+            "",
+            f"- **All entry-point controls passed:** {report.get('production_entry_point_controls', {}).get('all_passed')}",
+            f"- **Total controls:** {report.get('production_entry_point_controls', {}).get('total')}",
+            f"- **Passed controls:** {report.get('production_entry_point_controls', {}).get('passed_count')}",
+            f"- **Entry points covered:** {', '.join(report.get('production_entry_points_covered', []))}",
+            f"- **All expected entry points present:** {report.get('all_production_entry_points_present')}",
+            "",
+            "## Forced Exception Restoration",
+            "",
+            f"- **Forced exception raised:** {report.get('forced_exception_restoration', {}).get('forced_exception_raised')}",
+            f"- **All globals restored:** {report.get('forced_exception_restoration', {}).get('all_globals_restored')}",
+            f"- **Tracker inactive after exception:** {report.get('forced_exception_restoration', {}).get('tracker_inactive')}",
+            f"- **No repository file changed:** {report.get('forced_exception_restoration', {}).get('no_repository_file_changed')}",
+            f"- **Forced exception test passed:** {report.get('forced_exception_restoration', {}).get('passed')}",
+            "",
+            "## Recursive Snapshot Verification",
+            "",
+            f"- **Recursive snapshot changed:** {report.get('recursive_snapshot_changed')}",
+            f"- **Files added:** {report.get('recursive_snapshot_added', 0)}",
+            f"- **Files removed:** {report.get('recursive_snapshot_removed', 0)}",
+            f"- **Files modified:** {report.get('recursive_snapshot_modified', 0)}",
+            f"- **Snapshot before file count:** {report.get('recursive_snapshot_before_file_count', 0)}",
+            f"- **Snapshot after file count:** {report.get('recursive_snapshot_after_file_count', 0)}",
+            "",
             "## Protected File Verification",
             "",
             f"- **Protected files unchanged:** {report['protected_files_unchanged']}",
@@ -211,6 +267,14 @@ def render_markdown(report: Dict[str, Any]) -> str:
             f"- **Transactional report publication:** {report['transactional_report_publication']}",
             f"- **Transactional report publication ready:** {report.get('transactional_report_publication_ready')}",
             f"- **Implementation report JSON/Markdown consistency:** {report['implementation_report_json_markdown_consistency']}",
+            "",
+            "## Transactional Rollback Tests",
+            "",
+            f"- **Tests expected:** {report.get('transactional_rollback_tests', {}).get('tests_expected')}",
+            f"- **Tests executed:** {report.get('transactional_rollback_tests', {}).get('tests_executed')}",
+            f"- **Tests passed:** {report.get('transactional_rollback_tests', {}).get('tests_passed')}",
+            f"- **Tests failed:** {report.get('transactional_rollback_tests', {}).get('tests_failed')}",
+            f"- **All passed:** {report.get('transactional_rollback_tests', {}).get('all_passed')}",
         ]
     )
     return "\n".join(lines) + "\n"
@@ -503,6 +567,56 @@ def run_transactional_rollback_tests() -> Dict[str, Any]:
             replacement_ok = False
         _record("successful_replacement_publication", replacement_ok)
 
+        json_path = base / "overwrite_preserves_old.json"
+        md_path = base / "overwrite_preserves_old.md"
+        old_json = '{"old":"content"}\n'
+        old_md = "# old content\n"
+        json_path.write_text(old_json, encoding="utf-8")
+        md_path.write_text(old_md, encoding="utf-8")
+        pre_state = _capture_pre_publication_state(json_path, md_path)
+        overwrite_rolled_back = False
+        try:
+            publish_outputs_transactionally(
+                sample_report, json_path, md_path,
+                inject_failure="after_json_before_md",
+            )
+        except RuntimeError:
+            overwrite_rolled_back = _publication_state_matches(json_path, md_path, pre_state)
+        _record("overwrite_failure_restores_original_content", overwrite_rolled_back)
+
+        json_path = base / "no_backup_leftover.json"
+        md_path = base / "no_backup_leftover.md"
+        json_path.write_text('{"existing":"json"}\n', encoding="utf-8")
+        md_path.write_text("# existing md\n", encoding="utf-8")
+        no_backup = False
+        try:
+            publish_outputs_transactionally(
+                sample_report, json_path, md_path,
+                inject_failure="after_md_backup_before_md_replace",
+            )
+        except RuntimeError:
+            pubbak_json = json_path.with_suffix(json_path.suffix + ".pubbak")
+            pubbak_md = md_path.with_suffix(md_path.suffix + ".pubbak")
+            no_backup = not pubbak_json.exists() and not pubbak_md.exists()
+        _record("no_backup_files_left_after_rollback", no_backup)
+
+        json_path = base / "temp_files_cleaned.json"
+        md_path = base / "temp_files_cleaned.md"
+        temp_cleaned = False
+        try:
+            publish_outputs_transactionally(
+                sample_report, json_path, md_path,
+                inject_failure="before_any_replacement",
+            )
+        except RuntimeError:
+            siblings = list(json_path.parent.iterdir())
+            temp_files = [
+                f for f in siblings
+                if f.name.startswith("tmp") and f.suffix in (".json", ".md")
+            ]
+            temp_cleaned = len(temp_files) == 0
+        _record("temp_files_cleaned_after_rollback", temp_cleaned)
+
     passed = sum(1 for item in tests if item["passed"])
     failed = len(tests) - passed
     return {
@@ -635,6 +749,38 @@ def run_audit() -> Dict[str, Any]:
         synthetic_summary.get("repository_write_guard_active") is True
     )
 
+    write_guard_controls = synthetic_summary.get("write_guard_positive_controls", {})
+    write_guard_mechanisms_covered = sorted({
+        c.get("mechanism", "") for c in write_guard_controls.get("controls", [])
+    })
+    all_write_guard_mechanisms_present = all(
+        mech in write_guard_mechanisms_covered for mech in EXPECTED_WRITE_GUARD_MECHANISMS
+    )
+    write_guard_controls_passed = write_guard_controls.get("all_passed") is True
+
+    production_entry_controls = synthetic_summary.get("production_entry_point_positive_controls", {})
+    production_entry_points_covered = sorted({
+        c.get("entry_point", "") for c in production_entry_controls.get("controls", [])
+    })
+    all_production_entry_points_present = all(
+        ep in production_entry_points_covered for ep in EXPECTED_PRODUCTION_ENTRY_POINTS
+    )
+    production_entry_controls_passed = production_entry_controls.get("all_passed") is True
+
+    forced_exception_restoration = synthetic_summary.get("forced_exception_restoration_test", {})
+    forced_exception_test_passed = forced_exception_restoration.get("passed") is True
+
+    recursive_snapshot_changed = synthetic_summary.get("recursive_snapshot_changed", -1)
+    recursive_snapshot_added = synthetic_summary.get("protected_files_added", 0)
+    recursive_snapshot_removed = synthetic_summary.get("protected_files_removed", 0)
+    recursive_snapshot_modified = synthetic_summary.get("protected_files_modified", 0)
+    recursive_snapshot_before_file_count = synthetic_summary.get(
+        "recursive_snapshot_before_file_count", 0
+    )
+    recursive_snapshot_after_file_count = synthetic_summary.get(
+        "recursive_snapshot_after_file_count", 0
+    )
+
     counters_connected = (
         runtime_activity_counters_derived
         and "model_fits_executed" in synthetic_summary
@@ -735,7 +881,26 @@ def run_audit() -> Dict[str, Any]:
             "production_artifact_writes": synthetic_summary.get("production_artifact_writes"),
             "canonical_file_writes": synthetic_summary.get("canonical_file_writes"),
             "protected_artifacts_changed": synthetic_summary.get("protected_artifacts_changed"),
+            "protected_files_added": recursive_snapshot_added,
+            "protected_files_removed": recursive_snapshot_removed,
+            "protected_files_modified": recursive_snapshot_modified,
         },
+        "write_guard_controls": write_guard_controls,
+        "write_guard_mechanisms_covered": write_guard_mechanisms_covered,
+        "all_write_guard_mechanisms_present": all_write_guard_mechanisms_present,
+        "write_guard_controls_passed": write_guard_controls_passed,
+        "production_entry_point_controls": production_entry_controls,
+        "production_entry_points_covered": production_entry_points_covered,
+        "all_production_entry_points_present": all_production_entry_points_present,
+        "production_entry_controls_passed": production_entry_controls_passed,
+        "forced_exception_restoration": forced_exception_restoration,
+        "forced_exception_test_passed": forced_exception_test_passed,
+        "recursive_snapshot_changed": recursive_snapshot_changed,
+        "recursive_snapshot_added": recursive_snapshot_added,
+        "recursive_snapshot_removed": recursive_snapshot_removed,
+        "recursive_snapshot_modified": recursive_snapshot_modified,
+        "recursive_snapshot_before_file_count": recursive_snapshot_before_file_count,
+        "recursive_snapshot_after_file_count": recursive_snapshot_after_file_count,
         "runtime_activity_tracker_active": runtime_activity_tracker_active,
         "runtime_activity_tracker_covered_all_tests": runtime_activity_tracker_covered_all_tests,
         "runtime_activity_counters_derived": runtime_activity_counters_derived,
@@ -787,6 +952,15 @@ def run_audit() -> Dict[str, Any]:
         and synthetic_summary.get("production_artifact_writes") == 0
         and synthetic_summary.get("canonical_file_writes") == 0
         and synthetic_summary.get("protected_artifacts_changed") == 0
+        and recursive_snapshot_changed == 0
+        and recursive_snapshot_added == 0
+        and recursive_snapshot_removed == 0
+        and recursive_snapshot_modified == 0
+        and write_guard_controls_passed
+        and all_write_guard_mechanisms_present
+        and production_entry_controls_passed
+        and all_production_entry_points_present
+        and forced_exception_test_passed
         and executable_checks["missing_dual_build_context_rejected"]
         and executable_checks["dual_build_evidence_required"]
         and executable_checks["single_build_final_approval_prohibited"]

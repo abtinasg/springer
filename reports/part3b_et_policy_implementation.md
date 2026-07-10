@@ -1,19 +1,19 @@
 # Part 3B ET Reconciliation Policy Implementation Report
 
-**Stage:** Part 3B.2R.1-G.D6.1
-**Starting commit:** `69f60b84e2e20b3ac3a89aa93e10269a7b6c773c`
+**Stage:** Part 3B.2R.1-G.D6.2
+**Starting commit:** `7b8aba3ac836de312d0d95596c4bf853238ae2ba`
 
 ## Policy Specification
 
 - **Frozen policy path:** `reports/part3b_et_reconciliation_policy.json`
 - **Frozen policy SHA-256:** `6bc043b7c890256fd369eb8747f54dd9f2f1944b03b0dd1c70b5f6d85b8719f5`
 - **Frozen policy contract verified:** True
-- **Implementation module SHA-256:** `0e7865746579705d2d219128d329143c22ba39ca126558d3bb8d496edae48918`
+- **Implementation module SHA-256:** `df930ec2e69242f4fbc0b7968835a950aefe11dc3da2900125015f1e917c7cce`
 
 ## Production Validator
 
 - **Production validator SHA before:** `d269bb2eb9b6b4959c9bccb287314249b08da52ad895fa6285ec2af9b6abce49`
-- **Production validator SHA after:** `f8c070b962cebfeeb0d54f7a065126ffc333c548df42660994edcf40720804a8`
+- **Production validator SHA after:** `1340960df1440ec25a7e98e451eff8816032abaa79a89ea3fdd9796df2788d8e`
 - **Production validator code changed:** True
 - **Production authorization remains false:** True
 
@@ -94,6 +94,42 @@
 - **production_artifact_writes:** 0
 - **canonical_file_writes:** 0
 - **protected_artifacts_changed:** 0
+- **protected_files_added:** 0
+- **protected_files_removed:** 0
+- **protected_files_modified:** 0
+
+## Write-Guard Positive Controls
+
+- **All write-guard controls passed:** True
+- **Total controls:** 45
+- **Passed controls:** 45
+- **Mechanisms covered:** builtins_open, io_open, os_open, os_rename, os_replace, path_open, path_rename, path_replace, path_touch, path_write_bytes, path_write_text, shutil_copy, shutil_copy2, shutil_copyfile, shutil_move
+- **All expected mechanisms present:** True
+
+## Production Entry-Point Positive Controls
+
+- **All entry-point controls passed:** True
+- **Total controls:** 4
+- **Passed controls:** 4
+- **Entry points covered:** build_core_bundle, build_prediction_rows, execute_postbuild_integration, fit_event_candidates
+- **All expected entry points present:** True
+
+## Forced Exception Restoration
+
+- **Forced exception raised:** True
+- **All globals restored:** True
+- **Tracker inactive after exception:** True
+- **No repository file changed:** True
+- **Forced exception test passed:** True
+
+## Recursive Snapshot Verification
+
+- **Recursive snapshot changed:** 0
+- **Files added:** 0
+- **Files removed:** 0
+- **Files modified:** 0
+- **Snapshot before file count:** 25
+- **Snapshot after file count:** 25
 
 ## Protected File Verification
 
@@ -115,3 +151,11 @@
 - **Transactional report publication:** True
 - **Transactional report publication ready:** True
 - **Implementation report JSON/Markdown consistency:** True
+
+## Transactional Rollback Tests
+
+- **Tests expected:** 11
+- **Tests executed:** 11
+- **Tests passed:** 11
+- **Tests failed:** 0
+- **All passed:** True

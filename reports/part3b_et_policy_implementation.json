@@ -1,14 +1,14 @@
 {
-  "stage": "Part 3B.2R.1-G.D6.1",
-  "starting_commit": "69f60b84e2e20b3ac3a89aa93e10269a7b6c773c",
-  "current_commit": "69f60b84e2e20b3ac3a89aa93e10269a7b6c773c",
+  "stage": "Part 3B.2R.1-G.D6.2",
+  "starting_commit": "7b8aba3ac836de312d0d95596c4bf853238ae2ba",
+  "current_commit": "7b8aba3ac836de312d0d95596c4bf853238ae2ba",
   "starting_commit_verified": true,
   "frozen_policy_path": "reports/part3b_et_reconciliation_policy.json",
   "frozen_policy_sha256": "6bc043b7c890256fd369eb8747f54dd9f2f1944b03b0dd1c70b5f6d85b8719f5",
   "frozen_policy_contract_verified": true,
-  "implementation_module_sha256": "0e7865746579705d2d219128d329143c22ba39ca126558d3bb8d496edae48918",
+  "implementation_module_sha256": "df930ec2e69242f4fbc0b7968835a950aefe11dc3da2900125015f1e917c7cce",
   "production_validator_sha_before": "d269bb2eb9b6b4959c9bccb287314249b08da52ad895fa6285ec2af9b6abce49",
-  "production_validator_sha_after": "f8c070b962cebfeeb0d54f7a065126ffc333c548df42660994edcf40720804a8",
+  "production_validator_sha_after": "1340960df1440ec25a7e98e451eff8816032abaa79a89ea3fdd9796df2788d8e",
   "production_validator_code_changed": true,
   "production_authorization_remains_false": true,
   "implemented_constants": {
@@ -2111,11 +2111,23 @@
       {
         "test_name": "successful_replacement_publication",
         "passed": true
+      },
+      {
+        "test_name": "overwrite_failure_restores_original_content",
+        "passed": true
+      },
+      {
+        "test_name": "no_backup_files_left_after_rollback",
+        "passed": true
+      },
+      {
+        "test_name": "temp_files_cleaned_after_rollback",
+        "passed": true
       }
     ],
-    "tests_expected": 8,
-    "tests_executed": 8,
-    "tests_passed": 8,
+    "tests_expected": 11,
+    "tests_executed": 11,
+    "tests_passed": 11,
     "tests_failed": 0,
     "all_passed": true
   },
@@ -2126,8 +2138,605 @@
     "production_builder_entries": 0,
     "production_artifact_writes": 0,
     "canonical_file_writes": 0,
-    "protected_artifacts_changed": 0
+    "protected_artifacts_changed": 0,
+    "protected_files_added": 0,
+    "protected_files_removed": 0,
+    "protected_files_modified": 0
   },
+  "write_guard_controls": {
+    "controls": [
+      {
+        "mechanism": "builtins_open",
+        "target": "results/part1_full_reproduction/canonical.csv",
+        "blocked": true,
+        "counter_incremented": true,
+        "target_unchanged": true,
+        "no_leftover": true,
+        "tracker_inactive": true,
+        "guards_restored": true,
+        "passed": true
+      },
+      {
+        "mechanism": "builtins_open",
+        "target": "results/part3b_prediction_ledger/ledger.csv",
+        "blocked": true,
+        "counter_incremented": true,
+        "target_unchanged": true,
+        "no_leftover": true,
+        "tracker_inactive": true,
+        "guards_restored": true,
+        "passed": true
+      },
+      {
+        "mechanism": "builtins_open",
+        "target": "reports/part3b_et_policy_implementation.json",
+        "blocked": true,
+        "counter_incremented": true,
+        "target_unchanged": true,
+        "no_leftover": true,
+        "tracker_inactive": true,
+        "guards_restored": true,
+        "passed": true
+      },
+      {
+        "mechanism": "io_open",
+        "target": "results/part1_full_reproduction/canonical.csv",
+        "blocked": true,
+        "counter_incremented": true,
+        "target_unchanged": true,
+        "no_leftover": true,
+        "tracker_inactive": true,
+        "guards_restored": true,
+        "passed": true
+      },
+      {
+        "mechanism": "io_open",
+        "target": "results/part3b_prediction_ledger/ledger.csv",
+        "blocked": true,
+        "counter_incremented": true,
+        "target_unchanged": true,
+        "no_leftover": true,
+        "tracker_inactive": true,
+        "guards_restored": true,
+        "passed": true
+      },
+      {
+        "mechanism": "io_open",
+        "target": "reports/part3b_et_policy_implementation.json",
+        "blocked": true,
+        "counter_incremented": true,
+        "target_unchanged": true,
+        "no_leftover": true,
+        "tracker_inactive": true,
+        "guards_restored": true,
+        "passed": true
+      },
+      {
+        "mechanism": "path_open",
+        "target": "results/part1_full_reproduction/canonical.csv",
+        "blocked": true,
+        "counter_incremented": true,
+        "target_unchanged": true,
+        "no_leftover": true,
+        "tracker_inactive": true,
+        "guards_restored": true,
+        "passed": true
+      },
+      {
+        "mechanism": "path_open",
+        "target": "results/part3b_prediction_ledger/ledger.csv",
+        "blocked": true,
+        "counter_incremented": true,
+        "target_unchanged": true,
+        "no_leftover": true,
+        "tracker_inactive": true,
+        "guards_restored": true,
+        "passed": true
+      },
+      {
+        "mechanism": "path_open",
+        "target": "reports/part3b_et_policy_implementation.json",
+        "blocked": true,
+        "counter_incremented": true,
+        "target_unchanged": true,
+        "no_leftover": true,
+        "tracker_inactive": true,
+        "guards_restored": true,
+        "passed": true
+      },
+      {
+        "mechanism": "path_write_text",
+        "target": "results/part1_full_reproduction/canonical.csv",
+        "blocked": true,
+        "counter_incremented": true,
+        "target_unchanged": true,
+        "no_leftover": true,
+        "tracker_inactive": true,
+        "guards_restored": true,
+        "passed": true
+      },
+      {
+        "mechanism": "path_write_text",
+        "target": "results/part3b_prediction_ledger/ledger.csv",
+        "blocked": true,
+        "counter_incremented": true,
+        "target_unchanged": true,
+        "no_leftover": true,
+        "tracker_inactive": true,
+        "guards_restored": true,
+        "passed": true
+      },
+      {
+        "mechanism": "path_write_text",
+        "target": "reports/part3b_et_policy_implementation.json",
+        "blocked": true,
+        "counter_incremented": true,
+        "target_unchanged": true,
+        "no_leftover": true,
+        "tracker_inactive": true,
+        "guards_restored": true,
+        "passed": true
+      },
+      {
+        "mechanism": "path_write_bytes",
+        "target": "results/part1_full_reproduction/canonical.csv",
+        "blocked": true,
+        "counter_incremented": true,
+        "target_unchanged": true,
+        "no_leftover": true,
+        "tracker_inactive": true,
+        "guards_restored": true,
+        "passed": true
+      },
+      {
+        "mechanism": "path_write_bytes",
+        "target": "results/part3b_prediction_ledger/ledger.csv",
+        "blocked": true,
+        "counter_incremented": true,
+        "target_unchanged": true,
+        "no_leftover": true,
+        "tracker_inactive": true,
+        "guards_restored": true,
+        "passed": true
+      },
+      {
+        "mechanism": "path_write_bytes",
+        "target": "reports/part3b_et_policy_implementation.json",
+        "blocked": true,
+        "counter_incremented": true,
+        "target_unchanged": true,
+        "no_leftover": true,
+        "tracker_inactive": true,
+        "guards_restored": true,
+        "passed": true
+      },
+      {
+        "mechanism": "path_touch",
+        "target": "results/part1_full_reproduction/canonical.csv",
+        "blocked": true,
+        "counter_incremented": true,
+        "target_unchanged": true,
+        "no_leftover": true,
+        "tracker_inactive": true,
+        "guards_restored": true,
+        "passed": true
+      },
+      {
+        "mechanism": "path_touch",
+        "target": "results/part3b_prediction_ledger/ledger.csv",
+        "blocked": true,
+        "counter_incremented": true,
+        "target_unchanged": true,
+        "no_leftover": true,
+        "tracker_inactive": true,
+        "guards_restored": true,
+        "passed": true
+      },
+      {
+        "mechanism": "path_touch",
+        "target": "reports/part3b_et_policy_implementation.json",
+        "blocked": true,
+        "counter_incremented": true,
+        "target_unchanged": true,
+        "no_leftover": true,
+        "tracker_inactive": true,
+        "guards_restored": true,
+        "passed": true
+      },
+      {
+        "mechanism": "path_replace",
+        "target": "results/part1_full_reproduction/canonical.csv",
+        "blocked": true,
+        "counter_incremented": true,
+        "target_unchanged": true,
+        "no_leftover": true,
+        "tracker_inactive": true,
+        "guards_restored": true,
+        "passed": true
+      },
+      {
+        "mechanism": "path_replace",
+        "target": "results/part3b_prediction_ledger/ledger.csv",
+        "blocked": true,
+        "counter_incremented": true,
+        "target_unchanged": true,
+        "no_leftover": true,
+        "tracker_inactive": true,
+        "guards_restored": true,
+        "passed": true
+      },
+      {
+        "mechanism": "path_replace",
+        "target": "reports/part3b_et_policy_implementation.json",
+        "blocked": true,
+        "counter_incremented": true,
+        "target_unchanged": true,
+        "no_leftover": true,
+        "tracker_inactive": true,
+        "guards_restored": true,
+        "passed": true
+      },
+      {
+        "mechanism": "path_rename",
+        "target": "results/part1_full_reproduction/canonical.csv",
+        "blocked": true,
+        "counter_incremented": true,
+        "target_unchanged": true,
+        "no_leftover": true,
+        "tracker_inactive": true,
+        "guards_restored": true,
+        "passed": true
+      },
+      {
+        "mechanism": "path_rename",
+        "target": "results/part3b_prediction_ledger/ledger.csv",
+        "blocked": true,
+        "counter_incremented": true,
+        "target_unchanged": true,
+        "no_leftover": true,
+        "tracker_inactive": true,
+        "guards_restored": true,
+        "passed": true
+      },
+      {
+        "mechanism": "path_rename",
+        "target": "reports/part3b_et_policy_implementation.json",
+        "blocked": true,
+        "counter_incremented": true,
+        "target_unchanged": true,
+        "no_leftover": true,
+        "tracker_inactive": true,
+        "guards_restored": true,
+        "passed": true
+      },
+      {
+        "mechanism": "os_open",
+        "target": "results/part1_full_reproduction/canonical.csv",
+        "blocked": true,
+        "counter_incremented": true,
+        "target_unchanged": true,
+        "no_leftover": true,
+        "tracker_inactive": true,
+        "guards_restored": true,
+        "passed": true
+      },
+      {
+        "mechanism": "os_open",
+        "target": "results/part3b_prediction_ledger/ledger.csv",
+        "blocked": true,
+        "counter_incremented": true,
+        "target_unchanged": true,
+        "no_leftover": true,
+        "tracker_inactive": true,
+        "guards_restored": true,
+        "passed": true
+      },
+      {
+        "mechanism": "os_open",
+        "target": "reports/part3b_et_policy_implementation.json",
+        "blocked": true,
+        "counter_incremented": true,
+        "target_unchanged": true,
+        "no_leftover": true,
+        "tracker_inactive": true,
+        "guards_restored": true,
+        "passed": true
+      },
+      {
+        "mechanism": "os_replace",
+        "target": "results/part1_full_reproduction/canonical.csv",
+        "blocked": true,
+        "counter_incremented": true,
+        "target_unchanged": true,
+        "no_leftover": true,
+        "tracker_inactive": true,
+        "guards_restored": true,
+        "passed": true
+      },
+      {
+        "mechanism": "os_replace",
+        "target": "results/part3b_prediction_ledger/ledger.csv",
+        "blocked": true,
+        "counter_incremented": true,
+        "target_unchanged": true,
+        "no_leftover": true,
+        "tracker_inactive": true,
+        "guards_restored": true,
+        "passed": true
+      },
+      {
+        "mechanism": "os_replace",
+        "target": "reports/part3b_et_policy_implementation.json",
+        "blocked": true,
+        "counter_incremented": true,
+        "target_unchanged": true,
+        "no_leftover": true,
+        "tracker_inactive": true,
+        "guards_restored": true,
+        "passed": true
+      },
+      {
+        "mechanism": "os_rename",
+        "target": "results/part1_full_reproduction/canonical.csv",
+        "blocked": true,
+        "counter_incremented": true,
+        "target_unchanged": true,
+        "no_leftover": true,
+        "tracker_inactive": true,
+        "guards_restored": true,
+        "passed": true
+      },
+      {
+        "mechanism": "os_rename",
+        "target": "results/part3b_prediction_ledger/ledger.csv",
+        "blocked": true,
+        "counter_incremented": true,
+        "target_unchanged": true,
+        "no_leftover": true,
+        "tracker_inactive": true,
+        "guards_restored": true,
+        "passed": true
+      },
+      {
+        "mechanism": "os_rename",
+        "target": "reports/part3b_et_policy_implementation.json",
+        "blocked": true,
+        "counter_incremented": true,
+        "target_unchanged": true,
+        "no_leftover": true,
+        "tracker_inactive": true,
+        "guards_restored": true,
+        "passed": true
+      },
+      {
+        "mechanism": "shutil_copy",
+        "target": "results/part1_full_reproduction/canonical.csv",
+        "blocked": true,
+        "counter_incremented": true,
+        "target_unchanged": true,
+        "no_leftover": true,
+        "tracker_inactive": true,
+        "guards_restored": true,
+        "passed": true
+      },
+      {
+        "mechanism": "shutil_copy",
+        "target": "results/part3b_prediction_ledger/ledger.csv",
+        "blocked": true,
+        "counter_incremented": true,
+        "target_unchanged": true,
+        "no_leftover": true,
+        "tracker_inactive": true,
+        "guards_restored": true,
+        "passed": true
+      },
+      {
+        "mechanism": "shutil_copy",
+        "target": "reports/part3b_et_policy_implementation.json",
+        "blocked": true,
+        "counter_incremented": true,
+        "target_unchanged": true,
+        "no_leftover": true,
+        "tracker_inactive": true,
+        "guards_restored": true,
+        "passed": true
+      },
+      {
+        "mechanism": "shutil_copy2",
+        "target": "results/part1_full_reproduction/canonical.csv",
+        "blocked": true,
+        "counter_incremented": true,
+        "target_unchanged": true,
+        "no_leftover": true,
+        "tracker_inactive": true,
+        "guards_restored": true,
+        "passed": true
+      },
+      {
+        "mechanism": "shutil_copy2",
+        "target": "results/part3b_prediction_ledger/ledger.csv",
+        "blocked": true,
+        "counter_incremented": true,
+        "target_unchanged": true,
+        "no_leftover": true,
+        "tracker_inactive": true,
+        "guards_restored": true,
+        "passed": true
+      },
+      {
+        "mechanism": "shutil_copy2",
+        "target": "reports/part3b_et_policy_implementation.json",
+        "blocked": true,
+        "counter_incremented": true,
+        "target_unchanged": true,
+        "no_leftover": true,
+        "tracker_inactive": true,
+        "guards_restored": true,
+        "passed": true
+      },
+      {
+        "mechanism": "shutil_copyfile",
+        "target": "results/part1_full_reproduction/canonical.csv",
+        "blocked": true,
+        "counter_incremented": true,
+        "target_unchanged": true,
+        "no_leftover": true,
+        "tracker_inactive": true,
+        "guards_restored": true,
+        "passed": true
+      },
+      {
+        "mechanism": "shutil_copyfile",
+        "target": "results/part3b_prediction_ledger/ledger.csv",
+        "blocked": true,
+        "counter_incremented": true,
+        "target_unchanged": true,
+        "no_leftover": true,
+        "tracker_inactive": true,
+        "guards_restored": true,
+        "passed": true
+      },
+      {
+        "mechanism": "shutil_copyfile",
+        "target": "reports/part3b_et_policy_implementation.json",
+        "blocked": true,
+        "counter_incremented": true,
+        "target_unchanged": true,
+        "no_leftover": true,
+        "tracker_inactive": true,
+        "guards_restored": true,
+        "passed": true
+      },
+      {
+        "mechanism": "shutil_move",
+        "target": "results/part1_full_reproduction/canonical.csv",
+        "blocked": true,
+        "counter_incremented": true,
+        "target_unchanged": true,
+        "no_leftover": true,
+        "tracker_inactive": true,
+        "guards_restored": true,
+        "passed": true
+      },
+      {
+        "mechanism": "shutil_move",
+        "target": "results/part3b_prediction_ledger/ledger.csv",
+        "blocked": true,
+        "counter_incremented": true,
+        "target_unchanged": true,
+        "no_leftover": true,
+        "tracker_inactive": true,
+        "guards_restored": true,
+        "passed": true
+      },
+      {
+        "mechanism": "shutil_move",
+        "target": "reports/part3b_et_policy_implementation.json",
+        "blocked": true,
+        "counter_incremented": true,
+        "target_unchanged": true,
+        "no_leftover": true,
+        "tracker_inactive": true,
+        "guards_restored": true,
+        "passed": true
+      }
+    ],
+    "total": 45,
+    "passed_count": 45,
+    "all_passed": true
+  },
+  "write_guard_mechanisms_covered": [
+    "builtins_open",
+    "io_open",
+    "os_open",
+    "os_rename",
+    "os_replace",
+    "path_open",
+    "path_rename",
+    "path_replace",
+    "path_touch",
+    "path_write_bytes",
+    "path_write_text",
+    "shutil_copy",
+    "shutil_copy2",
+    "shutil_copyfile",
+    "shutil_move"
+  ],
+  "all_write_guard_mechanisms_present": true,
+  "write_guard_controls_passed": true,
+  "production_entry_point_controls": {
+    "controls": [
+      {
+        "entry_point": "build_core_bundle",
+        "blocked": true,
+        "counter_incremented": true,
+        "dummy_not_called": true,
+        "tracker_inactive": true,
+        "no_model_fits": true,
+        "no_predictions": true,
+        "no_artifact_writes": true,
+        "passed": true
+      },
+      {
+        "entry_point": "fit_event_candidates",
+        "blocked": true,
+        "counter_incremented": true,
+        "dummy_not_called": true,
+        "tracker_inactive": true,
+        "no_model_fits": true,
+        "no_predictions": true,
+        "no_artifact_writes": true,
+        "passed": true
+      },
+      {
+        "entry_point": "build_prediction_rows",
+        "blocked": true,
+        "counter_incremented": true,
+        "dummy_not_called": true,
+        "tracker_inactive": true,
+        "no_model_fits": true,
+        "no_predictions": true,
+        "no_artifact_writes": true,
+        "passed": true
+      },
+      {
+        "entry_point": "execute_postbuild_integration",
+        "blocked": true,
+        "counter_incremented": true,
+        "dummy_not_called": true,
+        "tracker_inactive": true,
+        "no_model_fits": true,
+        "no_predictions": true,
+        "no_artifact_writes": true,
+        "passed": true
+      }
+    ],
+    "total": 4,
+    "passed_count": 4,
+    "all_passed": true
+  },
+  "production_entry_points_covered": [
+    "build_core_bundle",
+    "build_prediction_rows",
+    "execute_postbuild_integration",
+    "fit_event_candidates"
+  ],
+  "all_production_entry_points_present": true,
+  "production_entry_controls_passed": true,
+  "forced_exception_restoration": {
+    "forced_exception_raised": true,
+    "all_globals_restored": true,
+    "tracker_inactive": true,
+    "no_repository_file_changed": true,
+    "passed": true
+  },
+  "forced_exception_test_passed": true,
+  "recursive_snapshot_changed": 0,
+  "recursive_snapshot_added": 0,
+  "recursive_snapshot_removed": 0,
+  "recursive_snapshot_modified": 0,
+  "recursive_snapshot_before_file_count": 25,
+  "recursive_snapshot_after_file_count": 25,
   "runtime_activity_tracker_active": true,
   "runtime_activity_tracker_covered_all_tests": true,
   "runtime_activity_counters_derived": true,
@@ -2209,7 +2818,7 @@
   "publication_result": {
     "json_path": "reports/part3b_et_policy_implementation.json",
     "md_path": "reports/part3b_et_policy_implementation.md",
-    "json_sha256": "62e884059e756394eabdb24f20ca0d0eb2b509cc92aa2f5395c41868d6925e9d",
-    "md_sha256": "fa15a89f8523e67bade1a1ae66bf64aa45eea6cc47b57c7cbd13965856609b6f"
+    "json_sha256": "3ccfd37c4c461af04e3e583c220d5f8e5c3eda175d3087deffccd0f14217fc59",
+    "md_sha256": "418efbf3cf775e6ab2e79f49a7e98f0c4d4ba18f5b0b00b42eb10fb338559fd1"
   }
 }
