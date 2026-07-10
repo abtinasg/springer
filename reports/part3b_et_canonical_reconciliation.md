@@ -1,7 +1,7 @@
 # Part 3B ExtraTrees Canonical Reconciliation Audit
 
-**Stage:** Part 3B.2R.1-G.D4
-**Starting commit:** `82d284f606ba4b06b4ee6ef46ab279d914028eef`
+**Stage:** Part 3B.2R.1-G.D4.1
+**Starting commit:** `b62af5623b571cd3e683c767e55ede1691d65fca`
 
 ## Summary
 
@@ -11,12 +11,14 @@
 - **Unapproved systematic difference count:** 8
 - **Build mismatch identity sets equal:** True
 - **Build mismatch values equal:** True
+- **Build mismatch values bit-exact:** True
 - **Categorical mismatches:** 0
 - **Validation numeric mismatches:** 0
 - **Maximum metric absolute difference:** 4.283498555857079e-08
 - **Maximum metric relative difference:** 9.938014065509184e-08
 - **Maximum ET score absolute difference:** 4.440892098500626e-16
 - **Non-ET scores byte-identical:** True
+- **Build score arrays byte-exact:** True
 - **All unapproved rows ET-derived:** True
 - **All unapproved rows rank-sensitive:** True
 - **All unapproved rows within 1e-7:** True
@@ -24,6 +26,13 @@
 - **Production validator changed:** False
 - **Canonical file changed:** False
 - **All validation checks passed:** True
+
+## Build Source Equality
+
+- **Build result reconstruction SHA equal:** True
+- **Build validation reconstruction SHA equal:** True
+- **Build prediction-within SHA equal:** True
+- **Build prediction-cross SHA equal:** True
 
 ## Affected Scope
 
@@ -34,8 +43,19 @@
 ## Validation Reconstruction
 
 - **Build 1 and Build 2 validation reconstructions equal:** True
-- **Validation categorical mismatches:** 0
-- **Validation numeric mismatches:** 0
+- **Build 1 validation categorical mismatches:** 0
+- **Build 2 validation categorical mismatches:** 0
+- **Build 1 validation numeric mismatches:** 0
+- **Build 2 validation numeric mismatches:** 0
+- **Validation builds exactly equal:** True
+
+## Audit Integrity
+
+- **Source-role contract passed:** True
+- **Matrix/JSON consistency passed:** True
+- **Markdown/JSON consistency passed:** True
+- **Atomic publication validation passed:** True
+- **Audit-integrity checks passed:** True
 
 ## Score-Level Mechanism
 
@@ -43,25 +63,27 @@
 
 - Maximum ET score absolute difference: 3.3306690738754696e-16
 - Non-ET scores byte-identical: True
+- Build score arrays byte-exact: True
 
-| Candidate | Validation byte equal | Test byte equal | Max val diff | Max test diff |
-| --- | --- | --- | --- | --- |
-| LR_std_C0.1 | True | True | 0.0 | 0.0 |
-| LR_std_C1 | True | True | 0.0 | 0.0 |
-| DT_leaf5 | True | True | 0.0 | 0.0 |
-| ET_leaf5 | False | False | 2.220446049250313e-16 | 3.3306690738754696e-16 |
+| Candidate | B1 val byte | B1 test byte | B2 val byte | B2 test byte | B1/B2 val byte | B1/B2 test byte | Max B1 val diff | Max B1 test diff | Max B2 val diff | Max B2 test diff | Max B1/B2 diff |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| LR_std_C0.1 | True | True | True | True | True | True | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 |
+| LR_std_C1 | True | True | True | True | True | True | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 |
+| DT_leaf5 | True | True | True | True | True | True | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 |
+| ET_leaf5 | False | False | False | False | True | True | 2.220446049250313e-16 | 3.3306690738754696e-16 | 2.220446049250313e-16 | 3.3306690738754696e-16 | 0.0 |
 
 ### cross_project__JM1__seed_042
 
 - Maximum ET score absolute difference: 4.440892098500626e-16
 - Non-ET scores byte-identical: True
+- Build score arrays byte-exact: True
 
-| Candidate | Validation byte equal | Test byte equal | Max val diff | Max test diff |
-| --- | --- | --- | --- | --- |
-| LR_std_C0.1 | True | True | 0.0 | 0.0 |
-| LR_std_C1 | True | True | 0.0 | 0.0 |
-| DT_leaf5 | True | True | 0.0 | 0.0 |
-| ET_leaf5 | False | False | 2.220446049250313e-16 | 4.440892098500626e-16 |
+| Candidate | B1 val byte | B1 test byte | B2 val byte | B2 test byte | B1/B2 val byte | B1/B2 test byte | Max B1 val diff | Max B1 test diff | Max B2 val diff | Max B2 test diff | Max B1/B2 diff |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| LR_std_C0.1 | True | True | True | True | True | True | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 |
+| LR_std_C1 | True | True | True | True | True | True | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 |
+| DT_leaf5 | True | True | True | True | True | True | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 |
+| ET_leaf5 | False | False | False | False | True | True | 2.220446049250313e-16 | 4.440892098500626e-16 | 2.220446049250313e-16 | 4.440892098500626e-16 | 0.0 |
 
 ## Proposed ET Rank Metric Reconciliation Policy
 
