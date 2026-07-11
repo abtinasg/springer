@@ -1,0 +1,27 @@
+{
+  "branch": "major-revision-analysis-v2",
+  "dependency_declaration_files": {
+    "requirements.txt": {
+      "present": true,
+      "sha256": "830704621b5125a3070c2a11615f32d6e31e40a3ce18d25fe015a627c17d320e"
+    },
+    "requirements_locked.txt": {
+      "present": true,
+      "sha256": "1d7cdfba46d87a527c17bcbf9f6d807b15d047bb88b0caba7038ca6d9c04682e"
+    }
+  },
+  "git_version": "git version 2.50.1 (Apple Git-155)",
+  "implementation_name": "CPython",
+  "installed_packages_directly_imported_by_gd6_scripts": {
+    "numpy": "2.5.0",
+    "openpyxl": "3.1.5",
+    "pandas": "3.0.3",
+    "scikit-learn": "1.9.0",
+    "scipy": "1.18.0"
+  },
+  "machine_architecture": "arm64",
+  "operating_system_name": "Darwin",
+  "operating_system_version": "25.2.0",
+  "python_full_version": "3.14.0",
+  "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+}

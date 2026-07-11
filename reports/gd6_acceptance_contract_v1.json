@@ -1,0 +1,426 @@
+{
+  "acceptance_rule": {
+    "contract_does_not_mark_gd6_accepted": true,
+    "no_compensation_between_failed_and_passed_conditions": true,
+    "no_discretionary_override": true,
+    "no_majority_vote": true,
+    "no_partial_acceptance": true,
+    "no_weighted_score": true,
+    "one_failed_mandatory_condition_means_not_accepted": true,
+    "rule": "G.D6 Accepted = every mandatory contract condition passes."
+  },
+  "contract_id": "SEMIT-GD6-ACCEPTANCE-CONTRACT",
+  "evidence_requirements": [
+    {
+      "mandatory": true,
+      "requirement": "all_eight_authorized_files_exist"
+    },
+    {
+      "mandatory": true,
+      "requirement": "no_existing_tracked_file_changed"
+    },
+    {
+      "mandatory": true,
+      "requirement": "contract_package_verifier_exits_0"
+    },
+    {
+      "mandatory": true,
+      "requirement": "contract_json_and_markdown_consistent"
+    },
+    {
+      "mandatory": true,
+      "requirement": "benchmark_json_and_markdown_consistent"
+    },
+    {
+      "mandatory": true,
+      "requirement": "exact_benchmark_sets_present"
+    },
+    {
+      "mandatory": true,
+      "requirement": "every_normative_clause_grounded"
+    },
+    {
+      "mandatory": true,
+      "requirement": "no_unresolved_required_fact"
+    },
+    {
+      "mandatory": true,
+      "requirement": "freeze_manifest_hashes_match"
+    },
+    {
+      "mandatory": true,
+      "requirement": "no_self_referential_hash"
+    },
+    {
+      "mandatory": true,
+      "requirement": "no_production_action_occurred"
+    },
+    {
+      "mandatory": true,
+      "requirement": "working_tree_clean_after_commit"
+    }
+  ],
+  "freeze_effective_when": "this exact contract package commit is independently accepted",
+  "limitations": [
+    "This is a bounded empirical verification contract, not a formal proof.",
+    "No claim of formal verification or mathematical proof of total correctness.",
+    "No claim of absence of all possible defects.",
+    "No ISO, IEEE, ACM, or NIST certification.",
+    "No guarantee of Q2 or Q3 journal acceptance.",
+    "No security against malicious operating systems.",
+    "No verification of Python, Git, SHA-256, CPU, memory, or the operating system.",
+    "No completion of Part 3B.",
+    "No authorization of Part 3C.",
+    "No approval or enforcement of the policy.",
+    "No authorization of production execution."
+  ],
+  "mandatory_benchmark_groups": [
+    "BG-01",
+    "BG-02",
+    "BG-03",
+    "BG-04",
+    "BG-05",
+    "BG-06",
+    "BG-07",
+    "BG-08",
+    "BG-09",
+    "BG-10",
+    "BG-11"
+  ],
+  "methodological_basis": [
+    {
+      "authority_type": "standard",
+      "issuer": "ISO/IEC/IEEE",
+      "source_id": "MB-01",
+      "supported_use": [
+        "terminology for software testing",
+        "explicit test objectives",
+        "test conditions and evidence",
+        "bounded testing scope"
+      ],
+      "title": "ISO/IEC/IEEE 29119-1:2022 — Software and systems engineering — Software testing — Part 1: General concepts",
+      "unsupported_claims": [
+        "ISO compliance",
+        "ISO certification"
+      ],
+      "version_or_year": "2022"
+    },
+    {
+      "authority_type": "standard",
+      "issuer": "ISO/IEC/IEEE",
+      "source_id": "MB-02",
+      "supported_use": [
+        "planned and documented test processes",
+        "test monitoring",
+        "test completion criteria",
+        "traceable test work products"
+      ],
+      "title": "ISO/IEC/IEEE 29119-2:2021 — Software and systems engineering — Software testing — Part 2: Test processes",
+      "unsupported_claims": [
+        "ISO compliance",
+        "ISO certification",
+        "reproduction of inaccessible copyrighted standard text"
+      ],
+      "version_or_year": "2021"
+    },
+    {
+      "authority_type": "official_guidance",
+      "issuer": "IEEE",
+      "source_id": "MB-03",
+      "supported_use": [
+        "documenting research sufficiently for independent verification",
+        "preserving code, data, and research outputs",
+        "recording execution information"
+      ],
+      "title": "IEEE Author Center — Research Reproducibility",
+      "unsupported_claims": [],
+      "version_or_year": "current"
+    },
+    {
+      "authority_type": "official_guidance",
+      "issuer": "ACM",
+      "source_id": "MB-04",
+      "supported_use": [
+        "artifact completeness",
+        "artifact usability",
+        "relationship between artifacts and paper claims",
+        "independent evaluation of computational artifacts"
+      ],
+      "title": "ACM Data & Software Artifacts / Artifact Review and Badging, Version 1.1",
+      "unsupported_claims": [
+        "ACM badge has been awarded"
+      ],
+      "version_or_year": "1.1"
+    },
+    {
+      "authority_type": "standard",
+      "issuer": "NIST",
+      "source_id": "MB-05",
+      "supported_use": [
+        "versioned development evidence",
+        "provenance",
+        "verification practices",
+        "documented software-development controls"
+      ],
+      "title": "NIST SP 800-218, Secure Software Development Framework, Version 1.1",
+      "unsupported_claims": [
+        "NIST-certified",
+        "security-certified"
+      ],
+      "version_or_year": "1.1"
+    }
+  ],
+  "normative_clauses": [
+    {
+      "basis": [
+        {
+          "basis_type": "external_methodological_source",
+          "source_id": "MB-02",
+          "supported_proposition": "test completion criteria"
+        }
+      ],
+      "clause_id": "NC-01",
+      "statement": "G.D6 Accepted = every mandatory contract condition passes."
+    },
+    {
+      "basis": [
+        {
+          "basis_type": "external_methodological_source",
+          "source_id": "MB-02",
+          "supported_proposition": "test completion criteria"
+        }
+      ],
+      "clause_id": "NC-02",
+      "statement": "No weighted score, no majority vote, no partial acceptance, no discretionary override, no compensation between failed and passed conditions. One failed mandatory condition means G.D6 is not accepted."
+    },
+    {
+      "basis": [
+        {
+          "basis_type": "internal_project_evidence",
+          "source_id": "reports/part3b_et_reconciliation_policy.json",
+          "supported_proposition": "policy_status is specified_not_enforced"
+        }
+      ],
+      "clause_id": "NC-03",
+      "statement": "The contract itself must not mark G.D6 as accepted. It only defines the future decision rule."
+    },
+    {
+      "basis": [
+        {
+          "basis_type": "external_methodological_source",
+          "source_id": "MB-02",
+          "supported_proposition": "test completion criteria"
+        }
+      ],
+      "clause_id": "NC-04",
+      "statement": "After Acceptance Contract v1.0 and Benchmark Manifest v1.0 are independently accepted and frozen, no new G.D6 acceptance criterion may be introduced during the same evaluation cycle."
+    },
+    {
+      "basis": [
+        {
+          "basis_type": "external_methodological_source",
+          "source_id": "MB-02",
+          "supported_proposition": "test completion criteria"
+        }
+      ],
+      "clause_id": "NC-05",
+      "statement": "If the frozen verifier passes every mandatory benchmark item, G.D6 must be accepted under Contract v1.0."
+    },
+    {
+      "basis": [
+        {
+          "basis_type": "external_methodological_source",
+          "source_id": "MB-01",
+          "supported_proposition": "bounded testing scope"
+        }
+      ],
+      "clause_id": "NC-06",
+      "statement": "The contract may be reopened only after presentation of a Reproducible Material Counterexample satisfying all five conditions: exact input or fixture, exact execution command, reproducible on frozen commit, incorrect verifier pass, and claim-relevant material effect."
+    },
+    {
+      "basis": [
+        {
+          "basis_type": "external_methodological_source",
+          "source_id": "MB-01",
+          "supported_proposition": "bounded testing scope"
+        }
+      ],
+      "clause_id": "NC-07",
+      "statement": "Hypothetical concerns without executable evidence, code-style preferences, naming improvements, formatting changes, speed optimizations, additional defense-in-depth outside frozen claims, edge cases outside declared trust boundary, and defects that cannot affect a paper claim do not reopen G.D6."
+    },
+    {
+      "basis": [
+        {
+          "basis_type": "external_methodological_source",
+          "source_id": "MB-01",
+          "supported_proposition": "terminology for software testing"
+        }
+      ],
+      "clause_id": "NC-08",
+      "statement": "The framework is a bounded empirical verification contract, not a formal proof."
+    },
+    {
+      "basis": [
+        {
+          "basis_type": "external_methodological_source",
+          "source_id": "MB-01",
+          "supported_proposition": "bounded testing scope"
+        }
+      ],
+      "clause_id": "NC-09",
+      "statement": "Trusted infrastructure components are trusted assumptions, not verified conclusions."
+    },
+    {
+      "basis": [
+        {
+          "basis_type": "internal_project_evidence",
+          "source_id": "scripts/audit_part3b_et_policy_implementation.py",
+          "supported_proposition": "existing verifier pattern at scripts/audit_part3b_et_policy_implementation.py"
+        }
+      ],
+      "clause_id": "NC-10",
+      "statement": "The future frozen verifier path is scripts/verify_gd6_frozen_benchmark_v1.py and the execution pattern is python3 scripts/verify_gd6_frozen_benchmark_v1.py."
+    },
+    {
+      "basis": [
+        {
+          "basis_type": "external_methodological_source",
+          "source_id": "MB-03",
+          "supported_proposition": "documenting research sufficiently for independent verification"
+        },
+        {
+          "basis_type": "external_methodological_source",
+          "source_id": "MB-04",
+          "supported_proposition": "independent evaluation of computational artifacts"
+        }
+      ],
+      "clause_id": "NC-11",
+      "statement": "Final acceptance later requires execution from a clean clone, recorded environment, exit code 0, complete JSON report, complete Markdown report, no production action, and execution by an evaluator other than the implementation author."
+    }
+  ],
+  "prohibited_claims": [
+    "formal_verification",
+    "mathematical_proof_of_total_correctness",
+    "absence_of_all_possible_defects",
+    "ISO_certification",
+    "IEEE_certification",
+    "ACM_certification",
+    "NIST_certification",
+    "guaranteed_Q2_or_Q3_journal_acceptance",
+    "security_against_malicious_operating_systems",
+    "verification_of_python_git_sha256_cpu_memory_or_operating_system",
+    "completion_of_Part_3B",
+    "authorization_of_Part_3C",
+    "approval_of_the_policy",
+    "enforcement_of_the_policy",
+    "authorization_of_production_execution"
+  ],
+  "provenance": {
+    "branch": "major-revision-analysis-v2",
+    "extraction_method": "runtime_output_and_constant_extraction_from_starting_commit",
+    "repository": "abtinasg/springer",
+    "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+  },
+  "purpose": "Define and freeze the scientific and engineering claims, trusted-computing boundary, acceptance criteria, benchmark cases, stopping rule, reopening rule, and evidence package for G.D6 before any further implementation.",
+  "reopening_rule": {
+    "all_required": true,
+    "non_reopening": [
+      "hypothetical_concerns_without_executable_evidence",
+      "code_style_preferences",
+      "naming_improvements",
+      "formatting_changes",
+      "speed_optimizations",
+      "additional_defense_in_depth_outside_frozen_claims",
+      "edge_cases_outside_declared_trust_boundary",
+      "defects_that_cannot_affect_a_paper_claim"
+    ],
+    "requirements": [
+      "exact_input_or_fixture",
+      "exact_execution_command",
+      "reproducible_on_frozen_commit",
+      "incorrect_verifier_pass",
+      "claim_relevant_material_effect"
+    ]
+  },
+  "scientific_claims": [
+    {
+      "claim_id": "CLAIM-A",
+      "statement": "The frozen policy implementation classifies the defined valid and invalid cases according to the frozen reconciliation policy and benchmark. This claim is bounded to the listed benchmark and invariants. It is not a claim of universal correctness.",
+      "title": "Correct Classification"
+    },
+    {
+      "claim_id": "CLAIM-B",
+      "statement": "G.D6 classification must never independently produce final approval, policy enforcement, production authorization, Part 3B completion, or Part 3C authorization.",
+      "title": "No Unauthorized Approval or Enforcement"
+    },
+    {
+      "claim_id": "CLAIM-C",
+      "statement": "The G.D6 verification process must not alter canonical Part 1 artifacts, existing Part 3B artifacts, frozen policy evidence, or frozen reconciliation evidence.",
+      "title": "Artifact Preservation"
+    },
+    {
+      "claim_id": "CLAIM-D",
+      "statement": "After an injected exception or transactional-publication failure, patched global objects must be restored, protected files must retain their prior state, temporary and backup files must not remain, and publication state must be restored.",
+      "title": "Recoverability"
+    },
+    {
+      "claim_id": "CLAIM-E",
+      "statement": "An independent evaluator must be able to execute the frozen verifier in a clean environment using the documented command and obtain the same Pass/Fail decision.",
+      "title": "Reproducible Verification"
+    }
+  ],
+  "severity_classification": {
+    "critical": {
+      "description": "A reproducible defect that can alter a paper result, grant unauthorized approval, authorize production, enforce policy, modify protected artifacts, or make the frozen verifier incorrectly pass a mandatory mutation.",
+      "effect": "blocks acceptance; reopens accepted G.D6 if discovered later"
+    },
+    "major": {
+      "description": "A reproducible defect that prevents independent execution, invalidates environment provenance, breaks JSON/Markdown consistency, makes required rollback or restoration evidence incomplete, or makes mandatory benchmark evidence unavailable.",
+      "effect": "blocks acceptance until corrected"
+    },
+    "minor": {
+      "description": "A defect limited to naming, formatting, refactoring, non-material documentation improvement, performance optimization, or non-claim-relevant cleanup.",
+      "effect": "recorded but does not block acceptance"
+    }
+  },
+  "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd",
+  "status": "freeze_candidate",
+  "stopping_rule": {
+    "do_not_add_further_requirements_merely_because_another_hypothetical_edge_case_can_be_imagined": true,
+    "if_frozen_verifier_passes_all_mandatory_benchmark_items_then_gd6_must_be_accepted": true,
+    "statement": "After Acceptance Contract v1.0 and Benchmark Manifest v1.0 are independently accepted and frozen, no new G.D6 acceptance criterion may be introduced during the same evaluation cycle."
+  },
+  "title": "G.D6 Acceptance Contract",
+  "trust_boundary": {
+    "in_scope_components": [
+      "frozen_reconciliation_policy_implementation",
+      "integration_points_used_by_gd6",
+      "benchmark_fixtures",
+      "benchmark_expected_outcomes",
+      "write_guards",
+      "production_entry_guards",
+      "restoration_logic",
+      "rollback_logic",
+      "protected_artifact_comparison",
+      "report_generation",
+      "json_markdown_consistency",
+      "frozen_verifier",
+      "environment_and_provenance_records"
+    ],
+    "trusted_infrastructure": [
+      "python_interpreter",
+      "python_standard_library",
+      "operating_system",
+      "filesystem_implementation",
+      "git_implementation",
+      "sha256_implementation",
+      "cpu",
+      "memory_hardware",
+      "github_hosting_infrastructure",
+      "installed_third_party_libraries_at_recorded_versions",
+      "absence_of_deliberate_malicious_tampering_below_repository_level"
+    ],
+    "trusted_infrastructure_note": "These components are trusted assumptions, not verified conclusions."
+  },
+  "version": "1.0"
+}
