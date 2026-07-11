@@ -1,0 +1,1304 @@
+{
+  "table_within_project_mean_sd.csv": {
+    "file": "table_within_project_mean_sd.csv",
+    "exists_in_both": true,
+    "first_sha256": "93bf162b5abfc7b03384874abb53aaff95d618b1a313cc07703551235b90c5bd",
+    "second_sha256": "cccaeb1553ac942dbe26f33673a3683ea181f06a4cf4ceb2466f0c3556086160",
+    "sha256_match": false,
+    "first_rows": 8,
+    "second_rows": 8,
+    "first_cols": 7,
+    "second_cols": 7,
+    "column_names_match": true,
+    "column_order_match": true,
+    "key_duplicates": {
+      "first": false,
+      "second": false
+    },
+    "missing_keys": [],
+    "extra_keys": [],
+    "cell_differences": [
+      {
+        "column": "MCC",
+        "key_values": {
+          "Model": "AQRPE-MCC"
+        },
+        "first_value": "0.308 (0.136)",
+        "second_value": "0.310 (0.131)",
+        "reference_mean": 0.308,
+        "new_mean": 0.31,
+        "mean_difference": 0.0020000000000000018,
+        "difference_type": "mean_difference",
+        "reference_std": 0.136,
+        "new_std": 0.131,
+        "std_difference": 0.0050000000000000044
+      },
+      {
+        "column": "MCC",
+        "key_values": {
+          "Model": "AQRPE-bal"
+        },
+        "first_value": "0.305 (0.136)",
+        "second_value": "0.309 (0.132)",
+        "reference_mean": 0.305,
+        "new_mean": 0.309,
+        "mean_difference": 0.0040000000000000036,
+        "difference_type": "mean_difference",
+        "reference_std": 0.136,
+        "new_std": 0.132,
+        "std_difference": 0.0040000000000000036
+      },
+      {
+        "column": "MCC",
+        "key_values": {
+          "Model": "AQRPE-rank"
+        },
+        "first_value": "0.356 (0.097)",
+        "second_value": "0.355 (0.095)",
+        "reference_mean": 0.356,
+        "new_mean": 0.355,
+        "mean_difference": 0.0010000000000000009,
+        "difference_type": "mean_difference",
+        "reference_std": 0.097,
+        "new_std": 0.095,
+        "std_difference": 0.0020000000000000018
+      },
+      {
+        "column": "MCC",
+        "key_values": {
+          "Model": "DT-L5"
+        },
+        "first_value": "0.247 (0.100)",
+        "second_value": "0.250 (0.101)",
+        "reference_mean": 0.247,
+        "new_mean": 0.25,
+        "mean_difference": 0.0030000000000000027,
+        "difference_type": "mean_difference",
+        "reference_std": 0.1,
+        "new_std": 0.101,
+        "std_difference": 0.0010000000000000009
+      },
+      {
+        "column": "MCC",
+        "key_values": {
+          "Model": "ET-L5"
+        },
+        "first_value": "0.314 (0.159)",
+        "second_value": "0.320 (0.157)",
+        "reference_mean": 0.314,
+        "new_mean": 0.32,
+        "mean_difference": 0.006000000000000005,
+        "difference_type": "mean_difference",
+        "reference_std": 0.159,
+        "new_std": 0.157,
+        "std_difference": 0.0020000000000000018
+      },
+      {
+        "column": "MCC",
+        "key_values": {
+          "Model": "Soft-top-3"
+        },
+        "first_value": "0.340 (0.106)",
+        "second_value": "0.339 (0.106)",
+        "reference_mean": 0.34,
+        "new_mean": 0.339,
+        "mean_difference": 0.0010000000000000009,
+        "difference_type": "mean_difference",
+        "reference_std": 0.106,
+        "new_std": 0.106,
+        "std_difference": 0.0
+      },
+      {
+        "column": "AP",
+        "key_values": {
+          "Model": "AQRPE-MCC"
+        },
+        "first_value": "0.404 (0.133)",
+        "second_value": "0.403 (0.133)",
+        "reference_mean": 0.404,
+        "new_mean": 0.403,
+        "mean_difference": 0.0010000000000000009,
+        "difference_type": "mean_difference",
+        "reference_std": 0.133,
+        "new_std": 0.133,
+        "std_difference": 0.0
+      },
+      {
+        "column": "AP",
+        "key_values": {
+          "Model": "AQRPE-bal"
+        },
+        "first_value": "0.404 (0.133)",
+        "second_value": "0.403 (0.133)",
+        "reference_mean": 0.404,
+        "new_mean": 0.403,
+        "mean_difference": 0.0010000000000000009,
+        "difference_type": "mean_difference",
+        "reference_std": 0.133,
+        "new_std": 0.133,
+        "std_difference": 0.0
+      },
+      {
+        "column": "AP",
+        "key_values": {
+          "Model": "AQRPE-rank"
+        },
+        "first_value": "0.456 (0.116)",
+        "second_value": "0.454 (0.116)",
+        "reference_mean": 0.456,
+        "new_mean": 0.454,
+        "mean_difference": 0.0020000000000000018,
+        "difference_type": "mean_difference",
+        "reference_std": 0.116,
+        "new_std": 0.116,
+        "std_difference": 0.0
+      },
+      {
+        "column": "AP",
+        "key_values": {
+          "Model": "DT-L5"
+        },
+        "first_value": "0.296 (0.102)",
+        "second_value": "0.298 (0.104)",
+        "reference_mean": 0.296,
+        "new_mean": 0.298,
+        "mean_difference": 0.0020000000000000018,
+        "difference_type": "mean_difference",
+        "reference_std": 0.102,
+        "new_std": 0.104,
+        "std_difference": 0.0020000000000000018
+      },
+      {
+        "column": "AP",
+        "key_values": {
+          "Model": "ET-L5"
+        },
+        "first_value": "0.421 (0.150)",
+        "second_value": "0.420 (0.150)",
+        "reference_mean": 0.421,
+        "new_mean": 0.42,
+        "mean_difference": 0.0010000000000000009,
+        "difference_type": "mean_difference",
+        "reference_std": 0.15,
+        "new_std": 0.15,
+        "std_difference": 0.0
+      },
+      {
+        "column": "F1",
+        "key_values": {
+          "Model": "AQRPE-MCC"
+        },
+        "first_value": "0.401 (0.133)",
+        "second_value": "0.402 (0.130)",
+        "reference_mean": 0.401,
+        "new_mean": 0.402,
+        "mean_difference": 0.0010000000000000009,
+        "difference_type": "mean_difference",
+        "reference_std": 0.133,
+        "new_std": 0.13,
+        "std_difference": 0.0030000000000000027
+      },
+      {
+        "column": "F1",
+        "key_values": {
+          "Model": "AQRPE-bal"
+        },
+        "first_value": "0.403 (0.133)",
+        "second_value": "0.404 (0.130)",
+        "reference_mean": 0.403,
+        "new_mean": 0.404,
+        "mean_difference": 0.0010000000000000009,
+        "difference_type": "mean_difference",
+        "reference_std": 0.133,
+        "new_std": 0.13,
+        "std_difference": 0.0030000000000000027
+      },
+      {
+        "column": "F1",
+        "key_values": {
+          "Model": "DT-L5"
+        },
+        "first_value": "0.359 (0.092)",
+        "second_value": "0.361 (0.094)",
+        "reference_mean": 0.359,
+        "new_mean": 0.361,
+        "mean_difference": 0.0020000000000000018,
+        "difference_type": "mean_difference",
+        "reference_std": 0.092,
+        "new_std": 0.094,
+        "std_difference": 0.0020000000000000018
+      },
+      {
+        "column": "F1",
+        "key_values": {
+          "Model": "ET-L5"
+        },
+        "first_value": "0.407 (0.138)",
+        "second_value": "0.409 (0.135)",
+        "reference_mean": 0.407,
+        "new_mean": 0.409,
+        "mean_difference": 0.0020000000000000018,
+        "difference_type": "mean_difference",
+        "reference_std": 0.138,
+        "new_std": 0.135,
+        "std_difference": 0.0030000000000000027
+      },
+      {
+        "column": "BA",
+        "key_values": {
+          "Model": "AQRPE-MCC"
+        },
+        "first_value": "0.665 (0.073)",
+        "second_value": "0.664 (0.068)",
+        "reference_mean": 0.665,
+        "new_mean": 0.664,
+        "mean_difference": 0.0010000000000000009,
+        "difference_type": "mean_difference",
+        "reference_std": 0.073,
+        "new_std": 0.068,
+        "std_difference": 0.0049999999999999906
+      },
+      {
+        "column": "BA",
+        "key_values": {
+          "Model": "AQRPE-bal"
+        },
+        "first_value": "0.668 (0.072)",
+        "second_value": "0.667 (0.069)",
+        "reference_mean": 0.668,
+        "new_mean": 0.667,
+        "mean_difference": 0.0010000000000000009,
+        "difference_type": "mean_difference",
+        "reference_std": 0.072,
+        "new_std": 0.069,
+        "std_difference": 0.002999999999999989
+      },
+      {
+        "column": "BA",
+        "key_values": {
+          "Model": "AQRPE-rank"
+        },
+        "first_value": "0.724 (0.066)",
+        "second_value": "0.723 (0.064)",
+        "reference_mean": 0.724,
+        "new_mean": 0.723,
+        "mean_difference": 0.0010000000000000009,
+        "difference_type": "mean_difference",
+        "reference_std": 0.066,
+        "new_std": 0.064,
+        "std_difference": 0.0020000000000000018
+      },
+      {
+        "column": "BA",
+        "key_values": {
+          "Model": "DT-L5"
+        },
+        "first_value": "0.644 (0.062)",
+        "second_value": "0.645 (0.063)",
+        "reference_mean": 0.644,
+        "new_mean": 0.645,
+        "mean_difference": 0.0010000000000000009,
+        "difference_type": "mean_difference",
+        "reference_std": 0.062,
+        "new_std": 0.063,
+        "std_difference": 0.0010000000000000009
+      },
+      {
+        "column": "BA",
+        "key_values": {
+          "Model": "ET-L5"
+        },
+        "first_value": "0.674 (0.091)",
+        "second_value": "0.672 (0.087)",
+        "reference_mean": 0.674,
+        "new_mean": 0.672,
+        "mean_difference": 0.0020000000000000018,
+        "difference_type": "mean_difference",
+        "reference_std": 0.091,
+        "new_std": 0.087,
+        "std_difference": 0.0040000000000000036
+      },
+      {
+        "column": "P@10%",
+        "key_values": {
+          "Model": "AQRPE-MCC"
+        },
+        "first_value": "0.438 (0.184)",
+        "second_value": "0.440 (0.177)",
+        "reference_mean": 0.438,
+        "new_mean": 0.44,
+        "mean_difference": 0.0020000000000000018,
+        "difference_type": "mean_difference",
+        "reference_std": 0.184,
+        "new_std": 0.177,
+        "std_difference": 0.007000000000000006
+      },
+      {
+        "column": "P@10%",
+        "key_values": {
+          "Model": "AQRPE-bal"
+        },
+        "first_value": "0.438 (0.184)",
+        "second_value": "0.440 (0.177)",
+        "reference_mean": 0.438,
+        "new_mean": 0.44,
+        "mean_difference": 0.0020000000000000018,
+        "difference_type": "mean_difference",
+        "reference_std": 0.184,
+        "new_std": 0.177,
+        "std_difference": 0.007000000000000006
+      },
+      {
+        "column": "P@10%",
+        "key_values": {
+          "Model": "AQRPE-rank"
+        },
+        "first_value": "0.478 (0.180)",
+        "second_value": "0.473 (0.180)",
+        "reference_mean": 0.478,
+        "new_mean": 0.473,
+        "mean_difference": 0.0050000000000000044,
+        "difference_type": "mean_difference",
+        "reference_std": 0.18,
+        "new_std": 0.18,
+        "std_difference": 0.0
+      },
+      {
+        "column": "P@10%",
+        "key_values": {
+          "Model": "DT-L5"
+        },
+        "first_value": "0.380 (0.141)",
+        "second_value": "0.388 (0.136)",
+        "reference_mean": 0.38,
+        "new_mean": 0.388,
+        "mean_difference": 0.008000000000000007,
+        "difference_type": "mean_difference",
+        "reference_std": 0.141,
+        "new_std": 0.136,
+        "std_difference": 0.004999999999999977
+      },
+      {
+        "column": "P@10%",
+        "key_values": {
+          "Model": "ET-L5"
+        },
+        "first_value": "0.452 (0.212)",
+        "second_value": "0.445 (0.211)",
+        "reference_mean": 0.452,
+        "new_mean": 0.445,
+        "mean_difference": 0.007000000000000006,
+        "difference_type": "mean_difference",
+        "reference_std": 0.212,
+        "new_std": 0.211,
+        "std_difference": 0.0010000000000000009
+      },
+      {
+        "column": "P@10%",
+        "key_values": {
+          "Model": "Soft-top-3"
+        },
+        "first_value": "0.458 (0.160)",
+        "second_value": "0.457 (0.160)",
+        "reference_mean": 0.458,
+        "new_mean": 0.457,
+        "mean_difference": 0.0010000000000000009,
+        "difference_type": "mean_difference",
+        "reference_std": 0.16,
+        "new_std": 0.16,
+        "std_difference": 0.0
+      },
+      {
+        "column": "R@10%",
+        "key_values": {
+          "Model": "AQRPE-MCC"
+        },
+        "first_value": "0.336 (0.118)",
+        "second_value": "0.340 (0.117)",
+        "reference_mean": 0.336,
+        "new_mean": 0.34,
+        "mean_difference": 0.0040000000000000036,
+        "difference_type": "mean_difference",
+        "reference_std": 0.118,
+        "new_std": 0.117,
+        "std_difference": 0.000999999999999987
+      },
+      {
+        "column": "R@10%",
+        "key_values": {
+          "Model": "AQRPE-bal"
+        },
+        "first_value": "0.336 (0.118)",
+        "second_value": "0.340 (0.117)",
+        "reference_mean": 0.336,
+        "new_mean": 0.34,
+        "mean_difference": 0.0040000000000000036,
+        "difference_type": "mean_difference",
+        "reference_std": 0.118,
+        "new_std": 0.117,
+        "std_difference": 0.000999999999999987
+      },
+      {
+        "column": "R@10%",
+        "key_values": {
+          "Model": "AQRPE-rank"
+        },
+        "first_value": "0.372 (0.121)",
+        "second_value": "0.370 (0.122)",
+        "reference_mean": 0.372,
+        "new_mean": 0.37,
+        "mean_difference": 0.0020000000000000018,
+        "difference_type": "mean_difference",
+        "reference_std": 0.121,
+        "new_std": 0.122,
+        "std_difference": 0.0010000000000000009
+      },
+      {
+        "column": "R@10%",
+        "key_values": {
+          "Model": "DT-L5"
+        },
+        "first_value": "0.295 (0.102)",
+        "second_value": "0.307 (0.113)",
+        "reference_mean": 0.295,
+        "new_mean": 0.307,
+        "mean_difference": 0.01200000000000001,
+        "difference_type": "mean_difference",
+        "reference_std": 0.102,
+        "new_std": 0.113,
+        "std_difference": 0.01100000000000001
+      },
+      {
+        "column": "R@10%",
+        "key_values": {
+          "Model": "ET-L5"
+        },
+        "first_value": "0.346 (0.142)",
+        "second_value": "0.342 (0.143)",
+        "reference_mean": 0.346,
+        "new_mean": 0.342,
+        "mean_difference": 0.003999999999999948,
+        "difference_type": "mean_difference",
+        "reference_std": 0.142,
+        "new_std": 0.143,
+        "std_difference": 0.0010000000000000009
+      }
+    ],
+    "null_mismatch_count": 0,
+    "max_mean_diff": 0.01200000000000001,
+    "max_std_diff": 0.01100000000000001
+  },
+  "table_cross_project_mean_sd.csv": {
+    "file": "table_cross_project_mean_sd.csv",
+    "exists_in_both": true,
+    "first_sha256": "b2f398d8abe784a52164b6ce3b0b358e779ba543c8097a91d259cc11deb31d34",
+    "second_sha256": "1753444c5b8a0c3a34179c644f6998cc663a3eb1da80e81b8fcf6d285e53731c",
+    "sha256_match": false,
+    "first_rows": 8,
+    "second_rows": 8,
+    "first_cols": 7,
+    "second_cols": 7,
+    "column_names_match": true,
+    "column_order_match": true,
+    "key_duplicates": {
+      "first": false,
+      "second": false
+    },
+    "missing_keys": [],
+    "extra_keys": [],
+    "cell_differences": [
+      {
+        "column": "MCC",
+        "key_values": {
+          "Model": "AQRPE-MCC"
+        },
+        "first_value": "0.280 (0.109)",
+        "second_value": "0.274 (0.102)",
+        "reference_mean": 0.28,
+        "new_mean": 0.274,
+        "mean_difference": 0.006000000000000005,
+        "difference_type": "mean_difference",
+        "reference_std": 0.109,
+        "new_std": 0.102,
+        "std_difference": 0.007000000000000006
+      },
+      {
+        "column": "MCC",
+        "key_values": {
+          "Model": "AQRPE-bal"
+        },
+        "first_value": "0.281 (0.108)",
+        "second_value": "0.285 (0.108)",
+        "reference_mean": 0.281,
+        "new_mean": 0.285,
+        "mean_difference": 0.003999999999999948,
+        "difference_type": "mean_difference",
+        "reference_std": 0.108,
+        "new_std": 0.108,
+        "std_difference": 0.0
+      },
+      {
+        "column": "MCC",
+        "key_values": {
+          "Model": "AQRPE-rank"
+        },
+        "first_value": "0.277 (0.109)",
+        "second_value": "0.282 (0.110)",
+        "reference_mean": 0.277,
+        "new_mean": 0.282,
+        "mean_difference": 0.004999999999999949,
+        "difference_type": "mean_difference",
+        "reference_std": 0.109,
+        "new_std": 0.11,
+        "std_difference": 0.0010000000000000009
+      },
+      {
+        "column": "MCC",
+        "key_values": {
+          "Model": "DT-L5"
+        },
+        "first_value": "0.130 (0.060)",
+        "second_value": "0.131 (0.063)",
+        "reference_mean": 0.13,
+        "new_mean": 0.131,
+        "mean_difference": 0.0010000000000000009,
+        "difference_type": "mean_difference",
+        "reference_std": 0.06,
+        "new_std": 0.063,
+        "std_difference": 0.0030000000000000027
+      },
+      {
+        "column": "MCC",
+        "key_values": {
+          "Model": "ET-L5"
+        },
+        "first_value": "0.281 (0.108)",
+        "second_value": "0.284 (0.108)",
+        "reference_mean": 0.281,
+        "new_mean": 0.284,
+        "mean_difference": 0.002999999999999947,
+        "difference_type": "mean_difference",
+        "reference_std": 0.108,
+        "new_std": 0.108,
+        "std_difference": 0.0
+      },
+      {
+        "column": "AP",
+        "key_values": {
+          "Model": "AQRPE-bal"
+        },
+        "first_value": "0.350 (0.151)",
+        "second_value": "0.351 (0.151)",
+        "reference_mean": 0.35,
+        "new_mean": 0.351,
+        "mean_difference": 0.0010000000000000009,
+        "difference_type": "mean_difference",
+        "reference_std": 0.151,
+        "new_std": 0.151,
+        "std_difference": 0.0
+      },
+      {
+        "column": "F1",
+        "key_values": {
+          "Model": "AQRPE-MCC"
+        },
+        "first_value": "0.376 (0.116)",
+        "second_value": "0.365 (0.109)",
+        "reference_mean": 0.376,
+        "new_mean": 0.365,
+        "mean_difference": 0.01100000000000001,
+        "difference_type": "mean_difference",
+        "reference_std": 0.116,
+        "new_std": 0.109,
+        "std_difference": 0.007000000000000006
+      },
+      {
+        "column": "F1",
+        "key_values": {
+          "Model": "AQRPE-bal"
+        },
+        "first_value": "0.380 (0.116)",
+        "second_value": "0.381 (0.117)",
+        "reference_mean": 0.38,
+        "new_mean": 0.381,
+        "mean_difference": 0.0010000000000000009,
+        "difference_type": "mean_difference",
+        "reference_std": 0.116,
+        "new_std": 0.117,
+        "std_difference": 0.0010000000000000009
+      },
+      {
+        "column": "F1",
+        "key_values": {
+          "Model": "AQRPE-rank"
+        },
+        "first_value": "0.379 (0.118)",
+        "second_value": "0.383 (0.118)",
+        "reference_mean": 0.379,
+        "new_mean": 0.383,
+        "mean_difference": 0.0040000000000000036,
+        "difference_type": "mean_difference",
+        "reference_std": 0.118,
+        "new_std": 0.118,
+        "std_difference": 0.0
+      },
+      {
+        "column": "F1",
+        "key_values": {
+          "Model": "DT-L5"
+        },
+        "first_value": "0.263 (0.077)",
+        "second_value": "0.265 (0.079)",
+        "reference_mean": 0.263,
+        "new_mean": 0.265,
+        "mean_difference": 0.0020000000000000018,
+        "difference_type": "mean_difference",
+        "reference_std": 0.077,
+        "new_std": 0.079,
+        "std_difference": 0.0020000000000000018
+      },
+      {
+        "column": "BA",
+        "key_values": {
+          "Model": "AQRPE-MCC"
+        },
+        "first_value": "0.650 (0.054)",
+        "second_value": "0.645 (0.050)",
+        "reference_mean": 0.65,
+        "new_mean": 0.645,
+        "mean_difference": 0.0050000000000000044,
+        "difference_type": "mean_difference",
+        "reference_std": 0.054,
+        "new_std": 0.05,
+        "std_difference": 0.003999999999999997
+      },
+      {
+        "column": "BA",
+        "key_values": {
+          "Model": "AQRPE-bal"
+        },
+        "first_value": "0.668 (0.052)",
+        "second_value": "0.672 (0.056)",
+        "reference_mean": 0.668,
+        "new_mean": 0.672,
+        "mean_difference": 0.0040000000000000036,
+        "difference_type": "mean_difference",
+        "reference_std": 0.052,
+        "new_std": 0.056,
+        "std_difference": 0.0040000000000000036
+      },
+      {
+        "column": "BA",
+        "key_values": {
+          "Model": "AQRPE-rank"
+        },
+        "first_value": "0.668 (0.050)",
+        "second_value": "0.671 (0.053)",
+        "reference_mean": 0.668,
+        "new_mean": 0.671,
+        "mean_difference": 0.0030000000000000027,
+        "difference_type": "mean_difference",
+        "reference_std": 0.05,
+        "new_std": 0.053,
+        "std_difference": 0.0029999999999999957
+      },
+      {
+        "column": "BA",
+        "key_values": {
+          "Model": "DT-L5"
+        },
+        "first_value": "0.579 (0.039)",
+        "second_value": "0.580 (0.039)",
+        "reference_mean": 0.579,
+        "new_mean": 0.58,
+        "mean_difference": 0.0010000000000000009,
+        "difference_type": "mean_difference",
+        "reference_std": 0.039,
+        "new_std": 0.039,
+        "std_difference": 0.0
+      },
+      {
+        "column": "BA",
+        "key_values": {
+          "Model": "ET-L5"
+        },
+        "first_value": "0.668 (0.052)",
+        "second_value": "0.671 (0.057)",
+        "reference_mean": 0.668,
+        "new_mean": 0.671,
+        "mean_difference": 0.0030000000000000027,
+        "difference_type": "mean_difference",
+        "reference_std": 0.052,
+        "new_std": 0.057,
+        "std_difference": 0.0050000000000000044
+      },
+      {
+        "column": "P@10%",
+        "key_values": {
+          "Model": "DT-L5"
+        },
+        "first_value": "0.287 (0.128)",
+        "second_value": "0.283 (0.128)",
+        "reference_mean": 0.287,
+        "new_mean": 0.283,
+        "mean_difference": 0.0040000000000000036,
+        "difference_type": "mean_difference",
+        "reference_std": 0.128,
+        "new_std": 0.128,
+        "std_difference": 0.0
+      },
+      {
+        "column": "R@10%",
+        "key_values": {
+          "Model": "AQRPE-MCC"
+        },
+        "first_value": "0.304 (0.046)",
+        "second_value": "0.306 (0.046)",
+        "reference_mean": 0.304,
+        "new_mean": 0.306,
+        "mean_difference": 0.0020000000000000018,
+        "difference_type": "mean_difference",
+        "reference_std": 0.046,
+        "new_std": 0.046,
+        "std_difference": 0.0
+      },
+      {
+        "column": "R@10%",
+        "key_values": {
+          "Model": "AQRPE-bal"
+        },
+        "first_value": "0.304 (0.046)",
+        "second_value": "0.306 (0.046)",
+        "reference_mean": 0.304,
+        "new_mean": 0.306,
+        "mean_difference": 0.0020000000000000018,
+        "difference_type": "mean_difference",
+        "reference_std": 0.046,
+        "new_std": 0.046,
+        "std_difference": 0.0
+      },
+      {
+        "column": "R@10%",
+        "key_values": {
+          "Model": "AQRPE-rank"
+        },
+        "first_value": "0.304 (0.046)",
+        "second_value": "0.306 (0.046)",
+        "reference_mean": 0.304,
+        "new_mean": 0.306,
+        "mean_difference": 0.0020000000000000018,
+        "difference_type": "mean_difference",
+        "reference_std": 0.046,
+        "new_std": 0.046,
+        "std_difference": 0.0
+      },
+      {
+        "column": "R@10%",
+        "key_values": {
+          "Model": "DT-L5"
+        },
+        "first_value": "0.208 (0.045)",
+        "second_value": "0.204 (0.042)",
+        "reference_mean": 0.208,
+        "new_mean": 0.204,
+        "mean_difference": 0.0040000000000000036,
+        "difference_type": "mean_difference",
+        "reference_std": 0.045,
+        "new_std": 0.042,
+        "std_difference": 0.0029999999999999957
+      },
+      {
+        "column": "R@10%",
+        "key_values": {
+          "Model": "ET-L5"
+        },
+        "first_value": "0.304 (0.046)",
+        "second_value": "0.306 (0.046)",
+        "reference_mean": 0.304,
+        "new_mean": 0.306,
+        "mean_difference": 0.0020000000000000018,
+        "difference_type": "mean_difference",
+        "reference_std": 0.046,
+        "new_std": 0.046,
+        "std_difference": 0.0
+      }
+    ],
+    "null_mismatch_count": 0,
+    "max_mean_diff": 0.01100000000000001,
+    "max_std_diff": 0.007000000000000006
+  },
+  "table_soft_top3_delta_vs_best_baseline.csv": {
+    "file": "table_soft_top3_delta_vs_best_baseline.csv",
+    "exists_in_both": true,
+    "first_sha256": "13f193e8cd47394eb7ae318ab8f81381d937887f8d4f9c7dedc663106fed96b1",
+    "second_sha256": "bf5cac180bf9701299dfd1c1b410224d34b8f32269b49fb8203df7567ff7a60b",
+    "sha256_match": false,
+    "first_rows": 16,
+    "second_rows": 16,
+    "first_cols": 8,
+    "second_cols": 8,
+    "column_names_match": true,
+    "column_order_match": true,
+    "key_duplicates": {
+      "first": false,
+      "second": false
+    },
+    "missing_keys": [],
+    "extra_keys": [],
+    "numeric_differences": [
+      {
+        "column": "Soft-top-3 mean",
+        "key_values": {
+          "Setting": "cross_project",
+          "Metric": "avg_precision"
+        },
+        "first_value": 0.359273,
+        "second_value": 0.358844,
+        "difference": 0.0004290000000000127
+      },
+      {
+        "column": "Soft-top-3 mean",
+        "key_values": {
+          "Setting": "cross_project",
+          "Metric": "balanced_accuracy"
+        },
+        "first_value": 0.685915,
+        "second_value": 0.685664,
+        "difference": 0.0002510000000000012
+      },
+      {
+        "column": "Soft-top-3 mean",
+        "key_values": {
+          "Setting": "cross_project",
+          "Metric": "brier"
+        },
+        "first_value": 0.181151,
+        "second_value": 0.180948,
+        "difference": 0.00020300000000000873
+      },
+      {
+        "column": "Soft-top-3 mean",
+        "key_values": {
+          "Setting": "cross_project",
+          "Metric": "f1"
+        },
+        "first_value": 0.393335,
+        "second_value": 0.392806,
+        "difference": 0.0005290000000000017
+      },
+      {
+        "column": "Soft-top-3 mean",
+        "key_values": {
+          "Setting": "cross_project",
+          "Metric": "lift_at_10pct"
+        },
+        "first_value": 2.825839,
+        "second_value": 2.829612,
+        "difference": 0.0037729999999998043
+      },
+      {
+        "column": "Soft-top-3 mean",
+        "key_values": {
+          "Setting": "cross_project",
+          "Metric": "mcc"
+        },
+        "first_value": 0.293463,
+        "second_value": 0.293438,
+        "difference": 2.4999999999997247e-05
+      },
+      {
+        "column": "Soft-top-3 mean",
+        "key_values": {
+          "Setting": "cross_project",
+          "Metric": "precision_at_10pct"
+        },
+        "first_value": 0.400087,
+        "second_value": 0.400436,
+        "difference": 0.0003489999999999882
+      },
+      {
+        "column": "Soft-top-3 mean",
+        "key_values": {
+          "Setting": "cross_project",
+          "Metric": "recall_at_10pct"
+        },
+        "first_value": 0.283987,
+        "second_value": 0.284368,
+        "difference": 0.0003810000000000202
+      },
+      {
+        "column": "Soft-top-3 mean",
+        "key_values": {
+          "Setting": "within_project",
+          "Metric": "avg_precision"
+        },
+        "first_value": 0.440253,
+        "second_value": 0.440429,
+        "difference": 0.00017600000000000948
+      },
+      {
+        "column": "Soft-top-3 mean",
+        "key_values": {
+          "Setting": "within_project",
+          "Metric": "balanced_accuracy"
+        },
+        "first_value": 0.694637,
+        "second_value": 0.694907,
+        "difference": 0.0002700000000001035
+      },
+      {
+        "column": "Soft-top-3 mean",
+        "key_values": {
+          "Setting": "within_project",
+          "Metric": "brier"
+        },
+        "first_value": 0.148333,
+        "second_value": 0.146873,
+        "difference": 0.001459999999999989
+      },
+      {
+        "column": "Soft-top-3 mean",
+        "key_values": {
+          "Setting": "within_project",
+          "Metric": "f1"
+        },
+        "first_value": 0.424034,
+        "second_value": 0.423754,
+        "difference": 0.00028000000000000247
+      },
+      {
+        "column": "Soft-top-3 mean",
+        "key_values": {
+          "Setting": "within_project",
+          "Metric": "lift_at_10pct"
+        },
+        "first_value": 3.527434,
+        "second_value": 3.523288,
+        "difference": 0.004145999999999983
+      },
+      {
+        "column": "Soft-top-3 mean",
+        "key_values": {
+          "Setting": "within_project",
+          "Metric": "mcc"
+        },
+        "first_value": 0.340068,
+        "second_value": 0.339156,
+        "difference": 0.0009119999999999684
+      },
+      {
+        "column": "Soft-top-3 mean",
+        "key_values": {
+          "Setting": "within_project",
+          "Metric": "precision_at_10pct"
+        },
+        "first_value": 0.458026,
+        "second_value": 0.457398,
+        "difference": 0.0006279999999999619
+      },
+      {
+        "column": "Soft-top-3 mean",
+        "key_values": {
+          "Setting": "within_project",
+          "Metric": "recall_at_10pct"
+        },
+        "first_value": 0.361307,
+        "second_value": 0.360881,
+        "difference": 0.00042599999999998195
+      },
+      {
+        "column": "Best baseline mean",
+        "key_values": {
+          "Setting": "cross_project",
+          "Metric": "avg_precision"
+        },
+        "first_value": 0.356339,
+        "second_value": 0.356312,
+        "difference": 2.6999999999999247e-05
+      },
+      {
+        "column": "Best baseline mean",
+        "key_values": {
+          "Setting": "cross_project",
+          "Metric": "brier"
+        },
+        "first_value": 0.162478,
+        "second_value": 0.161972,
+        "difference": 0.0005060000000000064
+      },
+      {
+        "column": "Best baseline mean",
+        "key_values": {
+          "Setting": "cross_project",
+          "Metric": "lift_at_10pct"
+        },
+        "first_value": 3.028701,
+        "second_value": 3.046156,
+        "difference": 0.017455
+      },
+      {
+        "column": "Best baseline mean",
+        "key_values": {
+          "Setting": "cross_project",
+          "Metric": "precision_at_10pct"
+        },
+        "first_value": 0.414298,
+        "second_value": 0.413764,
+        "difference": 0.0005339999999999789
+      },
+      {
+        "column": "Best baseline mean",
+        "key_values": {
+          "Setting": "cross_project",
+          "Metric": "recall_at_10pct"
+        },
+        "first_value": 0.304315,
+        "second_value": 0.306049,
+        "difference": 0.0017340000000000133
+      },
+      {
+        "column": "Best baseline mean",
+        "key_values": {
+          "Setting": "within_project",
+          "Metric": "avg_precision"
+        },
+        "first_value": 0.421389,
+        "second_value": 0.420293,
+        "difference": 0.0010959999999999859
+      },
+      {
+        "column": "Best baseline mean",
+        "key_values": {
+          "Setting": "within_project",
+          "Metric": "brier"
+        },
+        "first_value": 0.134191,
+        "second_value": 0.133357,
+        "difference": 0.0008340000000000014
+      },
+      {
+        "column": "Best baseline mean",
+        "key_values": {
+          "Setting": "within_project",
+          "Metric": "f1"
+        },
+        "first_value": 0.406668,
+        "second_value": 0.408831,
+        "difference": 0.002163000000000026
+      },
+      {
+        "column": "Best baseline mean",
+        "key_values": {
+          "Setting": "within_project",
+          "Metric": "lift_at_10pct"
+        },
+        "first_value": 3.368219,
+        "second_value": 3.33615,
+        "difference": 0.0320689999999999
+      },
+      {
+        "column": "Best baseline mean",
+        "key_values": {
+          "Setting": "within_project",
+          "Metric": "mcc"
+        },
+        "first_value": 0.31835,
+        "second_value": 0.320441,
+        "difference": 0.002090999999999954
+      },
+      {
+        "column": "Best baseline mean",
+        "key_values": {
+          "Setting": "within_project",
+          "Metric": "recall_at_10pct"
+        },
+        "first_value": 0.345597,
+        "second_value": 0.34152,
+        "difference": 0.004076999999999997
+      },
+      {
+        "column": "Delta",
+        "key_values": {
+          "Setting": "cross_project",
+          "Metric": "avg_precision"
+        },
+        "first_value": 0.002934,
+        "second_value": 0.002532,
+        "difference": 0.000402
+      },
+      {
+        "column": "Delta",
+        "key_values": {
+          "Setting": "cross_project",
+          "Metric": "balanced_accuracy"
+        },
+        "first_value": 0.011017,
+        "second_value": 0.010767,
+        "difference": 0.0002500000000000002
+      },
+      {
+        "column": "Delta",
+        "key_values": {
+          "Setting": "cross_project",
+          "Metric": "brier"
+        },
+        "first_value": 0.018673,
+        "second_value": 0.018976,
+        "difference": 0.0003030000000000012
+      },
+      {
+        "column": "Delta",
+        "key_values": {
+          "Setting": "cross_project",
+          "Metric": "f1"
+        },
+        "first_value": 0.006014,
+        "second_value": 0.005485,
+        "difference": 0.000529
+      },
+      {
+        "column": "Delta",
+        "key_values": {
+          "Setting": "cross_project",
+          "Metric": "lift_at_10pct"
+        },
+        "first_value": -0.202862,
+        "second_value": -0.216544,
+        "difference": 0.013682
+      },
+      {
+        "column": "Delta",
+        "key_values": {
+          "Setting": "cross_project",
+          "Metric": "mcc"
+        },
+        "first_value": 0.006592,
+        "second_value": 0.006568,
+        "difference": 2.3999999999999716e-05
+      },
+      {
+        "column": "Delta",
+        "key_values": {
+          "Setting": "cross_project",
+          "Metric": "precision_at_10pct"
+        },
+        "first_value": -0.014211,
+        "second_value": -0.013328,
+        "difference": 0.0008830000000000001
+      },
+      {
+        "column": "Delta",
+        "key_values": {
+          "Setting": "cross_project",
+          "Metric": "recall_at_10pct"
+        },
+        "first_value": -0.020328,
+        "second_value": -0.021681,
+        "difference": 0.001353
+      },
+      {
+        "column": "Delta",
+        "key_values": {
+          "Setting": "within_project",
+          "Metric": "avg_precision"
+        },
+        "first_value": 0.018864,
+        "second_value": 0.020136,
+        "difference": 0.0012720000000000023
+      },
+      {
+        "column": "Delta",
+        "key_values": {
+          "Setting": "within_project",
+          "Metric": "balanced_accuracy"
+        },
+        "first_value": 0.004777,
+        "second_value": 0.005048,
+        "difference": 0.0002710000000000004
+      },
+      {
+        "column": "Delta",
+        "key_values": {
+          "Setting": "within_project",
+          "Metric": "brier"
+        },
+        "first_value": 0.014142,
+        "second_value": 0.013517,
+        "difference": 0.0006250000000000006
+      },
+      {
+        "column": "Delta",
+        "key_values": {
+          "Setting": "within_project",
+          "Metric": "f1"
+        },
+        "first_value": 0.017366,
+        "second_value": 0.014923,
+        "difference": 0.002442999999999999
+      },
+      {
+        "column": "Delta",
+        "key_values": {
+          "Setting": "within_project",
+          "Metric": "lift_at_10pct"
+        },
+        "first_value": 0.159215,
+        "second_value": 0.187138,
+        "difference": 0.027923000000000003
+      },
+      {
+        "column": "Delta",
+        "key_values": {
+          "Setting": "within_project",
+          "Metric": "mcc"
+        },
+        "first_value": 0.021718,
+        "second_value": 0.018715,
+        "difference": 0.003003000000000002
+      },
+      {
+        "column": "Delta",
+        "key_values": {
+          "Setting": "within_project",
+          "Metric": "precision_at_10pct"
+        },
+        "first_value": 0.002067,
+        "second_value": 0.001439,
+        "difference": 0.0006279999999999999
+      },
+      {
+        "column": "Delta",
+        "key_values": {
+          "Setting": "within_project",
+          "Metric": "recall_at_10pct"
+        },
+        "first_value": 0.01571,
+        "second_value": 0.019362,
+        "difference": 0.0036520000000000025
+      }
+    ],
+    "text_differences": [
+      {
+        "column": "Best baseline",
+        "key_values": {
+          "Setting": "within_project",
+          "Metric": "lift_at_10pct"
+        },
+        "first_value": "ET-L5",
+        "second_value": "LR-C1"
+      },
+      {
+        "column": "Best baseline",
+        "key_values": {
+          "Setting": "within_project",
+          "Metric": "mcc"
+        },
+        "first_value": "LR-C0.1",
+        "second_value": "ET-L5"
+      }
+    ],
+    "null_mismatch_count": 0,
+    "max_absolute_diff": 0.0320689999999999
+  },
+  "overall_status": "materially_different"
+}

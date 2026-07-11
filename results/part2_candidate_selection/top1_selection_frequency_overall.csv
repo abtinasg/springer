@@ -1,0 +1,13 @@
+selector_model,mode,candidate,count,denominator,proportion
+AQRPE_v2_balanced,balanced,DT_leaf5,5,50,0.1
+AQRPE_v2_balanced,balanced,ET_leaf5,40,50,0.8
+AQRPE_v2_balanced,balanced,LR_std_C0.1,2,50,0.04
+AQRPE_v2_balanced,balanced,LR_std_C1,3,50,0.06
+AQRPE_v2_mcc,mcc,DT_leaf5,5,50,0.1
+AQRPE_v2_mcc,mcc,ET_leaf5,40,50,0.8
+AQRPE_v2_mcc,mcc,LR_std_C0.1,2,50,0.04
+AQRPE_v2_mcc,mcc,LR_std_C1,3,50,0.06
+AQRPE_v2_rank,rank,DT_leaf5,0,50,0.0
+AQRPE_v2_rank,rank,ET_leaf5,41,50,0.82
+AQRPE_v2_rank,rank,LR_std_C0.1,5,50,0.1
+AQRPE_v2_rank,rank,LR_std_C1,4,50,0.08

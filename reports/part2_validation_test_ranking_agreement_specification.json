@@ -1,0 +1,393 @@
+{
+  "stage": "Part 2 Section 4A: Specify validation-test ranking agreement methodology",
+  "base_commit": "b2c1118b832674bf881176bcc5d81cd009a832d2",
+  "scope": "Specification and audit design only. No ranking computation, analytical CSVs, numeric results, charts, or scientific conclusions generated.",
+  "canonical_inputs": {
+    "validation_log": "results/part1_full_reproduction/validation_log.csv",
+    "repeated_results": "results/part1_full_reproduction/repeated_all_results.csv",
+    "manifest": "reports/part1_canonical_manifest.json"
+  },
+  "analysis_unit": {
+    "definition": "experiment × target_project × seed × mode",
+    "expected_dimensions": {
+      "experiments": 2,
+      "projects": 5,
+      "seeds": 5,
+      "modes": 3
+    },
+    "expected_total_units": 150,
+    "candidates_per_unit": 4
+  },
+  "expected_cardinalities": {
+    "validation_log_rows": 600,
+    "baseline_repeated_result_rows": 200,
+    "joined_candidate_rows": 600
+  },
+  "candidate_domain": [
+    "LR_std_C0.1",
+    "LR_std_C1",
+    "DT_leaf5",
+    "ET_leaf5"
+  ],
+  "mode_mapping": {
+    "balanced": "AQRPE_v2_balanced",
+    "rank": "AQRPE_v2_rank",
+    "mcc": "AQRPE_v2_mcc"
+  },
+  "metrics": [
+    "avg_precision",
+    "roc_auc",
+    "mcc",
+    "f1",
+    "balanced_accuracy",
+    "precision",
+    "recall",
+    "brier",
+    "precision_at_10pct",
+    "recall_at_10pct",
+    "lift_at_10pct",
+    "precision_at_20pct",
+    "recall_at_20pct",
+    "lift_at_20pct"
+  ],
+  "metric_directions": {
+    "avg_precision": "higher_is_better",
+    "roc_auc": "higher_is_better",
+    "mcc": "higher_is_better",
+    "f1": "higher_is_better",
+    "balanced_accuracy": "higher_is_better",
+    "precision": "higher_is_better",
+    "recall": "higher_is_better",
+    "brier": "lower_is_better",
+    "precision_at_10pct": "higher_is_better",
+    "recall_at_10pct": "higher_is_better",
+    "lift_at_10pct": "higher_is_better",
+    "precision_at_20pct": "higher_is_better",
+    "recall_at_20pct": "higher_is_better",
+    "lift_at_20pct": "higher_is_better"
+  },
+  "metric_column_mapping": {
+    "avg_precision": {
+      "validation_column": "val_avg_precision",
+      "test_column": "avg_precision"
+    },
+    "roc_auc": {
+      "validation_column": "val_roc_auc",
+      "test_column": "roc_auc"
+    },
+    "mcc": {
+      "validation_column": "val_mcc",
+      "test_column": "mcc"
+    },
+    "f1": {
+      "validation_column": "val_f1",
+      "test_column": "f1"
+    },
+    "balanced_accuracy": {
+      "validation_column": "val_balanced_accuracy",
+      "test_column": "balanced_accuracy"
+    },
+    "precision": {
+      "validation_column": "val_precision",
+      "test_column": "precision"
+    },
+    "recall": {
+      "validation_column": "val_recall",
+      "test_column": "recall"
+    },
+    "brier": {
+      "validation_column": "val_brier",
+      "test_column": "brier"
+    },
+    "precision_at_10pct": {
+      "validation_column": "val_precision_at_10pct",
+      "test_column": "precision_at_10pct"
+    },
+    "recall_at_10pct": {
+      "validation_column": "val_recall_at_10pct",
+      "test_column": "recall_at_10pct"
+    },
+    "lift_at_10pct": {
+      "validation_column": "val_lift_at_10pct",
+      "test_column": "lift_at_10pct"
+    },
+    "precision_at_20pct": {
+      "validation_column": "val_precision_at_20pct",
+      "test_column": "precision_at_20pct"
+    },
+    "recall_at_20pct": {
+      "validation_column": "val_recall_at_20pct",
+      "test_column": "recall_at_20pct"
+    },
+    "lift_at_20pct": {
+      "validation_column": "val_lift_at_20pct",
+      "test_column": "lift_at_20pct"
+    }
+  },
+  "join_specification": {
+    "join_keys": [
+      {
+        "validation": "experiment",
+        "test": "experiment"
+      },
+      {
+        "validation": "target_project",
+        "test": "target_project"
+      },
+      {
+        "validation": "seed",
+        "test": "seed"
+      },
+      {
+        "validation": "candidate",
+        "test": "model"
+      }
+    ],
+    "mode_handling": "mode is retained from validation_log and is not part of the unique baseline test key",
+    "baseline_test_key_uniqueness": "baseline test table is unique on experiment × target_project × seed × model",
+    "validation_to_baseline_mapping": "each baseline test row is used in a controlled manner across three validation modes",
+    "join_cardinality": "600 validation rows join to 200 unique baseline test rows",
+    "expected_join_rows": 600,
+    "unexpected_many_to_many_join_forbidden": true
+  },
+  "tie_policy": {
+    "exact_tie": "values are exactly equal",
+    "tolerance_aware_tie": "absolute difference <= 1e-12",
+    "winner_set_handling": "preserve all tied candidates in winner set",
+    "deterministic_display": "constant candidate ordering allowed for display only, not for winner set determination",
+    "tolerance_winner_set_construction": "tolerance winner set is not built via pairwise chaining or candidate ordering"
+  },
+  "rank_policy": {
+    "rank_1_definition": "rank 1 always represents best performance",
+    "brier_rank_direction": "ascending (lower value = better rank)",
+    "other_metrics_rank_direction": "descending (higher value = better rank)",
+    "tie_handling": "ties are managed with average ranks",
+    "spearman_computation": "Spearman correlation computed on two rank vectors of four candidates",
+    "kendall_computation": "Kendall tau-b to support ties",
+    "correlation_tie_policy": "main correlations are based on tolerance-aware ranks",
+    "tolerance_group_construction": "tolerance groups are built by comparison to ordered performance levels",
+    "deterministic_order_forbidden": "no deterministic candidate order should break real ties",
+    "canonical_candidate_order": [
+      "LR_std_C0.1",
+      "LR_std_C1",
+      "DT_leaf5",
+      "ET_leaf5"
+    ],
+    "canonical_order_purpose": "alignment and serialization only, not for tie-breaking",
+    "utility_construction": {
+      "higher_is_better": "utility = metric_value",
+      "lower_is_better": "utility = -metric_value"
+    },
+    "exact_rank_algorithm": {
+      "step_1": "compute utility for each candidate based on metric direction",
+      "step_2": "sort candidates by utility in descending order",
+      "step_3": "group candidates with exactly equal utility values",
+      "step_4": "assign rank to each group as average ordinal positions of its members",
+      "rank_1_best": "rank 1 always represents best performance (highest utility)"
+    },
+    "tolerance_aware_rank_algorithm": {
+      "step_1": "compute utility for each candidate based on metric direction",
+      "step_2": "sort candidates by utility in descending order",
+      "step_3": "start with the best ungrouped candidate as anchor",
+      "step_4": "anchor_utility is the fixed reference value for the current group",
+      "step_5": "subsequent candidates join the same group only if: anchor_utility - candidate_utility <= 1e-12",
+      "step_6": "comparison to the last group member is forbidden",
+      "step_7": "pairwise chaining is forbidden",
+      "step_8": "when the first candidate is outside anchor tolerance, close the group",
+      "step_9": "next candidate becomes anchor for new group",
+      "step_10": "assign rank to each group as average ordinal positions of its members",
+      "candidate_order_forbidden": "candidate order must not be used to extend tie groups"
+    },
+    "synthetic_audit_example": {
+      "utility_values": [
+        1.0,
+        "1.0 - 0.75e-12",
+        "1.0 - 1.50e-12"
+      ],
+      "expected_result": "first and second candidates in one tolerance group, third candidate in next group",
+      "non_chaining_rule": "even if distance between second and third candidates is less than or equal to tolerance, chaining must not group all three together"
+    },
+    "candidate_vector_alignment": {
+      "alignment_order": [
+        "LR_std_C0.1",
+        "LR_std_C1",
+        "DT_leaf5",
+        "ET_leaf5"
+      ],
+      "alignment_purpose": "coordinate alignment for correlation computation, not tie-breaking",
+      "spearman_basis": "computed on two tolerance-aware average-rank vectors with fixed alignment order",
+      "kendall_basis": "Kendall tau-b computed on the same two tolerance-aware rank vectors with fixed alignment order",
+      "missing_or_extra_candidates_forbidden": "no missing or extra candidates allowed in rank vectors"
+    }
+  },
+  "agreement_measures": {
+    "strict_top1_agreement_exact": {
+      "definition": "true only when both validation and test winner sets (exact) are single-member and contain the same candidate"
+    },
+    "strict_top1_agreement_tolerance": {
+      "definition": "true only when both validation and test winner sets (tolerance) are single-member and contain the same candidate"
+    },
+    "winner_set_equal_exact": {
+      "definition": "validation winner set (exact) exactly equals test winner set (exact)"
+    },
+    "winner_set_equal_tolerance": {
+      "definition": "validation winner set (tolerance) exactly equals test winner set (tolerance)"
+    },
+    "winner_set_jaccard_exact": {
+      "definition": "Jaccard similarity between validation winner set (exact) and test winner set (exact)"
+    },
+    "winner_set_jaccard_tolerance": {
+      "definition": "Jaccard similarity between validation winner set (tolerance) and test winner set (tolerance)"
+    },
+    "winner_set_any_overlap_exact": {
+      "definition": "intersection of validation winner set (exact) and test winner set (exact) is non-empty"
+    },
+    "winner_set_any_overlap_tolerance": {
+      "definition": "intersection of validation winner set (tolerance) and test winner set (tolerance) is non-empty"
+    },
+    "selected_candidate_in_test_winner_set_exact": {
+      "definition": "mode-selected candidate is in test winner set (exact)"
+    },
+    "selected_candidate_in_test_winner_set_tolerance": {
+      "definition": "mode-selected candidate is in test winner set (tolerance)"
+    },
+    "spearman_correlation": {
+      "definition": "correlation on ranks of four candidates, with average ranks for ties"
+    },
+    "kendall_correlation": {
+      "definition": "Kendall tau-b to support ties"
+    },
+    "selected_candidate_test_rank": {
+      "definition": "rank of mode-selected candidate in test ranking for the same metric, average rank if tied",
+      "basis": "test_tolerance_aware_average_rank",
+      "tolerance_group_handling": "if candidate is in multi-member tolerance group, average rank of that group is recorded"
+    }
+  },
+  "undefined_correlation_policy": {
+    "condition": "correlation undefined when validation rank vector or test rank vector has zero variance (all four candidates have the same rank in one of the vectors)",
+    "allowed_reasons": [
+      "validation_rank_vector_constant",
+      "test_rank_vector_constant",
+      "both_rank_vectors_constant"
+    ],
+    "defined_handling": {
+      "defined": true,
+      "value": "finite number",
+      "undefined_reason": null
+    },
+    "undefined_handling": {
+      "defined": false,
+      "value": null,
+      "undefined_reason": "one of the allowed_reasons values"
+    },
+    "zero_substitution_forbidden": true
+  },
+  "planned_event_schema": {
+    "expected_rows": 2100,
+    "row_formula": "150 units × 14 metrics",
+    "required_columns": [
+      "experiment",
+      "target_project",
+      "seed",
+      "mode",
+      "metric",
+      "metric_direction",
+      "validation_winner_set_exact",
+      "validation_winner_set_tolerance",
+      "test_winner_set_exact",
+      "test_winner_set_tolerance",
+      "strict_top1_agreement_exact",
+      "strict_top1_agreement_tolerance",
+      "winner_set_equal_exact",
+      "winner_set_equal_tolerance",
+      "winner_set_jaccard_exact",
+      "winner_set_jaccard_tolerance",
+      "winner_set_any_overlap_exact",
+      "winner_set_any_overlap_tolerance",
+      "spearman_rho",
+      "spearman_defined",
+      "spearman_undefined_reason",
+      "kendall_tau_b",
+      "kendall_defined",
+      "kendall_undefined_reason",
+      "mode_selected_candidate",
+      "selected_candidate_test_rank",
+      "selected_candidate_in_test_winner_set_exact",
+      "selected_candidate_in_test_winner_set_tolerance"
+    ]
+  },
+  "planned_summary_scopes": [
+    "overall",
+    "by experiment",
+    "by mode",
+    "by metric",
+    "by target_project"
+  ],
+  "precomputation_audit_checks": [
+    "canonical_manifest_status",
+    "direct_SHA_verification",
+    "exact_input_schemas",
+    "exact_input_row_counts",
+    "null_checks",
+    "duplicate_key_checks",
+    "expected_experiment_project_seed_mode_candidate_domains",
+    "exact_four_candidate_coverage_per_unit",
+    "one_to_one_baseline_test_key_coverage",
+    "600_row_joined_candidate_coverage",
+    "metric_presence_and_numeric_type",
+    "metric_direction_mapping_completeness",
+    "metric_direction_key_set_validation",
+    "metric_column_mapping_key_set_validation",
+    "validation_metric_column_presence",
+    "test_metric_column_presence",
+    "candidate_vector_alignment_validation",
+    "tolerance_rank_anchor_algorithm_validation",
+    "tolerance_rank_non_chaining_synthetic_test",
+    "selected_candidate_unique_AQRPE_row_validation",
+    "selected_candidate_selection_score_match",
+    "selected_candidate_objective_winner_membership",
+    "selected_candidate_no_test_leakage",
+    "selected_candidate_provenance_agreement",
+    "tie_policy_consistency",
+    "no_test_information_used_for_candidate_selection"
+  ],
+  "interpretation_limits": {
+    "seed_assumption": "event-level analysis unit includes seed: experiment × target_project × seed × mode. For descriptive aggregation, the five seeds are repeated, non-independent runs nested within experiment × target_project × mode × metric. Seeds are not treated as iid observations for inferential testing.",
+    "seed_nesting": "event rows include seed. Summary may perform descriptive aggregation across seeds. No p-value or iid confidence interval will be produced.",
+    "excluded_inferences": [
+      "p-value",
+      "iid_seed_based_confidence_interval",
+      "significance_claim",
+      "superiority_claim",
+      "causal_claim"
+    ],
+    "test_data_usage": "test data will only be used for post-selection evaluation"
+  },
+  "selected_candidate_provenance": {
+    "source": "AQRPE row corresponding to mode in repeated_all_results.csv",
+    "mode_mapping": {
+      "balanced": "AQRPE_v2_balanced",
+      "rank": "AQRPE_v2_rank",
+      "mcc": "AQRPE_v2_mcc"
+    },
+    "aqrpe_unique_key": {
+      "experiment": "experiment",
+      "target_project": "target_project",
+      "seed": "seed",
+      "model": "model"
+    },
+    "expected_uniqueness": "exactly one AQRPE row must exist for each analysis unit and mapped model",
+    "mode_selected_candidate_source": "selected_candidate column from AQRPE row",
+    "validation_verification": {
+      "candidate_domain_check": "selected_candidate must be in candidate domain",
+      "validation_row_existence": "exactly one validation row must exist for the same experiment, target_project, seed, mode, and selected_candidate",
+      "selection_score_match": "abs(repeated_AQRPE.selection_score - validation_row.val_selection_score) <= 1e-12",
+      "objective_direction": "val_selection_score is treated as higher-is-better objective for all three modes",
+      "winner_set_membership": "selected candidate must be member of tolerance-aware maximum set for val_selection_score of the same mode",
+      "multi_member_winner_set_handling": "if objective winner set has multiple members, scalar selected candidate must be one of them",
+      "tie_break_exclusion": "tie-break scalar from canonical AQRPE row must not be used for winner sets of 14 metrics"
+    },
+    "test_leakage_prohibition": "no test metric is used to extract or validate candidate selection"
+  },
+  "computation_performed": false
+}

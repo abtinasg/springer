@@ -1,0 +1,1583 @@
+{
+  "canonical_verification": {
+    "manifest_validation_status": "all_checks_passed",
+    "repeated_results_sha256_verified": true,
+    "validation_log_sha256_verified": true,
+    "evaluation_script_sha256_verified": true
+  },
+  "algorithm_provenance": {
+    "balanced_objective_sort_verified": true,
+    "top_three_slice_verified": true,
+    "validation_mean_verified": true,
+    "balanced_threshold_retuning_verified": true,
+    "test_mean_verified": true,
+    "pipe_order_storage_verified": true,
+    "selection_mode_verified": true
+  },
+  "selection_integrity": {
+    "runs_checked": 50,
+    "order_mismatches": 0,
+    "membership_mismatches": 0,
+    "excluded_candidate_mismatches": 0,
+    "balanced_top1_consistency_mismatches": 0,
+    "selection_mode_mismatches": 0,
+    "invalid_thresholds": 0,
+    "invalid_selection_scores": 0,
+    "exact_score_tie_runs": 0,
+    "near_score_tie_runs_within_1e-12": 0,
+    "cutoff_near_tie_runs_within_1e-12": 0
+  },
+  "candidate_frequency": [
+    {
+      "scope": "by_project",
+      "experiment": "cross_project",
+      "target_project": "CM1",
+      "candidate": "DT_leaf5",
+      "membership_count": 0,
+      "exclusion_count": 5,
+      "denominator": 5,
+      "membership_proportion": 0.0,
+      "exclusion_proportion": 1.0
+    },
+    {
+      "scope": "by_project",
+      "experiment": "cross_project",
+      "target_project": "CM1",
+      "candidate": "ET_leaf5",
+      "membership_count": 5,
+      "exclusion_count": 0,
+      "denominator": 5,
+      "membership_proportion": 1.0,
+      "exclusion_proportion": 0.0
+    },
+    {
+      "scope": "by_project",
+      "experiment": "cross_project",
+      "target_project": "CM1",
+      "candidate": "LR_std_C0.1",
+      "membership_count": 5,
+      "exclusion_count": 0,
+      "denominator": 5,
+      "membership_proportion": 1.0,
+      "exclusion_proportion": 0.0
+    },
+    {
+      "scope": "by_project",
+      "experiment": "cross_project",
+      "target_project": "CM1",
+      "candidate": "LR_std_C1",
+      "membership_count": 5,
+      "exclusion_count": 0,
+      "denominator": 5,
+      "membership_proportion": 1.0,
+      "exclusion_proportion": 0.0
+    },
+    {
+      "scope": "by_project",
+      "experiment": "cross_project",
+      "target_project": "JM1",
+      "candidate": "DT_leaf5",
+      "membership_count": 0,
+      "exclusion_count": 5,
+      "denominator": 5,
+      "membership_proportion": 0.0,
+      "exclusion_proportion": 1.0
+    },
+    {
+      "scope": "by_project",
+      "experiment": "cross_project",
+      "target_project": "JM1",
+      "candidate": "ET_leaf5",
+      "membership_count": 5,
+      "exclusion_count": 0,
+      "denominator": 5,
+      "membership_proportion": 1.0,
+      "exclusion_proportion": 0.0
+    },
+    {
+      "scope": "by_project",
+      "experiment": "cross_project",
+      "target_project": "JM1",
+      "candidate": "LR_std_C0.1",
+      "membership_count": 5,
+      "exclusion_count": 0,
+      "denominator": 5,
+      "membership_proportion": 1.0,
+      "exclusion_proportion": 0.0
+    },
+    {
+      "scope": "by_project",
+      "experiment": "cross_project",
+      "target_project": "JM1",
+      "candidate": "LR_std_C1",
+      "membership_count": 5,
+      "exclusion_count": 0,
+      "denominator": 5,
+      "membership_proportion": 1.0,
+      "exclusion_proportion": 0.0
+    },
+    {
+      "scope": "by_project",
+      "experiment": "cross_project",
+      "target_project": "KC1",
+      "candidate": "DT_leaf5",
+      "membership_count": 0,
+      "exclusion_count": 5,
+      "denominator": 5,
+      "membership_proportion": 0.0,
+      "exclusion_proportion": 1.0
+    },
+    {
+      "scope": "by_project",
+      "experiment": "cross_project",
+      "target_project": "KC1",
+      "candidate": "ET_leaf5",
+      "membership_count": 5,
+      "exclusion_count": 0,
+      "denominator": 5,
+      "membership_proportion": 1.0,
+      "exclusion_proportion": 0.0
+    },
+    {
+      "scope": "by_project",
+      "experiment": "cross_project",
+      "target_project": "KC1",
+      "candidate": "LR_std_C0.1",
+      "membership_count": 5,
+      "exclusion_count": 0,
+      "denominator": 5,
+      "membership_proportion": 1.0,
+      "exclusion_proportion": 0.0
+    },
+    {
+      "scope": "by_project",
+      "experiment": "cross_project",
+      "target_project": "KC1",
+      "candidate": "LR_std_C1",
+      "membership_count": 5,
+      "exclusion_count": 0,
+      "denominator": 5,
+      "membership_proportion": 1.0,
+      "exclusion_proportion": 0.0
+    },
+    {
+      "scope": "by_project",
+      "experiment": "cross_project",
+      "target_project": "KC2",
+      "candidate": "DT_leaf5",
+      "membership_count": 0,
+      "exclusion_count": 5,
+      "denominator": 5,
+      "membership_proportion": 0.0,
+      "exclusion_proportion": 1.0
+    },
+    {
+      "scope": "by_project",
+      "experiment": "cross_project",
+      "target_project": "KC2",
+      "candidate": "ET_leaf5",
+      "membership_count": 5,
+      "exclusion_count": 0,
+      "denominator": 5,
+      "membership_proportion": 1.0,
+      "exclusion_proportion": 0.0
+    },
+    {
+      "scope": "by_project",
+      "experiment": "cross_project",
+      "target_project": "KC2",
+      "candidate": "LR_std_C0.1",
+      "membership_count": 5,
+      "exclusion_count": 0,
+      "denominator": 5,
+      "membership_proportion": 1.0,
+      "exclusion_proportion": 0.0
+    },
+    {
+      "scope": "by_project",
+      "experiment": "cross_project",
+      "target_project": "KC2",
+      "candidate": "LR_std_C1",
+      "membership_count": 5,
+      "exclusion_count": 0,
+      "denominator": 5,
+      "membership_proportion": 1.0,
+      "exclusion_proportion": 0.0
+    },
+    {
+      "scope": "by_project",
+      "experiment": "cross_project",
+      "target_project": "PC1",
+      "candidate": "DT_leaf5",
+      "membership_count": 0,
+      "exclusion_count": 5,
+      "denominator": 5,
+      "membership_proportion": 0.0,
+      "exclusion_proportion": 1.0
+    },
+    {
+      "scope": "by_project",
+      "experiment": "cross_project",
+      "target_project": "PC1",
+      "candidate": "ET_leaf5",
+      "membership_count": 5,
+      "exclusion_count": 0,
+      "denominator": 5,
+      "membership_proportion": 1.0,
+      "exclusion_proportion": 0.0
+    },
+    {
+      "scope": "by_project",
+      "experiment": "cross_project",
+      "target_project": "PC1",
+      "candidate": "LR_std_C0.1",
+      "membership_count": 5,
+      "exclusion_count": 0,
+      "denominator": 5,
+      "membership_proportion": 1.0,
+      "exclusion_proportion": 0.0
+    },
+    {
+      "scope": "by_project",
+      "experiment": "cross_project",
+      "target_project": "PC1",
+      "candidate": "LR_std_C1",
+      "membership_count": 5,
+      "exclusion_count": 0,
+      "denominator": 5,
+      "membership_proportion": 1.0,
+      "exclusion_proportion": 0.0
+    },
+    {
+      "scope": "by_project",
+      "experiment": "within_project",
+      "target_project": "CM1",
+      "candidate": "DT_leaf5",
+      "membership_count": 1,
+      "exclusion_count": 4,
+      "denominator": 5,
+      "membership_proportion": 0.2,
+      "exclusion_proportion": 0.8
+    },
+    {
+      "scope": "by_project",
+      "experiment": "within_project",
+      "target_project": "CM1",
+      "candidate": "ET_leaf5",
+      "membership_count": 4,
+      "exclusion_count": 1,
+      "denominator": 5,
+      "membership_proportion": 0.8,
+      "exclusion_proportion": 0.2
+    },
+    {
+      "scope": "by_project",
+      "experiment": "within_project",
+      "target_project": "CM1",
+      "candidate": "LR_std_C0.1",
+      "membership_count": 5,
+      "exclusion_count": 0,
+      "denominator": 5,
+      "membership_proportion": 1.0,
+      "exclusion_proportion": 0.0
+    },
+    {
+      "scope": "by_project",
+      "experiment": "within_project",
+      "target_project": "CM1",
+      "candidate": "LR_std_C1",
+      "membership_count": 5,
+      "exclusion_count": 0,
+      "denominator": 5,
+      "membership_proportion": 1.0,
+      "exclusion_proportion": 0.0
+    },
+    {
+      "scope": "by_project",
+      "experiment": "within_project",
+      "target_project": "JM1",
+      "candidate": "DT_leaf5",
+      "membership_count": 0,
+      "exclusion_count": 5,
+      "denominator": 5,
+      "membership_proportion": 0.0,
+      "exclusion_proportion": 1.0
+    },
+    {
+      "scope": "by_project",
+      "experiment": "within_project",
+      "target_project": "JM1",
+      "candidate": "ET_leaf5",
+      "membership_count": 5,
+      "exclusion_count": 0,
+      "denominator": 5,
+      "membership_proportion": 1.0,
+      "exclusion_proportion": 0.0
+    },
+    {
+      "scope": "by_project",
+      "experiment": "within_project",
+      "target_project": "JM1",
+      "candidate": "LR_std_C0.1",
+      "membership_count": 5,
+      "exclusion_count": 0,
+      "denominator": 5,
+      "membership_proportion": 1.0,
+      "exclusion_proportion": 0.0
+    },
+    {
+      "scope": "by_project",
+      "experiment": "within_project",
+      "target_project": "JM1",
+      "candidate": "LR_std_C1",
+      "membership_count": 5,
+      "exclusion_count": 0,
+      "denominator": 5,
+      "membership_proportion": 1.0,
+      "exclusion_proportion": 0.0
+    },
+    {
+      "scope": "by_project",
+      "experiment": "within_project",
+      "target_project": "KC1",
+      "candidate": "DT_leaf5",
+      "membership_count": 3,
+      "exclusion_count": 2,
+      "denominator": 5,
+      "membership_proportion": 0.6,
+      "exclusion_proportion": 0.4
+    },
+    {
+      "scope": "by_project",
+      "experiment": "within_project",
+      "target_project": "KC1",
+      "candidate": "ET_leaf5",
+      "membership_count": 5,
+      "exclusion_count": 0,
+      "denominator": 5,
+      "membership_proportion": 1.0,
+      "exclusion_proportion": 0.0
+    },
+    {
+      "scope": "by_project",
+      "experiment": "within_project",
+      "target_project": "KC1",
+      "candidate": "LR_std_C0.1",
+      "membership_count": 3,
+      "exclusion_count": 2,
+      "denominator": 5,
+      "membership_proportion": 0.6,
+      "exclusion_proportion": 0.4
+    },
+    {
+      "scope": "by_project",
+      "experiment": "within_project",
+      "target_project": "KC1",
+      "candidate": "LR_std_C1",
+      "membership_count": 4,
+      "exclusion_count": 1,
+      "denominator": 5,
+      "membership_proportion": 0.8,
+      "exclusion_proportion": 0.2
+    },
+    {
+      "scope": "by_project",
+      "experiment": "within_project",
+      "target_project": "KC2",
+      "candidate": "DT_leaf5",
+      "membership_count": 1,
+      "exclusion_count": 4,
+      "denominator": 5,
+      "membership_proportion": 0.2,
+      "exclusion_proportion": 0.8
+    },
+    {
+      "scope": "by_project",
+      "experiment": "within_project",
+      "target_project": "KC2",
+      "candidate": "ET_leaf5",
+      "membership_count": 5,
+      "exclusion_count": 0,
+      "denominator": 5,
+      "membership_proportion": 1.0,
+      "exclusion_proportion": 0.0
+    },
+    {
+      "scope": "by_project",
+      "experiment": "within_project",
+      "target_project": "KC2",
+      "candidate": "LR_std_C0.1",
+      "membership_count": 5,
+      "exclusion_count": 0,
+      "denominator": 5,
+      "membership_proportion": 1.0,
+      "exclusion_proportion": 0.0
+    },
+    {
+      "scope": "by_project",
+      "experiment": "within_project",
+      "target_project": "KC2",
+      "candidate": "LR_std_C1",
+      "membership_count": 4,
+      "exclusion_count": 1,
+      "denominator": 5,
+      "membership_proportion": 0.8,
+      "exclusion_proportion": 0.2
+    },
+    {
+      "scope": "by_project",
+      "experiment": "within_project",
+      "target_project": "PC1",
+      "candidate": "DT_leaf5",
+      "membership_count": 5,
+      "exclusion_count": 0,
+      "denominator": 5,
+      "membership_proportion": 1.0,
+      "exclusion_proportion": 0.0
+    },
+    {
+      "scope": "by_project",
+      "experiment": "within_project",
+      "target_project": "PC1",
+      "candidate": "ET_leaf5",
+      "membership_count": 5,
+      "exclusion_count": 0,
+      "denominator": 5,
+      "membership_proportion": 1.0,
+      "exclusion_proportion": 0.0
+    },
+    {
+      "scope": "by_project",
+      "experiment": "within_project",
+      "target_project": "PC1",
+      "candidate": "LR_std_C0.1",
+      "membership_count": 2,
+      "exclusion_count": 3,
+      "denominator": 5,
+      "membership_proportion": 0.4,
+      "exclusion_proportion": 0.6
+    },
+    {
+      "scope": "by_project",
+      "experiment": "within_project",
+      "target_project": "PC1",
+      "candidate": "LR_std_C1",
+      "membership_count": 3,
+      "exclusion_count": 2,
+      "denominator": 5,
+      "membership_proportion": 0.6,
+      "exclusion_proportion": 0.4
+    },
+    {
+      "scope": "by_setting",
+      "experiment": "cross_project",
+      "target_project": "all",
+      "candidate": "DT_leaf5",
+      "membership_count": 0,
+      "exclusion_count": 25,
+      "denominator": 25,
+      "membership_proportion": 0.0,
+      "exclusion_proportion": 1.0
+    },
+    {
+      "scope": "by_setting",
+      "experiment": "cross_project",
+      "target_project": "all",
+      "candidate": "ET_leaf5",
+      "membership_count": 25,
+      "exclusion_count": 0,
+      "denominator": 25,
+      "membership_proportion": 1.0,
+      "exclusion_proportion": 0.0
+    },
+    {
+      "scope": "by_setting",
+      "experiment": "cross_project",
+      "target_project": "all",
+      "candidate": "LR_std_C0.1",
+      "membership_count": 25,
+      "exclusion_count": 0,
+      "denominator": 25,
+      "membership_proportion": 1.0,
+      "exclusion_proportion": 0.0
+    },
+    {
+      "scope": "by_setting",
+      "experiment": "cross_project",
+      "target_project": "all",
+      "candidate": "LR_std_C1",
+      "membership_count": 25,
+      "exclusion_count": 0,
+      "denominator": 25,
+      "membership_proportion": 1.0,
+      "exclusion_proportion": 0.0
+    },
+    {
+      "scope": "by_setting",
+      "experiment": "within_project",
+      "target_project": "all",
+      "candidate": "DT_leaf5",
+      "membership_count": 10,
+      "exclusion_count": 15,
+      "denominator": 25,
+      "membership_proportion": 0.4,
+      "exclusion_proportion": 0.6
+    },
+    {
+      "scope": "by_setting",
+      "experiment": "within_project",
+      "target_project": "all",
+      "candidate": "ET_leaf5",
+      "membership_count": 24,
+      "exclusion_count": 1,
+      "denominator": 25,
+      "membership_proportion": 0.96,
+      "exclusion_proportion": 0.04
+    },
+    {
+      "scope": "by_setting",
+      "experiment": "within_project",
+      "target_project": "all",
+      "candidate": "LR_std_C0.1",
+      "membership_count": 20,
+      "exclusion_count": 5,
+      "denominator": 25,
+      "membership_proportion": 0.8,
+      "exclusion_proportion": 0.2
+    },
+    {
+      "scope": "by_setting",
+      "experiment": "within_project",
+      "target_project": "all",
+      "candidate": "LR_std_C1",
+      "membership_count": 21,
+      "exclusion_count": 4,
+      "denominator": 25,
+      "membership_proportion": 0.84,
+      "exclusion_proportion": 0.16
+    },
+    {
+      "scope": "overall",
+      "experiment": "all",
+      "target_project": "all",
+      "candidate": "DT_leaf5",
+      "membership_count": 10,
+      "exclusion_count": 40,
+      "denominator": 50,
+      "membership_proportion": 0.2,
+      "exclusion_proportion": 0.8
+    },
+    {
+      "scope": "overall",
+      "experiment": "all",
+      "target_project": "all",
+      "candidate": "ET_leaf5",
+      "membership_count": 49,
+      "exclusion_count": 1,
+      "denominator": 50,
+      "membership_proportion": 0.98,
+      "exclusion_proportion": 0.02
+    },
+    {
+      "scope": "overall",
+      "experiment": "all",
+      "target_project": "all",
+      "candidate": "LR_std_C0.1",
+      "membership_count": 45,
+      "exclusion_count": 5,
+      "denominator": 50,
+      "membership_proportion": 0.9,
+      "exclusion_proportion": 0.1
+    },
+    {
+      "scope": "overall",
+      "experiment": "all",
+      "target_project": "all",
+      "candidate": "LR_std_C1",
+      "membership_count": 46,
+      "exclusion_count": 4,
+      "denominator": 50,
+      "membership_proportion": 0.92,
+      "exclusion_proportion": 0.08
+    }
+  ],
+  "position_frequency": [
+    {
+      "scope": "by_setting",
+      "experiment": "cross_project",
+      "position": 1,
+      "candidate": "DT_leaf5",
+      "count": 0,
+      "denominator": 25,
+      "proportion": 0.0
+    },
+    {
+      "scope": "by_setting",
+      "experiment": "cross_project",
+      "position": 1,
+      "candidate": "ET_leaf5",
+      "count": 24,
+      "denominator": 25,
+      "proportion": 0.96
+    },
+    {
+      "scope": "by_setting",
+      "experiment": "cross_project",
+      "position": 1,
+      "candidate": "LR_std_C0.1",
+      "count": 1,
+      "denominator": 25,
+      "proportion": 0.04
+    },
+    {
+      "scope": "by_setting",
+      "experiment": "cross_project",
+      "position": 1,
+      "candidate": "LR_std_C1",
+      "count": 0,
+      "denominator": 25,
+      "proportion": 0.0
+    },
+    {
+      "scope": "by_setting",
+      "experiment": "cross_project",
+      "position": 2,
+      "candidate": "DT_leaf5",
+      "count": 0,
+      "denominator": 25,
+      "proportion": 0.0
+    },
+    {
+      "scope": "by_setting",
+      "experiment": "cross_project",
+      "position": 2,
+      "candidate": "ET_leaf5",
+      "count": 0,
+      "denominator": 25,
+      "proportion": 0.0
+    },
+    {
+      "scope": "by_setting",
+      "experiment": "cross_project",
+      "position": 2,
+      "candidate": "LR_std_C0.1",
+      "count": 12,
+      "denominator": 25,
+      "proportion": 0.48
+    },
+    {
+      "scope": "by_setting",
+      "experiment": "cross_project",
+      "position": 2,
+      "candidate": "LR_std_C1",
+      "count": 13,
+      "denominator": 25,
+      "proportion": 0.52
+    },
+    {
+      "scope": "by_setting",
+      "experiment": "cross_project",
+      "position": 3,
+      "candidate": "DT_leaf5",
+      "count": 0,
+      "denominator": 25,
+      "proportion": 0.0
+    },
+    {
+      "scope": "by_setting",
+      "experiment": "cross_project",
+      "position": 3,
+      "candidate": "ET_leaf5",
+      "count": 1,
+      "denominator": 25,
+      "proportion": 0.04
+    },
+    {
+      "scope": "by_setting",
+      "experiment": "cross_project",
+      "position": 3,
+      "candidate": "LR_std_C0.1",
+      "count": 12,
+      "denominator": 25,
+      "proportion": 0.48
+    },
+    {
+      "scope": "by_setting",
+      "experiment": "cross_project",
+      "position": 3,
+      "candidate": "LR_std_C1",
+      "count": 12,
+      "denominator": 25,
+      "proportion": 0.48
+    },
+    {
+      "scope": "by_setting",
+      "experiment": "within_project",
+      "position": 1,
+      "candidate": "DT_leaf5",
+      "count": 5,
+      "denominator": 25,
+      "proportion": 0.2
+    },
+    {
+      "scope": "by_setting",
+      "experiment": "within_project",
+      "position": 1,
+      "candidate": "ET_leaf5",
+      "count": 16,
+      "denominator": 25,
+      "proportion": 0.64
+    },
+    {
+      "scope": "by_setting",
+      "experiment": "within_project",
+      "position": 1,
+      "candidate": "LR_std_C0.1",
+      "count": 1,
+      "denominator": 25,
+      "proportion": 0.04
+    },
+    {
+      "scope": "by_setting",
+      "experiment": "within_project",
+      "position": 1,
+      "candidate": "LR_std_C1",
+      "count": 3,
+      "denominator": 25,
+      "proportion": 0.12
+    },
+    {
+      "scope": "by_setting",
+      "experiment": "within_project",
+      "position": 2,
+      "candidate": "DT_leaf5",
+      "count": 0,
+      "denominator": 25,
+      "proportion": 0.0
+    },
+    {
+      "scope": "by_setting",
+      "experiment": "within_project",
+      "position": 2,
+      "candidate": "ET_leaf5",
+      "count": 6,
+      "denominator": 25,
+      "proportion": 0.24
+    },
+    {
+      "scope": "by_setting",
+      "experiment": "within_project",
+      "position": 2,
+      "candidate": "LR_std_C0.1",
+      "count": 9,
+      "denominator": 25,
+      "proportion": 0.36
+    },
+    {
+      "scope": "by_setting",
+      "experiment": "within_project",
+      "position": 2,
+      "candidate": "LR_std_C1",
+      "count": 10,
+      "denominator": 25,
+      "proportion": 0.4
+    },
+    {
+      "scope": "by_setting",
+      "experiment": "within_project",
+      "position": 3,
+      "candidate": "DT_leaf5",
+      "count": 5,
+      "denominator": 25,
+      "proportion": 0.2
+    },
+    {
+      "scope": "by_setting",
+      "experiment": "within_project",
+      "position": 3,
+      "candidate": "ET_leaf5",
+      "count": 2,
+      "denominator": 25,
+      "proportion": 0.08
+    },
+    {
+      "scope": "by_setting",
+      "experiment": "within_project",
+      "position": 3,
+      "candidate": "LR_std_C0.1",
+      "count": 10,
+      "denominator": 25,
+      "proportion": 0.4
+    },
+    {
+      "scope": "by_setting",
+      "experiment": "within_project",
+      "position": 3,
+      "candidate": "LR_std_C1",
+      "count": 8,
+      "denominator": 25,
+      "proportion": 0.32
+    },
+    {
+      "scope": "overall",
+      "experiment": "all",
+      "position": 1,
+      "candidate": "DT_leaf5",
+      "count": 5,
+      "denominator": 50,
+      "proportion": 0.1
+    },
+    {
+      "scope": "overall",
+      "experiment": "all",
+      "position": 1,
+      "candidate": "ET_leaf5",
+      "count": 40,
+      "denominator": 50,
+      "proportion": 0.8
+    },
+    {
+      "scope": "overall",
+      "experiment": "all",
+      "position": 1,
+      "candidate": "LR_std_C0.1",
+      "count": 2,
+      "denominator": 50,
+      "proportion": 0.04
+    },
+    {
+      "scope": "overall",
+      "experiment": "all",
+      "position": 1,
+      "candidate": "LR_std_C1",
+      "count": 3,
+      "denominator": 50,
+      "proportion": 0.06
+    },
+    {
+      "scope": "overall",
+      "experiment": "all",
+      "position": 2,
+      "candidate": "DT_leaf5",
+      "count": 0,
+      "denominator": 50,
+      "proportion": 0.0
+    },
+    {
+      "scope": "overall",
+      "experiment": "all",
+      "position": 2,
+      "candidate": "ET_leaf5",
+      "count": 6,
+      "denominator": 50,
+      "proportion": 0.12
+    },
+    {
+      "scope": "overall",
+      "experiment": "all",
+      "position": 2,
+      "candidate": "LR_std_C0.1",
+      "count": 21,
+      "denominator": 50,
+      "proportion": 0.42
+    },
+    {
+      "scope": "overall",
+      "experiment": "all",
+      "position": 2,
+      "candidate": "LR_std_C1",
+      "count": 23,
+      "denominator": 50,
+      "proportion": 0.46
+    },
+    {
+      "scope": "overall",
+      "experiment": "all",
+      "position": 3,
+      "candidate": "DT_leaf5",
+      "count": 5,
+      "denominator": 50,
+      "proportion": 0.1
+    },
+    {
+      "scope": "overall",
+      "experiment": "all",
+      "position": 3,
+      "candidate": "ET_leaf5",
+      "count": 3,
+      "denominator": 50,
+      "proportion": 0.06
+    },
+    {
+      "scope": "overall",
+      "experiment": "all",
+      "position": 3,
+      "candidate": "LR_std_C0.1",
+      "count": 22,
+      "denominator": 50,
+      "proportion": 0.44
+    },
+    {
+      "scope": "overall",
+      "experiment": "all",
+      "position": 3,
+      "candidate": "LR_std_C1",
+      "count": 20,
+      "denominator": 50,
+      "proportion": 0.4
+    }
+  ],
+  "ordering_frequency": [
+    {
+      "scope": "by_setting",
+      "experiment": "cross_project",
+      "selected_order": "DT_leaf5|ET_leaf5|LR_std_C0.1",
+      "count": 0,
+      "denominator": 25,
+      "proportion": 0.0
+    },
+    {
+      "scope": "by_setting",
+      "experiment": "cross_project",
+      "selected_order": "DT_leaf5|ET_leaf5|LR_std_C1",
+      "count": 0,
+      "denominator": 25,
+      "proportion": 0.0
+    },
+    {
+      "scope": "by_setting",
+      "experiment": "cross_project",
+      "selected_order": "DT_leaf5|LR_std_C0.1|ET_leaf5",
+      "count": 0,
+      "denominator": 25,
+      "proportion": 0.0
+    },
+    {
+      "scope": "by_setting",
+      "experiment": "cross_project",
+      "selected_order": "DT_leaf5|LR_std_C0.1|LR_std_C1",
+      "count": 0,
+      "denominator": 25,
+      "proportion": 0.0
+    },
+    {
+      "scope": "by_setting",
+      "experiment": "cross_project",
+      "selected_order": "DT_leaf5|LR_std_C1|ET_leaf5",
+      "count": 0,
+      "denominator": 25,
+      "proportion": 0.0
+    },
+    {
+      "scope": "by_setting",
+      "experiment": "cross_project",
+      "selected_order": "DT_leaf5|LR_std_C1|LR_std_C0.1",
+      "count": 0,
+      "denominator": 25,
+      "proportion": 0.0
+    },
+    {
+      "scope": "by_setting",
+      "experiment": "cross_project",
+      "selected_order": "ET_leaf5|DT_leaf5|LR_std_C0.1",
+      "count": 0,
+      "denominator": 25,
+      "proportion": 0.0
+    },
+    {
+      "scope": "by_setting",
+      "experiment": "cross_project",
+      "selected_order": "ET_leaf5|DT_leaf5|LR_std_C1",
+      "count": 0,
+      "denominator": 25,
+      "proportion": 0.0
+    },
+    {
+      "scope": "by_setting",
+      "experiment": "cross_project",
+      "selected_order": "ET_leaf5|LR_std_C0.1|DT_leaf5",
+      "count": 0,
+      "denominator": 25,
+      "proportion": 0.0
+    },
+    {
+      "scope": "by_setting",
+      "experiment": "cross_project",
+      "selected_order": "ET_leaf5|LR_std_C0.1|LR_std_C1",
+      "count": 12,
+      "denominator": 25,
+      "proportion": 0.48
+    },
+    {
+      "scope": "by_setting",
+      "experiment": "cross_project",
+      "selected_order": "ET_leaf5|LR_std_C1|DT_leaf5",
+      "count": 0,
+      "denominator": 25,
+      "proportion": 0.0
+    },
+    {
+      "scope": "by_setting",
+      "experiment": "cross_project",
+      "selected_order": "ET_leaf5|LR_std_C1|LR_std_C0.1",
+      "count": 12,
+      "denominator": 25,
+      "proportion": 0.48
+    },
+    {
+      "scope": "by_setting",
+      "experiment": "cross_project",
+      "selected_order": "LR_std_C0.1|DT_leaf5|ET_leaf5",
+      "count": 0,
+      "denominator": 25,
+      "proportion": 0.0
+    },
+    {
+      "scope": "by_setting",
+      "experiment": "cross_project",
+      "selected_order": "LR_std_C0.1|DT_leaf5|LR_std_C1",
+      "count": 0,
+      "denominator": 25,
+      "proportion": 0.0
+    },
+    {
+      "scope": "by_setting",
+      "experiment": "cross_project",
+      "selected_order": "LR_std_C0.1|ET_leaf5|DT_leaf5",
+      "count": 0,
+      "denominator": 25,
+      "proportion": 0.0
+    },
+    {
+      "scope": "by_setting",
+      "experiment": "cross_project",
+      "selected_order": "LR_std_C0.1|ET_leaf5|LR_std_C1",
+      "count": 0,
+      "denominator": 25,
+      "proportion": 0.0
+    },
+    {
+      "scope": "by_setting",
+      "experiment": "cross_project",
+      "selected_order": "LR_std_C0.1|LR_std_C1|DT_leaf5",
+      "count": 0,
+      "denominator": 25,
+      "proportion": 0.0
+    },
+    {
+      "scope": "by_setting",
+      "experiment": "cross_project",
+      "selected_order": "LR_std_C0.1|LR_std_C1|ET_leaf5",
+      "count": 1,
+      "denominator": 25,
+      "proportion": 0.04
+    },
+    {
+      "scope": "by_setting",
+      "experiment": "cross_project",
+      "selected_order": "LR_std_C1|DT_leaf5|ET_leaf5",
+      "count": 0,
+      "denominator": 25,
+      "proportion": 0.0
+    },
+    {
+      "scope": "by_setting",
+      "experiment": "cross_project",
+      "selected_order": "LR_std_C1|DT_leaf5|LR_std_C0.1",
+      "count": 0,
+      "denominator": 25,
+      "proportion": 0.0
+    },
+    {
+      "scope": "by_setting",
+      "experiment": "cross_project",
+      "selected_order": "LR_std_C1|ET_leaf5|DT_leaf5",
+      "count": 0,
+      "denominator": 25,
+      "proportion": 0.0
+    },
+    {
+      "scope": "by_setting",
+      "experiment": "cross_project",
+      "selected_order": "LR_std_C1|ET_leaf5|LR_std_C0.1",
+      "count": 0,
+      "denominator": 25,
+      "proportion": 0.0
+    },
+    {
+      "scope": "by_setting",
+      "experiment": "cross_project",
+      "selected_order": "LR_std_C1|LR_std_C0.1|DT_leaf5",
+      "count": 0,
+      "denominator": 25,
+      "proportion": 0.0
+    },
+    {
+      "scope": "by_setting",
+      "experiment": "cross_project",
+      "selected_order": "LR_std_C1|LR_std_C0.1|ET_leaf5",
+      "count": 0,
+      "denominator": 25,
+      "proportion": 0.0
+    },
+    {
+      "scope": "by_setting",
+      "experiment": "within_project",
+      "selected_order": "DT_leaf5|ET_leaf5|LR_std_C0.1",
+      "count": 1,
+      "denominator": 25,
+      "proportion": 0.04
+    },
+    {
+      "scope": "by_setting",
+      "experiment": "within_project",
+      "selected_order": "DT_leaf5|ET_leaf5|LR_std_C1",
+      "count": 3,
+      "denominator": 25,
+      "proportion": 0.12
+    },
+    {
+      "scope": "by_setting",
+      "experiment": "within_project",
+      "selected_order": "DT_leaf5|LR_std_C0.1|ET_leaf5",
+      "count": 0,
+      "denominator": 25,
+      "proportion": 0.0
+    },
+    {
+      "scope": "by_setting",
+      "experiment": "within_project",
+      "selected_order": "DT_leaf5|LR_std_C0.1|LR_std_C1",
+      "count": 0,
+      "denominator": 25,
+      "proportion": 0.0
+    },
+    {
+      "scope": "by_setting",
+      "experiment": "within_project",
+      "selected_order": "DT_leaf5|LR_std_C1|ET_leaf5",
+      "count": 0,
+      "denominator": 25,
+      "proportion": 0.0
+    },
+    {
+      "scope": "by_setting",
+      "experiment": "within_project",
+      "selected_order": "DT_leaf5|LR_std_C1|LR_std_C0.1",
+      "count": 1,
+      "denominator": 25,
+      "proportion": 0.04
+    },
+    {
+      "scope": "by_setting",
+      "experiment": "within_project",
+      "selected_order": "ET_leaf5|DT_leaf5|LR_std_C0.1",
+      "count": 0,
+      "denominator": 25,
+      "proportion": 0.0
+    },
+    {
+      "scope": "by_setting",
+      "experiment": "within_project",
+      "selected_order": "ET_leaf5|DT_leaf5|LR_std_C1",
+      "count": 0,
+      "denominator": 25,
+      "proportion": 0.0
+    },
+    {
+      "scope": "by_setting",
+      "experiment": "within_project",
+      "selected_order": "ET_leaf5|LR_std_C0.1|DT_leaf5",
+      "count": 3,
+      "denominator": 25,
+      "proportion": 0.12
+    },
+    {
+      "scope": "by_setting",
+      "experiment": "within_project",
+      "selected_order": "ET_leaf5|LR_std_C0.1|LR_std_C1",
+      "count": 5,
+      "denominator": 25,
+      "proportion": 0.2
+    },
+    {
+      "scope": "by_setting",
+      "experiment": "within_project",
+      "selected_order": "ET_leaf5|LR_std_C1|DT_leaf5",
+      "count": 2,
+      "denominator": 25,
+      "proportion": 0.08
+    },
+    {
+      "scope": "by_setting",
+      "experiment": "within_project",
+      "selected_order": "ET_leaf5|LR_std_C1|LR_std_C0.1",
+      "count": 6,
+      "denominator": 25,
+      "proportion": 0.24
+    },
+    {
+      "scope": "by_setting",
+      "experiment": "within_project",
+      "selected_order": "LR_std_C0.1|DT_leaf5|ET_leaf5",
+      "count": 0,
+      "denominator": 25,
+      "proportion": 0.0
+    },
+    {
+      "scope": "by_setting",
+      "experiment": "within_project",
+      "selected_order": "LR_std_C0.1|DT_leaf5|LR_std_C1",
+      "count": 0,
+      "denominator": 25,
+      "proportion": 0.0
+    },
+    {
+      "scope": "by_setting",
+      "experiment": "within_project",
+      "selected_order": "LR_std_C0.1|ET_leaf5|DT_leaf5",
+      "count": 0,
+      "denominator": 25,
+      "proportion": 0.0
+    },
+    {
+      "scope": "by_setting",
+      "experiment": "within_project",
+      "selected_order": "LR_std_C0.1|ET_leaf5|LR_std_C1",
+      "count": 0,
+      "denominator": 25,
+      "proportion": 0.0
+    },
+    {
+      "scope": "by_setting",
+      "experiment": "within_project",
+      "selected_order": "LR_std_C0.1|LR_std_C1|DT_leaf5",
+      "count": 0,
+      "denominator": 25,
+      "proportion": 0.0
+    },
+    {
+      "scope": "by_setting",
+      "experiment": "within_project",
+      "selected_order": "LR_std_C0.1|LR_std_C1|ET_leaf5",
+      "count": 1,
+      "denominator": 25,
+      "proportion": 0.04
+    },
+    {
+      "scope": "by_setting",
+      "experiment": "within_project",
+      "selected_order": "LR_std_C1|DT_leaf5|ET_leaf5",
+      "count": 0,
+      "denominator": 25,
+      "proportion": 0.0
+    },
+    {
+      "scope": "by_setting",
+      "experiment": "within_project",
+      "selected_order": "LR_std_C1|DT_leaf5|LR_std_C0.1",
+      "count": 0,
+      "denominator": 25,
+      "proportion": 0.0
+    },
+    {
+      "scope": "by_setting",
+      "experiment": "within_project",
+      "selected_order": "LR_std_C1|ET_leaf5|DT_leaf5",
+      "count": 0,
+      "denominator": 25,
+      "proportion": 0.0
+    },
+    {
+      "scope": "by_setting",
+      "experiment": "within_project",
+      "selected_order": "LR_std_C1|ET_leaf5|LR_std_C0.1",
+      "count": 2,
+      "denominator": 25,
+      "proportion": 0.08
+    },
+    {
+      "scope": "by_setting",
+      "experiment": "within_project",
+      "selected_order": "LR_std_C1|LR_std_C0.1|DT_leaf5",
+      "count": 0,
+      "denominator": 25,
+      "proportion": 0.0
+    },
+    {
+      "scope": "by_setting",
+      "experiment": "within_project",
+      "selected_order": "LR_std_C1|LR_std_C0.1|ET_leaf5",
+      "count": 1,
+      "denominator": 25,
+      "proportion": 0.04
+    },
+    {
+      "scope": "overall",
+      "experiment": "all",
+      "selected_order": "DT_leaf5|ET_leaf5|LR_std_C0.1",
+      "count": 1,
+      "denominator": 50,
+      "proportion": 0.02
+    },
+    {
+      "scope": "overall",
+      "experiment": "all",
+      "selected_order": "DT_leaf5|ET_leaf5|LR_std_C1",
+      "count": 3,
+      "denominator": 50,
+      "proportion": 0.06
+    },
+    {
+      "scope": "overall",
+      "experiment": "all",
+      "selected_order": "DT_leaf5|LR_std_C0.1|ET_leaf5",
+      "count": 0,
+      "denominator": 50,
+      "proportion": 0.0
+    },
+    {
+      "scope": "overall",
+      "experiment": "all",
+      "selected_order": "DT_leaf5|LR_std_C0.1|LR_std_C1",
+      "count": 0,
+      "denominator": 50,
+      "proportion": 0.0
+    },
+    {
+      "scope": "overall",
+      "experiment": "all",
+      "selected_order": "DT_leaf5|LR_std_C1|ET_leaf5",
+      "count": 0,
+      "denominator": 50,
+      "proportion": 0.0
+    },
+    {
+      "scope": "overall",
+      "experiment": "all",
+      "selected_order": "DT_leaf5|LR_std_C1|LR_std_C0.1",
+      "count": 1,
+      "denominator": 50,
+      "proportion": 0.02
+    },
+    {
+      "scope": "overall",
+      "experiment": "all",
+      "selected_order": "ET_leaf5|DT_leaf5|LR_std_C0.1",
+      "count": 0,
+      "denominator": 50,
+      "proportion": 0.0
+    },
+    {
+      "scope": "overall",
+      "experiment": "all",
+      "selected_order": "ET_leaf5|DT_leaf5|LR_std_C1",
+      "count": 0,
+      "denominator": 50,
+      "proportion": 0.0
+    },
+    {
+      "scope": "overall",
+      "experiment": "all",
+      "selected_order": "ET_leaf5|LR_std_C0.1|DT_leaf5",
+      "count": 3,
+      "denominator": 50,
+      "proportion": 0.06
+    },
+    {
+      "scope": "overall",
+      "experiment": "all",
+      "selected_order": "ET_leaf5|LR_std_C0.1|LR_std_C1",
+      "count": 17,
+      "denominator": 50,
+      "proportion": 0.34
+    },
+    {
+      "scope": "overall",
+      "experiment": "all",
+      "selected_order": "ET_leaf5|LR_std_C1|DT_leaf5",
+      "count": 2,
+      "denominator": 50,
+      "proportion": 0.04
+    },
+    {
+      "scope": "overall",
+      "experiment": "all",
+      "selected_order": "ET_leaf5|LR_std_C1|LR_std_C0.1",
+      "count": 18,
+      "denominator": 50,
+      "proportion": 0.36
+    },
+    {
+      "scope": "overall",
+      "experiment": "all",
+      "selected_order": "LR_std_C0.1|DT_leaf5|ET_leaf5",
+      "count": 0,
+      "denominator": 50,
+      "proportion": 0.0
+    },
+    {
+      "scope": "overall",
+      "experiment": "all",
+      "selected_order": "LR_std_C0.1|DT_leaf5|LR_std_C1",
+      "count": 0,
+      "denominator": 50,
+      "proportion": 0.0
+    },
+    {
+      "scope": "overall",
+      "experiment": "all",
+      "selected_order": "LR_std_C0.1|ET_leaf5|DT_leaf5",
+      "count": 0,
+      "denominator": 50,
+      "proportion": 0.0
+    },
+    {
+      "scope": "overall",
+      "experiment": "all",
+      "selected_order": "LR_std_C0.1|ET_leaf5|LR_std_C1",
+      "count": 0,
+      "denominator": 50,
+      "proportion": 0.0
+    },
+    {
+      "scope": "overall",
+      "experiment": "all",
+      "selected_order": "LR_std_C0.1|LR_std_C1|DT_leaf5",
+      "count": 0,
+      "denominator": 50,
+      "proportion": 0.0
+    },
+    {
+      "scope": "overall",
+      "experiment": "all",
+      "selected_order": "LR_std_C0.1|LR_std_C1|ET_leaf5",
+      "count": 2,
+      "denominator": 50,
+      "proportion": 0.04
+    },
+    {
+      "scope": "overall",
+      "experiment": "all",
+      "selected_order": "LR_std_C1|DT_leaf5|ET_leaf5",
+      "count": 0,
+      "denominator": 50,
+      "proportion": 0.0
+    },
+    {
+      "scope": "overall",
+      "experiment": "all",
+      "selected_order": "LR_std_C1|DT_leaf5|LR_std_C0.1",
+      "count": 0,
+      "denominator": 50,
+      "proportion": 0.0
+    },
+    {
+      "scope": "overall",
+      "experiment": "all",
+      "selected_order": "LR_std_C1|ET_leaf5|DT_leaf5",
+      "count": 0,
+      "denominator": 50,
+      "proportion": 0.0
+    },
+    {
+      "scope": "overall",
+      "experiment": "all",
+      "selected_order": "LR_std_C1|ET_leaf5|LR_std_C0.1",
+      "count": 2,
+      "denominator": 50,
+      "proportion": 0.04
+    },
+    {
+      "scope": "overall",
+      "experiment": "all",
+      "selected_order": "LR_std_C1|LR_std_C0.1|DT_leaf5",
+      "count": 0,
+      "denominator": 50,
+      "proportion": 0.0
+    },
+    {
+      "scope": "overall",
+      "experiment": "all",
+      "selected_order": "LR_std_C1|LR_std_C0.1|ET_leaf5",
+      "count": 1,
+      "denominator": 50,
+      "proportion": 0.02
+    }
+  ],
+  "descriptive_summary": {
+    "overall": {
+      "unique_observed_order_count": 10,
+      "most_frequent_orders": [
+        "ET_leaf5|LR_std_C1|LR_std_C0.1"
+      ],
+      "maximum_order_count": 18,
+      "maximum_order_proportion": 0.36,
+      "most_frequent_position_1_candidates": [
+        "ET_leaf5"
+      ],
+      "most_frequently_included_candidates": [
+        "ET_leaf5"
+      ],
+      "most_frequently_excluded_candidates": [
+        "DT_leaf5"
+      ],
+      "minimum_cutoff_score_gap": 0.0005735938976423327,
+      "median_cutoff_score_gap": 0.041221975059327176,
+      "mean_cutoff_score_gap": 0.0536354037755988
+    },
+    "by_setting": {
+      "within_project": {
+        "unique_observed_order_count": 10,
+        "most_frequent_orders": [
+          "ET_leaf5|LR_std_C1|LR_std_C0.1"
+        ],
+        "maximum_order_count": 6,
+        "maximum_order_proportion": 0.24,
+        "most_frequent_position_1_candidates": [
+          "ET_leaf5"
+        ],
+        "most_frequently_included_candidates": [
+          "ET_leaf5"
+        ],
+        "most_frequently_excluded_candidates": [
+          "DT_leaf5"
+        ],
+        "minimum_cutoff_score_gap": 0.0005735938976423327,
+        "median_cutoff_score_gap": 0.04392544431449891,
+        "mean_cutoff_score_gap": 0.0633448930139059
+      },
+      "cross_project": {
+        "unique_observed_order_count": 3,
+        "most_frequent_orders": [
+          "ET_leaf5|LR_std_C0.1|LR_std_C1",
+          "ET_leaf5|LR_std_C1|LR_std_C0.1"
+        ],
+        "maximum_order_count": 12,
+        "maximum_order_proportion": 0.48,
+        "most_frequent_position_1_candidates": [
+          "ET_leaf5"
+        ],
+        "most_frequently_included_candidates": [
+          "ET_leaf5",
+          "LR_std_C0.1",
+          "LR_std_C1"
+        ],
+        "most_frequently_excluded_candidates": [
+          "DT_leaf5"
+        ],
+        "minimum_cutoff_score_gap": 0.017964070870854,
+        "median_cutoff_score_gap": 0.039483989178308976,
+        "mean_cutoff_score_gap": 0.04392591453729169
+      }
+    }
+  },
+  "validation_checks": {
+    "canonical_sha_checks_passed": true,
+    "algorithm_provenance_checks_passed": true,
+    "selection_integrity_checks_passed": true,
+    "candidate_frequency_checks_passed": true,
+    "position_frequency_checks_passed": true,
+    "ordering_frequency_checks_passed": true
+  }
+}

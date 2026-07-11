@@ -1,0 +1,1929 @@
+{
+  "summary": {
+    "total_combinations": 16,
+    "best_overall_winner_set_changes": [
+      {
+        "setting": "cross_project",
+        "metric": "brier",
+        "reference_best_models": [
+          "AQRPE_v2_balanced",
+          "AQRPE_v2_mcc",
+          "AQRPE_v2_rank",
+          "ET_leaf5"
+        ],
+        "locked_best_models": [
+          "AQRPE_v2_mcc",
+          "AQRPE_v2_rank",
+          "ET_leaf5"
+        ],
+        "winner_sets_overlap": true,
+        "disjoint_winner_change": false
+      }
+    ],
+    "best_overall_disjoint_winner_changes": [],
+    "best_baseline_winner_set_changes": [
+      {
+        "setting": "within_project",
+        "metric": "mcc",
+        "reference_best_models": [
+          "LR_std_C0.1"
+        ],
+        "locked_best_models": [
+          "ET_leaf5"
+        ],
+        "winner_sets_overlap": false,
+        "disjoint_winner_change": true
+      },
+      {
+        "setting": "within_project",
+        "metric": "recall_at_10pct",
+        "reference_best_models": [
+          "ET_leaf5"
+        ],
+        "locked_best_models": [
+          "LR_std_C1",
+          "ET_leaf5"
+        ],
+        "winner_sets_overlap": true,
+        "disjoint_winner_change": false
+      },
+      {
+        "setting": "within_project",
+        "metric": "lift_at_10pct",
+        "reference_best_models": [
+          "ET_leaf5"
+        ],
+        "locked_best_models": [
+          "LR_std_C1"
+        ],
+        "winner_sets_overlap": false,
+        "disjoint_winner_change": true
+      }
+    ],
+    "best_baseline_disjoint_winner_changes": [
+      {
+        "setting": "within_project",
+        "metric": "mcc",
+        "reference_best_models": [
+          "LR_std_C0.1"
+        ],
+        "locked_best_models": [
+          "ET_leaf5"
+        ]
+      },
+      {
+        "setting": "within_project",
+        "metric": "lift_at_10pct",
+        "reference_best_models": [
+          "ET_leaf5"
+        ],
+        "locked_best_models": [
+          "LR_std_C1"
+        ]
+      }
+    ],
+    "soft_top3_outcome_changes": [],
+    "combinations_with_any_tie_aware_rank_change": 9,
+    "min_tie_aware_spearman_correlation": 0.9036144578313252,
+    "max_absolute_mean_value_change": 0.11153603962595415,
+    "max_absolute_mean_value_change_location": {
+      "setting": "within_project",
+      "metric": "lift_at_10pct",
+      "model": "DT_leaf5"
+    }
+  },
+  "detailed_results": [
+    {
+      "setting": "within_project",
+      "metric": "mcc",
+      "best_overall": {
+        "reference": {
+          "models": [
+            "AQRPE_v2_rank"
+          ],
+          "value": 0.3559217508392053
+        },
+        "locked": {
+          "models": [
+            "AQRPE_v2_rank"
+          ],
+          "value": 0.3547453365643457
+        },
+        "winner_set_changed": false,
+        "winner_sets_overlap": true,
+        "disjoint_winner_change": false
+      },
+      "best_baseline": {
+        "reference": {
+          "models": [
+            "LR_std_C0.1"
+          ],
+          "value": 0.3183500176382744
+        },
+        "locked": {
+          "models": [
+            "ET_leaf5"
+          ],
+          "value": 0.3204405476563132
+        },
+        "winner_set_changed": true,
+        "winner_sets_overlap": false,
+        "disjoint_winner_change": true
+      },
+      "soft_top3": {
+        "reference_value": 0.3400683989058126,
+        "locked_value": 0.339155836674085,
+        "reference_vs_baseline": "better",
+        "locked_vs_baseline": "better",
+        "outcome_changed": false
+      },
+      "ranks": {
+        "reference": {
+          "AQRPE_v2_rank": 1.0,
+          "AQRPE_v2_soft_top3": 2.0,
+          "LR_std_C0.1": 3.0,
+          "ET_leaf5": 4.0,
+          "AQRPE_v2_mcc": 5.0,
+          "LR_std_C1": 6.0,
+          "AQRPE_v2_balanced": 7.0,
+          "DT_leaf5": 8.0
+        },
+        "locked": {
+          "AQRPE_v2_rank": 1.0,
+          "AQRPE_v2_soft_top3": 2.0,
+          "ET_leaf5": 3.0,
+          "LR_std_C0.1": 4.0,
+          "AQRPE_v2_mcc": 5.0,
+          "AQRPE_v2_balanced": 6.0,
+          "LR_std_C1": 7.0,
+          "DT_leaf5": 8.0
+        },
+        "models_with_changed_rank": 4,
+        "max_rank_change": 1.0,
+        "rank_changes_detail": {
+          "AQRPE_v2_balanced": {
+            "reference_rank": 7.0,
+            "locked_rank": 6.0,
+            "change": 1.0
+          },
+          "AQRPE_v2_mcc": {
+            "reference_rank": 5.0,
+            "locked_rank": 5.0,
+            "change": 0.0
+          },
+          "AQRPE_v2_rank": {
+            "reference_rank": 1.0,
+            "locked_rank": 1.0,
+            "change": 0.0
+          },
+          "AQRPE_v2_soft_top3": {
+            "reference_rank": 2.0,
+            "locked_rank": 2.0,
+            "change": 0.0
+          },
+          "DT_leaf5": {
+            "reference_rank": 8.0,
+            "locked_rank": 8.0,
+            "change": 0.0
+          },
+          "ET_leaf5": {
+            "reference_rank": 4.0,
+            "locked_rank": 3.0,
+            "change": 1.0
+          },
+          "LR_std_C0.1": {
+            "reference_rank": 3.0,
+            "locked_rank": 4.0,
+            "change": 1.0
+          },
+          "LR_std_C1": {
+            "reference_rank": 6.0,
+            "locked_rank": 7.0,
+            "change": 1.0
+          }
+        }
+      },
+      "tie_aware_spearman_correlation": 0.9523809523809524,
+      "max_absolute_mean_value_change": 0.006168699192276916
+    },
+    {
+      "setting": "within_project",
+      "metric": "avg_precision",
+      "best_overall": {
+        "reference": {
+          "models": [
+            "AQRPE_v2_rank"
+          ],
+          "value": 0.4555528901382356
+        },
+        "locked": {
+          "models": [
+            "AQRPE_v2_rank"
+          ],
+          "value": 0.4542303095506402
+        },
+        "winner_set_changed": false,
+        "winner_sets_overlap": true,
+        "disjoint_winner_change": false
+      },
+      "best_baseline": {
+        "reference": {
+          "models": [
+            "ET_leaf5"
+          ],
+          "value": 0.4213886549852915
+        },
+        "locked": {
+          "models": [
+            "ET_leaf5"
+          ],
+          "value": 0.4202930999421929
+        },
+        "winner_set_changed": false,
+        "winner_sets_overlap": true,
+        "disjoint_winner_change": false
+      },
+      "soft_top3": {
+        "reference_value": 0.4402526533263654,
+        "locked_value": 0.4404289851737475,
+        "reference_vs_baseline": "better",
+        "locked_vs_baseline": "better",
+        "outcome_changed": false
+      },
+      "ranks": {
+        "reference": {
+          "AQRPE_v2_rank": 1.0,
+          "AQRPE_v2_soft_top3": 2.0,
+          "ET_leaf5": 3.0,
+          "LR_std_C0.1": 4.0,
+          "LR_std_C1": 5.0,
+          "AQRPE_v2_balanced": 6.5,
+          "AQRPE_v2_mcc": 6.5,
+          "DT_leaf5": 8.0
+        },
+        "locked": {
+          "AQRPE_v2_rank": 1.0,
+          "AQRPE_v2_soft_top3": 2.0,
+          "ET_leaf5": 3.0,
+          "LR_std_C0.1": 4.0,
+          "LR_std_C1": 5.0,
+          "AQRPE_v2_balanced": 6.5,
+          "AQRPE_v2_mcc": 6.5,
+          "DT_leaf5": 8.0
+        },
+        "models_with_changed_rank": 0,
+        "max_rank_change": 0.0,
+        "rank_changes_detail": {
+          "AQRPE_v2_balanced": {
+            "reference_rank": 6.5,
+            "locked_rank": 6.5,
+            "change": 0.0
+          },
+          "AQRPE_v2_mcc": {
+            "reference_rank": 6.5,
+            "locked_rank": 6.5,
+            "change": 0.0
+          },
+          "AQRPE_v2_rank": {
+            "reference_rank": 1.0,
+            "locked_rank": 1.0,
+            "change": 0.0
+          },
+          "AQRPE_v2_soft_top3": {
+            "reference_rank": 2.0,
+            "locked_rank": 2.0,
+            "change": 0.0
+          },
+          "DT_leaf5": {
+            "reference_rank": 8.0,
+            "locked_rank": 8.0,
+            "change": 0.0
+          },
+          "ET_leaf5": {
+            "reference_rank": 3.0,
+            "locked_rank": 3.0,
+            "change": 0.0
+          },
+          "LR_std_C0.1": {
+            "reference_rank": 4.0,
+            "locked_rank": 4.0,
+            "change": 0.0
+          },
+          "LR_std_C1": {
+            "reference_rank": 5.0,
+            "locked_rank": 5.0,
+            "change": 0.0
+          }
+        }
+      },
+      "tie_aware_spearman_correlation": 0.9999999999999998,
+      "max_absolute_mean_value_change": 0.0026167739727542827
+    },
+    {
+      "setting": "within_project",
+      "metric": "f1",
+      "best_overall": {
+        "reference": {
+          "models": [
+            "AQRPE_v2_rank"
+          ],
+          "value": 0.4484725373656926
+        },
+        "locked": {
+          "models": [
+            "AQRPE_v2_rank"
+          ],
+          "value": 0.4476016275559039
+        },
+        "winner_set_changed": false,
+        "winner_sets_overlap": true,
+        "disjoint_winner_change": false
+      },
+      "best_baseline": {
+        "reference": {
+          "models": [
+            "ET_leaf5"
+          ],
+          "value": 0.4066684196280537
+        },
+        "locked": {
+          "models": [
+            "ET_leaf5"
+          ],
+          "value": 0.4088307367237175
+        },
+        "winner_set_changed": false,
+        "winner_sets_overlap": true,
+        "disjoint_winner_change": false
+      },
+      "soft_top3": {
+        "reference_value": 0.4240339285146347,
+        "locked_value": 0.4237539641176474,
+        "reference_vs_baseline": "better",
+        "locked_vs_baseline": "better",
+        "outcome_changed": false
+      },
+      "ranks": {
+        "reference": {
+          "AQRPE_v2_rank": 1.0,
+          "AQRPE_v2_soft_top3": 2.0,
+          "ET_leaf5": 3.0,
+          "AQRPE_v2_balanced": 4.0,
+          "AQRPE_v2_mcc": 5.0,
+          "LR_std_C0.1": 6.0,
+          "LR_std_C1": 7.0,
+          "DT_leaf5": 8.0
+        },
+        "locked": {
+          "AQRPE_v2_rank": 1.0,
+          "AQRPE_v2_soft_top3": 2.0,
+          "ET_leaf5": 3.0,
+          "AQRPE_v2_balanced": 4.0,
+          "AQRPE_v2_mcc": 5.0,
+          "LR_std_C0.1": 6.0,
+          "LR_std_C1": 7.0,
+          "DT_leaf5": 8.0
+        },
+        "models_with_changed_rank": 0,
+        "max_rank_change": 0.0,
+        "rank_changes_detail": {
+          "AQRPE_v2_balanced": {
+            "reference_rank": 4.0,
+            "locked_rank": 4.0,
+            "change": 0.0
+          },
+          "AQRPE_v2_mcc": {
+            "reference_rank": 5.0,
+            "locked_rank": 5.0,
+            "change": 0.0
+          },
+          "AQRPE_v2_rank": {
+            "reference_rank": 1.0,
+            "locked_rank": 1.0,
+            "change": 0.0
+          },
+          "AQRPE_v2_soft_top3": {
+            "reference_rank": 2.0,
+            "locked_rank": 2.0,
+            "change": 0.0
+          },
+          "DT_leaf5": {
+            "reference_rank": 8.0,
+            "locked_rank": 8.0,
+            "change": 0.0
+          },
+          "ET_leaf5": {
+            "reference_rank": 3.0,
+            "locked_rank": 3.0,
+            "change": 0.0
+          },
+          "LR_std_C0.1": {
+            "reference_rank": 6.0,
+            "locked_rank": 6.0,
+            "change": 0.0
+          },
+          "LR_std_C1": {
+            "reference_rank": 7.0,
+            "locked_rank": 7.0,
+            "change": 0.0
+          }
+        }
+      },
+      "tie_aware_spearman_correlation": 1.0,
+      "max_absolute_mean_value_change": 0.0023261370138548676
+    },
+    {
+      "setting": "within_project",
+      "metric": "balanced_accuracy",
+      "best_overall": {
+        "reference": {
+          "models": [
+            "AQRPE_v2_rank"
+          ],
+          "value": 0.7240394607340923
+        },
+        "locked": {
+          "models": [
+            "AQRPE_v2_rank"
+          ],
+          "value": 0.7230228088690464
+        },
+        "winner_set_changed": false,
+        "winner_sets_overlap": true,
+        "disjoint_winner_change": false
+      },
+      "best_baseline": {
+        "reference": {
+          "models": [
+            "LR_std_C1"
+          ],
+          "value": 0.6898594813730522
+        },
+        "locked": {
+          "models": [
+            "LR_std_C1"
+          ],
+          "value": 0.6898594813730522
+        },
+        "winner_set_changed": false,
+        "winner_sets_overlap": true,
+        "disjoint_winner_change": false
+      },
+      "soft_top3": {
+        "reference_value": 0.6946369526830218,
+        "locked_value": 0.6949074738618785,
+        "reference_vs_baseline": "better",
+        "locked_vs_baseline": "better",
+        "outcome_changed": false
+      },
+      "ranks": {
+        "reference": {
+          "AQRPE_v2_rank": 1.0,
+          "AQRPE_v2_soft_top3": 2.0,
+          "LR_std_C1": 3.0,
+          "LR_std_C0.1": 4.0,
+          "ET_leaf5": 5.0,
+          "AQRPE_v2_balanced": 6.0,
+          "AQRPE_v2_mcc": 7.0,
+          "DT_leaf5": 8.0
+        },
+        "locked": {
+          "AQRPE_v2_rank": 1.0,
+          "AQRPE_v2_soft_top3": 2.0,
+          "LR_std_C1": 3.0,
+          "LR_std_C0.1": 4.0,
+          "ET_leaf5": 5.0,
+          "AQRPE_v2_balanced": 6.0,
+          "AQRPE_v2_mcc": 7.0,
+          "DT_leaf5": 8.0
+        },
+        "models_with_changed_rank": 0,
+        "max_rank_change": 0.0,
+        "rank_changes_detail": {
+          "AQRPE_v2_balanced": {
+            "reference_rank": 6.0,
+            "locked_rank": 6.0,
+            "change": 0.0
+          },
+          "AQRPE_v2_mcc": {
+            "reference_rank": 7.0,
+            "locked_rank": 7.0,
+            "change": 0.0
+          },
+          "AQRPE_v2_rank": {
+            "reference_rank": 1.0,
+            "locked_rank": 1.0,
+            "change": 0.0
+          },
+          "AQRPE_v2_soft_top3": {
+            "reference_rank": 2.0,
+            "locked_rank": 2.0,
+            "change": 0.0
+          },
+          "DT_leaf5": {
+            "reference_rank": 8.0,
+            "locked_rank": 8.0,
+            "change": 0.0
+          },
+          "ET_leaf5": {
+            "reference_rank": 5.0,
+            "locked_rank": 5.0,
+            "change": 0.0
+          },
+          "LR_std_C0.1": {
+            "reference_rank": 4.0,
+            "locked_rank": 4.0,
+            "change": 0.0
+          },
+          "LR_std_C1": {
+            "reference_rank": 3.0,
+            "locked_rank": 3.0,
+            "change": 0.0
+          }
+        }
+      },
+      "tie_aware_spearman_correlation": 1.0,
+      "max_absolute_mean_value_change": 0.002791790298937502
+    },
+    {
+      "setting": "within_project",
+      "metric": "precision_at_10pct",
+      "best_overall": {
+        "reference": {
+          "models": [
+            "AQRPE_v2_rank"
+          ],
+          "value": 0.4778865912689671
+        },
+        "locked": {
+          "models": [
+            "AQRPE_v2_rank"
+          ],
+          "value": 0.4734600884168391
+        },
+        "winner_set_changed": false,
+        "winner_sets_overlap": true,
+        "disjoint_winner_change": false
+      },
+      "best_baseline": {
+        "reference": {
+          "models": [
+            "LR_std_C1"
+          ],
+          "value": 0.4559586671222209
+        },
+        "locked": {
+          "models": [
+            "LR_std_C1"
+          ],
+          "value": 0.4559586671222209
+        },
+        "winner_set_changed": false,
+        "winner_sets_overlap": true,
+        "disjoint_winner_change": false
+      },
+      "soft_top3": {
+        "reference_value": 0.4580259769991345,
+        "locked_value": 0.4573976312334478,
+        "reference_vs_baseline": "better",
+        "locked_vs_baseline": "better",
+        "outcome_changed": false
+      },
+      "ranks": {
+        "reference": {
+          "AQRPE_v2_rank": 1.0,
+          "AQRPE_v2_soft_top3": 2.0,
+          "LR_std_C1": 3.0,
+          "ET_leaf5": 4.0,
+          "LR_std_C0.1": 5.0,
+          "AQRPE_v2_balanced": 6.5,
+          "AQRPE_v2_mcc": 6.5,
+          "DT_leaf5": 8.0
+        },
+        "locked": {
+          "AQRPE_v2_rank": 1.0,
+          "AQRPE_v2_soft_top3": 2.0,
+          "LR_std_C1": 3.0,
+          "LR_std_C0.1": 4.0,
+          "ET_leaf5": 5.0,
+          "AQRPE_v2_balanced": 6.5,
+          "AQRPE_v2_mcc": 6.5,
+          "DT_leaf5": 8.0
+        },
+        "models_with_changed_rank": 2,
+        "max_rank_change": 1.0,
+        "rank_changes_detail": {
+          "AQRPE_v2_balanced": {
+            "reference_rank": 6.5,
+            "locked_rank": 6.5,
+            "change": 0.0
+          },
+          "AQRPE_v2_mcc": {
+            "reference_rank": 6.5,
+            "locked_rank": 6.5,
+            "change": 0.0
+          },
+          "AQRPE_v2_rank": {
+            "reference_rank": 1.0,
+            "locked_rank": 1.0,
+            "change": 0.0
+          },
+          "AQRPE_v2_soft_top3": {
+            "reference_rank": 2.0,
+            "locked_rank": 2.0,
+            "change": 0.0
+          },
+          "DT_leaf5": {
+            "reference_rank": 8.0,
+            "locked_rank": 8.0,
+            "change": 0.0
+          },
+          "ET_leaf5": {
+            "reference_rank": 4.0,
+            "locked_rank": 5.0,
+            "change": 1.0
+          },
+          "LR_std_C0.1": {
+            "reference_rank": 5.0,
+            "locked_rank": 4.0,
+            "change": 1.0
+          },
+          "LR_std_C1": {
+            "reference_rank": 3.0,
+            "locked_rank": 3.0,
+            "change": 0.0
+          }
+        }
+      },
+      "tie_aware_spearman_correlation": 0.9759036144578312,
+      "max_absolute_mean_value_change": 0.00831173092698928
+    },
+    {
+      "setting": "within_project",
+      "metric": "recall_at_10pct",
+      "best_overall": {
+        "reference": {
+          "models": [
+            "AQRPE_v2_rank"
+          ],
+          "value": 0.3723658289454014
+        },
+        "locked": {
+          "models": [
+            "AQRPE_v2_rank"
+          ],
+          "value": 0.3695198578143946
+        },
+        "winner_set_changed": false,
+        "winner_sets_overlap": true,
+        "disjoint_winner_change": false
+      },
+      "best_baseline": {
+        "reference": {
+          "models": [
+            "ET_leaf5"
+          ],
+          "value": 0.3455965981761706
+        },
+        "locked": {
+          "models": [
+            "LR_std_C1",
+            "ET_leaf5"
+          ],
+          "value": 0.3415198578143946
+        },
+        "winner_set_changed": true,
+        "winner_sets_overlap": true,
+        "disjoint_winner_change": false
+      },
+      "soft_top3": {
+        "reference_value": 0.3613068008792474,
+        "locked_value": 0.3608814400168319,
+        "reference_vs_baseline": "better",
+        "locked_vs_baseline": "better",
+        "outcome_changed": false
+      },
+      "ranks": {
+        "reference": {
+          "AQRPE_v2_rank": 1.0,
+          "AQRPE_v2_soft_top3": 2.0,
+          "ET_leaf5": 3.0,
+          "LR_std_C1": 4.0,
+          "AQRPE_v2_balanced": 5.5,
+          "AQRPE_v2_mcc": 5.5,
+          "LR_std_C0.1": 7.0,
+          "DT_leaf5": 8.0
+        },
+        "locked": {
+          "AQRPE_v2_rank": 1.0,
+          "AQRPE_v2_soft_top3": 2.0,
+          "ET_leaf5": 3.5,
+          "LR_std_C1": 3.5,
+          "AQRPE_v2_balanced": 5.5,
+          "AQRPE_v2_mcc": 5.5,
+          "LR_std_C0.1": 7.0,
+          "DT_leaf5": 8.0
+        },
+        "models_with_changed_rank": 2,
+        "max_rank_change": 0.5,
+        "rank_changes_detail": {
+          "AQRPE_v2_balanced": {
+            "reference_rank": 5.5,
+            "locked_rank": 5.5,
+            "change": 0.0
+          },
+          "AQRPE_v2_mcc": {
+            "reference_rank": 5.5,
+            "locked_rank": 5.5,
+            "change": 0.0
+          },
+          "AQRPE_v2_rank": {
+            "reference_rank": 1.0,
+            "locked_rank": 1.0,
+            "change": 0.0
+          },
+          "AQRPE_v2_soft_top3": {
+            "reference_rank": 2.0,
+            "locked_rank": 2.0,
+            "change": 0.0
+          },
+          "DT_leaf5": {
+            "reference_rank": 8.0,
+            "locked_rank": 8.0,
+            "change": 0.0
+          },
+          "ET_leaf5": {
+            "reference_rank": 3.0,
+            "locked_rank": 3.5,
+            "change": 0.5
+          },
+          "LR_std_C0.1": {
+            "reference_rank": 7.0,
+            "locked_rank": 7.0,
+            "change": 0.0
+          },
+          "LR_std_C1": {
+            "reference_rank": 4.0,
+            "locked_rank": 3.5,
+            "change": 0.5
+          }
+        }
+      },
+      "tie_aware_spearman_correlation": 0.9939576486092934,
+      "max_absolute_mean_value_change": 0.01142992874109261
+    },
+    {
+      "setting": "within_project",
+      "metric": "lift_at_10pct",
+      "best_overall": {
+        "reference": {
+          "models": [
+            "AQRPE_v2_rank"
+          ],
+          "value": 3.6361398271610863
+        },
+        "locked": {
+          "models": [
+            "AQRPE_v2_rank"
+          ],
+          "value": 3.607963952086615
+        },
+        "winner_set_changed": false,
+        "winner_sets_overlap": true,
+        "disjoint_winner_change": false
+      },
+      "best_baseline": {
+        "reference": {
+          "models": [
+            "ET_leaf5"
+          ],
+          "value": 3.368218539146775
+        },
+        "locked": {
+          "models": [
+            "LR_std_C1"
+          ],
+          "value": 3.3361499487094823
+        },
+        "winner_set_changed": true,
+        "winner_sets_overlap": false,
+        "disjoint_winner_change": true
+      },
+      "soft_top3": {
+        "reference_value": 3.5274335876229346,
+        "locked_value": 3.523288015522888,
+        "reference_vs_baseline": "better",
+        "locked_vs_baseline": "better",
+        "outcome_changed": false
+      },
+      "ranks": {
+        "reference": {
+          "AQRPE_v2_rank": 1.0,
+          "AQRPE_v2_soft_top3": 2.0,
+          "ET_leaf5": 3.0,
+          "LR_std_C1": 4.0,
+          "AQRPE_v2_balanced": 5.5,
+          "AQRPE_v2_mcc": 5.5,
+          "LR_std_C0.1": 7.0,
+          "DT_leaf5": 8.0
+        },
+        "locked": {
+          "AQRPE_v2_rank": 1.0,
+          "AQRPE_v2_soft_top3": 2.0,
+          "LR_std_C1": 3.0,
+          "ET_leaf5": 4.0,
+          "AQRPE_v2_balanced": 5.5,
+          "AQRPE_v2_mcc": 5.5,
+          "LR_std_C0.1": 7.0,
+          "DT_leaf5": 8.0
+        },
+        "models_with_changed_rank": 2,
+        "max_rank_change": 1.0,
+        "rank_changes_detail": {
+          "AQRPE_v2_balanced": {
+            "reference_rank": 5.5,
+            "locked_rank": 5.5,
+            "change": 0.0
+          },
+          "AQRPE_v2_mcc": {
+            "reference_rank": 5.5,
+            "locked_rank": 5.5,
+            "change": 0.0
+          },
+          "AQRPE_v2_rank": {
+            "reference_rank": 1.0,
+            "locked_rank": 1.0,
+            "change": 0.0
+          },
+          "AQRPE_v2_soft_top3": {
+            "reference_rank": 2.0,
+            "locked_rank": 2.0,
+            "change": 0.0
+          },
+          "DT_leaf5": {
+            "reference_rank": 8.0,
+            "locked_rank": 8.0,
+            "change": 0.0
+          },
+          "ET_leaf5": {
+            "reference_rank": 3.0,
+            "locked_rank": 4.0,
+            "change": 1.0
+          },
+          "LR_std_C0.1": {
+            "reference_rank": 7.0,
+            "locked_rank": 7.0,
+            "change": 0.0
+          },
+          "LR_std_C1": {
+            "reference_rank": 4.0,
+            "locked_rank": 3.0,
+            "change": 1.0
+          }
+        }
+      },
+      "tie_aware_spearman_correlation": 0.9759036144578312,
+      "max_absolute_mean_value_change": 0.11153603962595415
+    },
+    {
+      "setting": "within_project",
+      "metric": "brier",
+      "best_overall": {
+        "reference": {
+          "models": [
+            "DT_leaf5"
+          ],
+          "value": 0.1341909663986916
+        },
+        "locked": {
+          "models": [
+            "DT_leaf5"
+          ],
+          "value": 0.1333565419832479
+        },
+        "winner_set_changed": false,
+        "winner_sets_overlap": true,
+        "disjoint_winner_change": false
+      },
+      "best_baseline": {
+        "reference": {
+          "models": [
+            "DT_leaf5"
+          ],
+          "value": 0.1341909663986916
+        },
+        "locked": {
+          "models": [
+            "DT_leaf5"
+          ],
+          "value": 0.1333565419832479
+        },
+        "winner_set_changed": false,
+        "winner_sets_overlap": true,
+        "disjoint_winner_change": false
+      },
+      "soft_top3": {
+        "reference_value": 0.148333229302,
+        "locked_value": 0.14687315885566,
+        "reference_vs_baseline": "worse",
+        "locked_vs_baseline": "worse",
+        "outcome_changed": false
+      },
+      "ranks": {
+        "reference": {
+          "DT_leaf5": 1.0,
+          "AQRPE_v2_soft_top3": 3.0,
+          "AQRPE_v2_balanced": 3.0,
+          "AQRPE_v2_mcc": 3.0,
+          "AQRPE_v2_rank": 5.5,
+          "ET_leaf5": 5.5,
+          "LR_std_C1": 7.0,
+          "LR_std_C0.1": 8.0
+        },
+        "locked": {
+          "DT_leaf5": 1.0,
+          "AQRPE_v2_soft_top3": 2.0,
+          "AQRPE_v2_balanced": 3.0,
+          "AQRPE_v2_mcc": 4.0,
+          "AQRPE_v2_rank": 5.5,
+          "ET_leaf5": 5.5,
+          "LR_std_C1": 7.0,
+          "LR_std_C0.1": 8.0
+        },
+        "models_with_changed_rank": 2,
+        "max_rank_change": 1.0,
+        "rank_changes_detail": {
+          "AQRPE_v2_balanced": {
+            "reference_rank": 3.0,
+            "locked_rank": 3.0,
+            "change": 0.0
+          },
+          "AQRPE_v2_mcc": {
+            "reference_rank": 3.0,
+            "locked_rank": 4.0,
+            "change": 1.0
+          },
+          "AQRPE_v2_rank": {
+            "reference_rank": 5.5,
+            "locked_rank": 5.5,
+            "change": 0.0
+          },
+          "AQRPE_v2_soft_top3": {
+            "reference_rank": 3.0,
+            "locked_rank": 2.0,
+            "change": 1.0
+          },
+          "DT_leaf5": {
+            "reference_rank": 1.0,
+            "locked_rank": 1.0,
+            "change": 0.0
+          },
+          "ET_leaf5": {
+            "reference_rank": 5.5,
+            "locked_rank": 5.5,
+            "change": 0.0
+          },
+          "LR_std_C0.1": {
+            "reference_rank": 8.0,
+            "locked_rank": 8.0,
+            "change": 0.0
+          },
+          "LR_std_C1": {
+            "reference_rank": 7.0,
+            "locked_rank": 7.0,
+            "change": 0.0
+          }
+        }
+      },
+      "tie_aware_spearman_correlation": 0.9756060828611427,
+      "max_absolute_mean_value_change": 0.0014600704463400005
+    },
+    {
+      "setting": "cross_project",
+      "metric": "mcc",
+      "best_overall": {
+        "reference": {
+          "models": [
+            "AQRPE_v2_soft_top3"
+          ],
+          "value": 0.2934628441539924
+        },
+        "locked": {
+          "models": [
+            "AQRPE_v2_soft_top3"
+          ],
+          "value": 0.2934384579461616
+        },
+        "winner_set_changed": false,
+        "winner_sets_overlap": true,
+        "disjoint_winner_change": false
+      },
+      "best_baseline": {
+        "reference": {
+          "models": [
+            "LR_std_C0.1"
+          ],
+          "value": 0.2868704501388703
+        },
+        "locked": {
+          "models": [
+            "LR_std_C0.1"
+          ],
+          "value": 0.2868704501388703
+        },
+        "winner_set_changed": false,
+        "winner_sets_overlap": true,
+        "disjoint_winner_change": false
+      },
+      "soft_top3": {
+        "reference_value": 0.2934628441539924,
+        "locked_value": 0.2934384579461616,
+        "reference_vs_baseline": "better",
+        "locked_vs_baseline": "better",
+        "outcome_changed": false
+      },
+      "ranks": {
+        "reference": {
+          "AQRPE_v2_soft_top3": 1.0,
+          "LR_std_C0.1": 2.0,
+          "LR_std_C1": 3.0,
+          "AQRPE_v2_balanced": 4.5,
+          "ET_leaf5": 4.5,
+          "AQRPE_v2_mcc": 6.0,
+          "AQRPE_v2_rank": 7.0,
+          "DT_leaf5": 8.0
+        },
+        "locked": {
+          "AQRPE_v2_soft_top3": 1.0,
+          "LR_std_C0.1": 2.0,
+          "AQRPE_v2_balanced": 3.5,
+          "ET_leaf5": 3.5,
+          "LR_std_C1": 5.0,
+          "AQRPE_v2_rank": 6.0,
+          "AQRPE_v2_mcc": 7.0,
+          "DT_leaf5": 8.0
+        },
+        "models_with_changed_rank": 5,
+        "max_rank_change": 2.0,
+        "rank_changes_detail": {
+          "AQRPE_v2_balanced": {
+            "reference_rank": 4.5,
+            "locked_rank": 3.5,
+            "change": 1.0
+          },
+          "AQRPE_v2_mcc": {
+            "reference_rank": 6.0,
+            "locked_rank": 7.0,
+            "change": 1.0
+          },
+          "AQRPE_v2_rank": {
+            "reference_rank": 7.0,
+            "locked_rank": 6.0,
+            "change": 1.0
+          },
+          "AQRPE_v2_soft_top3": {
+            "reference_rank": 1.0,
+            "locked_rank": 1.0,
+            "change": 0.0
+          },
+          "DT_leaf5": {
+            "reference_rank": 8.0,
+            "locked_rank": 8.0,
+            "change": 0.0
+          },
+          "ET_leaf5": {
+            "reference_rank": 4.5,
+            "locked_rank": 3.5,
+            "change": 1.0
+          },
+          "LR_std_C0.1": {
+            "reference_rank": 2.0,
+            "locked_rank": 2.0,
+            "change": 0.0
+          },
+          "LR_std_C1": {
+            "reference_rank": 3.0,
+            "locked_rank": 5.0,
+            "change": 2.0
+          }
+        }
+      },
+      "tie_aware_spearman_correlation": 0.9036144578313252,
+      "max_absolute_mean_value_change": 0.005379372624433387
+    },
+    {
+      "setting": "cross_project",
+      "metric": "avg_precision",
+      "best_overall": {
+        "reference": {
+          "models": [
+            "AQRPE_v2_soft_top3"
+          ],
+          "value": 0.3592725146718135
+        },
+        "locked": {
+          "models": [
+            "AQRPE_v2_soft_top3"
+          ],
+          "value": 0.3588443134794544
+        },
+        "winner_set_changed": false,
+        "winner_sets_overlap": true,
+        "disjoint_winner_change": false
+      },
+      "best_baseline": {
+        "reference": {
+          "models": [
+            "LR_std_C1"
+          ],
+          "value": 0.3563386203024939
+        },
+        "locked": {
+          "models": [
+            "LR_std_C1"
+          ],
+          "value": 0.3563119586913052
+        },
+        "winner_set_changed": false,
+        "winner_sets_overlap": true,
+        "disjoint_winner_change": false
+      },
+      "soft_top3": {
+        "reference_value": 0.3592725146718135,
+        "locked_value": 0.3588443134794544,
+        "reference_vs_baseline": "better",
+        "locked_vs_baseline": "better",
+        "outcome_changed": false
+      },
+      "ranks": {
+        "reference": {
+          "AQRPE_v2_soft_top3": 1.0,
+          "LR_std_C1": 2.0,
+          "LR_std_C0.1": 3.0,
+          "AQRPE_v2_balanced": 5.5,
+          "AQRPE_v2_mcc": 5.5,
+          "AQRPE_v2_rank": 5.5,
+          "ET_leaf5": 5.5,
+          "DT_leaf5": 8.0
+        },
+        "locked": {
+          "AQRPE_v2_soft_top3": 1.0,
+          "LR_std_C1": 2.0,
+          "LR_std_C0.1": 3.0,
+          "AQRPE_v2_balanced": 5.5,
+          "AQRPE_v2_mcc": 5.5,
+          "AQRPE_v2_rank": 5.5,
+          "ET_leaf5": 5.5,
+          "DT_leaf5": 8.0
+        },
+        "models_with_changed_rank": 0,
+        "max_rank_change": 0.0,
+        "rank_changes_detail": {
+          "AQRPE_v2_balanced": {
+            "reference_rank": 5.5,
+            "locked_rank": 5.5,
+            "change": 0.0
+          },
+          "AQRPE_v2_mcc": {
+            "reference_rank": 5.5,
+            "locked_rank": 5.5,
+            "change": 0.0
+          },
+          "AQRPE_v2_rank": {
+            "reference_rank": 5.5,
+            "locked_rank": 5.5,
+            "change": 0.0
+          },
+          "AQRPE_v2_soft_top3": {
+            "reference_rank": 1.0,
+            "locked_rank": 1.0,
+            "change": 0.0
+          },
+          "DT_leaf5": {
+            "reference_rank": 8.0,
+            "locked_rank": 8.0,
+            "change": 0.0
+          },
+          "ET_leaf5": {
+            "reference_rank": 5.5,
+            "locked_rank": 5.5,
+            "change": 0.0
+          },
+          "LR_std_C0.1": {
+            "reference_rank": 3.0,
+            "locked_rank": 3.0,
+            "change": 0.0
+          },
+          "LR_std_C1": {
+            "reference_rank": 2.0,
+            "locked_rank": 2.0,
+            "change": 0.0
+          }
+        }
+      },
+      "tie_aware_spearman_correlation": 1.0,
+      "max_absolute_mean_value_change": 0.0007616174988758773
+    },
+    {
+      "setting": "cross_project",
+      "metric": "f1",
+      "best_overall": {
+        "reference": {
+          "models": [
+            "AQRPE_v2_soft_top3"
+          ],
+          "value": 0.3933349849342235
+        },
+        "locked": {
+          "models": [
+            "AQRPE_v2_soft_top3"
+          ],
+          "value": 0.3928055921034173
+        },
+        "winner_set_changed": false,
+        "winner_sets_overlap": true,
+        "disjoint_winner_change": false
+      },
+      "best_baseline": {
+        "reference": {
+          "models": [
+            "LR_std_C0.1"
+          ],
+          "value": 0.3873206086873824
+        },
+        "locked": {
+          "models": [
+            "LR_std_C0.1"
+          ],
+          "value": 0.3873206086873824
+        },
+        "winner_set_changed": false,
+        "winner_sets_overlap": true,
+        "disjoint_winner_change": false
+      },
+      "soft_top3": {
+        "reference_value": 0.3933349849342235,
+        "locked_value": 0.3928055921034173,
+        "reference_vs_baseline": "better",
+        "locked_vs_baseline": "better",
+        "outcome_changed": false
+      },
+      "ranks": {
+        "reference": {
+          "AQRPE_v2_soft_top3": 1.0,
+          "LR_std_C0.1": 2.0,
+          "LR_std_C1": 3.0,
+          "AQRPE_v2_balanced": 4.5,
+          "ET_leaf5": 4.5,
+          "AQRPE_v2_rank": 6.0,
+          "AQRPE_v2_mcc": 7.0,
+          "DT_leaf5": 8.0
+        },
+        "locked": {
+          "AQRPE_v2_soft_top3": 1.0,
+          "LR_std_C0.1": 2.0,
+          "LR_std_C1": 3.0,
+          "AQRPE_v2_rank": 4.0,
+          "AQRPE_v2_balanced": 5.0,
+          "ET_leaf5": 6.0,
+          "AQRPE_v2_mcc": 7.0,
+          "DT_leaf5": 8.0
+        },
+        "models_with_changed_rank": 3,
+        "max_rank_change": 2.0,
+        "rank_changes_detail": {
+          "AQRPE_v2_balanced": {
+            "reference_rank": 4.5,
+            "locked_rank": 5.0,
+            "change": 0.5
+          },
+          "AQRPE_v2_mcc": {
+            "reference_rank": 7.0,
+            "locked_rank": 7.0,
+            "change": 0.0
+          },
+          "AQRPE_v2_rank": {
+            "reference_rank": 6.0,
+            "locked_rank": 4.0,
+            "change": 2.0
+          },
+          "AQRPE_v2_soft_top3": {
+            "reference_rank": 1.0,
+            "locked_rank": 1.0,
+            "change": 0.0
+          },
+          "DT_leaf5": {
+            "reference_rank": 8.0,
+            "locked_rank": 8.0,
+            "change": 0.0
+          },
+          "ET_leaf5": {
+            "reference_rank": 4.5,
+            "locked_rank": 6.0,
+            "change": 1.5
+          },
+          "LR_std_C0.1": {
+            "reference_rank": 2.0,
+            "locked_rank": 2.0,
+            "change": 0.0
+          },
+          "LR_std_C1": {
+            "reference_rank": 3.0,
+            "locked_rank": 3.0,
+            "change": 0.0
+          }
+        }
+      },
+      "tie_aware_spearman_correlation": 0.9221722216732094,
+      "max_absolute_mean_value_change": 0.010820498455082095
+    },
+    {
+      "setting": "cross_project",
+      "metric": "balanced_accuracy",
+      "best_overall": {
+        "reference": {
+          "models": [
+            "AQRPE_v2_soft_top3"
+          ],
+          "value": 0.6859149204073638
+        },
+        "locked": {
+          "models": [
+            "AQRPE_v2_soft_top3"
+          ],
+          "value": 0.6856643623812311
+        },
+        "winner_set_changed": false,
+        "winner_sets_overlap": true,
+        "disjoint_winner_change": false
+      },
+      "best_baseline": {
+        "reference": {
+          "models": [
+            "LR_std_C1"
+          ],
+          "value": 0.6748976634908462
+        },
+        "locked": {
+          "models": [
+            "LR_std_C1"
+          ],
+          "value": 0.6748976634908462
+        },
+        "winner_set_changed": false,
+        "winner_sets_overlap": true,
+        "disjoint_winner_change": false
+      },
+      "soft_top3": {
+        "reference_value": 0.6859149204073638,
+        "locked_value": 0.6856643623812311,
+        "reference_vs_baseline": "better",
+        "locked_vs_baseline": "better",
+        "outcome_changed": false
+      },
+      "ranks": {
+        "reference": {
+          "AQRPE_v2_soft_top3": 1.0,
+          "LR_std_C1": 2.0,
+          "LR_std_C0.1": 3.0,
+          "AQRPE_v2_balanced": 5.0,
+          "ET_leaf5": 5.0,
+          "AQRPE_v2_rank": 5.0,
+          "AQRPE_v2_mcc": 7.0,
+          "DT_leaf5": 8.0
+        },
+        "locked": {
+          "AQRPE_v2_soft_top3": 1.0,
+          "LR_std_C1": 2.0,
+          "LR_std_C0.1": 3.0,
+          "AQRPE_v2_balanced": 4.0,
+          "ET_leaf5": 5.5,
+          "AQRPE_v2_rank": 5.5,
+          "AQRPE_v2_mcc": 7.0,
+          "DT_leaf5": 8.0
+        },
+        "models_with_changed_rank": 3,
+        "max_rank_change": 1.0,
+        "rank_changes_detail": {
+          "AQRPE_v2_balanced": {
+            "reference_rank": 5.0,
+            "locked_rank": 4.0,
+            "change": 1.0
+          },
+          "AQRPE_v2_mcc": {
+            "reference_rank": 7.0,
+            "locked_rank": 7.0,
+            "change": 0.0
+          },
+          "AQRPE_v2_rank": {
+            "reference_rank": 5.0,
+            "locked_rank": 5.5,
+            "change": 0.5
+          },
+          "AQRPE_v2_soft_top3": {
+            "reference_rank": 1.0,
+            "locked_rank": 1.0,
+            "change": 0.0
+          },
+          "DT_leaf5": {
+            "reference_rank": 8.0,
+            "locked_rank": 8.0,
+            "change": 0.0
+          },
+          "ET_leaf5": {
+            "reference_rank": 5.0,
+            "locked_rank": 5.5,
+            "change": 0.5
+          },
+          "LR_std_C0.1": {
+            "reference_rank": 3.0,
+            "locked_rank": 3.0,
+            "change": 0.0
+          },
+          "LR_std_C1": {
+            "reference_rank": 2.0,
+            "locked_rank": 2.0,
+            "change": 0.0
+          }
+        }
+      },
+      "tie_aware_spearman_correlation": 0.981761387347632,
+      "max_absolute_mean_value_change": 0.005131618769380952
+    },
+    {
+      "setting": "cross_project",
+      "metric": "precision_at_10pct",
+      "best_overall": {
+        "reference": {
+          "models": [
+            "AQRPE_v2_balanced",
+            "AQRPE_v2_mcc",
+            "AQRPE_v2_rank",
+            "ET_leaf5"
+          ],
+          "value": 0.4142982720985436
+        },
+        "locked": {
+          "models": [
+            "AQRPE_v2_balanced",
+            "AQRPE_v2_mcc",
+            "AQRPE_v2_rank",
+            "ET_leaf5"
+          ],
+          "value": 0.4137644016693996
+        },
+        "winner_set_changed": false,
+        "winner_sets_overlap": true,
+        "disjoint_winner_change": false
+      },
+      "best_baseline": {
+        "reference": {
+          "models": [
+            "ET_leaf5"
+          ],
+          "value": 0.4142982720985436
+        },
+        "locked": {
+          "models": [
+            "ET_leaf5"
+          ],
+          "value": 0.4137644016693996
+        },
+        "winner_set_changed": false,
+        "winner_sets_overlap": true,
+        "disjoint_winner_change": false
+      },
+      "soft_top3": {
+        "reference_value": 0.4000869820790289,
+        "locked_value": 0.4004359401284569,
+        "reference_vs_baseline": "worse",
+        "locked_vs_baseline": "worse",
+        "outcome_changed": false
+      },
+      "ranks": {
+        "reference": {
+          "AQRPE_v2_balanced": 2.5,
+          "AQRPE_v2_mcc": 2.5,
+          "AQRPE_v2_rank": 2.5,
+          "ET_leaf5": 2.5,
+          "LR_std_C0.1": 5.0,
+          "AQRPE_v2_soft_top3": 6.5,
+          "LR_std_C1": 6.5,
+          "DT_leaf5": 8.0
+        },
+        "locked": {
+          "AQRPE_v2_balanced": 2.5,
+          "AQRPE_v2_mcc": 2.5,
+          "AQRPE_v2_rank": 2.5,
+          "ET_leaf5": 2.5,
+          "LR_std_C0.1": 5.0,
+          "AQRPE_v2_soft_top3": 6.5,
+          "LR_std_C1": 6.5,
+          "DT_leaf5": 8.0
+        },
+        "models_with_changed_rank": 0,
+        "max_rank_change": 0.0,
+        "rank_changes_detail": {
+          "AQRPE_v2_balanced": {
+            "reference_rank": 2.5,
+            "locked_rank": 2.5,
+            "change": 0.0
+          },
+          "AQRPE_v2_mcc": {
+            "reference_rank": 2.5,
+            "locked_rank": 2.5,
+            "change": 0.0
+          },
+          "AQRPE_v2_rank": {
+            "reference_rank": 2.5,
+            "locked_rank": 2.5,
+            "change": 0.0
+          },
+          "AQRPE_v2_soft_top3": {
+            "reference_rank": 6.5,
+            "locked_rank": 6.5,
+            "change": 0.0
+          },
+          "DT_leaf5": {
+            "reference_rank": 8.0,
+            "locked_rank": 8.0,
+            "change": 0.0
+          },
+          "ET_leaf5": {
+            "reference_rank": 2.5,
+            "locked_rank": 2.5,
+            "change": 0.0
+          },
+          "LR_std_C0.1": {
+            "reference_rank": 5.0,
+            "locked_rank": 5.0,
+            "change": 0.0
+          },
+          "LR_std_C1": {
+            "reference_rank": 6.5,
+            "locked_rank": 6.5,
+            "change": 0.0
+          }
+        }
+      },
+      "tie_aware_spearman_correlation": 1.0,
+      "max_absolute_mean_value_change": 0.0033801538248485197
+    },
+    {
+      "setting": "cross_project",
+      "metric": "recall_at_10pct",
+      "best_overall": {
+        "reference": {
+          "models": [
+            "AQRPE_v2_balanced",
+            "AQRPE_v2_mcc",
+            "AQRPE_v2_rank",
+            "ET_leaf5"
+          ],
+          "value": 0.3043154711359849
+        },
+        "locked": {
+          "models": [
+            "AQRPE_v2_balanced",
+            "AQRPE_v2_mcc",
+            "AQRPE_v2_rank",
+            "ET_leaf5"
+          ],
+          "value": 0.3060494023075826
+        },
+        "winner_set_changed": false,
+        "winner_sets_overlap": true,
+        "disjoint_winner_change": false
+      },
+      "best_baseline": {
+        "reference": {
+          "models": [
+            "ET_leaf5"
+          ],
+          "value": 0.3043154711359849
+        },
+        "locked": {
+          "models": [
+            "ET_leaf5"
+          ],
+          "value": 0.3060494023075826
+        },
+        "winner_set_changed": false,
+        "winner_sets_overlap": true,
+        "disjoint_winner_change": false
+      },
+      "soft_top3": {
+        "reference_value": 0.2839874282409348,
+        "locked_value": 0.2843679599413194,
+        "reference_vs_baseline": "worse",
+        "locked_vs_baseline": "worse",
+        "outcome_changed": false
+      },
+      "ranks": {
+        "reference": {
+          "AQRPE_v2_balanced": 2.5,
+          "AQRPE_v2_mcc": 2.5,
+          "AQRPE_v2_rank": 2.5,
+          "ET_leaf5": 2.5,
+          "AQRPE_v2_soft_top3": 5.0,
+          "LR_std_C0.1": 6.0,
+          "LR_std_C1": 7.0,
+          "DT_leaf5": 8.0
+        },
+        "locked": {
+          "AQRPE_v2_balanced": 2.5,
+          "AQRPE_v2_mcc": 2.5,
+          "AQRPE_v2_rank": 2.5,
+          "ET_leaf5": 2.5,
+          "AQRPE_v2_soft_top3": 5.0,
+          "LR_std_C0.1": 6.0,
+          "LR_std_C1": 7.0,
+          "DT_leaf5": 8.0
+        },
+        "models_with_changed_rank": 0,
+        "max_rank_change": 0.0,
+        "rank_changes_detail": {
+          "AQRPE_v2_balanced": {
+            "reference_rank": 2.5,
+            "locked_rank": 2.5,
+            "change": 0.0
+          },
+          "AQRPE_v2_mcc": {
+            "reference_rank": 2.5,
+            "locked_rank": 2.5,
+            "change": 0.0
+          },
+          "AQRPE_v2_rank": {
+            "reference_rank": 2.5,
+            "locked_rank": 2.5,
+            "change": 0.0
+          },
+          "AQRPE_v2_soft_top3": {
+            "reference_rank": 5.0,
+            "locked_rank": 5.0,
+            "change": 0.0
+          },
+          "DT_leaf5": {
+            "reference_rank": 8.0,
+            "locked_rank": 8.0,
+            "change": 0.0
+          },
+          "ET_leaf5": {
+            "reference_rank": 2.5,
+            "locked_rank": 2.5,
+            "change": 0.0
+          },
+          "LR_std_C0.1": {
+            "reference_rank": 6.0,
+            "locked_rank": 6.0,
+            "change": 0.0
+          },
+          "LR_std_C1": {
+            "reference_rank": 7.0,
+            "locked_rank": 7.0,
+            "change": 0.0
+          }
+        }
+      },
+      "tie_aware_spearman_correlation": 1.0,
+      "max_absolute_mean_value_change": 0.003994257080263991
+    },
+    {
+      "setting": "cross_project",
+      "metric": "lift_at_10pct",
+      "best_overall": {
+        "reference": {
+          "models": [
+            "AQRPE_v2_balanced",
+            "AQRPE_v2_mcc",
+            "AQRPE_v2_rank",
+            "ET_leaf5"
+          ],
+          "value": 3.0287011833166115
+        },
+        "locked": {
+          "models": [
+            "AQRPE_v2_balanced",
+            "AQRPE_v2_mcc",
+            "AQRPE_v2_rank",
+            "ET_leaf5"
+          ],
+          "value": 3.0461563327138244
+        },
+        "winner_set_changed": false,
+        "winner_sets_overlap": true,
+        "disjoint_winner_change": false
+      },
+      "best_baseline": {
+        "reference": {
+          "models": [
+            "ET_leaf5"
+          ],
+          "value": 3.0287011833166115
+        },
+        "locked": {
+          "models": [
+            "ET_leaf5"
+          ],
+          "value": 3.0461563327138244
+        },
+        "winner_set_changed": false,
+        "winner_sets_overlap": true,
+        "disjoint_winner_change": false
+      },
+      "soft_top3": {
+        "reference_value": 2.82583897152621,
+        "locked_value": 2.8296122075560843,
+        "reference_vs_baseline": "worse",
+        "locked_vs_baseline": "worse",
+        "outcome_changed": false
+      },
+      "ranks": {
+        "reference": {
+          "AQRPE_v2_balanced": 2.5,
+          "AQRPE_v2_mcc": 2.5,
+          "AQRPE_v2_rank": 2.5,
+          "ET_leaf5": 2.5,
+          "AQRPE_v2_soft_top3": 5.0,
+          "LR_std_C0.1": 6.0,
+          "LR_std_C1": 7.0,
+          "DT_leaf5": 8.0
+        },
+        "locked": {
+          "AQRPE_v2_balanced": 2.5,
+          "AQRPE_v2_mcc": 2.5,
+          "AQRPE_v2_rank": 2.5,
+          "ET_leaf5": 2.5,
+          "AQRPE_v2_soft_top3": 5.0,
+          "LR_std_C0.1": 6.0,
+          "LR_std_C1": 7.0,
+          "DT_leaf5": 8.0
+        },
+        "models_with_changed_rank": 0,
+        "max_rank_change": 0.0,
+        "rank_changes_detail": {
+          "AQRPE_v2_balanced": {
+            "reference_rank": 2.5,
+            "locked_rank": 2.5,
+            "change": 0.0
+          },
+          "AQRPE_v2_mcc": {
+            "reference_rank": 2.5,
+            "locked_rank": 2.5,
+            "change": 0.0
+          },
+          "AQRPE_v2_rank": {
+            "reference_rank": 2.5,
+            "locked_rank": 2.5,
+            "change": 0.0
+          },
+          "AQRPE_v2_soft_top3": {
+            "reference_rank": 5.0,
+            "locked_rank": 5.0,
+            "change": 0.0
+          },
+          "DT_leaf5": {
+            "reference_rank": 8.0,
+            "locked_rank": 8.0,
+            "change": 0.0
+          },
+          "ET_leaf5": {
+            "reference_rank": 2.5,
+            "locked_rank": 2.5,
+            "change": 0.0
+          },
+          "LR_std_C0.1": {
+            "reference_rank": 6.0,
+            "locked_rank": 6.0,
+            "change": 0.0
+          },
+          "LR_std_C1": {
+            "reference_rank": 7.0,
+            "locked_rank": 7.0,
+            "change": 0.0
+          }
+        }
+      },
+      "tie_aware_spearman_correlation": 1.0,
+      "max_absolute_mean_value_change": 0.03974562194787001
+    },
+    {
+      "setting": "cross_project",
+      "metric": "brier",
+      "best_overall": {
+        "reference": {
+          "models": [
+            "AQRPE_v2_balanced",
+            "AQRPE_v2_mcc",
+            "AQRPE_v2_rank",
+            "ET_leaf5"
+          ],
+          "value": 0.162477957762774
+        },
+        "locked": {
+          "models": [
+            "AQRPE_v2_mcc",
+            "AQRPE_v2_rank",
+            "ET_leaf5"
+          ],
+          "value": 0.1619722184132785
+        },
+        "winner_set_changed": true,
+        "winner_sets_overlap": true,
+        "disjoint_winner_change": false
+      },
+      "best_baseline": {
+        "reference": {
+          "models": [
+            "ET_leaf5"
+          ],
+          "value": 0.162477957762774
+        },
+        "locked": {
+          "models": [
+            "ET_leaf5"
+          ],
+          "value": 0.1619722184132785
+        },
+        "winner_set_changed": false,
+        "winner_sets_overlap": true,
+        "disjoint_winner_change": false
+      },
+      "soft_top3": {
+        "reference_value": 0.1811506536311555,
+        "locked_value": 0.1809477503142948,
+        "reference_vs_baseline": "worse",
+        "locked_vs_baseline": "worse",
+        "outcome_changed": false
+      },
+      "ranks": {
+        "reference": {
+          "AQRPE_v2_balanced": 2.5,
+          "AQRPE_v2_mcc": 2.5,
+          "AQRPE_v2_rank": 2.5,
+          "ET_leaf5": 2.5,
+          "DT_leaf5": 5.0,
+          "AQRPE_v2_soft_top3": 6.0,
+          "LR_std_C0.1": 7.0,
+          "LR_std_C1": 8.0
+        },
+        "locked": {
+          "AQRPE_v2_mcc": 2.0,
+          "AQRPE_v2_rank": 2.0,
+          "ET_leaf5": 2.0,
+          "AQRPE_v2_balanced": 4.0,
+          "DT_leaf5": 5.0,
+          "AQRPE_v2_soft_top3": 6.0,
+          "LR_std_C0.1": 7.0,
+          "LR_std_C1": 8.0
+        },
+        "models_with_changed_rank": 4,
+        "max_rank_change": 1.5,
+        "rank_changes_detail": {
+          "AQRPE_v2_balanced": {
+            "reference_rank": 2.5,
+            "locked_rank": 4.0,
+            "change": 1.5
+          },
+          "AQRPE_v2_mcc": {
+            "reference_rank": 2.5,
+            "locked_rank": 2.0,
+            "change": 0.5
+          },
+          "AQRPE_v2_rank": {
+            "reference_rank": 2.5,
+            "locked_rank": 2.0,
+            "change": 0.5
+          },
+          "AQRPE_v2_soft_top3": {
+            "reference_rank": 6.0,
+            "locked_rank": 6.0,
+            "change": 0.0
+          },
+          "DT_leaf5": {
+            "reference_rank": 5.0,
+            "locked_rank": 5.0,
+            "change": 0.0
+          },
+          "ET_leaf5": {
+            "reference_rank": 2.5,
+            "locked_rank": 2.0,
+            "change": 0.5
+          },
+          "LR_std_C0.1": {
+            "reference_rank": 7.0,
+            "locked_rank": 7.0,
+            "change": 0.0
+          },
+          "LR_std_C1": {
+            "reference_rank": 8.0,
+            "locked_rank": 8.0,
+            "change": 0.0
+          }
+        }
+      },
+      "tie_aware_spearman_correlation": 0.9617692030835674,
+      "max_absolute_mean_value_change": 0.0010714503300265077
+    }
+  ]
+}

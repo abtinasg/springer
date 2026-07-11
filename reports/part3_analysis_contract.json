@@ -1,0 +1,1406 @@
+{
+  "adaptive_top1_policy": {
+    "definition": [
+      "Train all four candidates on training data.",
+      "Score all candidates on validation data.",
+      "Select one candidate using the specified validation objective.",
+      "Freeze its threshold according to the specified policy.",
+      "Evaluate once on held-out test data."
+    ],
+    "distinguished_components": [
+      "Selected candidate identity.",
+      "Selection score.",
+      "Validation threshold.",
+      "Test performance.",
+      "Test rank.",
+      "Post-hoc regret."
+    ],
+    "prohibition": "No test label, test score, test metric, or test ranking may influence the selection."
+  },
+  "analysis_domains": {
+    "concept_distinctions": [
+      "candidate learner",
+      "validation selector",
+      "threshold policy",
+      "ensemble construction rule",
+      "post-hoc oracle"
+    ],
+    "existing_adaptive_models": [
+      "AQRPE_v2_balanced",
+      "AQRPE_v2_rank",
+      "AQRPE_v2_mcc",
+      "AQRPE_v2_soft_top3"
+    ],
+    "experiments": [
+      "within_project",
+      "cross_project"
+    ],
+    "fixed_candidate_learners": [
+      "LR_std_C0.1",
+      "LR_std_C1",
+      "DT_leaf5",
+      "ET_leaf5"
+    ],
+    "planned_additional_ensemble_models": [
+      "AQRPE_v2_soft_top2",
+      "AQRPE_v2_soft_all4"
+    ],
+    "projects": [
+      "CM1",
+      "JM1",
+      "KC1",
+      "KC2",
+      "PC1"
+    ],
+    "seeds": [
+      7,
+      13,
+      29,
+      42,
+      101
+    ]
+  },
+  "baseline_policy": {
+    "best_fixed_baseline": {
+      "deployment_warning": "Must not be treated as a validation-selected deployment rule unless a separate validation-only baseline-selection mechanism is defined.",
+      "selection_rules": [
+        "Separately for each metric.",
+        "Separately for each experiment.",
+        "From the four fixed candidates only.",
+        "For descriptive summary after all candidate results are available."
+      ],
+      "status": "post-hoc descriptive"
+    },
+    "individual_fixed_baselines": [
+      "LR_std_C0.1",
+      "LR_std_C1",
+      "DT_leaf5",
+      "ET_leaf5"
+    ]
+  },
+  "branch": "major-revision-analysis-v2",
+  "candidate_learners": {
+    "DT_leaf5": {
+      "class_weight": null,
+      "criterion": "gini",
+      "imputer": "median",
+      "max_depth": null,
+      "min_samples_leaf": 5,
+      "random_state_source": "seed",
+      "splitter": "best",
+      "type": "decision_tree"
+    },
+    "ET_leaf5": {
+      "bootstrap": false,
+      "class_weight": "balanced",
+      "criterion": "gini",
+      "imputer": "median",
+      "max_depth": null,
+      "max_features": "sqrt",
+      "min_samples_leaf": 5,
+      "n_estimators": 50,
+      "n_jobs": 2,
+      "random_state_source": "seed",
+      "type": "extra_trees"
+    },
+    "LR_std_C0.1": {
+      "C": 0.1,
+      "class_weight": "balanced",
+      "imputer": "median",
+      "max_iter": 600,
+      "penalty": "l2",
+      "random_state_source": "seed",
+      "scaler": "StandardScaler",
+      "solver": "lbfgs",
+      "type": "logistic_regression"
+    },
+    "LR_std_C1": {
+      "C": 1.0,
+      "class_weight": "balanced",
+      "imputer": "median",
+      "max_iter": 600,
+      "penalty": "l2",
+      "random_state_source": "seed",
+      "scaler": "StandardScaler",
+      "solver": "lbfgs",
+      "type": "logistic_regression"
+    }
+  },
+  "contract_title": "Scientific Analysis Contract for Major Revision",
+  "contract_version": "Part-3A.8-v1",
+  "existing_adaptive_models": {
+    "AQRPE_v2_balanced": {
+      "selection_type": "adaptive_top1",
+      "threshold_policy": "validation_tuned",
+      "validation_objective": "balanced"
+    },
+    "AQRPE_v2_mcc": {
+      "selection_type": "adaptive_top1",
+      "threshold_policy": "validation_tuned",
+      "validation_objective": "mcc"
+    },
+    "AQRPE_v2_rank": {
+      "selection_type": "adaptive_top1",
+      "threshold_policy": "fixed_0.5",
+      "validation_objective": "rank"
+    },
+    "AQRPE_v2_soft_top3": {
+      "ensemble_size": 3,
+      "equal_weights": true,
+      "membership_ranking_policy": "balanced_objective",
+      "threshold_objective": "balanced",
+      "validation_objective": "balanced"
+    }
+  },
+  "final_state_construction_evidence": {
+    "complete_payload_before_render": true,
+    "json_final_serialization_invocations": 1,
+    "markdown_final_render_invocations": 1,
+    "mutation_after_final_render_detected": false,
+    "single_final_serialization_phase": true,
+    "state_equal_to_snapshot_after_render": true,
+    "state_equal_to_snapshot_after_write": true,
+    "written_from_final_rendered_bytes": true
+  },
+  "metric_taxonomy": {
+    "threshold_dependent": {
+      "balanced_accuracy": {
+        "allowed_analysis_uses": [
+          "comparative_performance",
+          "metric_tradeoffs",
+          "thresholded_evaluation"
+        ],
+        "canonical_name": "balanced_accuracy",
+        "direction": "higher_is_better",
+        "display_name": "Balanced Accuracy",
+        "family": "threshold_dependent",
+        "practical_interpretation": "Average of recall across both classes.",
+        "primary_or_secondary": "primary",
+        "threshold_dependent": true
+      },
+      "f1": {
+        "allowed_analysis_uses": [
+          "comparative_performance",
+          "metric_tradeoffs",
+          "thresholded_evaluation"
+        ],
+        "canonical_name": "f1",
+        "direction": "higher_is_better",
+        "display_name": "F1 Score",
+        "family": "threshold_dependent",
+        "practical_interpretation": "Harmonic mean of precision and recall.",
+        "primary_or_secondary": "primary",
+        "threshold_dependent": true
+      },
+      "mcc": {
+        "allowed_analysis_uses": [
+          "comparative_performance",
+          "metric_tradeoffs",
+          "thresholded_evaluation"
+        ],
+        "canonical_name": "mcc",
+        "direction": "higher_is_better",
+        "display_name": "Matthews Correlation Coefficient",
+        "family": "threshold_dependent",
+        "practical_interpretation": "Balanced measure for binary classification, robust to class imbalance.",
+        "primary_or_secondary": "primary",
+        "threshold_dependent": true
+      },
+      "precision": {
+        "allowed_analysis_uses": [
+          "diagnostic"
+        ],
+        "canonical_name": "precision",
+        "direction": "higher_is_better",
+        "display_name": "Precision",
+        "family": "threshold_dependent",
+        "practical_interpretation": "Diagnostic metric, must not be interpreted without threshold policy.",
+        "primary_or_secondary": "secondary",
+        "threshold_dependent": true
+      },
+      "recall": {
+        "allowed_analysis_uses": [
+          "diagnostic"
+        ],
+        "canonical_name": "recall",
+        "direction": "higher_is_better",
+        "display_name": "Recall",
+        "family": "threshold_dependent",
+        "practical_interpretation": "Diagnostic metric, must not be interpreted without threshold policy.",
+        "primary_or_secondary": "secondary",
+        "threshold_dependent": true
+      }
+    },
+    "threshold_independent_score_ranking": {
+      "avg_precision": {
+        "allowed_analysis_uses": [
+          "comparative_performance",
+          "metric_tradeoffs",
+          "selection_stability"
+        ],
+        "canonical_name": "avg_precision",
+        "direction": "higher_is_better",
+        "display_name": "Average Precision",
+        "family": "threshold_independent_score_ranking",
+        "inspection_budget_dependent": false,
+        "practical_interpretation": "Area under precision-recall curve, threshold-free ranking quality.",
+        "primary_or_secondary": "primary",
+        "threshold_dependent": false
+      },
+      "brier": {
+        "allowed_analysis_uses": [
+          "comparative_performance",
+          "metric_tradeoffs",
+          "calibration_analysis"
+        ],
+        "canonical_name": "brier",
+        "direction": "lower_is_better",
+        "display_name": "Brier Score",
+        "family": "threshold_independent_score_ranking",
+        "inspection_budget_dependent": false,
+        "practical_interpretation": "Proper probability scoring rule measuring squared probabilistic prediction error; it is sensitive to calibration and probability refinement and is not a pure calibration-only measure.",
+        "primary_or_secondary": "secondary",
+        "threshold_dependent": false
+      },
+      "lift_at_10pct": {
+        "allowed_analysis_uses": [
+          "comparative_performance",
+          "metric_tradeoffs",
+          "early_inspection"
+        ],
+        "canonical_name": "lift_at_10pct",
+        "direction": "higher_is_better",
+        "display_name": "Lift@10%",
+        "family": "threshold_independent_score_ranking",
+        "inspection_budget_dependent": true,
+        "practical_interpretation": "Ratio of precision@10% to baseline defect rate.",
+        "primary_or_secondary": "primary",
+        "threshold_dependent": false
+      },
+      "lift_at_20pct": {
+        "allowed_analysis_uses": [
+          "comparative_performance",
+          "metric_tradeoffs",
+          "early_inspection"
+        ],
+        "canonical_name": "lift_at_20pct",
+        "direction": "higher_is_better",
+        "display_name": "Lift@20%",
+        "family": "threshold_independent_score_ranking",
+        "inspection_budget_dependent": true,
+        "practical_interpretation": "Ratio of precision@20% to baseline defect rate.",
+        "primary_or_secondary": "secondary",
+        "threshold_dependent": false
+      },
+      "precision_at_10pct": {
+        "allowed_analysis_uses": [
+          "comparative_performance",
+          "metric_tradeoffs",
+          "early_inspection"
+        ],
+        "canonical_name": "precision_at_10pct",
+        "direction": "higher_is_better",
+        "display_name": "Precision@10%",
+        "family": "threshold_independent_score_ranking",
+        "inspection_budget_dependent": true,
+        "practical_interpretation": "Precision when inspecting top 10% of risky instances.",
+        "primary_or_secondary": "primary",
+        "threshold_dependent": false
+      },
+      "precision_at_20pct": {
+        "allowed_analysis_uses": [
+          "comparative_performance",
+          "metric_tradeoffs",
+          "early_inspection"
+        ],
+        "canonical_name": "precision_at_20pct",
+        "direction": "higher_is_better",
+        "display_name": "Precision@20%",
+        "family": "threshold_independent_score_ranking",
+        "inspection_budget_dependent": true,
+        "practical_interpretation": "Precision when inspecting top 20% of risky instances.",
+        "primary_or_secondary": "secondary",
+        "threshold_dependent": false
+      },
+      "recall_at_10pct": {
+        "allowed_analysis_uses": [
+          "comparative_performance",
+          "metric_tradeoffs",
+          "early_inspection"
+        ],
+        "canonical_name": "recall_at_10pct",
+        "direction": "higher_is_better",
+        "display_name": "Recall@10%",
+        "family": "threshold_independent_score_ranking",
+        "inspection_budget_dependent": true,
+        "practical_interpretation": "Defect coverage when inspecting top 10% of risky instances.",
+        "primary_or_secondary": "primary",
+        "threshold_dependent": false
+      },
+      "recall_at_20pct": {
+        "allowed_analysis_uses": [
+          "comparative_performance",
+          "metric_tradeoffs",
+          "early_inspection"
+        ],
+        "canonical_name": "recall_at_20pct",
+        "direction": "higher_is_better",
+        "display_name": "Recall@20%",
+        "family": "threshold_independent_score_ranking",
+        "inspection_budget_dependent": true,
+        "practical_interpretation": "Defect coverage when inspecting top 20% of risky instances.",
+        "primary_or_secondary": "secondary",
+        "threshold_dependent": false
+      },
+      "roc_auc": {
+        "allowed_analysis_uses": [
+          "comparative_performance",
+          "metric_tradeoffs",
+          "diagnostic"
+        ],
+        "canonical_name": "roc_auc",
+        "direction": "higher_is_better",
+        "display_name": "ROC AUC",
+        "family": "threshold_independent_score_ranking",
+        "inspection_budget_dependent": false,
+        "practical_interpretation": "Area under ROC curve, threshold-free ranking quality. Secondary because precision-recall is more informative under imbalance.",
+        "primary_or_secondary": "secondary",
+        "threshold_dependent": false
+      }
+    }
+  },
+  "objective_policies": {
+    "balanced_policy": {
+      "candidate_ranking": "balanced validation objective",
+      "description": "Candidate ranking by balanced validation objective, threshold selected by balanced validation objective.",
+      "threshold_selection": "balanced validation objective"
+    },
+    "mcc_policy": {
+      "candidate_ranking": "validation MCC objective",
+      "description": "Candidate ranking by validation MCC objective, threshold selected by validation MCC objective.",
+      "threshold_selection": "validation MCC objective"
+    },
+    "policy_mismatch_prohibition": [
+      "Threshold-dependent method comparisons should use the same candidate-ranking objective and threshold-selection policy whenever scientifically possible.",
+      "An MCC-tuned adaptive method must not be compared against a baseline using only a balanced-objective threshold and then interpreted as pure evidence of adaptive-selection benefit.",
+      "Policy-mismatched comparisons may appear only as explicitly labeled descriptive legacy comparisons.",
+      "Policy-mismatched comparisons cannot support superiority claims."
+    ],
+    "rank_plus_validation_threshold_policy": {
+      "candidate_ranking": "rank objective",
+      "description": "Candidate ranking by rank objective, after candidate or ensemble selection, threshold is tuned on validation only. This policy is a planned sensitivity analysis and must not replace or silently overwrite the existing score-only rank policy.",
+      "must_not_replace": "existing score-only rank policy",
+      "status": "planned sensitivity analysis",
+      "threshold_selection": "tuned on validation only"
+    },
+    "rank_score_only_policy": {
+      "candidate_ranking": "rank objective",
+      "description": "Candidate ranking by rank objective, primary interpretation restricted to threshold-free and top-k metrics, thresholded metrics are diagnostic only when threshold is fixed at 0.5.",
+      "primary_interpretation": "Restricted to threshold-free and top-k metrics.",
+      "threshold_selection": "fixed at 0.5",
+      "thresholded_metrics_status": "diagnostic only when threshold is fixed at 0.5"
+    }
+  },
+  "oracle_and_regret_policy": {
+    "absolute_regret": {
+      "higher_is_better": "oracle_value - selected_value",
+      "lower_is_better": "selected_value - oracle_value"
+    },
+    "key_assertions": [
+      "Oracle is not a deployable model.",
+      "Oracle uses test information only for retrospective analysis.",
+      "Oracle values must never feed candidate selection, threshold selection, ensemble construction, or model fitting."
+    ],
+    "normalized_regret_formula": "absolute_regret / max(abs(oracle_value), 1e-12)",
+    "oracle_computation": {
+      "higher_is_better": "oracle_value = maximum test value among the four fixed candidates",
+      "lower_is_better": "oracle_value = minimum test value among the four fixed candidates"
+    },
+    "oracle_definition": "Post-hoc analytical reference only.",
+    "regret_property": "Regret must always be non-negative up to floating-point tolerance.",
+    "separate_records": [
+      "Exact winner.",
+      "Tolerance winner using 1e-12.",
+      "Selected candidate test rank.",
+      "Selected candidate in oracle winner set.",
+      "Absolute regret.",
+      "Normalized regret."
+    ]
+  },
+  "planned_models": {
+    "AQRPE_v2_soft_all4": {
+      "ensemble_size": 4,
+      "equal_weights": true,
+      "membership_ranking_policy": "not_applicable_all_candidates",
+      "status": "planned",
+      "threshold_objective": "balanced",
+      "validation_objective": "balanced"
+    },
+    "AQRPE_v2_soft_top2": {
+      "ensemble_size": 2,
+      "equal_weights": true,
+      "membership_ranking_policy": "balanced_objective",
+      "status": "planned",
+      "threshold_objective": "balanced",
+      "validation_objective": "balanced"
+    }
+  },
+  "preservation_checks": {
+    "all_preserved": true,
+    "file_evidence": {
+      "results/part1_full_reproduction/repeated_all_results.csv": {
+        "after_sha256": "76b430031a944708af661bee1a1355619d1e0e6f49b932d462cea421aeb01160",
+        "before_sha256": "76b430031a944708af661bee1a1355619d1e0e6f49b932d462cea421aeb01160",
+        "exists_after": true,
+        "exists_before": true,
+        "expected_sha256": "76b430031a944708af661bee1a1355619d1e0e6f49b932d462cea421aeb01160",
+        "matches_expected_after": true,
+        "matches_expected_before": true,
+        "unchanged_during_execution": true
+      },
+      "results/part1_full_reproduction/repeated_summary_mean_std.csv": {
+        "after_sha256": "b6f27ee32e350e23899d451fe4ab0758a76944633873f018bdac9ce16b94ae5b",
+        "before_sha256": "b6f27ee32e350e23899d451fe4ab0758a76944633873f018bdac9ce16b94ae5b",
+        "exists_after": true,
+        "exists_before": true,
+        "expected_sha256": "b6f27ee32e350e23899d451fe4ab0758a76944633873f018bdac9ce16b94ae5b",
+        "matches_expected_after": true,
+        "matches_expected_before": true,
+        "unchanged_during_execution": true
+      },
+      "results/part1_full_reproduction/validation_log.csv": {
+        "after_sha256": "d18dbb6b7a71f356203aa34fe41ab7d531daa1f8499fc06d06ab643b088f0272",
+        "before_sha256": "d18dbb6b7a71f356203aa34fe41ab7d531daa1f8499fc06d06ab643b088f0272",
+        "exists_after": true,
+        "exists_before": true,
+        "expected_sha256": "d18dbb6b7a71f356203aa34fe41ab7d531daa1f8499fc06d06ab643b088f0272",
+        "matches_expected_after": true,
+        "matches_expected_before": true,
+        "unchanged_during_execution": true
+      },
+      "results/part1_full_reproduction_tables/table_cross_project_mean_sd.csv": {
+        "after_sha256": "1753444c5b8a0c3a34179c644f6998cc663a3eb1da80e81b8fcf6d285e53731c",
+        "before_sha256": "1753444c5b8a0c3a34179c644f6998cc663a3eb1da80e81b8fcf6d285e53731c",
+        "exists_after": true,
+        "exists_before": true,
+        "expected_sha256": "1753444c5b8a0c3a34179c644f6998cc663a3eb1da80e81b8fcf6d285e53731c",
+        "matches_expected_after": true,
+        "matches_expected_before": true,
+        "unchanged_during_execution": true
+      },
+      "results/part1_full_reproduction_tables/table_soft_top3_delta_vs_best_baseline.csv": {
+        "after_sha256": "bf5cac180bf9701299dfd1c1b410224d34b8f32269b49fb8203df7567ff7a60b",
+        "before_sha256": "bf5cac180bf9701299dfd1c1b410224d34b8f32269b49fb8203df7567ff7a60b",
+        "exists_after": true,
+        "exists_before": true,
+        "expected_sha256": "bf5cac180bf9701299dfd1c1b410224d34b8f32269b49fb8203df7567ff7a60b",
+        "matches_expected_after": true,
+        "matches_expected_before": true,
+        "unchanged_during_execution": true
+      },
+      "results/part1_full_reproduction_tables/table_within_project_mean_sd.csv": {
+        "after_sha256": "cccaeb1553ac942dbe26f33673a3683ea181f06a4cf4ceb2466f0c3556086160",
+        "before_sha256": "cccaeb1553ac942dbe26f33673a3683ea181f06a4cf4ceb2466f0c3556086160",
+        "exists_after": true,
+        "exists_before": true,
+        "expected_sha256": "cccaeb1553ac942dbe26f33673a3683ea181f06a4cf4ceb2466f0c3556086160",
+        "matches_expected_after": true,
+        "matches_expected_before": true,
+        "unchanged_during_execution": true
+      },
+      "scripts/make_manuscript_tables.py": {
+        "after_sha256": "152f4568025420bf8aff780e2f9c104abb6e00a4373635277d14483e67dcdbb2",
+        "before_sha256": "152f4568025420bf8aff780e2f9c104abb6e00a4373635277d14483e67dcdbb2",
+        "exists_after": true,
+        "exists_before": true,
+        "expected_sha256": "152f4568025420bf8aff780e2f9c104abb6e00a4373635277d14483e67dcdbb2",
+        "matches_expected_after": true,
+        "matches_expected_before": true,
+        "unchanged_during_execution": true
+      },
+      "scripts/run_repeated_evaluation.py": {
+        "after_sha256": "d385b6ecef2427c85299dcbc50cfff919fa8546b31829fa3ce0e5fdb307c4856",
+        "before_sha256": "d385b6ecef2427c85299dcbc50cfff919fa8546b31829fa3ce0e5fdb307c4856",
+        "exists_after": true,
+        "exists_before": true,
+        "expected_sha256": "d385b6ecef2427c85299dcbc50cfff919fa8546b31829fa3ce0e5fdb307c4856",
+        "matches_expected_after": true,
+        "matches_expected_before": true,
+        "unchanged_during_execution": true
+      }
+    },
+    "files_changed": 0,
+    "files_checked": 8,
+    "preservation_checks_passed": true
+  },
+  "prohibited_claims": [
+    "AQRPE v2 is a fundamentally new algorithm.",
+    "Validation-based model selection is itself a novel contribution.",
+    "Soft averaging of top models is itself a novel contribution.",
+    "Repeated seeds establish external validity.",
+    "Train/validation/test separation is itself an algorithmic contribution.",
+    "AQRPE universally outperforms all baselines.",
+    "Five seeds are five independent datasets.",
+    "Twenty-five project-seed runs are twenty-five independent projects.",
+    "A p-value alone proves superiority.",
+    "The test oracle is a deployable selection method.",
+    "Soft-top-3 is optimal before ablation.",
+    "Test data may influence selection or threshold tuning."
+  ],
+  "remaining_stage_roadmap": [
+    "Part 3A: Scientific analysis contract",
+    "Part 3B: Prediction ledger and split/leakage audit",
+    "Part 3C: Objective-matched candidate and adaptive evaluation",
+    "Part 3D: Post-hoc regret and oracle-gap analysis",
+    "Part 3E: Ensemble-size and component ablation",
+    "Part 3F: Methodological sensitivity analyses",
+    "Part 3G: Project-level paired effects and uncertainty",
+    "Part 3H: Workflow diagram and metric dictionary",
+    "Part 4: Final full rerun, deterministic artifact freeze, package rebuild, and canonical manifest"
+  ],
+  "repository": "abtinasg/springer",
+  "research_questions": {
+    "count": 4,
+    "rq1": {
+      "exact_intent": "How do the four fixed candidate learners, validation-selected adaptive Top-1 variants, and validation-constructed soft ensembles compare under repeated within-project and cross-project evaluation?",
+      "requirements": [
+        "Objective-matched comparisons.",
+        "Run-level outputs.",
+        "Project-level aggregation.",
+        "No post-hoc selection of a favorable comparison only.",
+        "Separate interpretation for within-project and cross-project settings."
+      ],
+      "title": "Comparative performance"
+    },
+    "rq2": {
+      "exact_intent": "How do model rankings and conclusions change across discrimination, thresholded classification, early-inspection ranking, and calibration-sensitive metrics?",
+      "requirements": [
+        "No single metric defines an overall winner.",
+        "Metric direction must be explicit.",
+        "Ranking metrics, thresholded metrics, and calibration metrics represent different operational goals.",
+        "Brier score is minimized.",
+        "All other retained metrics are maximized."
+      ],
+      "title": "Metric-dependent trade-offs"
+    },
+    "rq3": {
+      "exact_intent": "How frequently and how stably are candidates selected across projects and seeds, and how well do validation rankings agree with held-out test rankings?",
+      "required_analyses": [
+        "Top-1 selection frequency.",
+        "Top-1 seed stability.",
+        "Soft-top-3 membership and order stability.",
+        "Exact validation-test Top-1 agreement.",
+        "Winner-set overlap.",
+        "Selected-candidate test rank.",
+        "Spearman and Kendall rank agreement.",
+        "Explicit statement that these are descriptive analyses, not proof of superiority."
+      ],
+      "title": "Selection behavior and stability"
+    },
+    "rq4": {
+      "exact_intent": "What do post-hoc regret and controlled ablation reveal about the value of adaptive Top-1 selection, Soft-top-2, Soft-top-3, and Soft-all-4 relative to fixed candidates and an oracle reference?",
+      "requirements": [
+        "Fixed individual candidates.",
+        "Adaptive Top-1.",
+        "Soft-top-2.",
+        "Soft-top-3.",
+        "Soft-all-4.",
+        "Oracle best candidate on test used only as a post-hoc analytical reference.",
+        "Selected-versus-oracle regret.",
+        "Marginal ensemble-size comparisons.",
+        "No use of test information for actual model selection."
+      ],
+      "requires_new_computation": true,
+      "title": "Regret, ensemble size, and ablation"
+    }
+  },
+  "reviewer_context": {
+    "reviewer_1_focus": [
+      "Practical explanation of evaluation metrics.",
+      "Key findings before detailed result tables.",
+      "Reproducible workflow diagram."
+    ],
+    "reviewer_2_focus": [
+      "Methodological decisions require clearer justification.",
+      "Threats to validity require deeper analysis.",
+      "Limitations and future directions must be evidence-based."
+    ],
+    "reviewer_3_focus": [
+      "Validation-based model selection is standard.",
+      "Averaging top models is standard.",
+      "Repeated seeds and leakage control are good practice, not algorithmic novelty.",
+      "The paper should be treated as a careful empirical study rather than a new fundamental algorithm."
+    ]
+  },
+  "reviewer_coverage_evidence": {
+    "coverage_identifiers": [
+      "reviewer_1_comment_1",
+      "reviewer_1_comment_2",
+      "reviewer_1_comment_3",
+      "reviewer_2_comment_1",
+      "reviewer_2_comment_2",
+      "reviewer_2_comment_3",
+      "reviewer_2_comment_4",
+      "reviewer_2_comment_5",
+      "reviewer_2_comment_6",
+      "reviewer_2_comment_7",
+      "reviewer_3_novelty_concern"
+    ],
+    "covered_comment_count": 11,
+    "reviewer_1_comment_count": 3,
+    "reviewer_2_comment_count": 7,
+    "reviewer_3_concern_count": 1
+  },
+  "reviewer_traceability_matrix": {
+    "reviewer_1_comment_1": {
+      "computational_response": "Metric dictionary in later Part 3H",
+      "manuscript_response": "Brief practical metric explanation"
+    },
+    "reviewer_1_comment_2": {
+      "computational_response": "None",
+      "manuscript_response": "Key finding paragraph before every results table"
+    },
+    "reviewer_1_comment_3": {
+      "computational_response": "Deterministic workflow figure in later Part 3H",
+      "manuscript_response": "Include figure and description"
+    },
+    "reviewer_2_comment_1": {
+      "computational_response": "None",
+      "manuscript_response": "Rewrite abstract to 150-250 words"
+    },
+    "reviewer_2_comment_2": {
+      "computational_response": "None",
+      "manuscript_response": "Verified 2025-2026 literature update"
+    },
+    "reviewer_2_comment_3": {
+      "computational_response": [
+        "Objective-matched comparisons.",
+        "Prediction ledger.",
+        "Regret.",
+        "Ablation.",
+        "Sensitivity.",
+        "Project-level effects"
+      ],
+      "manuscript_response": "Not applicable (computational focus)"
+    },
+    "reviewer_2_comment_4": {
+      "computational_response": [
+        "Leakage audit.",
+        "Robustness analyses.",
+        "Dependency-aware statistical policy"
+      ],
+      "manuscript_response": "Not applicable (computational focus)"
+    },
+    "reviewer_2_comment_5": {
+      "computational_response": "Final limitations grounded in completed analyses",
+      "manuscript_response": "Not applicable (computational focus)"
+    },
+    "reviewer_2_comment_6": {
+      "computational_response": "None",
+      "manuscript_response": "Citation renumbering and Springer formatting"
+    },
+    "reviewer_2_comment_7": {
+      "computational_response": "None",
+      "manuscript_response": "Citation renumbering and Springer formatting"
+    },
+    "reviewer_3_novelty_concern": {
+      "computational_response": [
+        "Selection frequency.",
+        "Seed stability.",
+        "Validation-test agreement.",
+        "Post-hoc regret.",
+        "Ensemble-size ablation.",
+        "Sensitivity analysis.",
+        "Objective-matched comparison"
+      ],
+      "scientific_response": "Reposition the study as a controlled empirical evaluation rather than a fundamentally novel algorithm."
+    }
+  },
+  "scientific_positioning": {
+    "key_assertions": [
+      "Validation-based selection is standard methodology.",
+      "Soft averaging is standard ensemble methodology.",
+      "Repeated seeds and train/validation/test separation are experimental controls.",
+      "The scientific contribution is empirical characterization and controlled evidence, not the invention of a fundamentally new learning algorithm.",
+      "No result may be framed as universal dominance.",
+      "Conclusions must remain dataset-, metric-, setting-, and protocol-dependent."
+    ],
+    "positioning_statement": "A validation-controlled empirical study of model selection behavior, metric-dependent trade-offs, selection stability, validation-test agreement, post-hoc regret, and soft-ensemble ablation for imbalanced software defect prediction under repeated within-project and cross-project evaluation."
+  },
+  "sensitivity_analysis_policy": {
+    "dataset_change_policy": "Changing the five benchmark projects is outside the current computational revision unless new verified datasets are introduced under a separate protocol.",
+    "optional_after_required": [
+      "More seeds.",
+      "Additional learners.",
+      "Broader hyperparameter search."
+    ],
+    "required_dimensions": {
+      "balanced_objective_weights": {
+        "constraints": [
+          "Positive metric weights must sum to 1 within 1e-12.",
+          "The Brier term must be subtracted.",
+          "The profile must be predeclared, not selected after observing test results."
+        ],
+        "current": {
+          "avg_precision": 0.1,
+          "balanced_accuracy": 0.2,
+          "brier_penalty": 0.02,
+          "f1": 0.27,
+          "mcc": 0.36,
+          "recall_at_10pct": 0.05,
+          "recall_at_20pct": 0.02
+        },
+        "equal_positive_weights": {
+          "avg_precision": 0.16666666666666666,
+          "balanced_accuracy": 0.16666666666666666,
+          "brier_penalty": 0.02,
+          "f1": 0.16666666666666666,
+          "mcc": 0.16666666666666666,
+          "recall_at_10pct": 0.16666666666666666,
+          "recall_at_20pct": 0.16666666666666666
+        },
+        "mcc_emphasis": {
+          "avg_precision": 0.08,
+          "balanced_accuracy": 0.15,
+          "brier_penalty": 0.02,
+          "f1": 0.2,
+          "mcc": 0.5,
+          "recall_at_10pct": 0.05,
+          "recall_at_20pct": 0.02
+        },
+        "ranking_emphasis": {
+          "avg_precision": 0.3,
+          "balanced_accuracy": 0.15,
+          "brier_penalty": 0.02,
+          "f1": 0.15,
+          "mcc": 0.2,
+          "recall_at_10pct": 0.15,
+          "recall_at_20pct": 0.05
+        }
+      },
+      "cross_project_validation_design": {
+        "source_project_aware_protocol": [
+          "For each held-out target project and seed:",
+          "Use the other four projects as source projects.",
+          "Perform four leave-one-source-project-out validation folds.",
+          "In each fold, train on three source projects and validate on the fourth.",
+          "Generate out-of-fold validation probabilities for every source project.",
+          "Concatenate the four out-of-fold validation predictions.",
+          "Rank candidates using the aggregated out-of-fold validation objective.",
+          "Select candidate or ensemble membership from aggregated source-only validation evidence.",
+          "Select the threshold using only aggregated source-only out-of-fold validation predictions.",
+          "Refit frozen selected candidate(s) on all four source projects.",
+          "Evaluate once on the held-out target project.",
+          "Never use the target project for candidate selection, membership selection, threshold selection, or sensitivity choice."
+        ]
+      },
+      "rank_threshold_policy": {
+        "description": "Fixed 0.5, validation-tuned secondary threshold."
+      },
+      "threshold_grid": {
+        "constraint": "Both grids must use validation scores only.",
+        "current": {
+          "combination": "unique(round(concat(fixed, validation-score quantiles), 6))",
+          "filter": "0 < threshold < 1",
+          "fixed": "linspace(0.03, 0.97, 41)",
+          "quantile_probabilities": "linspace(0.03, 0.97, 25)"
+        },
+        "dense_sensitivity": {
+          "combination": "unique(round(concat(fixed, validation-score quantiles), 6))",
+          "filter": "0 < threshold < 1",
+          "fixed": "linspace(0.01, 0.99, 99)",
+          "quantile_probabilities": "linspace(0.01, 0.99, 99)"
+        }
+      }
+    }
+  },
+  "serialization_evidence": {
+    "exact_written_byte_verification_required": true,
+    "json_double_render_required": true,
+    "markdown_double_render_required": true,
+    "self_referential_hashes_embedded": false,
+    "written_sha256_reported_externally": true
+  },
+  "soft_ensemble_policy": {
+    "definition": [
+      "Rank candidates using validation scores only.",
+      "Select the top k candidates using a deterministic tie policy.",
+      "Average their defective-class probabilities with equal weights.",
+      "Tune the ensemble threshold using validation data only.",
+      "Freeze selected membership, order, weights, and threshold.",
+      "Evaluate once on test data."
+    ],
+    "key_assertions": [
+      "Equal weighting is the primary ensemble rule.",
+      "Learned weights are outside the current study scope.",
+      "Soft-top-3 must not be treated as privileged before the ablation is complete.",
+      "If Soft-top-3 does not outperform Soft-all-4 or Soft-top-2 consistently, the manuscript must report that result directly."
+    ],
+    "planned_k_values": [
+      2,
+      3,
+      4
+    ],
+    "soft_all_4_note": "Soft-all-4 includes all four candidates and therefore does not involve membership selection, but its threshold must still be tuned on validation only."
+  },
+  "stage_gate": {
+    "canonical_outputs_modified": false,
+    "manuscript_modified": false,
+    "model_rerun_performed": false,
+    "next_authorized_stage": "Part 3B",
+    "part3a_contract_frozen": true,
+    "part3b_constraint": "Part 3B cannot alter the current 400 canonical result rows or current canonical manuscript tables unless a later explicitly approved migration stage is created."
+  },
+  "starting_commit": "0f81fd4afd3369e08ce2a28343577f6ab4399040",
+  "statistical_reporting_policy": {
+    "effect_reporting": [
+      "Median paired project-level difference.",
+      "Rank-biserial effect size or another predeclared paired effect size.",
+      "Explicit warning that n_projects = 5."
+    ],
+    "key_assertions": [
+      "No multiple-comparison-adjusted confirmatory family is claimed.",
+      "No inferential superiority claim is authorized.",
+      "Conclusions must emphasize direction, magnitude, consistency, and limitations."
+    ],
+    "permitted_exploratory_inference": [
+      "Exact Wilcoxon signed-rank test at project level only.",
+      "Only when the assumptions and zero-difference handling are explicitly stated.",
+      "Labeled exploratory.",
+      "No binary accept/reject conclusion based only on p-values."
+    ],
+    "required_descriptive_reporting": [
+      "Mean.",
+      "Standard deviation.",
+      "Median.",
+      "Interquartile range.",
+      "Minimum.",
+      "Maximum.",
+      "Positive / negative / tied project counts.",
+      "Five raw project-level paired differences when space permits."
+    ]
+  },
+  "threats_to_validity": {
+    "conclusion_validity": [
+      {
+        "current_mitigation": "Project-level paired analysis, descriptive focus.",
+        "planned_computational_response": "Emphasize descriptive over inferential, report effect sizes.",
+        "possible_impact": "Low statistical power.",
+        "remaining_limitation": "N=5 is small for strong inference.",
+        "threat": "Five independent projects"
+      },
+      {
+        "current_mitigation": "Project as primary unit, seed as nested replication.",
+        "planned_computational_response": "Strict unit-of-analysis policy, no seed-level inference.",
+        "possible_impact": "Pseudo-replication if treated as independent.",
+        "remaining_limitation": "Limited independent observations.",
+        "threat": "Repeated seeds are nested"
+      },
+      {
+        "current_mitigation": "Descriptive emphasis, effect size reporting.",
+        "planned_computational_response": "Power limitation in discussion.",
+        "possible_impact": "Type II errors, missed real differences.",
+        "remaining_limitation": "Small N limits detection of small effects.",
+        "threat": "Low power"
+      },
+      {
+        "current_mitigation": "Metric taxonomy, family grouping.",
+        "planned_computational_response": "Metric-by-metric interpretation, no global superiority claim.",
+        "possible_impact": "Multiple comparisons, inconsistent conclusions.",
+        "remaining_limitation": "No unified metric family-wise error control.",
+        "threat": "Multiple metrics"
+      },
+      {
+        "current_mitigation": "Clear labeling of descriptive vs exploratory inference.",
+        "planned_computational_response": "Explicit framing, no binary accept/reject.",
+        "possible_impact": "Over-interpretation of descriptive patterns.",
+        "remaining_limitation": "Exploratory tests may be misinterpreted.",
+        "threat": "Descriptive versus inferential distinction"
+      },
+      {
+        "current_mitigation": "Pre-specified validation design.",
+        "planned_computational_response": "Sensitivity analysis in Part 3F.",
+        "possible_impact": "Results may change under different validation schemes.",
+        "remaining_limitation": "Many possible validation alternatives.",
+        "threat": "Sensitivity to objective weights and validation design"
+      }
+    ],
+    "construct_validity": [
+      {
+        "current_mitigation": "Comprehensive metric taxonomy, metric-dependent analysis.",
+        "planned_computational_response": "RQ2 analysis of metric trade-offs.",
+        "possible_impact": "Different metrics may rank models differently.",
+        "remaining_limitation": "No single metric captures all operational goals.",
+        "threat": "Metric disagreement"
+      },
+      {
+        "current_mitigation": "Validation-tuned thresholds, fixed 0.5 baseline.",
+        "planned_computational_response": "Sensitivity analysis on threshold policy in Part 3F.",
+        "possible_impact": "Thresholded metrics sensitive to threshold choice.",
+        "remaining_limitation": "Threshold policy may favor certain methods.",
+        "threat": "Threshold dependence"
+      },
+      {
+        "current_mitigation": "Multiple k values (10%, 20%).",
+        "planned_computational_response": "Report results for multiple k values.",
+        "possible_impact": "Precision@k and recall@k depend on inspection budget.",
+        "remaining_limitation": "Results may not generalize to other budgets.",
+        "threat": "Top-k budget dependence"
+      },
+      {
+        "current_mitigation": "Separate calibration metric (Brier score).",
+        "planned_computational_response": "Analyze calibration-discrimination trade-off in RQ2.",
+        "possible_impact": "Models may excel at one but not the other.",
+        "remaining_limitation": "Trade-off between calibration and discrimination.",
+        "threat": "Calibration versus discrimination"
+      },
+      {
+        "current_mitigation": "Explicit post-hoc-only labeling.",
+        "planned_computational_response": "Clear oracle framing in all reporting.",
+        "possible_impact": "Oracle may be misinterpreted as achievable target.",
+        "remaining_limitation": "Oracle is not a deployable method.",
+        "threat": "Oracle interpretation"
+      }
+    ],
+    "external_validity": [
+      {
+        "current_mitigation": "Diverse project characteristics.",
+        "planned_computational_response": "Explicit limitation statement, no universal claims.",
+        "possible_impact": "Results may not generalize to other datasets.",
+        "remaining_limitation": "Small number of datasets, all from same domain.",
+        "threat": "Only five NASA/PROMISE projects"
+      },
+      {
+        "current_mitigation": "Clear scope definition.",
+        "planned_computational_response": "Limitation statement on metric type.",
+        "possible_impact": "Results may not apply to process or change metrics.",
+        "remaining_limitation": "Static metrics may not capture dynamic defect patterns.",
+        "threat": "Static metrics only"
+      },
+      {
+        "current_mitigation": "Use of established benchmark.",
+        "planned_computational_response": "Limitation statement on data vintage.",
+        "possible_impact": "Data may not reflect modern software development.",
+        "remaining_limitation": "Data age and collection methodology.",
+        "threat": "Older public benchmark data"
+      },
+      {
+        "current_mitigation": "Diverse learner families (LR, DT, ET).",
+        "planned_computational_response": "Limitation statement on learner scope.",
+        "possible_impact": "Results may not extend to other learner types.",
+        "remaining_limitation": "Limited hyperparameter search, no deep learning.",
+        "threat": "Compact learner pool"
+      },
+      {
+        "current_mitigation": "Clear empirical study framing.",
+        "planned_computational_response": "Limitation statement on deployment gap.",
+        "possible_impact": "Practical utility unverified.",
+        "remaining_limitation": "No real-world deployment validation.",
+        "threat": "No industrial deployment evaluation"
+      }
+    ],
+    "internal_validity": [
+      {
+        "current_mitigation": "Strict train/validation/test splits, leakage audit in Part 3B.",
+        "planned_computational_response": "Comprehensive leakage audit in Part 3B.",
+        "possible_impact": "Inflated performance due to test information contaminating training.",
+        "remaining_limitation": "Complex preprocessing pipelines may have subtle leakage.",
+        "threat": "Leakage"
+      },
+      {
+        "current_mitigation": "Preprocessing fitted on training fold only.",
+        "planned_computational_response": "Audit preprocessing pipeline in Part 3B.",
+        "possible_impact": "Data leakage through preprocessing parameters.",
+        "remaining_limitation": "Need to verify all preprocessing steps.",
+        "threat": "Preprocessing fitted outside training"
+      },
+      {
+        "current_mitigation": "Fixed random seeds, deterministic algorithms.",
+        "planned_computational_response": "Verify seed stability in Part 3C.",
+        "possible_impact": "Inconsistent results across runs.",
+        "remaining_limitation": "Some library components may have nondeterministic behavior.",
+        "threat": "Nondeterminism"
+      },
+      {
+        "current_mitigation": "Deterministic tie-breaking order.",
+        "planned_computational_response": "Report tie frequency and impact in Part 3C.",
+        "possible_impact": "Selection instability when scores are equal.",
+        "remaining_limitation": "Near ties may still cause instability.",
+        "threat": "Tie handling"
+      },
+      {
+        "current_mitigation": "Objective-matched comparison policy.",
+        "planned_computational_response": "Explicit policy labeling in Part 3C.",
+        "possible_impact": "Unfair comparisons using different threshold policies.",
+        "remaining_limitation": "Policy mismatches may still occur in exploratory analyses.",
+        "threat": "Threshold-selection mismatch"
+      },
+      {
+        "current_mitigation": "Pre-specified analysis contract.",
+        "planned_computational_response": "Distinguish pre-specified from exploratory in reporting.",
+        "possible_impact": "Cherry-picking favorable analyses.",
+        "remaining_limitation": "Exploratory analyses may still be selective.",
+        "threat": "Post-hoc analytical choices"
+      }
+    ]
+  },
+  "tie_policy": {
+    "distinguished_concepts": [
+      "Exact tie.",
+      "Near tie.",
+      "Winner set.",
+      "Deterministic operational choice."
+    ],
+    "scientific_analysis_rule": "For scientific analysis, all exact tied winners must be preserved in the winner set even if one deterministic candidate is used operationally.",
+    "validation_candidate_ranking": [
+      "Use exact validation score ordering.",
+      "Use a tolerance of 1e-12 only for reporting near ties.",
+      "Do not merge non-transitive chains of near-equal values.",
+      "If exact scores are equal, use the following deterministic candidate order: LR_std_C0.1, LR_std_C1, DT_leaf5, ET_leaf5."
+    ]
+  },
+  "unit_of_analysis_policy": {
+    "primary_independent_unit": "software project",
+    "prohibitions": [
+      "Treating 25 project-seed runs as 25 fully independent projects.",
+      "Using seed-level p-values as primary superiority evidence.",
+      "Claiming general population-level significance from five projects."
+    ],
+    "project_level_paired_summaries": [
+      "First aggregate the five seeds within each project.",
+      "Then compare methods across the five projects."
+    ],
+    "repeated_seed": {
+      "definition": "Within-project replication nested inside a project.",
+      "not": [
+        "An independent project.",
+        "A valid substitute for additional datasets."
+      ]
+    },
+    "run_level_observations_may_be_used_for": [
+      "Descriptive distributions.",
+      "Stability analysis.",
+      "Event-level regret.",
+      "Debugging and provenance."
+    ],
+    "run_level_observations_must_not_be_used_for": [
+      "Fully independent observations for significance claims."
+    ]
+  },
+  "validation_checks": {
+    "adaptive_policy_passed": true,
+    "agreement_policy_passed": true,
+    "all_checks_passed": true,
+    "analysis_domains_passed": true,
+    "balanced_weight_sensitivity_frozen": true,
+    "baseline_policy_passed": true,
+    "candidate_metadata_matches_current_pipeline": true,
+    "deterministic_serialization_passed": true,
+    "ensemble_policy_passed": true,
+    "exact_research_questions_passed": true,
+    "existing_soft_top3_policy_passed": true,
+    "metric_count_is_14": true,
+    "metric_direction_passed": true,
+    "metric_inspection_budget_dependency_passed": true,
+    "metric_primary_secondary_passed": true,
+    "metric_taxonomy_passed": true,
+    "metric_threshold_dependency_passed": true,
+    "objective_policy_passed": true,
+    "oracle_policy_passed": true,
+    "preservation_checks_passed": true,
+    "prohibited_claims_passed": true,
+    "reviewer_context_complete": true,
+    "reviewer_traceability_passed": true,
+    "roadmap_passed": true,
+    "sensitivity_policy_passed": true,
+    "source_project_aware_protocol_frozen": true,
+    "stage_gate_passed": true,
+    "statistical_reporting_policy_passed": true,
+    "threats_mapping_passed": true,
+    "threshold_grid_sensitivity_frozen": true,
+    "tie_policy_passed": true,
+    "unit_of_analysis_policy_passed": true
+  },
+  "validation_test_agreement_policy": {
+    "explicit_statements": [
+      "Agreement is descriptive.",
+      "Low agreement does not by itself prove the validation procedure is invalid.",
+      "High agreement does not prove predictive superiority.",
+      "Undefined rank correlations must remain missing, never substituted with zero.",
+      "All test-based agreement is retrospective analysis only."
+    ],
+    "required_agreement_analyses": [
+      "Strict Top-1 exact agreement.",
+      "Tolerance-aware Top-1 agreement.",
+      "Exact winner-set equality.",
+      "Tolerance-aware winner-set equality.",
+      "Winner-set overlap.",
+      "Jaccard similarity.",
+      "Spearman correlation.",
+      "Kendall tau-b.",
+      "Selected candidate test rank.",
+      "Selected candidate in test winner set."
+    ]
+  },
+  "validator_negative_test_evidence": {
+    "all_negative_tests_passed": true,
+    "global_count_contract_passed": true,
+    "prohibited_claims": {
+      "all_cases_called_production_validator": true,
+      "all_negative_tests_passed": true,
+      "cases": [
+        {
+          "case_name": "typo_an_to_a",
+          "mutation": "an -> a algorithmic contribution",
+          "passed": true,
+          "validator_name": "validate_prohibited_claims",
+          "validator_returned_false": true
+        },
+        {
+          "case_name": "reordered_list",
+          "mutation": "list reversed",
+          "passed": true,
+          "validator_name": "validate_prohibited_claims",
+          "validator_returned_false": true
+        },
+        {
+          "case_name": "missing_claim",
+          "mutation": "last claim removed",
+          "passed": true,
+          "validator_name": "validate_prohibited_claims",
+          "validator_returned_false": true
+        },
+        {
+          "case_name": "additional_claim",
+          "mutation": "extra claim added",
+          "passed": true,
+          "validator_name": "validate_prohibited_claims",
+          "validator_returned_false": true
+        }
+      ],
+      "count_contract_passed": true,
+      "production_validator_used": true,
+      "tests_executed": 4,
+      "tests_expected": 4,
+      "tests_failed": 0,
+      "tests_passed": 4
+    },
+    "provenance_and_stage_gate": {
+      "all_cases_called_production_validator": true,
+      "all_negative_tests_passed": true,
+      "cases": [
+        {
+          "case_name": "wrong_contract_title",
+          "mutation": "contract_title changed",
+          "passed": true,
+          "validator_name": "validate_final_provenance_and_stage_gate",
+          "validator_returned_false": true
+        },
+        {
+          "case_name": "wrong_contract_version",
+          "mutation": "contract_version changed",
+          "passed": true,
+          "validator_name": "validate_final_provenance_and_stage_gate",
+          "validator_returned_false": true
+        },
+        {
+          "case_name": "wrong_starting_commit",
+          "mutation": "starting_commit changed",
+          "passed": true,
+          "validator_name": "validate_final_provenance_and_stage_gate",
+          "validator_returned_false": true
+        },
+        {
+          "case_name": "wrong_repository",
+          "mutation": "repository changed",
+          "passed": true,
+          "validator_name": "validate_final_provenance_and_stage_gate",
+          "validator_returned_false": true
+        },
+        {
+          "case_name": "wrong_branch",
+          "mutation": "branch changed",
+          "passed": true,
+          "validator_name": "validate_final_provenance_and_stage_gate",
+          "validator_returned_false": true
+        },
+        {
+          "case_name": "part3a_contract_frozen_false",
+          "mutation": "part3a_contract_frozen set to False",
+          "passed": true,
+          "validator_name": "validate_final_provenance_and_stage_gate",
+          "validator_returned_false": true
+        },
+        {
+          "case_name": "model_rerun_performed_true",
+          "mutation": "model_rerun_performed set to True",
+          "passed": true,
+          "validator_name": "validate_final_provenance_and_stage_gate",
+          "validator_returned_false": true
+        },
+        {
+          "case_name": "canonical_outputs_modified_true",
+          "mutation": "canonical_outputs_modified set to True",
+          "passed": true,
+          "validator_name": "validate_final_provenance_and_stage_gate",
+          "validator_returned_false": true
+        },
+        {
+          "case_name": "manuscript_modified_true",
+          "mutation": "manuscript_modified set to True",
+          "passed": true,
+          "validator_name": "validate_final_provenance_and_stage_gate",
+          "validator_returned_false": true
+        },
+        {
+          "case_name": "wrong_next_authorized_stage",
+          "mutation": "next_authorized_stage changed",
+          "passed": true,
+          "validator_name": "validate_final_provenance_and_stage_gate",
+          "validator_returned_false": true
+        },
+        {
+          "case_name": "altered_constraint",
+          "mutation": "part3b_constraint altered",
+          "passed": true,
+          "validator_name": "validate_final_provenance_and_stage_gate",
+          "validator_returned_false": true
+        },
+        {
+          "case_name": "additional_stage_gate_field",
+          "mutation": "extra field added to stage_gate",
+          "passed": true,
+          "validator_name": "validate_final_provenance_and_stage_gate",
+          "validator_returned_false": true
+        },
+        {
+          "case_name": "missing_stage_gate_field",
+          "mutation": "part3b_constraint removed from stage_gate",
+          "passed": true,
+          "validator_name": "validate_final_provenance_and_stage_gate",
+          "validator_returned_false": true
+        }
+      ],
+      "count_contract_passed": true,
+      "production_validator_used": true,
+      "tests_executed": 13,
+      "tests_expected": 13,
+      "tests_failed": 0,
+      "tests_passed": 13
+    },
+    "reviewer_responses": {
+      "all_cases_called_production_validator": true,
+      "all_negative_tests_passed": true,
+      "cases": [
+        {
+          "case_name": "blank_reviewer1_computational",
+          "mutation": "blank string",
+          "passed": true,
+          "validator_name": "validate_reviewer_traceability",
+          "validator_returned_false": true
+        },
+        {
+          "case_name": "whitespace_reviewer1_computational",
+          "mutation": "whitespace-only string",
+          "passed": true,
+          "validator_name": "validate_reviewer_traceability",
+          "validator_returned_false": true
+        },
+        {
+          "case_name": "empty_reviewer1_manuscript",
+          "mutation": "empty string",
+          "passed": true,
+          "validator_name": "validate_reviewer_traceability",
+          "validator_returned_false": true
+        },
+        {
+          "case_name": "blank_reviewer2_manuscript",
+          "mutation": "blank string",
+          "passed": true,
+          "validator_name": "validate_reviewer_traceability",
+          "validator_returned_false": true
+        },
+        {
+          "case_name": "empty_list_computational",
+          "mutation": "empty list",
+          "passed": true,
+          "validator_name": "validate_reviewer_traceability",
+          "validator_returned_false": true
+        },
+        {
+          "case_name": "list_with_empty_string",
+          "mutation": "list with empty string",
+          "passed": true,
+          "validator_name": "validate_reviewer_traceability",
+          "validator_returned_false": true
+        },
+        {
+          "case_name": "list_with_whitespace_string",
+          "mutation": "list with whitespace-only string",
+          "passed": true,
+          "validator_name": "validate_reviewer_traceability",
+          "validator_returned_false": true
+        },
+        {
+          "case_name": "list_with_integer",
+          "mutation": "list with integer",
+          "passed": true,
+          "validator_name": "validate_reviewer_traceability",
+          "validator_returned_false": true
+        },
+        {
+          "case_name": "integer_response",
+          "mutation": "integer value",
+          "passed": true,
+          "validator_name": "validate_reviewer_traceability",
+          "validator_returned_false": true
+        },
+        {
+          "case_name": "dictionary_response",
+          "mutation": "dictionary value",
+          "passed": true,
+          "validator_name": "validate_reviewer_traceability",
+          "validator_returned_false": true
+        },
+        {
+          "case_name": "missing_response_key",
+          "mutation": "missing manuscript_response key",
+          "passed": true,
+          "validator_name": "validate_reviewer_traceability",
+          "validator_returned_false": true
+        },
+        {
+          "case_name": "additional_response_key",
+          "mutation": "extra key added",
+          "passed": true,
+          "validator_name": "validate_reviewer_traceability",
+          "validator_returned_false": true
+        },
+        {
+          "case_name": "blank_reviewer3_scientific",
+          "mutation": "blank string",
+          "passed": true,
+          "validator_name": "validate_reviewer_traceability",
+          "validator_returned_false": true
+        },
+        {
+          "case_name": "empty_list_reviewer3_computational",
+          "mutation": "empty list",
+          "passed": true,
+          "validator_name": "validate_reviewer_traceability",
+          "validator_returned_false": true
+        }
+      ],
+      "count_contract_passed": true,
+      "production_validator_used": true,
+      "tests_executed": 14,
+      "tests_expected": 14,
+      "tests_failed": 0,
+      "tests_passed": 14
+    },
+    "total_tests_executed": 31,
+    "total_tests_expected": 31,
+    "total_tests_failed": 0,
+    "total_tests_passed": 31
+  }
+}

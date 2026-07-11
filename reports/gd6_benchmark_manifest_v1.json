@@ -1,0 +1,2772 @@
+{
+  "acceptance_decision_rule": "G.D6 Accepted = every mandatory benchmark item passes.",
+  "benchmark_groups": [
+    {
+      "claim_ids": [
+        "CLAIM-A"
+      ],
+      "expected_count": 35,
+      "extraction_entry_point": "run_et_reconciliation_policy_self_tests()",
+      "group_id": "BG-01",
+      "title": "Semantic Policy Tests"
+    },
+    {
+      "claim_ids": [
+        "CLAIM-A"
+      ],
+      "expected_count": 9,
+      "group_id": "BG-02",
+      "title": "Historical Fixture Parity"
+    },
+    {
+      "claim_ids": [
+        "CLAIM-C",
+        "CLAIM-D"
+      ],
+      "expected_count": 45,
+      "group_id": "BG-03",
+      "mechanism_count": 15,
+      "target_count": 3,
+      "title": "Write-Guard Matrix"
+    },
+    {
+      "claim_ids": [
+        "CLAIM-B"
+      ],
+      "expected_count": 4,
+      "group_id": "BG-04",
+      "title": "Production Entry-Point Guards"
+    },
+    {
+      "claim_ids": [
+        "CLAIM-D"
+      ],
+      "expected_count": 20,
+      "group_id": "BG-05",
+      "title": "Restoration Identity Set"
+    },
+    {
+      "claim_ids": [
+        "CLAIM-C",
+        "CLAIM-D"
+      ],
+      "expected_count": 3,
+      "group_id": "BG-06",
+      "title": "Forced-Exception Fixture Set"
+    },
+    {
+      "claim_ids": [
+        "CLAIM-D"
+      ],
+      "expected_count": 6,
+      "group_id": "BG-07",
+      "title": "Transactional Rollback Scenarios"
+    },
+    {
+      "claim_ids": [
+        "CLAIM-D"
+      ],
+      "expected_count": 7,
+      "group_id": "BG-08",
+      "title": "Rollback Mutation Set"
+    },
+    {
+      "claim_ids": [
+        "CLAIM-B",
+        "CLAIM-C"
+      ],
+      "expected_count": 17,
+      "group_id": "BG-09",
+      "title": "Preservation and Zero-Activity Conditions"
+    },
+    {
+      "claim_ids": [
+        "CLAIM-E"
+      ],
+      "expected_count": 9,
+      "group_id": "BG-10",
+      "title": "Report Integrity"
+    },
+    {
+      "claim_ids": [
+        "CLAIM-E"
+      ],
+      "expected_count": 1,
+      "group_id": "BG-11",
+      "title": "Independent Clean-Environment Execution"
+    }
+  ],
+  "benchmark_id": "SEMIT-GD6-BENCHMARK",
+  "benchmark_items": [
+    {
+      "benchmark_id": "BG-01-valid_roc_auc_row_accepted",
+      "category": "BG-01",
+      "claim_ids": [
+        "CLAIM-A"
+      ],
+      "expected_result": "pass",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "run_et_reconciliation_policy_self_tests().tests[valid_roc_auc_row_accepted]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-01-valid_avg_precision_row_accepted",
+      "category": "BG-01",
+      "claim_ids": [
+        "CLAIM-A"
+      ],
+      "expected_result": "pass",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "run_et_reconciliation_policy_self_tests().tests[valid_avg_precision_row_accepted]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-01-project_seed_independent_equivalent_row_accepted",
+      "category": "BG-01",
+      "claim_ids": [
+        "CLAIM-A"
+      ],
+      "expected_result": "pass",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "run_et_reconciliation_policy_self_tests().tests[project_seed_independent_equivalent_row_accepted]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-01-one_ulp_build_mismatch_rejected",
+      "category": "BG-01",
+      "claim_ids": [
+        "CLAIM-A"
+      ],
+      "expected_result": "pass",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "run_et_reconciliation_policy_self_tests().tests[one_ulp_build_mismatch_rejected]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-01-positive_zero_negative_zero_rejected",
+      "category": "BG-01",
+      "claim_ids": [
+        "CLAIM-A"
+      ],
+      "expected_result": "pass",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "run_et_reconciliation_policy_self_tests().tests[positive_zero_negative_zero_rejected]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-01-build_score_byte_difference_rejected",
+      "category": "BG-01",
+      "claim_ids": [
+        "CLAIM-A"
+      ],
+      "expected_result": "pass",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "run_et_reconciliation_policy_self_tests().tests[build_score_byte_difference_rejected]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-01-missing_candidate_rejected",
+      "category": "BG-01",
+      "claim_ids": [
+        "CLAIM-A"
+      ],
+      "expected_result": "pass",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "run_et_reconciliation_policy_self_tests().tests[missing_candidate_rejected]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-01-unexpected_candidate_rejected",
+      "category": "BG-01",
+      "claim_ids": [
+        "CLAIM-A"
+      ],
+      "expected_result": "pass",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "run_et_reconciliation_policy_self_tests().tests[unexpected_candidate_rejected]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-01-missing_candidate_field_rejected",
+      "category": "BG-01",
+      "claim_ids": [
+        "CLAIM-A"
+      ],
+      "expected_result": "pass",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "run_et_reconciliation_policy_self_tests().tests[missing_candidate_field_rejected]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-01-non_et_build1_validation_difference_rejected",
+      "category": "BG-01",
+      "claim_ids": [
+        "CLAIM-A"
+      ],
+      "expected_result": "pass",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "run_et_reconciliation_policy_self_tests().tests[non_et_build1_validation_difference_rejected]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-01-non_et_build2_test_difference_rejected",
+      "category": "BG-01",
+      "claim_ids": [
+        "CLAIM-A"
+      ],
+      "expected_result": "pass",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "run_et_reconciliation_policy_self_tests().tests[non_et_build2_test_difference_rejected]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-01-et_validation_build_byte_difference_rejected",
+      "category": "BG-01",
+      "claim_ids": [
+        "CLAIM-A"
+      ],
+      "expected_result": "pass",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "run_et_reconciliation_policy_self_tests().tests[et_validation_build_byte_difference_rejected]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-01-et_test_build_byte_difference_rejected",
+      "category": "BG-01",
+      "claim_ids": [
+        "CLAIM-A"
+      ],
+      "expected_result": "pass",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "run_et_reconciliation_policy_self_tests().tests[et_test_build_byte_difference_rejected]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-01-et_delta_above_tolerance_rejected_independently",
+      "category": "BG-01",
+      "claim_ids": [
+        "CLAIM-A"
+      ],
+      "expected_result": "pass",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "run_et_reconciliation_policy_self_tests().tests[et_delta_above_tolerance_rejected_independently]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-01-aggregate_maximum_cannot_substitute_for_independent_fields",
+      "category": "BG-01",
+      "claim_ids": [
+        "CLAIM-A"
+      ],
+      "expected_result": "pass",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "run_et_reconciliation_policy_self_tests().tests[aggregate_maximum_cannot_substitute_for_independent_fields]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-01-metric_build1_delta_above_tolerance_rejected",
+      "category": "BG-01",
+      "claim_ids": [
+        "CLAIM-A"
+      ],
+      "expected_result": "pass",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "run_et_reconciliation_policy_self_tests().tests[metric_build1_delta_above_tolerance_rejected]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-01-metric_build2_delta_above_tolerance_rejected",
+      "category": "BG-01",
+      "claim_ids": [
+        "CLAIM-A"
+      ],
+      "expected_result": "pass",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "run_et_reconciliation_policy_self_tests().tests[metric_build2_delta_above_tolerance_rejected]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-01-brier_rejected",
+      "category": "BG-01",
+      "claim_ids": [
+        "CLAIM-A"
+      ],
+      "expected_result": "pass",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "run_et_reconciliation_policy_self_tests().tests[brier_rejected]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-01-threshold_sensitive_metric_rejected",
+      "category": "BG-01",
+      "claim_ids": [
+        "CLAIM-A"
+      ],
+      "expected_result": "pass",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "run_et_reconciliation_policy_self_tests().tests[threshold_sensitive_metric_rejected]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-01-unknown_metric_rejected",
+      "category": "BG-01",
+      "claim_ids": [
+        "CLAIM-A"
+      ],
+      "expected_result": "pass",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "run_et_reconciliation_policy_self_tests().tests[unknown_metric_rejected]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-01-validation_categorical_mismatch_rejected",
+      "category": "BG-01",
+      "claim_ids": [
+        "CLAIM-A"
+      ],
+      "expected_result": "pass",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "run_et_reconciliation_policy_self_tests().tests[validation_categorical_mismatch_rejected]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-01-validation_numeric_mismatch_rejected",
+      "category": "BG-01",
+      "claim_ids": [
+        "CLAIM-A"
+      ],
+      "expected_result": "pass",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "run_et_reconciliation_policy_self_tests().tests[validation_numeric_mismatch_rejected]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-01-selected_candidate_difference_rejected",
+      "category": "BG-01",
+      "claim_ids": [
+        "CLAIM-A"
+      ],
+      "expected_result": "pass",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "run_et_reconciliation_policy_self_tests().tests[selected_candidate_difference_rejected]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-01-selection_mode_difference_rejected",
+      "category": "BG-01",
+      "claim_ids": [
+        "CLAIM-A"
+      ],
+      "expected_result": "pass",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "run_et_reconciliation_policy_self_tests().tests[selection_mode_difference_rejected]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-01-missing_dual_build_context_rejected",
+      "category": "BG-01",
+      "claim_ids": [
+        "CLAIM-A"
+      ],
+      "expected_result": "pass",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "run_et_reconciliation_policy_self_tests().tests[missing_dual_build_context_rejected]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-01-single_build_evidence_cannot_produce_final_approval",
+      "category": "BG-01",
+      "claim_ids": [
+        "CLAIM-A"
+      ],
+      "expected_result": "pass",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "run_et_reconciliation_policy_self_tests().tests[single_build_evidence_cannot_produce_final_approval]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-01-dual_build_all_eligible_classification_no_final_approval",
+      "category": "BG-01",
+      "claim_ids": [
+        "CLAIM-A"
+      ],
+      "expected_result": "pass",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "run_et_reconciliation_policy_self_tests().tests[dual_build_all_eligible_classification_no_final_approval]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-01-dual_build_one_ineligible_classification_no_final_approval",
+      "category": "BG-01",
+      "claim_ids": [
+        "CLAIM-A"
+      ],
+      "expected_result": "pass",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "run_et_reconciliation_policy_self_tests().tests[dual_build_one_ineligible_classification_no_final_approval]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-01-dual_build_unknown_metric_classification_no_final_approval",
+      "category": "BG-01",
+      "claim_ids": [
+        "CLAIM-A"
+      ],
+      "expected_result": "pass",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "run_et_reconciliation_policy_self_tests().tests[dual_build_unknown_metric_classification_no_final_approval]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-01-dual_build_missing_et_delta_classification_no_final_approval",
+      "category": "BG-01",
+      "claim_ids": [
+        "CLAIM-A"
+      ],
+      "expected_result": "pass",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "run_et_reconciliation_policy_self_tests().tests[dual_build_missing_et_delta_classification_no_final_approval]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-01-validator_single_build_pending_no_final_approval",
+      "category": "BG-01",
+      "claim_ids": [
+        "CLAIM-A"
+      ],
+      "expected_result": "pass",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "run_et_reconciliation_policy_self_tests().tests[validator_single_build_pending_no_final_approval]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-01-policy_specification_sha_mismatch_rejected",
+      "category": "BG-01",
+      "claim_ids": [
+        "CLAIM-A"
+      ],
+      "expected_result": "pass",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "run_et_reconciliation_policy_self_tests().tests[policy_specification_sha_mismatch_rejected]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-01-policy_specification_contract_mutation_rejected",
+      "category": "BG-01",
+      "claim_ids": [
+        "CLAIM-A"
+      ],
+      "expected_result": "pass",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "run_et_reconciliation_policy_self_tests().tests[policy_specification_contract_mutation_rejected]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-01-identity_hardcoded_implementation_detector_passes",
+      "category": "BG-01",
+      "claim_ids": [
+        "CLAIM-A"
+      ],
+      "expected_result": "pass",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "run_et_reconciliation_policy_self_tests().tests[identity_hardcoded_implementation_detector_passes]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-01-frozen_nine_fixture_parity_with_gd5_2",
+      "category": "BG-01",
+      "claim_ids": [
+        "CLAIM-A"
+      ],
+      "expected_result": "pass",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "run_et_reconciliation_policy_self_tests().tests[frozen_nine_fixture_parity_with_gd5_2]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-02-000-cross_project__JM1__seed_013-AQRPE_v2_balanced-avg_precision",
+      "category": "BG-02",
+      "claim_ids": [
+        "CLAIM-A"
+      ],
+      "expected_result": "pass",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "existing_frozen_artifact",
+        "source_file": "reports/part3b_et_reconciliation_policy.json",
+        "source_symbol": "regression_fixtures[0]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-02-001-cross_project__JM1__seed_013-AQRPE_v2_balanced-roc_auc",
+      "category": "BG-02",
+      "claim_ids": [
+        "CLAIM-A"
+      ],
+      "expected_result": "pass",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "existing_frozen_artifact",
+        "source_file": "reports/part3b_et_reconciliation_policy.json",
+        "source_symbol": "regression_fixtures[1]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-02-002-cross_project__JM1__seed_013-AQRPE_v2_mcc-avg_precision",
+      "category": "BG-02",
+      "claim_ids": [
+        "CLAIM-A"
+      ],
+      "expected_result": "pass",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "existing_frozen_artifact",
+        "source_file": "reports/part3b_et_reconciliation_policy.json",
+        "source_symbol": "regression_fixtures[2]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-02-003-cross_project__JM1__seed_013-AQRPE_v2_mcc-roc_auc",
+      "category": "BG-02",
+      "claim_ids": [
+        "CLAIM-A"
+      ],
+      "expected_result": "pass",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "existing_frozen_artifact",
+        "source_file": "reports/part3b_et_reconciliation_policy.json",
+        "source_symbol": "regression_fixtures[3]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-02-004-cross_project__JM1__seed_013-AQRPE_v2_rank-avg_precision",
+      "category": "BG-02",
+      "claim_ids": [
+        "CLAIM-A"
+      ],
+      "expected_result": "pass",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "existing_frozen_artifact",
+        "source_file": "reports/part3b_et_reconciliation_policy.json",
+        "source_symbol": "regression_fixtures[4]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-02-005-cross_project__JM1__seed_013-AQRPE_v2_rank-roc_auc",
+      "category": "BG-02",
+      "claim_ids": [
+        "CLAIM-A"
+      ],
+      "expected_result": "pass",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "existing_frozen_artifact",
+        "source_file": "reports/part3b_et_reconciliation_policy.json",
+        "source_symbol": "regression_fixtures[5]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-02-006-cross_project__JM1__seed_013-ET_leaf5-avg_precision",
+      "category": "BG-02",
+      "claim_ids": [
+        "CLAIM-A"
+      ],
+      "expected_result": "pass",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "existing_frozen_artifact",
+        "source_file": "reports/part3b_et_reconciliation_policy.json",
+        "source_symbol": "regression_fixtures[6]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-02-007-cross_project__JM1__seed_013-ET_leaf5-roc_auc",
+      "category": "BG-02",
+      "claim_ids": [
+        "CLAIM-A"
+      ],
+      "expected_result": "pass",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "existing_frozen_artifact",
+        "source_file": "reports/part3b_et_reconciliation_policy.json",
+        "source_symbol": "regression_fixtures[7]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-02-008-cross_project__JM1__seed_042-AQRPE_v2_rank-roc_auc",
+      "category": "BG-02",
+      "claim_ids": [
+        "CLAIM-A"
+      ],
+      "expected_result": "pass",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "existing_frozen_artifact",
+        "source_file": "reports/part3b_et_reconciliation_policy.json",
+        "source_symbol": "regression_fixtures[8]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-03-builtins_open-results/part1_full_reproduction/canonical.csv",
+      "category": "BG-03",
+      "claim_ids": [
+        "CLAIM-C",
+        "CLAIM-D"
+      ],
+      "expected_result": "reject",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=builtins_open,target=results/part1_full_reproduction/canonical.csv]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-03-builtins_open-results/part3b_prediction_ledger/ledger.csv",
+      "category": "BG-03",
+      "claim_ids": [
+        "CLAIM-C",
+        "CLAIM-D"
+      ],
+      "expected_result": "reject",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=builtins_open,target=results/part3b_prediction_ledger/ledger.csv]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-03-builtins_open-reports/part3b_et_policy_implementation.json",
+      "category": "BG-03",
+      "claim_ids": [
+        "CLAIM-C",
+        "CLAIM-D"
+      ],
+      "expected_result": "reject",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=builtins_open,target=reports/part3b_et_policy_implementation.json]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-03-io_open-results/part1_full_reproduction/canonical.csv",
+      "category": "BG-03",
+      "claim_ids": [
+        "CLAIM-C",
+        "CLAIM-D"
+      ],
+      "expected_result": "reject",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=io_open,target=results/part1_full_reproduction/canonical.csv]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-03-io_open-results/part3b_prediction_ledger/ledger.csv",
+      "category": "BG-03",
+      "claim_ids": [
+        "CLAIM-C",
+        "CLAIM-D"
+      ],
+      "expected_result": "reject",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=io_open,target=results/part3b_prediction_ledger/ledger.csv]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-03-io_open-reports/part3b_et_policy_implementation.json",
+      "category": "BG-03",
+      "claim_ids": [
+        "CLAIM-C",
+        "CLAIM-D"
+      ],
+      "expected_result": "reject",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=io_open,target=reports/part3b_et_policy_implementation.json]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-03-path_open-results/part1_full_reproduction/canonical.csv",
+      "category": "BG-03",
+      "claim_ids": [
+        "CLAIM-C",
+        "CLAIM-D"
+      ],
+      "expected_result": "reject",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_open,target=results/part1_full_reproduction/canonical.csv]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-03-path_open-results/part3b_prediction_ledger/ledger.csv",
+      "category": "BG-03",
+      "claim_ids": [
+        "CLAIM-C",
+        "CLAIM-D"
+      ],
+      "expected_result": "reject",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_open,target=results/part3b_prediction_ledger/ledger.csv]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-03-path_open-reports/part3b_et_policy_implementation.json",
+      "category": "BG-03",
+      "claim_ids": [
+        "CLAIM-C",
+        "CLAIM-D"
+      ],
+      "expected_result": "reject",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_open,target=reports/part3b_et_policy_implementation.json]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-03-path_write_text-results/part1_full_reproduction/canonical.csv",
+      "category": "BG-03",
+      "claim_ids": [
+        "CLAIM-C",
+        "CLAIM-D"
+      ],
+      "expected_result": "reject",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_write_text,target=results/part1_full_reproduction/canonical.csv]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-03-path_write_text-results/part3b_prediction_ledger/ledger.csv",
+      "category": "BG-03",
+      "claim_ids": [
+        "CLAIM-C",
+        "CLAIM-D"
+      ],
+      "expected_result": "reject",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_write_text,target=results/part3b_prediction_ledger/ledger.csv]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-03-path_write_text-reports/part3b_et_policy_implementation.json",
+      "category": "BG-03",
+      "claim_ids": [
+        "CLAIM-C",
+        "CLAIM-D"
+      ],
+      "expected_result": "reject",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_write_text,target=reports/part3b_et_policy_implementation.json]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-03-path_write_bytes-results/part1_full_reproduction/canonical.csv",
+      "category": "BG-03",
+      "claim_ids": [
+        "CLAIM-C",
+        "CLAIM-D"
+      ],
+      "expected_result": "reject",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_write_bytes,target=results/part1_full_reproduction/canonical.csv]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-03-path_write_bytes-results/part3b_prediction_ledger/ledger.csv",
+      "category": "BG-03",
+      "claim_ids": [
+        "CLAIM-C",
+        "CLAIM-D"
+      ],
+      "expected_result": "reject",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_write_bytes,target=results/part3b_prediction_ledger/ledger.csv]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-03-path_write_bytes-reports/part3b_et_policy_implementation.json",
+      "category": "BG-03",
+      "claim_ids": [
+        "CLAIM-C",
+        "CLAIM-D"
+      ],
+      "expected_result": "reject",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_write_bytes,target=reports/part3b_et_policy_implementation.json]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-03-path_touch-results/part1_full_reproduction/canonical.csv",
+      "category": "BG-03",
+      "claim_ids": [
+        "CLAIM-C",
+        "CLAIM-D"
+      ],
+      "expected_result": "reject",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_touch,target=results/part1_full_reproduction/canonical.csv]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-03-path_touch-results/part3b_prediction_ledger/ledger.csv",
+      "category": "BG-03",
+      "claim_ids": [
+        "CLAIM-C",
+        "CLAIM-D"
+      ],
+      "expected_result": "reject",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_touch,target=results/part3b_prediction_ledger/ledger.csv]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-03-path_touch-reports/part3b_et_policy_implementation.json",
+      "category": "BG-03",
+      "claim_ids": [
+        "CLAIM-C",
+        "CLAIM-D"
+      ],
+      "expected_result": "reject",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_touch,target=reports/part3b_et_policy_implementation.json]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-03-path_replace-results/part1_full_reproduction/canonical.csv",
+      "category": "BG-03",
+      "claim_ids": [
+        "CLAIM-C",
+        "CLAIM-D"
+      ],
+      "expected_result": "reject",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_replace,target=results/part1_full_reproduction/canonical.csv]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-03-path_replace-results/part3b_prediction_ledger/ledger.csv",
+      "category": "BG-03",
+      "claim_ids": [
+        "CLAIM-C",
+        "CLAIM-D"
+      ],
+      "expected_result": "reject",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_replace,target=results/part3b_prediction_ledger/ledger.csv]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-03-path_replace-reports/part3b_et_policy_implementation.json",
+      "category": "BG-03",
+      "claim_ids": [
+        "CLAIM-C",
+        "CLAIM-D"
+      ],
+      "expected_result": "reject",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_replace,target=reports/part3b_et_policy_implementation.json]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-03-path_rename-results/part1_full_reproduction/canonical.csv",
+      "category": "BG-03",
+      "claim_ids": [
+        "CLAIM-C",
+        "CLAIM-D"
+      ],
+      "expected_result": "reject",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_rename,target=results/part1_full_reproduction/canonical.csv]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-03-path_rename-results/part3b_prediction_ledger/ledger.csv",
+      "category": "BG-03",
+      "claim_ids": [
+        "CLAIM-C",
+        "CLAIM-D"
+      ],
+      "expected_result": "reject",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_rename,target=results/part3b_prediction_ledger/ledger.csv]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-03-path_rename-reports/part3b_et_policy_implementation.json",
+      "category": "BG-03",
+      "claim_ids": [
+        "CLAIM-C",
+        "CLAIM-D"
+      ],
+      "expected_result": "reject",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_rename,target=reports/part3b_et_policy_implementation.json]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-03-os_open-results/part1_full_reproduction/canonical.csv",
+      "category": "BG-03",
+      "claim_ids": [
+        "CLAIM-C",
+        "CLAIM-D"
+      ],
+      "expected_result": "reject",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=os_open,target=results/part1_full_reproduction/canonical.csv]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-03-os_open-results/part3b_prediction_ledger/ledger.csv",
+      "category": "BG-03",
+      "claim_ids": [
+        "CLAIM-C",
+        "CLAIM-D"
+      ],
+      "expected_result": "reject",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=os_open,target=results/part3b_prediction_ledger/ledger.csv]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-03-os_open-reports/part3b_et_policy_implementation.json",
+      "category": "BG-03",
+      "claim_ids": [
+        "CLAIM-C",
+        "CLAIM-D"
+      ],
+      "expected_result": "reject",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=os_open,target=reports/part3b_et_policy_implementation.json]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-03-os_replace-results/part1_full_reproduction/canonical.csv",
+      "category": "BG-03",
+      "claim_ids": [
+        "CLAIM-C",
+        "CLAIM-D"
+      ],
+      "expected_result": "reject",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=os_replace,target=results/part1_full_reproduction/canonical.csv]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-03-os_replace-results/part3b_prediction_ledger/ledger.csv",
+      "category": "BG-03",
+      "claim_ids": [
+        "CLAIM-C",
+        "CLAIM-D"
+      ],
+      "expected_result": "reject",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=os_replace,target=results/part3b_prediction_ledger/ledger.csv]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-03-os_replace-reports/part3b_et_policy_implementation.json",
+      "category": "BG-03",
+      "claim_ids": [
+        "CLAIM-C",
+        "CLAIM-D"
+      ],
+      "expected_result": "reject",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=os_replace,target=reports/part3b_et_policy_implementation.json]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-03-os_rename-results/part1_full_reproduction/canonical.csv",
+      "category": "BG-03",
+      "claim_ids": [
+        "CLAIM-C",
+        "CLAIM-D"
+      ],
+      "expected_result": "reject",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=os_rename,target=results/part1_full_reproduction/canonical.csv]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-03-os_rename-results/part3b_prediction_ledger/ledger.csv",
+      "category": "BG-03",
+      "claim_ids": [
+        "CLAIM-C",
+        "CLAIM-D"
+      ],
+      "expected_result": "reject",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=os_rename,target=results/part3b_prediction_ledger/ledger.csv]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-03-os_rename-reports/part3b_et_policy_implementation.json",
+      "category": "BG-03",
+      "claim_ids": [
+        "CLAIM-C",
+        "CLAIM-D"
+      ],
+      "expected_result": "reject",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=os_rename,target=reports/part3b_et_policy_implementation.json]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-03-shutil_copy-results/part1_full_reproduction/canonical.csv",
+      "category": "BG-03",
+      "claim_ids": [
+        "CLAIM-C",
+        "CLAIM-D"
+      ],
+      "expected_result": "reject",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_copy,target=results/part1_full_reproduction/canonical.csv]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-03-shutil_copy-results/part3b_prediction_ledger/ledger.csv",
+      "category": "BG-03",
+      "claim_ids": [
+        "CLAIM-C",
+        "CLAIM-D"
+      ],
+      "expected_result": "reject",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_copy,target=results/part3b_prediction_ledger/ledger.csv]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-03-shutil_copy-reports/part3b_et_policy_implementation.json",
+      "category": "BG-03",
+      "claim_ids": [
+        "CLAIM-C",
+        "CLAIM-D"
+      ],
+      "expected_result": "reject",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_copy,target=reports/part3b_et_policy_implementation.json]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-03-shutil_copy2-results/part1_full_reproduction/canonical.csv",
+      "category": "BG-03",
+      "claim_ids": [
+        "CLAIM-C",
+        "CLAIM-D"
+      ],
+      "expected_result": "reject",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_copy2,target=results/part1_full_reproduction/canonical.csv]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-03-shutil_copy2-results/part3b_prediction_ledger/ledger.csv",
+      "category": "BG-03",
+      "claim_ids": [
+        "CLAIM-C",
+        "CLAIM-D"
+      ],
+      "expected_result": "reject",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_copy2,target=results/part3b_prediction_ledger/ledger.csv]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-03-shutil_copy2-reports/part3b_et_policy_implementation.json",
+      "category": "BG-03",
+      "claim_ids": [
+        "CLAIM-C",
+        "CLAIM-D"
+      ],
+      "expected_result": "reject",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_copy2,target=reports/part3b_et_policy_implementation.json]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-03-shutil_copyfile-results/part1_full_reproduction/canonical.csv",
+      "category": "BG-03",
+      "claim_ids": [
+        "CLAIM-C",
+        "CLAIM-D"
+      ],
+      "expected_result": "reject",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_copyfile,target=results/part1_full_reproduction/canonical.csv]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-03-shutil_copyfile-results/part3b_prediction_ledger/ledger.csv",
+      "category": "BG-03",
+      "claim_ids": [
+        "CLAIM-C",
+        "CLAIM-D"
+      ],
+      "expected_result": "reject",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_copyfile,target=results/part3b_prediction_ledger/ledger.csv]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-03-shutil_copyfile-reports/part3b_et_policy_implementation.json",
+      "category": "BG-03",
+      "claim_ids": [
+        "CLAIM-C",
+        "CLAIM-D"
+      ],
+      "expected_result": "reject",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_copyfile,target=reports/part3b_et_policy_implementation.json]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-03-shutil_move-results/part1_full_reproduction/canonical.csv",
+      "category": "BG-03",
+      "claim_ids": [
+        "CLAIM-C",
+        "CLAIM-D"
+      ],
+      "expected_result": "reject",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_move,target=results/part1_full_reproduction/canonical.csv]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-03-shutil_move-results/part3b_prediction_ledger/ledger.csv",
+      "category": "BG-03",
+      "claim_ids": [
+        "CLAIM-C",
+        "CLAIM-D"
+      ],
+      "expected_result": "reject",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_move,target=results/part3b_prediction_ledger/ledger.csv]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-03-shutil_move-reports/part3b_et_policy_implementation.json",
+      "category": "BG-03",
+      "claim_ids": [
+        "CLAIM-C",
+        "CLAIM-D"
+      ],
+      "expected_result": "reject",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_move,target=reports/part3b_et_policy_implementation.json]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-04-build_core_bundle",
+      "category": "BG-04",
+      "claim_ids": [
+        "CLAIM-B"
+      ],
+      "expected_result": "reject",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "constant",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "_GD6_PRODUCTION_ENTRY_POINTS[build_core_bundle]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-04-fit_event_candidates",
+      "category": "BG-04",
+      "claim_ids": [
+        "CLAIM-B"
+      ],
+      "expected_result": "reject",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "constant",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "_GD6_PRODUCTION_ENTRY_POINTS[fit_event_candidates]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-04-build_prediction_rows",
+      "category": "BG-04",
+      "claim_ids": [
+        "CLAIM-B"
+      ],
+      "expected_result": "reject",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "constant",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "_GD6_PRODUCTION_ENTRY_POINTS[build_prediction_rows]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-04-execute_postbuild_integration",
+      "category": "BG-04",
+      "claim_ids": [
+        "CLAIM-B"
+      ],
+      "expected_result": "reject",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "constant",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "_GD6_PRODUCTION_ENTRY_POINTS[execute_postbuild_integration]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-05-sys_profile_restored",
+      "category": "BG-05",
+      "claim_ids": [
+        "CLAIM-D"
+      ],
+      "expected_result": "restore",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "constant",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "_GD6_FORCED_EXCEPTION_RESTORATION_KEYS[sys_profile_restored]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-05-builtins_open_restored",
+      "category": "BG-05",
+      "claim_ids": [
+        "CLAIM-D"
+      ],
+      "expected_result": "restore",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "constant",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "_GD6_FORCED_EXCEPTION_RESTORATION_KEYS[builtins_open_restored]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-05-io_open_restored",
+      "category": "BG-05",
+      "claim_ids": [
+        "CLAIM-D"
+      ],
+      "expected_result": "restore",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "constant",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "_GD6_FORCED_EXCEPTION_RESTORATION_KEYS[io_open_restored]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-05-path_open_restored",
+      "category": "BG-05",
+      "claim_ids": [
+        "CLAIM-D"
+      ],
+      "expected_result": "restore",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "constant",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "_GD6_FORCED_EXCEPTION_RESTORATION_KEYS[path_open_restored]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-05-path_write_text_restored",
+      "category": "BG-05",
+      "claim_ids": [
+        "CLAIM-D"
+      ],
+      "expected_result": "restore",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "constant",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "_GD6_FORCED_EXCEPTION_RESTORATION_KEYS[path_write_text_restored]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-05-path_write_bytes_restored",
+      "category": "BG-05",
+      "claim_ids": [
+        "CLAIM-D"
+      ],
+      "expected_result": "restore",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "constant",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "_GD6_FORCED_EXCEPTION_RESTORATION_KEYS[path_write_bytes_restored]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-05-path_touch_restored",
+      "category": "BG-05",
+      "claim_ids": [
+        "CLAIM-D"
+      ],
+      "expected_result": "restore",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "constant",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "_GD6_FORCED_EXCEPTION_RESTORATION_KEYS[path_touch_restored]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-05-path_replace_restored",
+      "category": "BG-05",
+      "claim_ids": [
+        "CLAIM-D"
+      ],
+      "expected_result": "restore",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "constant",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "_GD6_FORCED_EXCEPTION_RESTORATION_KEYS[path_replace_restored]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-05-path_rename_restored",
+      "category": "BG-05",
+      "claim_ids": [
+        "CLAIM-D"
+      ],
+      "expected_result": "restore",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "constant",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "_GD6_FORCED_EXCEPTION_RESTORATION_KEYS[path_rename_restored]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-05-os_open_restored",
+      "category": "BG-05",
+      "claim_ids": [
+        "CLAIM-D"
+      ],
+      "expected_result": "restore",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "constant",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "_GD6_FORCED_EXCEPTION_RESTORATION_KEYS[os_open_restored]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-05-os_replace_restored",
+      "category": "BG-05",
+      "claim_ids": [
+        "CLAIM-D"
+      ],
+      "expected_result": "restore",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "constant",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "_GD6_FORCED_EXCEPTION_RESTORATION_KEYS[os_replace_restored]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-05-os_rename_restored",
+      "category": "BG-05",
+      "claim_ids": [
+        "CLAIM-D"
+      ],
+      "expected_result": "restore",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "constant",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "_GD6_FORCED_EXCEPTION_RESTORATION_KEYS[os_rename_restored]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-05-shutil_copy_restored",
+      "category": "BG-05",
+      "claim_ids": [
+        "CLAIM-D"
+      ],
+      "expected_result": "restore",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "constant",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "_GD6_FORCED_EXCEPTION_RESTORATION_KEYS[shutil_copy_restored]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-05-shutil_copy2_restored",
+      "category": "BG-05",
+      "claim_ids": [
+        "CLAIM-D"
+      ],
+      "expected_result": "restore",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "constant",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "_GD6_FORCED_EXCEPTION_RESTORATION_KEYS[shutil_copy2_restored]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-05-shutil_copyfile_restored",
+      "category": "BG-05",
+      "claim_ids": [
+        "CLAIM-D"
+      ],
+      "expected_result": "restore",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "constant",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "_GD6_FORCED_EXCEPTION_RESTORATION_KEYS[shutil_copyfile_restored]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-05-shutil_move_restored",
+      "category": "BG-05",
+      "claim_ids": [
+        "CLAIM-D"
+      ],
+      "expected_result": "restore",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "constant",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "_GD6_FORCED_EXCEPTION_RESTORATION_KEYS[shutil_move_restored]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-05-build_core_bundle_restored",
+      "category": "BG-05",
+      "claim_ids": [
+        "CLAIM-D"
+      ],
+      "expected_result": "restore",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "constant",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "_GD6_FORCED_EXCEPTION_RESTORATION_KEYS[build_core_bundle_restored]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-05-fit_event_candidates_restored",
+      "category": "BG-05",
+      "claim_ids": [
+        "CLAIM-D"
+      ],
+      "expected_result": "restore",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "constant",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "_GD6_FORCED_EXCEPTION_RESTORATION_KEYS[fit_event_candidates_restored]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-05-build_prediction_rows_restored",
+      "category": "BG-05",
+      "claim_ids": [
+        "CLAIM-D"
+      ],
+      "expected_result": "restore",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "constant",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "_GD6_FORCED_EXCEPTION_RESTORATION_KEYS[build_prediction_rows_restored]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-05-execute_postbuild_integration_restored",
+      "category": "BG-05",
+      "claim_ids": [
+        "CLAIM-D"
+      ],
+      "expected_result": "restore",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "constant",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "_GD6_FORCED_EXCEPTION_RESTORATION_KEYS[execute_postbuild_integration_restored]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-06-reports/part3b_et_policy_implementation.json",
+      "category": "BG-06",
+      "claim_ids": [
+        "CLAIM-C",
+        "CLAIM-D"
+      ],
+      "expected_result": "unchanged",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "constant",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "_GD6_FORCED_EXCEPTION_FIXTURE_PATHS[reports/part3b_et_policy_implementation.json]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-06-results/part1_full_reproduction/canonical.csv",
+      "category": "BG-06",
+      "claim_ids": [
+        "CLAIM-C",
+        "CLAIM-D"
+      ],
+      "expected_result": "unchanged",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "constant",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "_GD6_FORCED_EXCEPTION_FIXTURE_PATHS[results/part1_full_reproduction/canonical.csv]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-06-results/part3b_prediction_ledger/ledger.csv",
+      "category": "BG-06",
+      "claim_ids": [
+        "CLAIM-C",
+        "CLAIM-D"
+      ],
+      "expected_result": "unchanged",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "constant",
+        "source_file": "scripts/build_part3b_prediction_ledger.py",
+        "source_symbol": "_GD6_FORCED_EXCEPTION_FIXTURE_PATHS[results/part3b_prediction_ledger/ledger.csv]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-07-before_any_replacement-neither_exist",
+      "category": "BG-07",
+      "claim_ids": [
+        "CLAIM-D"
+      ],
+      "expected_result": "restore",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/audit_part3b_et_policy_implementation.py",
+        "source_symbol": "run_transactional_rollback_tests().scenario_records[failure_point=before_any_replacement,initial_state=neither_exist]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-07-before_any_replacement-both_exist",
+      "category": "BG-07",
+      "claim_ids": [
+        "CLAIM-D"
+      ],
+      "expected_result": "restore",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/audit_part3b_et_policy_implementation.py",
+        "source_symbol": "run_transactional_rollback_tests().scenario_records[failure_point=before_any_replacement,initial_state=both_exist]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-07-after_json_before_md-neither_exist",
+      "category": "BG-07",
+      "claim_ids": [
+        "CLAIM-D"
+      ],
+      "expected_result": "restore",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/audit_part3b_et_policy_implementation.py",
+        "source_symbol": "run_transactional_rollback_tests().scenario_records[failure_point=after_json_before_md,initial_state=neither_exist]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-07-after_json_before_md-both_exist",
+      "category": "BG-07",
+      "claim_ids": [
+        "CLAIM-D"
+      ],
+      "expected_result": "restore",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/audit_part3b_et_policy_implementation.py",
+        "source_symbol": "run_transactional_rollback_tests().scenario_records[failure_point=after_json_before_md,initial_state=both_exist]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-07-after_md_backup_before_md_replace-neither_exist",
+      "category": "BG-07",
+      "claim_ids": [
+        "CLAIM-D"
+      ],
+      "expected_result": "restore",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/audit_part3b_et_policy_implementation.py",
+        "source_symbol": "run_transactional_rollback_tests().scenario_records[failure_point=after_md_backup_before_md_replace,initial_state=neither_exist]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-07-after_md_backup_before_md_replace-both_exist",
+      "category": "BG-07",
+      "claim_ids": [
+        "CLAIM-D"
+      ],
+      "expected_result": "restore",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "runtime_output",
+        "source_file": "scripts/audit_part3b_et_policy_implementation.py",
+        "source_symbol": "run_transactional_rollback_tests().scenario_records[failure_point=after_md_backup_before_md_replace,initial_state=both_exist]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-08-extensionless_temp_leftover",
+      "category": "BG-08",
+      "claim_ids": [
+        "CLAIM-D"
+      ],
+      "expected_result": "reject",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "constant",
+        "source_file": "scripts/audit_part3b_et_policy_implementation.py",
+        "source_symbol": "REQUIRED_ROLLBACK_MUTATIONS[extensionless_temp_leftover]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-08-pubbak_leftover",
+      "category": "BG-08",
+      "claim_ids": [
+        "CLAIM-D"
+      ],
+      "expected_result": "reject",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "constant",
+        "source_file": "scripts/audit_part3b_et_policy_implementation.py",
+        "source_symbol": "REQUIRED_ROLLBACK_MUTATIONS[pubbak_leftover]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-08-unexpected_extra_file",
+      "category": "BG-08",
+      "claim_ids": [
+        "CLAIM-D"
+      ],
+      "expected_result": "reject",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "constant",
+        "source_file": "scripts/audit_part3b_et_policy_implementation.py",
+        "source_symbol": "REQUIRED_ROLLBACK_MUTATIONS[unexpected_extra_file]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-08-modified_original_json",
+      "category": "BG-08",
+      "claim_ids": [
+        "CLAIM-D"
+      ],
+      "expected_result": "reject",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "constant",
+        "source_file": "scripts/audit_part3b_et_policy_implementation.py",
+        "source_symbol": "REQUIRED_ROLLBACK_MUTATIONS[modified_original_json]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-08-modified_original_markdown",
+      "category": "BG-08",
+      "claim_ids": [
+        "CLAIM-D"
+      ],
+      "expected_result": "reject",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "constant",
+        "source_file": "scripts/audit_part3b_et_policy_implementation.py",
+        "source_symbol": "REQUIRED_ROLLBACK_MUTATIONS[modified_original_markdown]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-08-deleted_original_file",
+      "category": "BG-08",
+      "claim_ids": [
+        "CLAIM-D"
+      ],
+      "expected_result": "reject",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "constant",
+        "source_file": "scripts/audit_part3b_et_policy_implementation.py",
+        "source_symbol": "REQUIRED_ROLLBACK_MUTATIONS[deleted_original_file]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-08-path_type_change",
+      "category": "BG-08",
+      "claim_ids": [
+        "CLAIM-D"
+      ],
+      "expected_result": "reject",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "constant",
+        "source_file": "scripts/audit_part3b_et_policy_implementation.py",
+        "source_symbol": "REQUIRED_ROLLBACK_MUTATIONS[path_type_change]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-09-model_fits_executed",
+      "category": "BG-09",
+      "claim_ids": [
+        "CLAIM-B",
+        "CLAIM-C"
+      ],
+      "expected_result": "zero",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "contract_fixed_requirement",
+        "source_file": "scripts/audit_part3b_et_policy_implementation.py",
+        "source_symbol": "run_audit().measured_activity_counters[model_fits_executed]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-09-prediction_calls_executed",
+      "category": "BG-09",
+      "claim_ids": [
+        "CLAIM-B",
+        "CLAIM-C"
+      ],
+      "expected_result": "zero",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "contract_fixed_requirement",
+        "source_file": "scripts/audit_part3b_et_policy_implementation.py",
+        "source_symbol": "run_audit().measured_activity_counters[prediction_calls_executed]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-09-production_model_evaluation_builds_executed",
+      "category": "BG-09",
+      "claim_ids": [
+        "CLAIM-B",
+        "CLAIM-C"
+      ],
+      "expected_result": "zero",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "contract_fixed_requirement",
+        "source_file": "scripts/audit_part3b_et_policy_implementation.py",
+        "source_symbol": "run_audit().measured_activity_counters[production_model_evaluation_builds_executed]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-09-production_builder_entries",
+      "category": "BG-09",
+      "claim_ids": [
+        "CLAIM-B",
+        "CLAIM-C"
+      ],
+      "expected_result": "zero",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "contract_fixed_requirement",
+        "source_file": "scripts/audit_part3b_et_policy_implementation.py",
+        "source_symbol": "run_audit().measured_activity_counters[production_builder_entries]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-09-production_artifact_writes",
+      "category": "BG-09",
+      "claim_ids": [
+        "CLAIM-B",
+        "CLAIM-C"
+      ],
+      "expected_result": "zero",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "contract_fixed_requirement",
+        "source_file": "scripts/audit_part3b_et_policy_implementation.py",
+        "source_symbol": "run_audit().measured_activity_counters[production_artifact_writes]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-09-canonical_file_writes",
+      "category": "BG-09",
+      "claim_ids": [
+        "CLAIM-B",
+        "CLAIM-C"
+      ],
+      "expected_result": "zero",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "contract_fixed_requirement",
+        "source_file": "scripts/audit_part3b_et_policy_implementation.py",
+        "source_symbol": "run_audit().measured_activity_counters[canonical_file_writes]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-09-protected_artifacts_changed",
+      "category": "BG-09",
+      "claim_ids": [
+        "CLAIM-B",
+        "CLAIM-C"
+      ],
+      "expected_result": "zero",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "contract_fixed_requirement",
+        "source_file": "scripts/audit_part3b_et_policy_implementation.py",
+        "source_symbol": "run_audit().measured_activity_counters[protected_artifacts_changed]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-09-protected_files_added",
+      "category": "BG-09",
+      "claim_ids": [
+        "CLAIM-B",
+        "CLAIM-C"
+      ],
+      "expected_result": "zero",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "contract_fixed_requirement",
+        "source_file": "scripts/audit_part3b_et_policy_implementation.py",
+        "source_symbol": "run_audit().measured_activity_counters[protected_files_added]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-09-protected_files_removed",
+      "category": "BG-09",
+      "claim_ids": [
+        "CLAIM-B",
+        "CLAIM-C"
+      ],
+      "expected_result": "zero",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "contract_fixed_requirement",
+        "source_file": "scripts/audit_part3b_et_policy_implementation.py",
+        "source_symbol": "run_audit().measured_activity_counters[protected_files_removed]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-09-protected_files_modified",
+      "category": "BG-09",
+      "claim_ids": [
+        "CLAIM-B",
+        "CLAIM-C"
+      ],
+      "expected_result": "zero",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "contract_fixed_requirement",
+        "source_file": "scripts/audit_part3b_et_policy_implementation.py",
+        "source_symbol": "run_audit().measured_activity_counters[protected_files_modified]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-09-production_run_executed",
+      "category": "BG-09",
+      "claim_ids": [
+        "CLAIM-B",
+        "CLAIM-C"
+      ],
+      "expected_result": "zero",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "contract_fixed_requirement",
+        "source_file": "scripts/audit_part3b_et_policy_implementation.py",
+        "source_symbol": "run_audit().measured_activity_counters[production_run_executed]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-09-policy_executed_on_production_artifacts",
+      "category": "BG-09",
+      "claim_ids": [
+        "CLAIM-B",
+        "CLAIM-C"
+      ],
+      "expected_result": "zero",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "contract_fixed_requirement",
+        "source_file": "scripts/audit_part3b_et_policy_implementation.py",
+        "source_symbol": "run_audit().measured_activity_counters[policy_executed_on_production_artifacts]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-09-policy_approved",
+      "category": "BG-09",
+      "claim_ids": [
+        "CLAIM-B",
+        "CLAIM-C"
+      ],
+      "expected_result": "zero",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "contract_fixed_requirement",
+        "source_file": "scripts/audit_part3b_et_policy_implementation.py",
+        "source_symbol": "run_audit().measured_activity_counters[policy_approved]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-09-policy_enforced",
+      "category": "BG-09",
+      "claim_ids": [
+        "CLAIM-B",
+        "CLAIM-C"
+      ],
+      "expected_result": "zero",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "contract_fixed_requirement",
+        "source_file": "scripts/audit_part3b_et_policy_implementation.py",
+        "source_symbol": "run_audit().measured_activity_counters[policy_enforced]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-09-production_execution_authorized",
+      "category": "BG-09",
+      "claim_ids": [
+        "CLAIM-B",
+        "CLAIM-C"
+      ],
+      "expected_result": "zero",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "contract_fixed_requirement",
+        "source_file": "scripts/audit_part3b_et_policy_implementation.py",
+        "source_symbol": "run_audit().measured_activity_counters[production_execution_authorized]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-09-part3b_complete",
+      "category": "BG-09",
+      "claim_ids": [
+        "CLAIM-B",
+        "CLAIM-C"
+      ],
+      "expected_result": "zero",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "contract_fixed_requirement",
+        "source_file": "scripts/audit_part3b_et_policy_implementation.py",
+        "source_symbol": "run_audit().measured_activity_counters[part3b_complete]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-09-part3c_authorized",
+      "category": "BG-09",
+      "claim_ids": [
+        "CLAIM-B",
+        "CLAIM-C"
+      ],
+      "expected_result": "zero",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "contract_fixed_requirement",
+        "source_file": "scripts/audit_part3b_et_policy_implementation.py",
+        "source_symbol": "run_audit().measured_activity_counters[part3c_authorized]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-10-final_json_parses",
+      "category": "BG-10",
+      "claim_ids": [
+        "CLAIM-E"
+      ],
+      "expected_result": "pass",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "contract_fixed_requirement",
+        "source_file": "scripts/audit_part3b_et_policy_implementation.py",
+        "source_symbol": "run_audit().report[final_json_parses]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-10-markdown_generated_from_final_json",
+      "category": "BG-10",
+      "claim_ids": [
+        "CLAIM-E"
+      ],
+      "expected_result": "pass",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "contract_fixed_requirement",
+        "source_file": "scripts/audit_part3b_et_policy_implementation.py",
+        "source_symbol": "run_audit().report[markdown_generated_from_final_json]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-10-render_markdown_equals_final_markdown",
+      "category": "BG-10",
+      "claim_ids": [
+        "CLAIM-E"
+      ],
+      "expected_result": "pass",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "contract_fixed_requirement",
+        "source_file": "scripts/audit_part3b_et_policy_implementation.py",
+        "source_symbol": "run_audit().report[render_markdown_equals_final_markdown]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-10-no_self_referential_publication_result_hash_persisted",
+      "category": "BG-10",
+      "claim_ids": [
+        "CLAIM-E"
+      ],
+      "expected_result": "pass",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "contract_fixed_requirement",
+        "source_file": "scripts/audit_part3b_et_policy_implementation.py",
+        "source_symbol": "run_audit().report[no_self_referential_publication_result_hash_persisted]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-10-no_stale_preliminary_publication_hash_persisted",
+      "category": "BG-10",
+      "claim_ids": [
+        "CLAIM-E"
+      ],
+      "expected_result": "pass",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "contract_fixed_requirement",
+        "source_file": "scripts/audit_part3b_et_policy_implementation.py",
+        "source_symbol": "run_audit().report[no_stale_preliminary_publication_hash_persisted]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-10-repository_relative_paths_only",
+      "category": "BG-10",
+      "claim_ids": [
+        "CLAIM-E"
+      ],
+      "expected_result": "pass",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "contract_fixed_requirement",
+        "source_file": "scripts/audit_part3b_et_policy_implementation.py",
+        "source_symbol": "run_audit().report[repository_relative_paths_only]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-10-no_local_absolute_path",
+      "category": "BG-10",
+      "claim_ids": [
+        "CLAIM-E"
+      ],
+      "expected_result": "pass",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "contract_fixed_requirement",
+        "source_file": "scripts/audit_part3b_et_policy_implementation.py",
+        "source_symbol": "run_audit().report[no_local_absolute_path]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-10-no_editor_specific_cci_reference",
+      "category": "BG-10",
+      "claim_ids": [
+        "CLAIM-E"
+      ],
+      "expected_result": "pass",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "contract_fixed_requirement",
+        "source_file": "scripts/audit_part3b_et_policy_implementation.py",
+        "source_symbol": "run_audit().report[no_editor_specific_cci_reference]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-10-no_unsupported_scientific_claim",
+      "category": "BG-10",
+      "claim_ids": [
+        "CLAIM-E"
+      ],
+      "expected_result": "pass",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "contract_fixed_requirement",
+        "source_file": "scripts/audit_part3b_et_policy_implementation.py",
+        "source_symbol": "run_audit().report[no_unsupported_scientific_claim]",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    },
+    {
+      "benchmark_id": "BG-11-clean-environment-execution",
+      "category": "BG-11",
+      "claim_ids": [
+        "CLAIM-E"
+      ],
+      "expected_result": "pass",
+      "mandatory": true,
+      "provenance": {
+        "extraction_method": "contract_fixed_requirement",
+        "source_file": "scripts/audit_part3b_et_policy_implementation.py",
+        "source_symbol": "run_audit() verifier pattern",
+        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+      }
+    }
+  ],
+  "contract_id": "SEMIT-GD6-ACCEPTANCE-CONTRACT",
+  "contract_version": "1.0",
+  "exact_sets": {
+    "forced_exception_fixture_paths": [
+      "reports/part3b_et_policy_implementation.json",
+      "results/part1_full_reproduction/canonical.csv",
+      "results/part3b_prediction_ledger/ledger.csv"
+    ],
+    "preservation_conditions": [
+      {
+        "condition": "model_fits_executed",
+        "expected": 0
+      },
+      {
+        "condition": "prediction_calls_executed",
+        "expected": 0
+      },
+      {
+        "condition": "production_model_evaluation_builds_executed",
+        "expected": 0
+      },
+      {
+        "condition": "production_builder_entries",
+        "expected": 0
+      },
+      {
+        "condition": "production_artifact_writes",
+        "expected": 0
+      },
+      {
+        "condition": "canonical_file_writes",
+        "expected": 0
+      },
+      {
+        "condition": "protected_artifacts_changed",
+        "expected": 0
+      },
+      {
+        "condition": "protected_files_added",
+        "expected": 0
+      },
+      {
+        "condition": "protected_files_removed",
+        "expected": 0
+      },
+      {
+        "condition": "protected_files_modified",
+        "expected": 0
+      },
+      {
+        "condition": "production_run_executed",
+        "expected": false
+      },
+      {
+        "condition": "policy_executed_on_production_artifacts",
+        "expected": false
+      },
+      {
+        "condition": "policy_approved",
+        "expected": false
+      },
+      {
+        "condition": "policy_enforced",
+        "expected": false
+      },
+      {
+        "condition": "production_execution_authorized",
+        "expected": false
+      },
+      {
+        "condition": "part3b_complete",
+        "expected": false
+      },
+      {
+        "condition": "part3c_authorized",
+        "expected": false
+      }
+    ],
+    "production_entry_points": [
+      "build_core_bundle",
+      "fit_event_candidates",
+      "build_prediction_rows",
+      "execute_postbuild_integration"
+    ],
+    "protected_artifact_paths": [
+      "scripts/freeze_part3b_et_reconciliation_policy.py",
+      "reports/part3b_et_reconciliation_policy.json",
+      "reports/part3b_et_reconciliation_policy.md",
+      "scripts/audit_part3b_et_canonical_reconciliation.py",
+      "reports/part3b_et_canonical_reconciliation.json",
+      "reports/part3b_et_canonical_reconciliation.md",
+      "results/part3b_prediction_ledger/et_canonical_mismatch_matrix.csv",
+      "results/part3b_prediction_ledger/sample_registry.csv",
+      "results/part3b_prediction_ledger/split_membership_within.csv.gz",
+      "results/part3b_prediction_ledger/canonical_result_reconstruction.csv",
+      "results/part3b_prediction_ledger/ledger_manifest.json",
+      "results/part3b_prediction_ledger/prediction_ledger_within.csv.gz",
+      "results/part3b_prediction_ledger/split_membership_cross.csv.gz",
+      "results/part3b_prediction_ledger/event_manifest.csv",
+      "results/part3b_prediction_ledger/prediction_ledger_cross.csv.gz",
+      "results/part3b_prediction_ledger/validation_reconstruction.csv"
+    ],
+    "report_integrity_conditions": [
+      "final_json_parses",
+      "markdown_generated_from_final_json",
+      "render_markdown_equals_final_markdown",
+      "no_self_referential_publication_result_hash_persisted",
+      "no_stale_preliminary_publication_hash_persisted",
+      "repository_relative_paths_only",
+      "no_local_absolute_path",
+      "no_editor_specific_cci_reference",
+      "no_unsupported_scientific_claim"
+    ],
+    "restoration_keys": [
+      "sys_profile_restored",
+      "builtins_open_restored",
+      "io_open_restored",
+      "path_open_restored",
+      "path_write_text_restored",
+      "path_write_bytes_restored",
+      "path_touch_restored",
+      "path_replace_restored",
+      "path_rename_restored",
+      "os_open_restored",
+      "os_replace_restored",
+      "os_rename_restored",
+      "shutil_copy_restored",
+      "shutil_copy2_restored",
+      "shutil_copyfile_restored",
+      "shutil_move_restored",
+      "build_core_bundle_restored",
+      "fit_event_candidates_restored",
+      "build_prediction_rows_restored",
+      "execute_postbuild_integration_restored"
+    ],
+    "rollback_mutations": [
+      "extensionless_temp_leftover",
+      "pubbak_leftover",
+      "unexpected_extra_file",
+      "modified_original_json",
+      "modified_original_markdown",
+      "deleted_original_file",
+      "path_type_change"
+    ],
+    "rollback_scenarios": [
+      {
+        "failure_point": "before_any_replacement",
+        "initial_state": "neither_exist"
+      },
+      {
+        "failure_point": "before_any_replacement",
+        "initial_state": "both_exist"
+      },
+      {
+        "failure_point": "after_json_before_md",
+        "initial_state": "neither_exist"
+      },
+      {
+        "failure_point": "after_json_before_md",
+        "initial_state": "both_exist"
+      },
+      {
+        "failure_point": "after_md_backup_before_md_replace",
+        "initial_state": "neither_exist"
+      },
+      {
+        "failure_point": "after_md_backup_before_md_replace",
+        "initial_state": "both_exist"
+      }
+    ],
+    "semantic_test_ids": [
+      "valid_roc_auc_row_accepted",
+      "valid_avg_precision_row_accepted",
+      "project_seed_independent_equivalent_row_accepted",
+      "one_ulp_build_mismatch_rejected",
+      "positive_zero_negative_zero_rejected",
+      "build_score_byte_difference_rejected",
+      "missing_candidate_rejected",
+      "unexpected_candidate_rejected",
+      "missing_candidate_field_rejected",
+      "non_et_build1_validation_difference_rejected",
+      "non_et_build2_test_difference_rejected",
+      "et_validation_build_byte_difference_rejected",
+      "et_test_build_byte_difference_rejected",
+      "et_delta_above_tolerance_rejected_independently",
+      "aggregate_maximum_cannot_substitute_for_independent_fields",
+      "metric_build1_delta_above_tolerance_rejected",
+      "metric_build2_delta_above_tolerance_rejected",
+      "brier_rejected",
+      "threshold_sensitive_metric_rejected",
+      "unknown_metric_rejected",
+      "validation_categorical_mismatch_rejected",
+      "validation_numeric_mismatch_rejected",
+      "selected_candidate_difference_rejected",
+      "selection_mode_difference_rejected",
+      "missing_dual_build_context_rejected",
+      "single_build_evidence_cannot_produce_final_approval",
+      "dual_build_all_eligible_classification_no_final_approval",
+      "dual_build_one_ineligible_classification_no_final_approval",
+      "dual_build_unknown_metric_classification_no_final_approval",
+      "dual_build_missing_et_delta_classification_no_final_approval",
+      "validator_single_build_pending_no_final_approval",
+      "policy_specification_sha_mismatch_rejected",
+      "policy_specification_contract_mutation_rejected",
+      "identity_hardcoded_implementation_detector_passes",
+      "frozen_nine_fixture_parity_with_gd5_2"
+    ],
+    "write_guard_control_targets": [
+      "results/part1_full_reproduction/canonical.csv",
+      "results/part3b_prediction_ledger/ledger.csv",
+      "reports/part3b_et_policy_implementation.json"
+    ],
+    "write_guard_mechanisms": [
+      "builtins_open",
+      "io_open",
+      "path_open",
+      "path_write_text",
+      "path_write_bytes",
+      "path_touch",
+      "path_replace",
+      "path_rename",
+      "os_open",
+      "os_replace",
+      "os_rename",
+      "shutil_copy",
+      "shutil_copy2",
+      "shutil_copyfile",
+      "shutil_move"
+    ]
+  },
+  "expected_counts": {
+    "BG-01": 35,
+    "BG-02": 9,
+    "BG-03": 45,
+    "BG-04": 4,
+    "BG-05": 20,
+    "BG-06": 3,
+    "BG-07": 6,
+    "BG-08": 7,
+    "BG-09": 17,
+    "BG-10": 9,
+    "BG-11": 1
+  },
+  "future_verifier_requirement": {
+    "execution_pattern": "python3 scripts/verify_gd6_frozen_benchmark_v1.py",
+    "note": "At this stage, do not create that future implementation verifier. Record it as a normative future requirement.",
+    "requirements": [
+      "execution_from_clean_clone",
+      "recorded_environment",
+      "exit_code_0",
+      "complete_json_report",
+      "complete_markdown_report",
+      "no_production_action",
+      "execution_by_evaluator_other_than_implementation_author"
+    ],
+    "verifier_path": "scripts/verify_gd6_frozen_benchmark_v1.py"
+  },
+  "provenance": {
+    "extraction_method": "runtime_output_and_constant_extraction_from_starting_commit",
+    "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
+  },
+  "reopening_rule_reference": "See gd6_acceptance_contract_v1.json reopening_rule",
+  "stage": "Part 3B.2R.1-G.D6-F0.2",
+  "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd",
+  "version": "1.0"
+}

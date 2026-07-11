@@ -1,0 +1,3135 @@
+{
+  "stage": "Part 3B.2R.1-G.D5.2",
+  "starting_commit": "3b62c0a66331dc26809641fbd4e6466f499c31f0",
+  "policy_id": "et_rank_metric_reconciliation",
+  "policy_version": "1.0.1",
+  "policy_status": "specified_not_enforced",
+  "production_validator_status": "unchanged",
+  "production_authorization": false,
+  "part3b_complete": false,
+  "part3c_authorized": false,
+  "canonical_files_changed": false,
+  "policy_enforced": false,
+  "production_validator_changed": false,
+  "canonical_file_changed": false,
+  "evidence_provenance": [
+    {
+      "repository_relative_path": "reports/part3b_et_canonical_reconciliation.json",
+      "sha256": "2c483ceea237c97d5c339ba3ceb438f8e6e2e9beae695dc9410aa5b4b825de0a",
+      "row_count": null,
+      "column_count": null,
+      "role_in_policy_derivation": "G.D4 reconciliation audit report with score-level mechanism evidence",
+      "required_fields_verified": {
+        "all_validation_checks_passed": true,
+        "all_audit_integrity_checks_passed": true,
+        "policy_enforced": false,
+        "production_validator_changed": false,
+        "canonical_file_changed": false,
+        "part3b_complete": false,
+        "part3c_authorized": false
+      }
+    },
+    {
+      "repository_relative_path": "results/part3b_prediction_ledger/et_canonical_mismatch_matrix.csv",
+      "sha256": "25cc88a8785f18668be2e03328a71b80b6e2c66f679a572e1e53656cde4ef908",
+      "row_count": 9,
+      "column_count": 28,
+      "role_in_policy_derivation": "Nine-row ET canonical mismatch matrix with current approval flags"
+    }
+  ],
+  "exact_constants": {
+    "et_score_absolute_tolerance": 1e-15,
+    "metric_absolute_tolerance": 1e-07,
+    "eligible_metric_allowlist": [
+      "avg_precision",
+      "roc_auc"
+    ],
+    "exact_build_value_equality": "float64_bit_exact",
+    "exact_build_score_equality": "byte_exact",
+    "executable_equality_helper": "float64_bit_equal",
+    "et_leaf5_candidate_literal": "ET_leaf5",
+    "required_candidates": [
+      "LR_std_C0.1",
+      "LR_std_C1",
+      "DT_leaf5",
+      "ET_leaf5"
+    ]
+  },
+  "metric_classifications": [
+    {
+      "metric": "avg_precision",
+      "classification": "eligible",
+      "eligible_under_policy": true
+    },
+    {
+      "metric": "roc_auc",
+      "classification": "eligible",
+      "eligible_under_policy": true
+    },
+    {
+      "metric": "threshold",
+      "classification": "threshold",
+      "eligible_under_policy": false
+    },
+    {
+      "metric": "selection_score",
+      "classification": "threshold_sensitive",
+      "eligible_under_policy": false
+    },
+    {
+      "metric": "precision",
+      "classification": "threshold_sensitive",
+      "eligible_under_policy": false
+    },
+    {
+      "metric": "recall",
+      "classification": "threshold_sensitive",
+      "eligible_under_policy": false
+    },
+    {
+      "metric": "f1",
+      "classification": "threshold_sensitive",
+      "eligible_under_policy": false
+    },
+    {
+      "metric": "mcc",
+      "classification": "threshold_sensitive",
+      "eligible_under_policy": false
+    },
+    {
+      "metric": "balanced_accuracy",
+      "classification": "threshold_sensitive",
+      "eligible_under_policy": false
+    },
+    {
+      "metric": "brier",
+      "classification": "calibration",
+      "eligible_under_policy": false
+    },
+    {
+      "metric": "any_unknown_metric",
+      "classification": "unknown",
+      "eligible_under_policy": false
+    },
+    {
+      "metric": "any_calibration_metric",
+      "classification": "calibration",
+      "eligible_under_policy": false
+    },
+    {
+      "metric": "any_threshold_sensitive_metric",
+      "classification": "threshold_sensitive",
+      "eligible_under_policy": false
+    }
+  ],
+  "required_fields": {
+    "matrix_row": [
+      "build1_build2_value_equal",
+      "absolute_difference_build1",
+      "absolute_difference_build2",
+      "direct_et_model",
+      "selected_candidate_is_et",
+      "soft_ensemble_contains_et",
+      "et_derived_row",
+      "column",
+      "threshold_sensitive_metric",
+      "calibration_metric",
+      "currently_approved_exception",
+      "currently_unapproved_mismatch"
+    ],
+    "reconciliation_json_global": [
+      "strict_mismatch_count_build1",
+      "strict_mismatch_count_build2",
+      "build_mismatch_identity_sets_equal",
+      "build_result_reconstruction_sha_equal",
+      "build_validation_reconstruction_sha_equal",
+      "build_prediction_within_sha_equal",
+      "build_prediction_cross_sha_equal",
+      "validation_categorical_mismatch_count_build1",
+      "validation_categorical_mismatch_count_build2",
+      "validation_numeric_mismatch_count_build1",
+      "validation_numeric_mismatch_count_build2",
+      "build1_build2_validation_reconstructions_equal",
+      "categorical_mismatch_count"
+    ],
+    "score_evidence_event": [
+      "maximum_build1_validation_absolute_score_difference",
+      "maximum_build1_test_absolute_score_difference",
+      "maximum_build2_validation_absolute_score_difference",
+      "maximum_build2_test_absolute_score_difference",
+      "candidate_score_evidence",
+      "build_score_arrays_byte_exact",
+      "maximum_et_score_absolute_difference"
+    ],
+    "score_evidence_candidate_non_et": [
+      "build1_validation_score_byte_equal",
+      "build1_test_score_byte_equal",
+      "build2_validation_score_byte_equal",
+      "build2_test_score_byte_equal"
+    ],
+    "score_evidence_candidate_et": [
+      "build1_build2_validation_score_byte_equal",
+      "build1_build2_test_score_byte_equal",
+      "maximum_build1_validation_absolute_score_difference",
+      "maximum_build1_test_absolute_score_difference",
+      "maximum_build2_validation_absolute_score_difference",
+      "maximum_build2_test_absolute_score_difference"
+    ]
+  },
+  "transactional_publication_ready": true,
+  "transactional_publication_ready_meaning": "All temporary-file validation, JSON/Markdown consistency checks, and synthetic partial-replacement rollback tests passed before the real report publication attempt.",
+  "predicate_definition": {
+    "predicate_name": "et_rank_metric_reconciliation_eligible",
+    "A_evidence_completeness": {
+      "description": "Mismatch exists in both deterministic builds with complete evidence.",
+      "requirements": [
+        {
+          "field": "global.strict_mismatch_count_build1",
+          "operator": ">",
+          "value": 0,
+          "source": "reconciliation_json"
+        },
+        {
+          "field": "global.strict_mismatch_count_build2",
+          "operator": ">",
+          "value": 0,
+          "source": "reconciliation_json"
+        },
+        {
+          "field": "global.build_mismatch_identity_sets_equal",
+          "operator": "==",
+          "value": true,
+          "source": "reconciliation_json"
+        },
+        {
+          "field": "global.audit_integrity_checks.exact_source_role_set_passed",
+          "operator": "==",
+          "value": true,
+          "source": "reconciliation_json"
+        },
+        {
+          "field": "global.audit_integrity_checks.all_audit_integrity_checks_passed",
+          "operator": "==",
+          "value": true,
+          "source": "reconciliation_json"
+        }
+      ]
+    },
+    "B_exact_deterministic_equality": {
+      "description": "Build 1 and Build 2 mismatch values and artifacts are exactly equal.",
+      "requirements": [
+        {
+          "field": "row.build1_build2_value_equal",
+          "operator": "==",
+          "value": true,
+          "equality_mode": "float64_bit_exact",
+          "source": "matrix_row"
+        },
+        {
+          "field": "global.build_result_reconstruction_sha_equal",
+          "operator": "==",
+          "value": true,
+          "source": "reconciliation_json"
+        },
+        {
+          "field": "global.build_validation_reconstruction_sha_equal",
+          "operator": "==",
+          "value": true,
+          "source": "reconciliation_json"
+        },
+        {
+          "field": "global.build_prediction_within_sha_equal",
+          "operator": "==",
+          "value": true,
+          "source": "reconciliation_json"
+        },
+        {
+          "field": "global.build_prediction_cross_sha_equal",
+          "operator": "==",
+          "value": true,
+          "source": "reconciliation_json"
+        },
+        {
+          "field": "global.audit_integrity_checks.build_mismatch_values_bit_exact",
+          "operator": "==",
+          "value": true,
+          "source": "reconciliation_json"
+        },
+        {
+          "field": "event.build_score_arrays_byte_exact",
+          "operator": "==",
+          "value": true,
+          "equality_mode": "byte_exact",
+          "source": "score_evidence"
+        }
+      ],
+      "exact_build_value_equality": "float64_bit_exact",
+      "exact_build_score_equality": "byte_exact",
+      "tolerance_substitution_prohibited": true
+    },
+    "C_et_mechanism": {
+      "description": "Row is ET-derived through direct model, selected candidate, or soft ensemble.",
+      "any_of": [
+        {
+          "field": "row.direct_et_model",
+          "operator": "==",
+          "value": true
+        },
+        {
+          "field": "row.selected_candidate_is_et",
+          "operator": "==",
+          "value": true
+        },
+        {
+          "field": "row.soft_ensemble_contains_et",
+          "operator": "==",
+          "value": true
+        }
+      ],
+      "et_candidate_literal": "ET_leaf5",
+      "identity_hardcoding_prohibited": true
+    },
+    "D_accepted_output_comparison": {
+      "description": "Candidate-level non-ET byte equality, ET build byte equality, and four independent ET score-delta fields.",
+      "required_event_et_score_delta_fields": [
+        "maximum_build1_validation_absolute_score_difference",
+        "maximum_build1_test_absolute_score_difference",
+        "maximum_build2_validation_absolute_score_difference",
+        "maximum_build2_test_absolute_score_difference"
+      ],
+      "et_score_delta_requirements": [
+        {
+          "field": "maximum_build1_validation_absolute_score_difference",
+          "operator": "<=",
+          "value": 1e-15,
+          "must_exist": true,
+          "must_be_finite": true,
+          "source": "score_evidence_event"
+        },
+        {
+          "field": "maximum_build1_test_absolute_score_difference",
+          "operator": "<=",
+          "value": 1e-15,
+          "must_exist": true,
+          "must_be_finite": true,
+          "source": "score_evidence_event"
+        },
+        {
+          "field": "maximum_build2_validation_absolute_score_difference",
+          "operator": "<=",
+          "value": 1e-15,
+          "must_exist": true,
+          "must_be_finite": true,
+          "source": "score_evidence_event"
+        },
+        {
+          "field": "maximum_build2_test_absolute_score_difference",
+          "operator": "<=",
+          "value": 1e-15,
+          "must_exist": true,
+          "must_be_finite": true,
+          "source": "score_evidence_event"
+        }
+      ],
+      "required_candidates": [
+        "LR_std_C0.1",
+        "LR_std_C1",
+        "DT_leaf5",
+        "ET_leaf5"
+      ],
+      "non_et_candidate_byte_equal_fields": [
+        "build1_validation_score_byte_equal",
+        "build1_test_score_byte_equal",
+        "build2_validation_score_byte_equal",
+        "build2_test_score_byte_equal"
+      ],
+      "et_candidate_requirements": [
+        {
+          "field": "build1_build2_validation_score_byte_equal",
+          "operator": "==",
+          "value": true,
+          "candidate": "ET_leaf5"
+        },
+        {
+          "field": "build1_build2_test_score_byte_equal",
+          "operator": "==",
+          "value": true,
+          "candidate": "ET_leaf5"
+        }
+      ],
+      "et_candidate_delta_fields": [
+        "maximum_build1_validation_absolute_score_difference",
+        "maximum_build1_test_absolute_score_difference",
+        "maximum_build2_validation_absolute_score_difference",
+        "maximum_build2_test_absolute_score_difference"
+      ],
+      "aggregate_fields_reporting_only": [
+        "maximum_et_score_absolute_difference",
+        "non_et_scores_byte_identical",
+        "build1_non_et_scores_byte_identical",
+        "build2_non_et_scores_byte_identical"
+      ],
+      "et_score_absolute_tolerance": 1e-15,
+      "missing_score_evidence_rejects": true,
+      "missing_candidate_rejects": true,
+      "aggregate_substitution_prohibited": true
+    },
+    "E_metric_classification": {
+      "description": "Metric must be on the exact allowlist.",
+      "eligible_metric_allowlist": [
+        "avg_precision",
+        "roc_auc"
+      ],
+      "ineligible_categories": {
+        "threshold_sensitive": [
+          "threshold",
+          "selection_score",
+          "precision",
+          "recall",
+          "f1",
+          "mcc",
+          "balanced_accuracy"
+        ],
+        "calibration": [
+          "brier"
+        ],
+        "threshold_sensitive_metrics_flag": "row.threshold_sensitive_metric",
+        "calibration_metrics_flag": "row.calibration_metric"
+      },
+      "unknown_metric_rejects": true
+    },
+    "F_metric_delta": {
+      "description": "Absolute metric delta from canonical must be within tolerance.",
+      "requirements": [
+        {
+          "field": "row.absolute_difference_build1",
+          "operator": "<=",
+          "value": 1e-07
+        },
+        {
+          "field": "row.absolute_difference_build2",
+          "operator": "<=",
+          "value": 1e-07
+        }
+      ],
+      "metric_absolute_tolerance": 1e-07,
+      "relative_difference_reported_not_substituted": true,
+      "prohibited_operations": [
+        "rounding",
+        "quantization",
+        "truncation",
+        "post_hoc_replacement",
+        "averaging",
+        "output_copying"
+      ]
+    },
+    "G_validation_and_categorical_invariants": {
+      "description": "Validation reconstructions exact with unchanged categorical identity.",
+      "requirements": [
+        {
+          "field": "global.validation_categorical_mismatch_count_build1",
+          "operator": "==",
+          "value": 0
+        },
+        {
+          "field": "global.validation_categorical_mismatch_count_build2",
+          "operator": "==",
+          "value": 0
+        },
+        {
+          "field": "global.validation_numeric_mismatch_count_build1",
+          "operator": "==",
+          "value": 0
+        },
+        {
+          "field": "global.validation_numeric_mismatch_count_build2",
+          "operator": "==",
+          "value": 0
+        },
+        {
+          "field": "global.build1_build2_validation_reconstructions_equal",
+          "operator": "==",
+          "value": true
+        },
+        {
+          "field": "row.et_derived_row",
+          "operator": "==",
+          "value": true
+        },
+        {
+          "field": "global.categorical_mismatch_count",
+          "operator": "==",
+          "value": 0
+        }
+      ],
+      "invariants": [
+        "result_row_categorical_identity_unchanged",
+        "selected_candidate_unchanged",
+        "selection_mode_unchanged",
+        "no_validation_test_role_mixing",
+        "no_test_set_use_in_model_selection"
+      ]
+    },
+    "H_fail_closed": {
+      "description": "Any missing, null, NaN, or disagreement rejects eligibility.",
+      "rejection_conditions": [
+        "missing_field",
+        "null_or_nan_required_field",
+        "unknown_metric",
+        "build_identity_disagreement",
+        "one_ulp_build_value_difference",
+        "positive_zero_negative_zero_build_value_difference",
+        "float64_byte_representation_difference",
+        "score_array_byte_difference_between_builds",
+        "missing_non_et_candidate",
+        "missing_candidate_field",
+        "unexpected_candidate",
+        "non_et_byte_inequality",
+        "et_candidate_build_byte_inequality",
+        "missing_et_build_split_delta_field",
+        "et_build_split_delta_above_tolerance",
+        "aggregate_et_delta_substitution_prohibited",
+        "metric_delta_above_tolerance",
+        "threshold_sensitive_metric",
+        "calibration_metric",
+        "validation_mismatch",
+        "selected_candidate_difference",
+        "selection_mode_difference",
+        "non_et_derived_row",
+        "reconciliation_json_sha_mismatch",
+        "mismatch_matrix_sha_mismatch"
+      ]
+    }
+  },
+  "ordered_evaluation_steps": [
+    {
+      "step": 1,
+      "section": "A_evidence_completeness",
+      "action": "verify_global_and_row_presence"
+    },
+    {
+      "step": 2,
+      "section": "B_exact_deterministic_equality",
+      "action": "verify_float64_bit_equal_and_byte_exact"
+    },
+    {
+      "step": 3,
+      "section": "C_et_mechanism",
+      "action": "verify_et_derivation"
+    },
+    {
+      "step": 4,
+      "section": "D_accepted_output_comparison",
+      "action": "verify_candidate_and_et_score_delta_evidence"
+    },
+    {
+      "step": 5,
+      "section": "E_metric_classification",
+      "action": "verify_metric_allowlist"
+    },
+    {
+      "step": 6,
+      "section": "F_metric_delta",
+      "action": "verify_metric_delta"
+    },
+    {
+      "step": 7,
+      "section": "G_validation_and_categorical_invariants",
+      "action": "verify_validation_invariants"
+    },
+    {
+      "step": 8,
+      "section": "H_fail_closed",
+      "action": "aggregate_fail_closed"
+    }
+  ],
+  "fail_closed_rules": [
+    "missing_field",
+    "null_or_nan_required_field",
+    "unknown_metric",
+    "build_identity_disagreement",
+    "one_ulp_build_value_difference",
+    "positive_zero_negative_zero_build_value_difference",
+    "float64_byte_representation_difference",
+    "score_array_byte_difference_between_builds",
+    "missing_non_et_candidate",
+    "missing_candidate_field",
+    "unexpected_candidate",
+    "non_et_byte_inequality",
+    "et_candidate_build_byte_inequality",
+    "missing_et_build_split_delta_field",
+    "et_build_split_delta_above_tolerance",
+    "aggregate_et_delta_substitution_prohibited",
+    "metric_delta_above_tolerance",
+    "threshold_sensitive_metric",
+    "calibration_metric",
+    "validation_mismatch",
+    "selected_candidate_difference",
+    "selection_mode_difference",
+    "non_et_derived_row",
+    "reconciliation_json_sha_mismatch",
+    "mismatch_matrix_sha_mismatch"
+  ],
+  "prohibited_operations": [
+    "implement_policy_in_production_validator",
+    "enforce_unapproved_mismatches",
+    "rerun_production",
+    "fit_models",
+    "call_prediction_methods",
+    "generate_new_prediction_ledgers",
+    "modify_canonical_part1_files",
+    "modify_g_d4_reconciliation_evidence",
+    "rounding",
+    "quantization",
+    "truncation",
+    "post_hoc_replacement",
+    "averaging",
+    "output_copying",
+    "tolerance_substitution_for_exact_equality"
+  ],
+  "concept_separation": {
+    "mechanistically_eligible_under_frozen_policy": "Predicate et_rank_metric_reconciliation_eligible returns true; does not change approval status.",
+    "currently_approved_exception": "Historical approval recorded in mismatch matrix; unchanged by G.D5.",
+    "currently_unapproved_mismatch": "Rows not currently approved; remain unapproved after G.D5."
+  },
+  "regression_fixtures": [
+    {
+      "fixture_role": "regression_fixture_only",
+      "experiment": "cross_project",
+      "target_project": "JM1",
+      "seed": 13,
+      "model": "AQRPE_v2_balanced",
+      "selected_candidate": "ET_leaf5",
+      "selection_mode": "balanced_objective",
+      "column": "avg_precision",
+      "event_id": "cross_project__JM1__seed_013",
+      "mechanistically_eligible_under_frozen_policy": true,
+      "currently_approved_exception": false,
+      "currently_unapproved_mismatch": true,
+      "reason_codes": [],
+      "predicate_results": {
+        "A_evidence_completeness": {
+          "passed": true,
+          "checks": [
+            {
+              "field": "global.strict_mismatch_count_build1",
+              "passed": true,
+              "observed": 9
+            },
+            {
+              "field": "global.strict_mismatch_count_build2",
+              "passed": true,
+              "observed": 9
+            },
+            {
+              "field": "global.build_mismatch_identity_sets_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "field": "global.audit_integrity_checks.exact_source_role_set_passed",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "field": "global.audit_integrity_checks.all_audit_integrity_checks_passed",
+              "passed": true,
+              "observed": true
+            }
+          ]
+        },
+        "B_exact_deterministic_equality": {
+          "passed": true,
+          "checks": [
+            {
+              "field": "g_r1_build1_value_vs_g_r1_build2_value",
+              "passed": true,
+              "equality_helper": "float64_bit_equal"
+            },
+            {
+              "field": "build_result_reconstruction_sha_equal",
+              "passed": true
+            },
+            {
+              "field": "build_validation_reconstruction_sha_equal",
+              "passed": true
+            },
+            {
+              "field": "build_prediction_within_sha_equal",
+              "passed": true
+            },
+            {
+              "field": "build_prediction_cross_sha_equal",
+              "passed": true
+            },
+            {
+              "field": "build_mismatch_values_bit_exact",
+              "passed": true
+            },
+            {
+              "field": "build_score_arrays_byte_exact",
+              "passed": true
+            }
+          ]
+        },
+        "C_et_mechanism": {
+          "passed": true,
+          "direct_et_model": false,
+          "selected_candidate_is_et": true,
+          "soft_ensemble_contains_et": false
+        },
+        "D_accepted_output_comparison": {
+          "passed": true,
+          "checks": [
+            {
+              "field": "maximum_build1_validation_absolute_score_difference",
+              "passed": true,
+              "observed": 2.220446049250313e-16
+            },
+            {
+              "field": "maximum_build1_test_absolute_score_difference",
+              "passed": true,
+              "observed": 3.3306690738754696e-16
+            },
+            {
+              "field": "maximum_build2_validation_absolute_score_difference",
+              "passed": true,
+              "observed": 2.220446049250313e-16
+            },
+            {
+              "field": "maximum_build2_test_absolute_score_difference",
+              "passed": true,
+              "observed": 3.3306690738754696e-16
+            },
+            {
+              "candidate": "LR_std_C0.1",
+              "field": "build1_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C0.1",
+              "field": "build1_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C0.1",
+              "field": "build2_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C0.1",
+              "field": "build2_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C1",
+              "field": "build1_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C1",
+              "field": "build1_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C1",
+              "field": "build2_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C1",
+              "field": "build2_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "DT_leaf5",
+              "field": "build1_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "DT_leaf5",
+              "field": "build1_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "DT_leaf5",
+              "field": "build2_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "DT_leaf5",
+              "field": "build2_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "build1_build2_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "build1_build2_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "maximum_build1_validation_absolute_score_difference",
+              "passed": true,
+              "observed": 2.220446049250313e-16
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "maximum_build1_test_absolute_score_difference",
+              "passed": true,
+              "observed": 3.3306690738754696e-16
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "maximum_build2_validation_absolute_score_difference",
+              "passed": true,
+              "observed": 2.220446049250313e-16
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "maximum_build2_test_absolute_score_difference",
+              "passed": true,
+              "observed": 3.3306690738754696e-16
+            },
+            {
+              "field": "maximum_et_score_absolute_difference",
+              "passed": true,
+              "observed": 3.3306690738754696e-16,
+              "derived_from_independent_fields": 3.3306690738754696e-16,
+              "reporting_only": true
+            }
+          ]
+        },
+        "E_metric_classification": {
+          "passed": true,
+          "metric": "avg_precision",
+          "eligible_metric_allowlist": [
+            "avg_precision",
+            "roc_auc"
+          ]
+        },
+        "F_metric_delta": {
+          "passed": true,
+          "absolute_difference_build1": 3.019170041751451e-08,
+          "absolute_difference_build2": 3.019170041751451e-08,
+          "relative_difference_build1": 9.938014065509185e-08,
+          "relative_difference_build2": 9.938014065509185e-08,
+          "metric_absolute_tolerance": 1e-07
+        },
+        "G_validation_and_categorical_invariants": {
+          "passed": true,
+          "checks": [
+            {
+              "field": "validation_categorical_mismatch_count_build1",
+              "passed": true,
+              "observed": 0
+            },
+            {
+              "field": "validation_categorical_mismatch_count_build2",
+              "passed": true,
+              "observed": 0
+            },
+            {
+              "field": "validation_numeric_mismatch_count_build1",
+              "passed": true,
+              "observed": 0
+            },
+            {
+              "field": "validation_numeric_mismatch_count_build2",
+              "passed": true,
+              "observed": 0
+            },
+            {
+              "field": "categorical_mismatch_count",
+              "passed": true,
+              "observed": 0
+            }
+          ]
+        },
+        "H_fail_closed": {
+          "passed": true,
+          "reason_codes": []
+        }
+      }
+    },
+    {
+      "fixture_role": "regression_fixture_only",
+      "experiment": "cross_project",
+      "target_project": "JM1",
+      "seed": 13,
+      "model": "AQRPE_v2_balanced",
+      "selected_candidate": "ET_leaf5",
+      "selection_mode": "balanced_objective",
+      "column": "roc_auc",
+      "event_id": "cross_project__JM1__seed_013",
+      "mechanistically_eligible_under_frozen_policy": true,
+      "currently_approved_exception": false,
+      "currently_unapproved_mismatch": true,
+      "reason_codes": [],
+      "predicate_results": {
+        "A_evidence_completeness": {
+          "passed": true,
+          "checks": [
+            {
+              "field": "global.strict_mismatch_count_build1",
+              "passed": true,
+              "observed": 9
+            },
+            {
+              "field": "global.strict_mismatch_count_build2",
+              "passed": true,
+              "observed": 9
+            },
+            {
+              "field": "global.build_mismatch_identity_sets_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "field": "global.audit_integrity_checks.exact_source_role_set_passed",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "field": "global.audit_integrity_checks.all_audit_integrity_checks_passed",
+              "passed": true,
+              "observed": true
+            }
+          ]
+        },
+        "B_exact_deterministic_equality": {
+          "passed": true,
+          "checks": [
+            {
+              "field": "g_r1_build1_value_vs_g_r1_build2_value",
+              "passed": true,
+              "equality_helper": "float64_bit_equal"
+            },
+            {
+              "field": "build_result_reconstruction_sha_equal",
+              "passed": true
+            },
+            {
+              "field": "build_validation_reconstruction_sha_equal",
+              "passed": true
+            },
+            {
+              "field": "build_prediction_within_sha_equal",
+              "passed": true
+            },
+            {
+              "field": "build_prediction_cross_sha_equal",
+              "passed": true
+            },
+            {
+              "field": "build_mismatch_values_bit_exact",
+              "passed": true
+            },
+            {
+              "field": "build_score_arrays_byte_exact",
+              "passed": true
+            }
+          ]
+        },
+        "C_et_mechanism": {
+          "passed": true,
+          "direct_et_model": false,
+          "selected_candidate_is_et": true,
+          "soft_ensemble_contains_et": false
+        },
+        "D_accepted_output_comparison": {
+          "passed": true,
+          "checks": [
+            {
+              "field": "maximum_build1_validation_absolute_score_difference",
+              "passed": true,
+              "observed": 2.220446049250313e-16
+            },
+            {
+              "field": "maximum_build1_test_absolute_score_difference",
+              "passed": true,
+              "observed": 3.3306690738754696e-16
+            },
+            {
+              "field": "maximum_build2_validation_absolute_score_difference",
+              "passed": true,
+              "observed": 2.220446049250313e-16
+            },
+            {
+              "field": "maximum_build2_test_absolute_score_difference",
+              "passed": true,
+              "observed": 3.3306690738754696e-16
+            },
+            {
+              "candidate": "LR_std_C0.1",
+              "field": "build1_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C0.1",
+              "field": "build1_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C0.1",
+              "field": "build2_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C0.1",
+              "field": "build2_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C1",
+              "field": "build1_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C1",
+              "field": "build1_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C1",
+              "field": "build2_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C1",
+              "field": "build2_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "DT_leaf5",
+              "field": "build1_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "DT_leaf5",
+              "field": "build1_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "DT_leaf5",
+              "field": "build2_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "DT_leaf5",
+              "field": "build2_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "build1_build2_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "build1_build2_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "maximum_build1_validation_absolute_score_difference",
+              "passed": true,
+              "observed": 2.220446049250313e-16
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "maximum_build1_test_absolute_score_difference",
+              "passed": true,
+              "observed": 3.3306690738754696e-16
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "maximum_build2_validation_absolute_score_difference",
+              "passed": true,
+              "observed": 2.220446049250313e-16
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "maximum_build2_test_absolute_score_difference",
+              "passed": true,
+              "observed": 3.3306690738754696e-16
+            },
+            {
+              "field": "maximum_et_score_absolute_difference",
+              "passed": true,
+              "observed": 3.3306690738754696e-16,
+              "derived_from_independent_fields": 3.3306690738754696e-16,
+              "reporting_only": true
+            }
+          ]
+        },
+        "E_metric_classification": {
+          "passed": true,
+          "metric": "roc_auc",
+          "eligible_metric_allowlist": [
+            "avg_precision",
+            "roc_auc"
+          ]
+        },
+        "F_metric_delta": {
+          "passed": true,
+          "absolute_difference_build1": 4.283498555857079e-08,
+          "absolute_difference_build2": 4.283498555857079e-08,
+          "relative_difference_build1": 6.399852140145853e-08,
+          "relative_difference_build2": 6.399852140145853e-08,
+          "metric_absolute_tolerance": 1e-07
+        },
+        "G_validation_and_categorical_invariants": {
+          "passed": true,
+          "checks": [
+            {
+              "field": "validation_categorical_mismatch_count_build1",
+              "passed": true,
+              "observed": 0
+            },
+            {
+              "field": "validation_categorical_mismatch_count_build2",
+              "passed": true,
+              "observed": 0
+            },
+            {
+              "field": "validation_numeric_mismatch_count_build1",
+              "passed": true,
+              "observed": 0
+            },
+            {
+              "field": "validation_numeric_mismatch_count_build2",
+              "passed": true,
+              "observed": 0
+            },
+            {
+              "field": "categorical_mismatch_count",
+              "passed": true,
+              "observed": 0
+            }
+          ]
+        },
+        "H_fail_closed": {
+          "passed": true,
+          "reason_codes": []
+        }
+      }
+    },
+    {
+      "fixture_role": "regression_fixture_only",
+      "experiment": "cross_project",
+      "target_project": "JM1",
+      "seed": 13,
+      "model": "AQRPE_v2_mcc",
+      "selected_candidate": "ET_leaf5",
+      "selection_mode": "mcc_objective",
+      "column": "avg_precision",
+      "event_id": "cross_project__JM1__seed_013",
+      "mechanistically_eligible_under_frozen_policy": true,
+      "currently_approved_exception": false,
+      "currently_unapproved_mismatch": true,
+      "reason_codes": [],
+      "predicate_results": {
+        "A_evidence_completeness": {
+          "passed": true,
+          "checks": [
+            {
+              "field": "global.strict_mismatch_count_build1",
+              "passed": true,
+              "observed": 9
+            },
+            {
+              "field": "global.strict_mismatch_count_build2",
+              "passed": true,
+              "observed": 9
+            },
+            {
+              "field": "global.build_mismatch_identity_sets_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "field": "global.audit_integrity_checks.exact_source_role_set_passed",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "field": "global.audit_integrity_checks.all_audit_integrity_checks_passed",
+              "passed": true,
+              "observed": true
+            }
+          ]
+        },
+        "B_exact_deterministic_equality": {
+          "passed": true,
+          "checks": [
+            {
+              "field": "g_r1_build1_value_vs_g_r1_build2_value",
+              "passed": true,
+              "equality_helper": "float64_bit_equal"
+            },
+            {
+              "field": "build_result_reconstruction_sha_equal",
+              "passed": true
+            },
+            {
+              "field": "build_validation_reconstruction_sha_equal",
+              "passed": true
+            },
+            {
+              "field": "build_prediction_within_sha_equal",
+              "passed": true
+            },
+            {
+              "field": "build_prediction_cross_sha_equal",
+              "passed": true
+            },
+            {
+              "field": "build_mismatch_values_bit_exact",
+              "passed": true
+            },
+            {
+              "field": "build_score_arrays_byte_exact",
+              "passed": true
+            }
+          ]
+        },
+        "C_et_mechanism": {
+          "passed": true,
+          "direct_et_model": false,
+          "selected_candidate_is_et": true,
+          "soft_ensemble_contains_et": false
+        },
+        "D_accepted_output_comparison": {
+          "passed": true,
+          "checks": [
+            {
+              "field": "maximum_build1_validation_absolute_score_difference",
+              "passed": true,
+              "observed": 2.220446049250313e-16
+            },
+            {
+              "field": "maximum_build1_test_absolute_score_difference",
+              "passed": true,
+              "observed": 3.3306690738754696e-16
+            },
+            {
+              "field": "maximum_build2_validation_absolute_score_difference",
+              "passed": true,
+              "observed": 2.220446049250313e-16
+            },
+            {
+              "field": "maximum_build2_test_absolute_score_difference",
+              "passed": true,
+              "observed": 3.3306690738754696e-16
+            },
+            {
+              "candidate": "LR_std_C0.1",
+              "field": "build1_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C0.1",
+              "field": "build1_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C0.1",
+              "field": "build2_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C0.1",
+              "field": "build2_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C1",
+              "field": "build1_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C1",
+              "field": "build1_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C1",
+              "field": "build2_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C1",
+              "field": "build2_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "DT_leaf5",
+              "field": "build1_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "DT_leaf5",
+              "field": "build1_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "DT_leaf5",
+              "field": "build2_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "DT_leaf5",
+              "field": "build2_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "build1_build2_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "build1_build2_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "maximum_build1_validation_absolute_score_difference",
+              "passed": true,
+              "observed": 2.220446049250313e-16
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "maximum_build1_test_absolute_score_difference",
+              "passed": true,
+              "observed": 3.3306690738754696e-16
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "maximum_build2_validation_absolute_score_difference",
+              "passed": true,
+              "observed": 2.220446049250313e-16
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "maximum_build2_test_absolute_score_difference",
+              "passed": true,
+              "observed": 3.3306690738754696e-16
+            },
+            {
+              "field": "maximum_et_score_absolute_difference",
+              "passed": true,
+              "observed": 3.3306690738754696e-16,
+              "derived_from_independent_fields": 3.3306690738754696e-16,
+              "reporting_only": true
+            }
+          ]
+        },
+        "E_metric_classification": {
+          "passed": true,
+          "metric": "avg_precision",
+          "eligible_metric_allowlist": [
+            "avg_precision",
+            "roc_auc"
+          ]
+        },
+        "F_metric_delta": {
+          "passed": true,
+          "absolute_difference_build1": 3.019170041751451e-08,
+          "absolute_difference_build2": 3.019170041751451e-08,
+          "relative_difference_build1": 9.938014065509185e-08,
+          "relative_difference_build2": 9.938014065509185e-08,
+          "metric_absolute_tolerance": 1e-07
+        },
+        "G_validation_and_categorical_invariants": {
+          "passed": true,
+          "checks": [
+            {
+              "field": "validation_categorical_mismatch_count_build1",
+              "passed": true,
+              "observed": 0
+            },
+            {
+              "field": "validation_categorical_mismatch_count_build2",
+              "passed": true,
+              "observed": 0
+            },
+            {
+              "field": "validation_numeric_mismatch_count_build1",
+              "passed": true,
+              "observed": 0
+            },
+            {
+              "field": "validation_numeric_mismatch_count_build2",
+              "passed": true,
+              "observed": 0
+            },
+            {
+              "field": "categorical_mismatch_count",
+              "passed": true,
+              "observed": 0
+            }
+          ]
+        },
+        "H_fail_closed": {
+          "passed": true,
+          "reason_codes": []
+        }
+      }
+    },
+    {
+      "fixture_role": "regression_fixture_only",
+      "experiment": "cross_project",
+      "target_project": "JM1",
+      "seed": 13,
+      "model": "AQRPE_v2_mcc",
+      "selected_candidate": "ET_leaf5",
+      "selection_mode": "mcc_objective",
+      "column": "roc_auc",
+      "event_id": "cross_project__JM1__seed_013",
+      "mechanistically_eligible_under_frozen_policy": true,
+      "currently_approved_exception": false,
+      "currently_unapproved_mismatch": true,
+      "reason_codes": [],
+      "predicate_results": {
+        "A_evidence_completeness": {
+          "passed": true,
+          "checks": [
+            {
+              "field": "global.strict_mismatch_count_build1",
+              "passed": true,
+              "observed": 9
+            },
+            {
+              "field": "global.strict_mismatch_count_build2",
+              "passed": true,
+              "observed": 9
+            },
+            {
+              "field": "global.build_mismatch_identity_sets_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "field": "global.audit_integrity_checks.exact_source_role_set_passed",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "field": "global.audit_integrity_checks.all_audit_integrity_checks_passed",
+              "passed": true,
+              "observed": true
+            }
+          ]
+        },
+        "B_exact_deterministic_equality": {
+          "passed": true,
+          "checks": [
+            {
+              "field": "g_r1_build1_value_vs_g_r1_build2_value",
+              "passed": true,
+              "equality_helper": "float64_bit_equal"
+            },
+            {
+              "field": "build_result_reconstruction_sha_equal",
+              "passed": true
+            },
+            {
+              "field": "build_validation_reconstruction_sha_equal",
+              "passed": true
+            },
+            {
+              "field": "build_prediction_within_sha_equal",
+              "passed": true
+            },
+            {
+              "field": "build_prediction_cross_sha_equal",
+              "passed": true
+            },
+            {
+              "field": "build_mismatch_values_bit_exact",
+              "passed": true
+            },
+            {
+              "field": "build_score_arrays_byte_exact",
+              "passed": true
+            }
+          ]
+        },
+        "C_et_mechanism": {
+          "passed": true,
+          "direct_et_model": false,
+          "selected_candidate_is_et": true,
+          "soft_ensemble_contains_et": false
+        },
+        "D_accepted_output_comparison": {
+          "passed": true,
+          "checks": [
+            {
+              "field": "maximum_build1_validation_absolute_score_difference",
+              "passed": true,
+              "observed": 2.220446049250313e-16
+            },
+            {
+              "field": "maximum_build1_test_absolute_score_difference",
+              "passed": true,
+              "observed": 3.3306690738754696e-16
+            },
+            {
+              "field": "maximum_build2_validation_absolute_score_difference",
+              "passed": true,
+              "observed": 2.220446049250313e-16
+            },
+            {
+              "field": "maximum_build2_test_absolute_score_difference",
+              "passed": true,
+              "observed": 3.3306690738754696e-16
+            },
+            {
+              "candidate": "LR_std_C0.1",
+              "field": "build1_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C0.1",
+              "field": "build1_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C0.1",
+              "field": "build2_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C0.1",
+              "field": "build2_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C1",
+              "field": "build1_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C1",
+              "field": "build1_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C1",
+              "field": "build2_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C1",
+              "field": "build2_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "DT_leaf5",
+              "field": "build1_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "DT_leaf5",
+              "field": "build1_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "DT_leaf5",
+              "field": "build2_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "DT_leaf5",
+              "field": "build2_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "build1_build2_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "build1_build2_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "maximum_build1_validation_absolute_score_difference",
+              "passed": true,
+              "observed": 2.220446049250313e-16
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "maximum_build1_test_absolute_score_difference",
+              "passed": true,
+              "observed": 3.3306690738754696e-16
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "maximum_build2_validation_absolute_score_difference",
+              "passed": true,
+              "observed": 2.220446049250313e-16
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "maximum_build2_test_absolute_score_difference",
+              "passed": true,
+              "observed": 3.3306690738754696e-16
+            },
+            {
+              "field": "maximum_et_score_absolute_difference",
+              "passed": true,
+              "observed": 3.3306690738754696e-16,
+              "derived_from_independent_fields": 3.3306690738754696e-16,
+              "reporting_only": true
+            }
+          ]
+        },
+        "E_metric_classification": {
+          "passed": true,
+          "metric": "roc_auc",
+          "eligible_metric_allowlist": [
+            "avg_precision",
+            "roc_auc"
+          ]
+        },
+        "F_metric_delta": {
+          "passed": true,
+          "absolute_difference_build1": 4.283498555857079e-08,
+          "absolute_difference_build2": 4.283498555857079e-08,
+          "relative_difference_build1": 6.399852140145853e-08,
+          "relative_difference_build2": 6.399852140145853e-08,
+          "metric_absolute_tolerance": 1e-07
+        },
+        "G_validation_and_categorical_invariants": {
+          "passed": true,
+          "checks": [
+            {
+              "field": "validation_categorical_mismatch_count_build1",
+              "passed": true,
+              "observed": 0
+            },
+            {
+              "field": "validation_categorical_mismatch_count_build2",
+              "passed": true,
+              "observed": 0
+            },
+            {
+              "field": "validation_numeric_mismatch_count_build1",
+              "passed": true,
+              "observed": 0
+            },
+            {
+              "field": "validation_numeric_mismatch_count_build2",
+              "passed": true,
+              "observed": 0
+            },
+            {
+              "field": "categorical_mismatch_count",
+              "passed": true,
+              "observed": 0
+            }
+          ]
+        },
+        "H_fail_closed": {
+          "passed": true,
+          "reason_codes": []
+        }
+      }
+    },
+    {
+      "fixture_role": "regression_fixture_only",
+      "experiment": "cross_project",
+      "target_project": "JM1",
+      "seed": 13,
+      "model": "AQRPE_v2_rank",
+      "selected_candidate": "ET_leaf5",
+      "selection_mode": "rank_objective_fixed_threshold",
+      "column": "avg_precision",
+      "event_id": "cross_project__JM1__seed_013",
+      "mechanistically_eligible_under_frozen_policy": true,
+      "currently_approved_exception": false,
+      "currently_unapproved_mismatch": true,
+      "reason_codes": [],
+      "predicate_results": {
+        "A_evidence_completeness": {
+          "passed": true,
+          "checks": [
+            {
+              "field": "global.strict_mismatch_count_build1",
+              "passed": true,
+              "observed": 9
+            },
+            {
+              "field": "global.strict_mismatch_count_build2",
+              "passed": true,
+              "observed": 9
+            },
+            {
+              "field": "global.build_mismatch_identity_sets_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "field": "global.audit_integrity_checks.exact_source_role_set_passed",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "field": "global.audit_integrity_checks.all_audit_integrity_checks_passed",
+              "passed": true,
+              "observed": true
+            }
+          ]
+        },
+        "B_exact_deterministic_equality": {
+          "passed": true,
+          "checks": [
+            {
+              "field": "g_r1_build1_value_vs_g_r1_build2_value",
+              "passed": true,
+              "equality_helper": "float64_bit_equal"
+            },
+            {
+              "field": "build_result_reconstruction_sha_equal",
+              "passed": true
+            },
+            {
+              "field": "build_validation_reconstruction_sha_equal",
+              "passed": true
+            },
+            {
+              "field": "build_prediction_within_sha_equal",
+              "passed": true
+            },
+            {
+              "field": "build_prediction_cross_sha_equal",
+              "passed": true
+            },
+            {
+              "field": "build_mismatch_values_bit_exact",
+              "passed": true
+            },
+            {
+              "field": "build_score_arrays_byte_exact",
+              "passed": true
+            }
+          ]
+        },
+        "C_et_mechanism": {
+          "passed": true,
+          "direct_et_model": false,
+          "selected_candidate_is_et": true,
+          "soft_ensemble_contains_et": false
+        },
+        "D_accepted_output_comparison": {
+          "passed": true,
+          "checks": [
+            {
+              "field": "maximum_build1_validation_absolute_score_difference",
+              "passed": true,
+              "observed": 2.220446049250313e-16
+            },
+            {
+              "field": "maximum_build1_test_absolute_score_difference",
+              "passed": true,
+              "observed": 3.3306690738754696e-16
+            },
+            {
+              "field": "maximum_build2_validation_absolute_score_difference",
+              "passed": true,
+              "observed": 2.220446049250313e-16
+            },
+            {
+              "field": "maximum_build2_test_absolute_score_difference",
+              "passed": true,
+              "observed": 3.3306690738754696e-16
+            },
+            {
+              "candidate": "LR_std_C0.1",
+              "field": "build1_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C0.1",
+              "field": "build1_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C0.1",
+              "field": "build2_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C0.1",
+              "field": "build2_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C1",
+              "field": "build1_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C1",
+              "field": "build1_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C1",
+              "field": "build2_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C1",
+              "field": "build2_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "DT_leaf5",
+              "field": "build1_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "DT_leaf5",
+              "field": "build1_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "DT_leaf5",
+              "field": "build2_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "DT_leaf5",
+              "field": "build2_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "build1_build2_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "build1_build2_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "maximum_build1_validation_absolute_score_difference",
+              "passed": true,
+              "observed": 2.220446049250313e-16
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "maximum_build1_test_absolute_score_difference",
+              "passed": true,
+              "observed": 3.3306690738754696e-16
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "maximum_build2_validation_absolute_score_difference",
+              "passed": true,
+              "observed": 2.220446049250313e-16
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "maximum_build2_test_absolute_score_difference",
+              "passed": true,
+              "observed": 3.3306690738754696e-16
+            },
+            {
+              "field": "maximum_et_score_absolute_difference",
+              "passed": true,
+              "observed": 3.3306690738754696e-16,
+              "derived_from_independent_fields": 3.3306690738754696e-16,
+              "reporting_only": true
+            }
+          ]
+        },
+        "E_metric_classification": {
+          "passed": true,
+          "metric": "avg_precision",
+          "eligible_metric_allowlist": [
+            "avg_precision",
+            "roc_auc"
+          ]
+        },
+        "F_metric_delta": {
+          "passed": true,
+          "absolute_difference_build1": 3.019170041751451e-08,
+          "absolute_difference_build2": 3.019170041751451e-08,
+          "relative_difference_build1": 9.938014065509185e-08,
+          "relative_difference_build2": 9.938014065509185e-08,
+          "metric_absolute_tolerance": 1e-07
+        },
+        "G_validation_and_categorical_invariants": {
+          "passed": true,
+          "checks": [
+            {
+              "field": "validation_categorical_mismatch_count_build1",
+              "passed": true,
+              "observed": 0
+            },
+            {
+              "field": "validation_categorical_mismatch_count_build2",
+              "passed": true,
+              "observed": 0
+            },
+            {
+              "field": "validation_numeric_mismatch_count_build1",
+              "passed": true,
+              "observed": 0
+            },
+            {
+              "field": "validation_numeric_mismatch_count_build2",
+              "passed": true,
+              "observed": 0
+            },
+            {
+              "field": "categorical_mismatch_count",
+              "passed": true,
+              "observed": 0
+            }
+          ]
+        },
+        "H_fail_closed": {
+          "passed": true,
+          "reason_codes": []
+        }
+      }
+    },
+    {
+      "fixture_role": "regression_fixture_only",
+      "experiment": "cross_project",
+      "target_project": "JM1",
+      "seed": 13,
+      "model": "AQRPE_v2_rank",
+      "selected_candidate": "ET_leaf5",
+      "selection_mode": "rank_objective_fixed_threshold",
+      "column": "roc_auc",
+      "event_id": "cross_project__JM1__seed_013",
+      "mechanistically_eligible_under_frozen_policy": true,
+      "currently_approved_exception": false,
+      "currently_unapproved_mismatch": true,
+      "reason_codes": [],
+      "predicate_results": {
+        "A_evidence_completeness": {
+          "passed": true,
+          "checks": [
+            {
+              "field": "global.strict_mismatch_count_build1",
+              "passed": true,
+              "observed": 9
+            },
+            {
+              "field": "global.strict_mismatch_count_build2",
+              "passed": true,
+              "observed": 9
+            },
+            {
+              "field": "global.build_mismatch_identity_sets_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "field": "global.audit_integrity_checks.exact_source_role_set_passed",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "field": "global.audit_integrity_checks.all_audit_integrity_checks_passed",
+              "passed": true,
+              "observed": true
+            }
+          ]
+        },
+        "B_exact_deterministic_equality": {
+          "passed": true,
+          "checks": [
+            {
+              "field": "g_r1_build1_value_vs_g_r1_build2_value",
+              "passed": true,
+              "equality_helper": "float64_bit_equal"
+            },
+            {
+              "field": "build_result_reconstruction_sha_equal",
+              "passed": true
+            },
+            {
+              "field": "build_validation_reconstruction_sha_equal",
+              "passed": true
+            },
+            {
+              "field": "build_prediction_within_sha_equal",
+              "passed": true
+            },
+            {
+              "field": "build_prediction_cross_sha_equal",
+              "passed": true
+            },
+            {
+              "field": "build_mismatch_values_bit_exact",
+              "passed": true
+            },
+            {
+              "field": "build_score_arrays_byte_exact",
+              "passed": true
+            }
+          ]
+        },
+        "C_et_mechanism": {
+          "passed": true,
+          "direct_et_model": false,
+          "selected_candidate_is_et": true,
+          "soft_ensemble_contains_et": false
+        },
+        "D_accepted_output_comparison": {
+          "passed": true,
+          "checks": [
+            {
+              "field": "maximum_build1_validation_absolute_score_difference",
+              "passed": true,
+              "observed": 2.220446049250313e-16
+            },
+            {
+              "field": "maximum_build1_test_absolute_score_difference",
+              "passed": true,
+              "observed": 3.3306690738754696e-16
+            },
+            {
+              "field": "maximum_build2_validation_absolute_score_difference",
+              "passed": true,
+              "observed": 2.220446049250313e-16
+            },
+            {
+              "field": "maximum_build2_test_absolute_score_difference",
+              "passed": true,
+              "observed": 3.3306690738754696e-16
+            },
+            {
+              "candidate": "LR_std_C0.1",
+              "field": "build1_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C0.1",
+              "field": "build1_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C0.1",
+              "field": "build2_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C0.1",
+              "field": "build2_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C1",
+              "field": "build1_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C1",
+              "field": "build1_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C1",
+              "field": "build2_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C1",
+              "field": "build2_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "DT_leaf5",
+              "field": "build1_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "DT_leaf5",
+              "field": "build1_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "DT_leaf5",
+              "field": "build2_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "DT_leaf5",
+              "field": "build2_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "build1_build2_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "build1_build2_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "maximum_build1_validation_absolute_score_difference",
+              "passed": true,
+              "observed": 2.220446049250313e-16
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "maximum_build1_test_absolute_score_difference",
+              "passed": true,
+              "observed": 3.3306690738754696e-16
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "maximum_build2_validation_absolute_score_difference",
+              "passed": true,
+              "observed": 2.220446049250313e-16
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "maximum_build2_test_absolute_score_difference",
+              "passed": true,
+              "observed": 3.3306690738754696e-16
+            },
+            {
+              "field": "maximum_et_score_absolute_difference",
+              "passed": true,
+              "observed": 3.3306690738754696e-16,
+              "derived_from_independent_fields": 3.3306690738754696e-16,
+              "reporting_only": true
+            }
+          ]
+        },
+        "E_metric_classification": {
+          "passed": true,
+          "metric": "roc_auc",
+          "eligible_metric_allowlist": [
+            "avg_precision",
+            "roc_auc"
+          ]
+        },
+        "F_metric_delta": {
+          "passed": true,
+          "absolute_difference_build1": 4.283498555857079e-08,
+          "absolute_difference_build2": 4.283498555857079e-08,
+          "relative_difference_build1": 6.399852140145853e-08,
+          "relative_difference_build2": 6.399852140145853e-08,
+          "metric_absolute_tolerance": 1e-07
+        },
+        "G_validation_and_categorical_invariants": {
+          "passed": true,
+          "checks": [
+            {
+              "field": "validation_categorical_mismatch_count_build1",
+              "passed": true,
+              "observed": 0
+            },
+            {
+              "field": "validation_categorical_mismatch_count_build2",
+              "passed": true,
+              "observed": 0
+            },
+            {
+              "field": "validation_numeric_mismatch_count_build1",
+              "passed": true,
+              "observed": 0
+            },
+            {
+              "field": "validation_numeric_mismatch_count_build2",
+              "passed": true,
+              "observed": 0
+            },
+            {
+              "field": "categorical_mismatch_count",
+              "passed": true,
+              "observed": 0
+            }
+          ]
+        },
+        "H_fail_closed": {
+          "passed": true,
+          "reason_codes": []
+        }
+      }
+    },
+    {
+      "fixture_role": "regression_fixture_only",
+      "experiment": "cross_project",
+      "target_project": "JM1",
+      "seed": 13,
+      "model": "ET_leaf5",
+      "selected_candidate": "ET_leaf5",
+      "selection_mode": "single_candidate_balanced_threshold",
+      "column": "avg_precision",
+      "event_id": "cross_project__JM1__seed_013",
+      "mechanistically_eligible_under_frozen_policy": true,
+      "currently_approved_exception": false,
+      "currently_unapproved_mismatch": true,
+      "reason_codes": [],
+      "predicate_results": {
+        "A_evidence_completeness": {
+          "passed": true,
+          "checks": [
+            {
+              "field": "global.strict_mismatch_count_build1",
+              "passed": true,
+              "observed": 9
+            },
+            {
+              "field": "global.strict_mismatch_count_build2",
+              "passed": true,
+              "observed": 9
+            },
+            {
+              "field": "global.build_mismatch_identity_sets_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "field": "global.audit_integrity_checks.exact_source_role_set_passed",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "field": "global.audit_integrity_checks.all_audit_integrity_checks_passed",
+              "passed": true,
+              "observed": true
+            }
+          ]
+        },
+        "B_exact_deterministic_equality": {
+          "passed": true,
+          "checks": [
+            {
+              "field": "g_r1_build1_value_vs_g_r1_build2_value",
+              "passed": true,
+              "equality_helper": "float64_bit_equal"
+            },
+            {
+              "field": "build_result_reconstruction_sha_equal",
+              "passed": true
+            },
+            {
+              "field": "build_validation_reconstruction_sha_equal",
+              "passed": true
+            },
+            {
+              "field": "build_prediction_within_sha_equal",
+              "passed": true
+            },
+            {
+              "field": "build_prediction_cross_sha_equal",
+              "passed": true
+            },
+            {
+              "field": "build_mismatch_values_bit_exact",
+              "passed": true
+            },
+            {
+              "field": "build_score_arrays_byte_exact",
+              "passed": true
+            }
+          ]
+        },
+        "C_et_mechanism": {
+          "passed": true,
+          "direct_et_model": true,
+          "selected_candidate_is_et": true,
+          "soft_ensemble_contains_et": false
+        },
+        "D_accepted_output_comparison": {
+          "passed": true,
+          "checks": [
+            {
+              "field": "maximum_build1_validation_absolute_score_difference",
+              "passed": true,
+              "observed": 2.220446049250313e-16
+            },
+            {
+              "field": "maximum_build1_test_absolute_score_difference",
+              "passed": true,
+              "observed": 3.3306690738754696e-16
+            },
+            {
+              "field": "maximum_build2_validation_absolute_score_difference",
+              "passed": true,
+              "observed": 2.220446049250313e-16
+            },
+            {
+              "field": "maximum_build2_test_absolute_score_difference",
+              "passed": true,
+              "observed": 3.3306690738754696e-16
+            },
+            {
+              "candidate": "LR_std_C0.1",
+              "field": "build1_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C0.1",
+              "field": "build1_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C0.1",
+              "field": "build2_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C0.1",
+              "field": "build2_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C1",
+              "field": "build1_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C1",
+              "field": "build1_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C1",
+              "field": "build2_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C1",
+              "field": "build2_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "DT_leaf5",
+              "field": "build1_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "DT_leaf5",
+              "field": "build1_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "DT_leaf5",
+              "field": "build2_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "DT_leaf5",
+              "field": "build2_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "build1_build2_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "build1_build2_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "maximum_build1_validation_absolute_score_difference",
+              "passed": true,
+              "observed": 2.220446049250313e-16
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "maximum_build1_test_absolute_score_difference",
+              "passed": true,
+              "observed": 3.3306690738754696e-16
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "maximum_build2_validation_absolute_score_difference",
+              "passed": true,
+              "observed": 2.220446049250313e-16
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "maximum_build2_test_absolute_score_difference",
+              "passed": true,
+              "observed": 3.3306690738754696e-16
+            },
+            {
+              "field": "maximum_et_score_absolute_difference",
+              "passed": true,
+              "observed": 3.3306690738754696e-16,
+              "derived_from_independent_fields": 3.3306690738754696e-16,
+              "reporting_only": true
+            }
+          ]
+        },
+        "E_metric_classification": {
+          "passed": true,
+          "metric": "avg_precision",
+          "eligible_metric_allowlist": [
+            "avg_precision",
+            "roc_auc"
+          ]
+        },
+        "F_metric_delta": {
+          "passed": true,
+          "absolute_difference_build1": 3.019170041751451e-08,
+          "absolute_difference_build2": 3.019170041751451e-08,
+          "relative_difference_build1": 9.938014065509185e-08,
+          "relative_difference_build2": 9.938014065509185e-08,
+          "metric_absolute_tolerance": 1e-07
+        },
+        "G_validation_and_categorical_invariants": {
+          "passed": true,
+          "checks": [
+            {
+              "field": "validation_categorical_mismatch_count_build1",
+              "passed": true,
+              "observed": 0
+            },
+            {
+              "field": "validation_categorical_mismatch_count_build2",
+              "passed": true,
+              "observed": 0
+            },
+            {
+              "field": "validation_numeric_mismatch_count_build1",
+              "passed": true,
+              "observed": 0
+            },
+            {
+              "field": "validation_numeric_mismatch_count_build2",
+              "passed": true,
+              "observed": 0
+            },
+            {
+              "field": "categorical_mismatch_count",
+              "passed": true,
+              "observed": 0
+            }
+          ]
+        },
+        "H_fail_closed": {
+          "passed": true,
+          "reason_codes": []
+        }
+      }
+    },
+    {
+      "fixture_role": "regression_fixture_only",
+      "experiment": "cross_project",
+      "target_project": "JM1",
+      "seed": 13,
+      "model": "ET_leaf5",
+      "selected_candidate": "ET_leaf5",
+      "selection_mode": "single_candidate_balanced_threshold",
+      "column": "roc_auc",
+      "event_id": "cross_project__JM1__seed_013",
+      "mechanistically_eligible_under_frozen_policy": true,
+      "currently_approved_exception": false,
+      "currently_unapproved_mismatch": true,
+      "reason_codes": [],
+      "predicate_results": {
+        "A_evidence_completeness": {
+          "passed": true,
+          "checks": [
+            {
+              "field": "global.strict_mismatch_count_build1",
+              "passed": true,
+              "observed": 9
+            },
+            {
+              "field": "global.strict_mismatch_count_build2",
+              "passed": true,
+              "observed": 9
+            },
+            {
+              "field": "global.build_mismatch_identity_sets_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "field": "global.audit_integrity_checks.exact_source_role_set_passed",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "field": "global.audit_integrity_checks.all_audit_integrity_checks_passed",
+              "passed": true,
+              "observed": true
+            }
+          ]
+        },
+        "B_exact_deterministic_equality": {
+          "passed": true,
+          "checks": [
+            {
+              "field": "g_r1_build1_value_vs_g_r1_build2_value",
+              "passed": true,
+              "equality_helper": "float64_bit_equal"
+            },
+            {
+              "field": "build_result_reconstruction_sha_equal",
+              "passed": true
+            },
+            {
+              "field": "build_validation_reconstruction_sha_equal",
+              "passed": true
+            },
+            {
+              "field": "build_prediction_within_sha_equal",
+              "passed": true
+            },
+            {
+              "field": "build_prediction_cross_sha_equal",
+              "passed": true
+            },
+            {
+              "field": "build_mismatch_values_bit_exact",
+              "passed": true
+            },
+            {
+              "field": "build_score_arrays_byte_exact",
+              "passed": true
+            }
+          ]
+        },
+        "C_et_mechanism": {
+          "passed": true,
+          "direct_et_model": true,
+          "selected_candidate_is_et": true,
+          "soft_ensemble_contains_et": false
+        },
+        "D_accepted_output_comparison": {
+          "passed": true,
+          "checks": [
+            {
+              "field": "maximum_build1_validation_absolute_score_difference",
+              "passed": true,
+              "observed": 2.220446049250313e-16
+            },
+            {
+              "field": "maximum_build1_test_absolute_score_difference",
+              "passed": true,
+              "observed": 3.3306690738754696e-16
+            },
+            {
+              "field": "maximum_build2_validation_absolute_score_difference",
+              "passed": true,
+              "observed": 2.220446049250313e-16
+            },
+            {
+              "field": "maximum_build2_test_absolute_score_difference",
+              "passed": true,
+              "observed": 3.3306690738754696e-16
+            },
+            {
+              "candidate": "LR_std_C0.1",
+              "field": "build1_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C0.1",
+              "field": "build1_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C0.1",
+              "field": "build2_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C0.1",
+              "field": "build2_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C1",
+              "field": "build1_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C1",
+              "field": "build1_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C1",
+              "field": "build2_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C1",
+              "field": "build2_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "DT_leaf5",
+              "field": "build1_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "DT_leaf5",
+              "field": "build1_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "DT_leaf5",
+              "field": "build2_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "DT_leaf5",
+              "field": "build2_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "build1_build2_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "build1_build2_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "maximum_build1_validation_absolute_score_difference",
+              "passed": true,
+              "observed": 2.220446049250313e-16
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "maximum_build1_test_absolute_score_difference",
+              "passed": true,
+              "observed": 3.3306690738754696e-16
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "maximum_build2_validation_absolute_score_difference",
+              "passed": true,
+              "observed": 2.220446049250313e-16
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "maximum_build2_test_absolute_score_difference",
+              "passed": true,
+              "observed": 3.3306690738754696e-16
+            },
+            {
+              "field": "maximum_et_score_absolute_difference",
+              "passed": true,
+              "observed": 3.3306690738754696e-16,
+              "derived_from_independent_fields": 3.3306690738754696e-16,
+              "reporting_only": true
+            }
+          ]
+        },
+        "E_metric_classification": {
+          "passed": true,
+          "metric": "roc_auc",
+          "eligible_metric_allowlist": [
+            "avg_precision",
+            "roc_auc"
+          ]
+        },
+        "F_metric_delta": {
+          "passed": true,
+          "absolute_difference_build1": 4.283498555857079e-08,
+          "absolute_difference_build2": 4.283498555857079e-08,
+          "relative_difference_build1": 6.399852140145853e-08,
+          "relative_difference_build2": 6.399852140145853e-08,
+          "metric_absolute_tolerance": 1e-07
+        },
+        "G_validation_and_categorical_invariants": {
+          "passed": true,
+          "checks": [
+            {
+              "field": "validation_categorical_mismatch_count_build1",
+              "passed": true,
+              "observed": 0
+            },
+            {
+              "field": "validation_categorical_mismatch_count_build2",
+              "passed": true,
+              "observed": 0
+            },
+            {
+              "field": "validation_numeric_mismatch_count_build1",
+              "passed": true,
+              "observed": 0
+            },
+            {
+              "field": "validation_numeric_mismatch_count_build2",
+              "passed": true,
+              "observed": 0
+            },
+            {
+              "field": "categorical_mismatch_count",
+              "passed": true,
+              "observed": 0
+            }
+          ]
+        },
+        "H_fail_closed": {
+          "passed": true,
+          "reason_codes": []
+        }
+      }
+    },
+    {
+      "fixture_role": "regression_fixture_only",
+      "experiment": "cross_project",
+      "target_project": "JM1",
+      "seed": 42,
+      "model": "AQRPE_v2_rank",
+      "selected_candidate": "ET_leaf5",
+      "selection_mode": "rank_objective_fixed_threshold",
+      "column": "roc_auc",
+      "event_id": "cross_project__JM1__seed_042",
+      "mechanistically_eligible_under_frozen_policy": true,
+      "currently_approved_exception": true,
+      "currently_unapproved_mismatch": false,
+      "reason_codes": [],
+      "predicate_results": {
+        "A_evidence_completeness": {
+          "passed": true,
+          "checks": [
+            {
+              "field": "global.strict_mismatch_count_build1",
+              "passed": true,
+              "observed": 9
+            },
+            {
+              "field": "global.strict_mismatch_count_build2",
+              "passed": true,
+              "observed": 9
+            },
+            {
+              "field": "global.build_mismatch_identity_sets_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "field": "global.audit_integrity_checks.exact_source_role_set_passed",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "field": "global.audit_integrity_checks.all_audit_integrity_checks_passed",
+              "passed": true,
+              "observed": true
+            }
+          ]
+        },
+        "B_exact_deterministic_equality": {
+          "passed": true,
+          "checks": [
+            {
+              "field": "g_r1_build1_value_vs_g_r1_build2_value",
+              "passed": true,
+              "equality_helper": "float64_bit_equal"
+            },
+            {
+              "field": "build_result_reconstruction_sha_equal",
+              "passed": true
+            },
+            {
+              "field": "build_validation_reconstruction_sha_equal",
+              "passed": true
+            },
+            {
+              "field": "build_prediction_within_sha_equal",
+              "passed": true
+            },
+            {
+              "field": "build_prediction_cross_sha_equal",
+              "passed": true
+            },
+            {
+              "field": "build_mismatch_values_bit_exact",
+              "passed": true
+            },
+            {
+              "field": "build_score_arrays_byte_exact",
+              "passed": true
+            }
+          ]
+        },
+        "C_et_mechanism": {
+          "passed": true,
+          "direct_et_model": false,
+          "selected_candidate_is_et": true,
+          "soft_ensemble_contains_et": false
+        },
+        "D_accepted_output_comparison": {
+          "passed": true,
+          "checks": [
+            {
+              "field": "maximum_build1_validation_absolute_score_difference",
+              "passed": true,
+              "observed": 2.220446049250313e-16
+            },
+            {
+              "field": "maximum_build1_test_absolute_score_difference",
+              "passed": true,
+              "observed": 4.440892098500626e-16
+            },
+            {
+              "field": "maximum_build2_validation_absolute_score_difference",
+              "passed": true,
+              "observed": 2.220446049250313e-16
+            },
+            {
+              "field": "maximum_build2_test_absolute_score_difference",
+              "passed": true,
+              "observed": 4.440892098500626e-16
+            },
+            {
+              "candidate": "LR_std_C0.1",
+              "field": "build1_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C0.1",
+              "field": "build1_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C0.1",
+              "field": "build2_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C0.1",
+              "field": "build2_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C1",
+              "field": "build1_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C1",
+              "field": "build1_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C1",
+              "field": "build2_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "LR_std_C1",
+              "field": "build2_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "DT_leaf5",
+              "field": "build1_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "DT_leaf5",
+              "field": "build1_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "DT_leaf5",
+              "field": "build2_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "DT_leaf5",
+              "field": "build2_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "build1_build2_validation_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "build1_build2_test_score_byte_equal",
+              "passed": true,
+              "observed": true
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "maximum_build1_validation_absolute_score_difference",
+              "passed": true,
+              "observed": 2.220446049250313e-16
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "maximum_build1_test_absolute_score_difference",
+              "passed": true,
+              "observed": 4.440892098500626e-16
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "maximum_build2_validation_absolute_score_difference",
+              "passed": true,
+              "observed": 2.220446049250313e-16
+            },
+            {
+              "candidate": "ET_leaf5",
+              "field": "maximum_build2_test_absolute_score_difference",
+              "passed": true,
+              "observed": 4.440892098500626e-16
+            },
+            {
+              "field": "maximum_et_score_absolute_difference",
+              "passed": true,
+              "observed": 4.440892098500626e-16,
+              "derived_from_independent_fields": 4.440892098500626e-16,
+              "reporting_only": true
+            }
+          ]
+        },
+        "E_metric_classification": {
+          "passed": true,
+          "metric": "roc_auc",
+          "eligible_metric_allowlist": [
+            "avg_precision",
+            "roc_auc"
+          ]
+        },
+        "F_metric_delta": {
+          "passed": true,
+          "absolute_difference_build1": 4.283498544754849e-08,
+          "absolute_difference_build2": 4.283498544754849e-08,
+          "relative_difference_build1": 6.392706981051185e-08,
+          "relative_difference_build2": 6.392706981051185e-08,
+          "metric_absolute_tolerance": 1e-07
+        },
+        "G_validation_and_categorical_invariants": {
+          "passed": true,
+          "checks": [
+            {
+              "field": "validation_categorical_mismatch_count_build1",
+              "passed": true,
+              "observed": 0
+            },
+            {
+              "field": "validation_categorical_mismatch_count_build2",
+              "passed": true,
+              "observed": 0
+            },
+            {
+              "field": "validation_numeric_mismatch_count_build1",
+              "passed": true,
+              "observed": 0
+            },
+            {
+              "field": "validation_numeric_mismatch_count_build2",
+              "passed": true,
+              "observed": 0
+            },
+            {
+              "field": "categorical_mismatch_count",
+              "passed": true,
+              "observed": 0
+            }
+          ]
+        },
+        "H_fail_closed": {
+          "passed": true,
+          "reason_codes": []
+        }
+      }
+    }
+  ],
+  "current_classification_counts": {
+    "mechanistically_eligible_rows": 9,
+    "currently_approved_rows": 1,
+    "currently_unapproved_rows": 8,
+    "matrix_row_count": 9
+  },
+  "production_activity_counters": {
+    "model_fits_executed": 0,
+    "prediction_calls_executed": 0,
+    "specification_generator_executions": 1,
+    "production_model_evaluation_builds_executed": 0,
+    "repository_production_artifacts_published": 0
+  },
+  "authorization_flags": {
+    "production_authorization": false,
+    "part3b_complete": false,
+    "part3c_authorized": false,
+    "policy_enforced": false,
+    "production_validator_changed": false,
+    "canonical_file_changed": false
+  },
+  "specification_integrity_checks": {
+    "reconciliation_json_sha_verified": true,
+    "mismatch_matrix_sha_verified": true,
+    "source_evidence_hashes_verified": true,
+    "source_evidence_schema_verified": true,
+    "matrix_row_count_is_9": true,
+    "approved_count_is_1": true,
+    "unapproved_count_is_8": true,
+    "eligible_metric_allowlist_exact": true,
+    "exact_equality_rules_present": true,
+    "float64_bit_equal_helper_is_executable": true,
+    "four_et_score_delta_requirements_present": true,
+    "candidate_level_non_et_checks_present": true,
+    "fail_closed_rules_exact": true,
+    "predicate_free_of_identity_hardcoding": true,
+    "regression_fixtures_separated_from_predicate": true,
+    "all_nine_rows_mechanistically_eligible": true,
+    "approval_status_unchanged": true,
+    "policy_remains_unenforced": true,
+    "production_flags_remain_false": true,
+    "transactional_publication_ready": true,
+    "json_markdown_consistency": true,
+    "all_specification_checks_passed": true
+  }
+}

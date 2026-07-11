@@ -1,0 +1,16 @@
+{
+  "files": {
+    "reports/gd6_acceptance_contract_v1.json": "9ab0879cb08a5f4f7fb0e22598a25a0561c8842b208c5f8a770a88b45bec4fc7",
+    "reports/gd6_acceptance_contract_v1.md": "4a8997e8a9e4a2b8aef6acbc444a3bcdd524341d1658067e44b60d72f1802fa2",
+    "reports/gd6_benchmark_manifest_v1.json": "c812b98f5903186a1cd4d475f71eac90a8db78f12858ce2e7aa890b4314906fa",
+    "reports/gd6_benchmark_manifest_v1.md": "f480299a74a7326b42d70dd7cc28fcf963a8fa59269c6821ffb06ed8f0cd8dc9",
+    "reports/gd6_reference_environment_v1.json": "2aff7e19b699d6b8b92e63db2e5abeda6d093e65d468c8a675f5f65bdcb2af48",
+    "scripts/build_gd6_acceptance_contract_v1.py": "6810c0ad8bca4d5328e954146a1d1bb759aa8e3e994223f9708107be045b62b5",
+    "scripts/verify_gd6_acceptance_contract_v1.py": "5899d811bfe4ea2269e646647a2b769bde582148e4fbc3efcc9df142223dfd3e"
+  },
+  "hash_algorithm": "SHA-256",
+  "manifest_id": "SEMIT-GD6-CONTRACT-FREEZE-MANIFEST",
+  "self_hash_included": false,
+  "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd",
+  "version": "1.0"
+}

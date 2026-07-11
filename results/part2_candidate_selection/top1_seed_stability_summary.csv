@@ -1,0 +1,10 @@
+scope,selector_model,mode,experiment,group_count,unanimous_group_count,unanimous_group_proportion,at_least_four_group_count,at_least_four_group_proportion,modal_tie_group_count,mean_modal_proportion,median_modal_proportion,min_modal_proportion,max_modal_proportion,mean_pairwise_agreement,median_pairwise_agreement,min_pairwise_agreement,max_pairwise_agreement,mean_normalized_entropy,median_normalized_entropy,min_normalized_entropy,max_normalized_entropy
+by_setting,AQRPE_v2_balanced,balanced,cross_project,5,4,0.8,5,1.0,0,0.96,1.0,0.8,1.0,0.9199999999999999,1.0,0.6,1.0,0.07219280948873623,0.0,-0.0,0.36096404744368116
+by_setting,AQRPE_v2_balanced,balanced,within_project,5,1,0.2,1,0.2,0,0.64,0.6,0.4,1.0,0.42000000000000004,0.3,0.1,1.0,0.5634779878251369,0.6854752972273345,-0.0,0.9609640474436812
+by_setting,AQRPE_v2_mcc,mcc,cross_project,5,5,1.0,5,1.0,0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,-0.0,-0.0
+by_setting,AQRPE_v2_mcc,mcc,within_project,5,1,0.2,1,0.2,0,0.6,0.6,0.4,1.0,0.38000000000000006,0.3,0.1,1.0,0.6185757378684063,0.6854752972273345,-0.0,0.9609640474436812
+by_setting,AQRPE_v2_rank,rank,cross_project,5,5,1.0,5,1.0,0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,-0.0,-0.0
+by_setting,AQRPE_v2_rank,rank,within_project,5,2,0.4,2,0.4,0,0.76,0.6,0.6,1.0,0.62,0.4,0.3,1.0,0.3312851783364007,0.4854752972273344,-0.0,0.6854752972273345
+overall,AQRPE_v2_balanced,balanced,all,10,5,0.5,6,0.6,0,0.7999999999999999,0.9,0.4,1.0,0.67,0.8,0.1,1.0,0.31783539865693655,0.18048202372184058,-0.0,0.9609640474436812
+overall,AQRPE_v2_mcc,mcc,all,10,6,0.6,6,0.6,0,0.7999999999999999,1.0,0.4,1.0,0.6900000000000001,1.0,0.1,1.0,0.3092878689342031,0.0,-0.0,0.9609640474436812
+overall,AQRPE_v2_rank,rank,all,10,7,0.7,7,0.7,0,0.8800000000000001,1.0,0.6,1.0,0.8100000000000002,1.0,0.3,1.0,0.16564258916820035,0.0,-0.0,0.6854752972273345

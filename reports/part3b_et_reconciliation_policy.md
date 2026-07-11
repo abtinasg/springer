@@ -1,0 +1,210 @@
+# Part 3B ExtraTrees Reconciliation Policy Specification
+
+**Stage:** Part 3B.2R.1-G.D5.2
+**Starting commit:** `3b62c0a66331dc26809641fbd4e6466f499c31f0`
+**Policy ID:** et_rank_metric_reconciliation
+**Policy version:** 1.0.1
+
+## Purpose and Non-Enforcement Warning
+
+This document freezes the exact mechanistic predicate `et_rank_metric_reconciliation_eligible` as a **specified, not enforced** policy.
+The production validator is **unchanged**. Production authorization is **false**.
+Mechanistic eligibility does **not** change current approval status.
+
+- **Policy status:** specified_not_enforced
+- **Production validator status:** unchanged
+- **Production authorization:** False
+- **Policy enforced:** False
+- **Part 3B complete:** False
+- **Part 3C authorized:** False
+- **Canonical files changed:** False
+
+## Evidence Inputs
+
+| Path | SHA-256 | Rows | Columns | Role |
+| --- | --- | --- | --- | --- |
+| reports/part3b_et_canonical_reconciliation.json | `2c483ceea237c97d5c339ba3ceb438f8e6e2e9beae695dc9410aa5b4b825de0a` | None | None | G.D4 reconciliation audit report with score-level mechanism evidence |
+| results/part3b_prediction_ledger/et_canonical_mismatch_matrix.csv | `25cc88a8785f18668be2e03328a71b80b6e2c66f679a572e1e53656cde4ef908` | 9 | 28 | Nine-row ET canonical mismatch matrix with current approval flags |
+
+## Exact Constants
+
+- **ET score absolute tolerance:** 1e-15
+- **Metric absolute tolerance:** 1e-07
+- **Eligible metric allowlist:** avg_precision, roc_auc
+- **Exact build-value equality:** float64_bit_exact
+- **Exact build-score equality:** byte_exact
+- **Executable equality helper:** float64_bit_equal
+
+## Predicate: et_rank_metric_reconciliation_eligible
+
+A mismatch row is eligible only when every section below passes.
+
+### A. Evidence Completeness
+- Mismatch exists in both deterministic builds.
+- Build 1 and Build 2 mismatch identity sets are exactly equal.
+- No required source role or evidence field is missing.
+- All G.D4 audit-integrity checks are true.
+
+### B. Exact Deterministic Equality
+- Build 1 and Build 2 mismatch values are float64 bit-exact.
+- Build 1 and Build 2 result/validation/prediction SHA-256 values are equal.
+- Build 1 and Build 2 score arrays are byte-identical.
+- Tolerance-based equality must not substitute for any requirement here.
+
+### C. ET Mechanism
+- Direct model is `ET_leaf5`, or selected candidate is `ET_leaf5`, or a soft ensemble explicitly contains `ET_leaf5`.
+
+### D. Accepted-Output Comparison
+- Candidate-level non-ET score evidence required for LR_std_C0.1, LR_std_C1, DT_leaf5 with byte-identical validation/test arrays.
+- ET_leaf5 requires Build 1/Build 2 validation and test score arrays byte-identical.
+- Four independent ET score-delta fields must each exist, be finite, and be ≤ 1e-15:
+  - maximum_build1_validation_absolute_score_difference
+  - maximum_build1_test_absolute_score_difference
+  - maximum_build2_validation_absolute_score_difference
+  - maximum_build2_test_absolute_score_difference
+- Aggregate maximum ET score difference is reporting-only and must not substitute.
+- Missing candidate, missing field, or False non-ET byte-equality rejects.
+
+### E. Metric Classification
+- Eligible metrics: avg_precision, roc_auc.
+- Threshold-sensitive, calibration, and unknown metrics are ineligible.
+
+### F. Metric Delta
+- Absolute metric difference from canonical is at most 1e-07 for both builds.
+- Relative difference is reported but does not replace the absolute threshold.
+- No rounding, quantization, truncation, post-hoc replacement, averaging, or output copying.
+
+### G. Validation and Categorical Invariants
+- Validation categorical and numeric mismatch counts are zero for both builds.
+- Validation reconstructions are exactly equal across builds.
+- Result-row categorical identity, selected candidate, and selection mode are unchanged.
+- No validation/test role mixing; no test-set use in model selection.
+
+### H. Fail-Closed Behavior
+- Any missing field, null/NaN, unknown metric, build disagreement, score mismatch, validation mismatch, or non-ET-derived row rejects eligibility.
+
+## Decision Table
+
+| Concept | Meaning | Changes approval? |
+| --- | --- | --- |
+| mechanistically_eligible_under_frozen_policy | Predicate passes all sections | No |
+| currently_approved_exception | Historical approval in mismatch matrix | No (unchanged) |
+| currently_unapproved_mismatch | Not currently approved | No (unchanged) |
+
+## ET Score-Delta Decision Table
+
+| Field | Independent check | Tolerance | Substitutes aggregate? |
+| --- | --- | --- | --- |
+| maximum_build1_validation_absolute_score_difference | required | ≤ 1e-15 | No |
+| maximum_build1_test_absolute_score_difference | required | ≤ 1e-15 | No |
+| maximum_build2_validation_absolute_score_difference | required | ≤ 1e-15 | No |
+| maximum_build2_test_absolute_score_difference | required | ≤ 1e-15 | No |
+| maximum_et_score_absolute_difference | reporting only | n/a | Must not substitute |
+
+## Metric Classification Table
+
+| Metric | Classification | Eligible |
+| --- | --- | --- |
+| avg_precision | eligible | True |
+| roc_auc | eligible | True |
+| threshold | threshold | False |
+| selection_score | threshold_sensitive | False |
+| precision | threshold_sensitive | False |
+| recall | threshold_sensitive | False |
+| f1 | threshold_sensitive | False |
+| mcc | threshold_sensitive | False |
+| balanced_accuracy | threshold_sensitive | False |
+| brier | calibration | False |
+| any_unknown_metric | unknown | False |
+| any_calibration_metric | calibration | False |
+| any_threshold_sensitive_metric | threshold_sensitive | False |
+
+## Tolerance vs Exact Equality
+
+- **Exact equality** applies to Build 1/Build 2 mismatch values (float64 bit-exact) and score arrays (byte-exact).
+- **Tolerance** applies only to ET score deltas (≤ 1e-15) and metric deltas (≤ 1e-07).
+- Relative metric differences are reported for transparency but never substitute for the absolute threshold.
+
+## Fail-Closed Conditions
+
+- missing_field
+- null_or_nan_required_field
+- unknown_metric
+- build_identity_disagreement
+- one_ulp_build_value_difference
+- positive_zero_negative_zero_build_value_difference
+- float64_byte_representation_difference
+- score_array_byte_difference_between_builds
+- missing_non_et_candidate
+- missing_candidate_field
+- unexpected_candidate
+- non_et_byte_inequality
+- et_candidate_build_byte_inequality
+- missing_et_build_split_delta_field
+- et_build_split_delta_above_tolerance
+- aggregate_et_delta_substitution_prohibited
+- metric_delta_above_tolerance
+- threshold_sensitive_metric
+- calibration_metric
+- validation_mismatch
+- selected_candidate_difference
+- selection_mode_difference
+- non_et_derived_row
+- reconciliation_json_sha_mismatch
+- mismatch_matrix_sha_mismatch
+
+## Prohibited Operations
+
+- implement_policy_in_production_validator
+- enforce_unapproved_mismatches
+- rerun_production
+- fit_models
+- call_prediction_methods
+- generate_new_prediction_ledgers
+- modify_canonical_part1_files
+- modify_g_d4_reconciliation_evidence
+- rounding
+- quantization
+- truncation
+- post_hoc_replacement
+- averaging
+- output_copying
+- tolerance_substitution_for_exact_equality
+
+## Current Classification
+
+- **Mechanistically eligible rows:** 9
+- **Currently approved rows:** 1
+- **Currently unapproved rows:** 8
+
+- **Transactional publication ready:** True
+- **JSON/Markdown consistency:** True
+- **All specification checks passed:** True
+
+## Regression Fixtures (Nine Rows)
+
+| Seed | Model | Metric | Mechanistically eligible | Currently approved | Currently unapproved | Reason codes |
+| --- | --- | --- | --- | --- | --- | --- |
+| 13 | AQRPE_v2_balanced | avg_precision | True | False | True | none |
+| 13 | AQRPE_v2_balanced | roc_auc | True | False | True | none |
+| 13 | AQRPE_v2_mcc | avg_precision | True | False | True | none |
+| 13 | AQRPE_v2_mcc | roc_auc | True | False | True | none |
+| 13 | AQRPE_v2_rank | avg_precision | True | False | True | none |
+| 13 | AQRPE_v2_rank | roc_auc | True | False | True | none |
+| 13 | ET_leaf5 | avg_precision | True | False | True | none |
+| 13 | ET_leaf5 | roc_auc | True | False | True | none |
+| 42 | AQRPE_v2_rank | roc_auc | True | True | False | none |
+
+## Production and Authorization Status
+
+- **Model fits executed:** 0
+- **Prediction calls executed:** 0
+- **Specification generator executions:** 1
+- **Production model/evaluation builds executed:** 0
+- **Repository production artifacts published:** 0
+- **Production authorization:** False
+- **Policy enforced:** False
+- **Production validator changed:** False
+- **Canonical file changed:** False
+- **Part 3B complete:** False
+- **Part 3C authorized:** False

@@ -1,0 +1,461 @@
+{
+  "canonical_policy": {
+    "canonical_result_source": "results/part1_full_reproduction",
+    "canonical_table_source": "results/part1_full_reproduction_tables",
+    "legacy_reference_source": "results",
+    "legacy_reference_status": "retained_but_noncanonical",
+    "canonical_decision_basis": [
+      "The tracked executable does not reproduce the legacy reference results.",
+      "The exact executable that generated the legacy reference results is not available in tracked Git history.",
+      "Two independent runs in the locked environment are numerically equivalent.",
+      "No non-numeric repeatability differences were detected.",
+      "Soft-top-3 qualitative outcomes versus the best baseline are unchanged across all 16 setting-metric combinations."
+    ]
+  },
+  "validation_checks": {
+    "part1_reproduction_comparison_overall_status": "materially_different",
+    "part1_repeatability_comparison_overall_status": "numerically_equivalent",
+    "part1_result_drift_analysis_total_combinations": 16,
+    "part1_result_drift_analysis_soft_top3_outcome_changes": 0,
+    "part1_result_drift_analysis_best_overall_disjoint_winner_changes": 0,
+    "part1_reference_provenance_audit_verified": true
+  },
+  "environment_and_code_files": {
+    "requirements_locked.txt": {
+      "exists": true,
+      "sha256": "1d7cdfba46d87a527c17bcbf9f6d807b15d047bb88b0caba7038ca6d9c04682e",
+      "size": 93
+    },
+    "run_repeated_evaluation.py": {
+      "exists": true,
+      "sha256": "d385b6ecef2427c85299dcbc50cfff919fa8546b31829fa3ce0e5fdb307c4856",
+      "size": 20162
+    },
+    "make_manuscript_tables.py": {
+      "exists": true,
+      "sha256": "152f4568025420bf8aff780e2f9c104abb6e00a4373635277d14483e67dcdbb2",
+      "size": 3729
+    }
+  },
+  "raw_datasets": {
+    "cm1.csv": {
+      "exists": true,
+      "sha256": "c05e4834217c7b0af59f4615c4972b36ef636d2f8414141de6e523bb82e70ac5",
+      "size": 41410,
+      "row_count": 498,
+      "column_count": 22,
+      "column_names": [
+        "loc",
+        "v(g)",
+        "ev(g)",
+        "iv(g)",
+        "n",
+        "v",
+        "l",
+        "d",
+        "i",
+        "e",
+        "b",
+        "t",
+        "lOCode",
+        "lOComment",
+        "lOBlank",
+        "locCodeAndComment",
+        "uniq_Op",
+        "uniq_Opnd",
+        "total_Op",
+        "total_Opnd",
+        "branchCount",
+        "defects"
+      ],
+      "null_count": 0
+    },
+    "jm1.csv": {
+      "exists": true,
+      "sha256": "013cb035b07f176e217c0db3abeaeeb214d262e1a63b237a44737ea0f301cc03",
+      "size": 1039663,
+      "row_count": 13204,
+      "column_count": 22,
+      "column_names": [
+        "loc",
+        "v(g)",
+        "ev(g)",
+        "iv(g)",
+        "n",
+        "v",
+        "l",
+        "d",
+        "i",
+        "e",
+        "b",
+        "t",
+        "lOCode",
+        "lOComment",
+        "lOBlank",
+        "locCodeAndComment",
+        "uniq_Op",
+        "uniq_Opnd",
+        "total_Op",
+        "total_Opnd",
+        "branchCount",
+        "defects"
+      ],
+      "null_count": 0
+    },
+    "kc1.csv": {
+      "exists": true,
+      "sha256": "bdc2221d5490243bd033baaf35a1a906a460cd88a54444dfe8be92aba430e798",
+      "size": 153640,
+      "row_count": 2109,
+      "column_count": 22,
+      "column_names": [
+        "loc",
+        "v(g)",
+        "ev(g)",
+        "iv(g)",
+        "n",
+        "v",
+        "l",
+        "d",
+        "i",
+        "e",
+        "b",
+        "t",
+        "lOCode",
+        "lOComment",
+        "lOBlank",
+        "locCodeAndComment",
+        "uniq_Op",
+        "uniq_Opnd",
+        "total_Op",
+        "total_Opnd",
+        "branchCount",
+        "defects"
+      ],
+      "null_count": 0
+    },
+    "kc2.csv": {
+      "exists": true,
+      "sha256": "fedb0f8b4e131dad110e2a7713f7d3b1c0efb68a55b7df7c469610998dafbec7",
+      "size": 38782,
+      "row_count": 522,
+      "column_count": 22,
+      "column_names": [
+        "loc",
+        "v(g)",
+        "ev(g)",
+        "iv(g)",
+        "n",
+        "v",
+        "l",
+        "d",
+        "i",
+        "e",
+        "b",
+        "t",
+        "lOCode",
+        "lOComment",
+        "lOBlank",
+        "lOCodeAndComment",
+        "uniq_Op",
+        "uniq_Opnd",
+        "total_Op",
+        "total_Opnd",
+        "branchCount",
+        "problems"
+      ],
+      "null_count": 0
+    },
+    "pc1.csv": {
+      "exists": true,
+      "sha256": "9331ea04c83dfbcb618dbb707c8123e661f2ac5f59c85c03031f46fa0ce9f3e4",
+      "size": 91139,
+      "row_count": 1109,
+      "column_count": 22,
+      "column_names": [
+        "loc",
+        "v(g)",
+        "ev(g)",
+        "iv(G)",
+        "N",
+        "V",
+        "L",
+        "D",
+        "I",
+        "E",
+        "B",
+        "T",
+        "lOCode",
+        "lOComment",
+        "locCodeAndComment",
+        "lOBlank",
+        "uniq_Op",
+        "uniq_Opnd",
+        "total_Op",
+        "total_Opnd",
+        "branchCount",
+        "defects"
+      ],
+      "null_count": 0
+    }
+  },
+  "canonical_reproduction_outputs": {
+    "dataset_profile.csv": {
+      "exists": true,
+      "sha256": "486b6c38749a8d0a87ab1010917dd3e95461c07bb36af781c9d6b3c6aef68795",
+      "size": 225,
+      "row_count": 5,
+      "column_count": 5,
+      "column_names": [
+        "project",
+        "n_rows",
+        "n_features",
+        "defective",
+        "defect_rate"
+      ],
+      "duplicate_full_rows": 0,
+      "total_null_count": 0
+    },
+    "decision_metadata.json": {
+      "exists": true,
+      "sha256": "bd446ccbb5571bfeaa27a52a7d42316ea924b7787c9153f6418d0db6812fdb6b",
+      "size": 600,
+      "top_level_fields": [
+        "stage",
+        "seeds",
+        "candidate_pool",
+        "aqrpe_variants",
+        "threshold_grid",
+        "integrity_control",
+        "rows"
+      ],
+      "stage": "Stage-43 clean supplementary reproduction script",
+      "seeds": [
+        7,
+        13,
+        29,
+        42,
+        101
+      ],
+      "rows": 400
+    },
+    "repeated_all_results.csv": {
+      "exists": true,
+      "sha256": "76b430031a944708af661bee1a1355619d1e0e6f49b932d462cea421aeb01160",
+      "size": 141632,
+      "row_count": 400,
+      "column_count": 22,
+      "column_names": [
+        "experiment",
+        "target_project",
+        "seed",
+        "model",
+        "selected_candidate",
+        "selection_mode",
+        "threshold",
+        "selection_score",
+        "avg_precision",
+        "roc_auc",
+        "mcc",
+        "f1",
+        "balanced_accuracy",
+        "precision",
+        "recall",
+        "brier",
+        "precision_at_10pct",
+        "recall_at_10pct",
+        "lift_at_10pct",
+        "precision_at_20pct",
+        "recall_at_20pct",
+        "lift_at_20pct"
+      ],
+      "duplicate_full_rows": 0,
+      "total_null_count": 0
+    },
+    "repeated_results_workbook.xlsx": {
+      "exists": true,
+      "sha256": "0674e0a290d716b04eabde99d5ca469b275c4c4ced0fe676f82a8565e6eb3bc4",
+      "size": 161846,
+      "sheet_names": [
+        "Dataset_Profile",
+        "All_Results",
+        "Summary_Mean_SD",
+        "Validation_Log"
+      ],
+      "sheets": {
+        "Dataset_Profile": {
+          "row_count": 6,
+          "column_count": 5
+        },
+        "All_Results": {
+          "row_count": 401,
+          "column_count": 22
+        },
+        "Summary_Mean_SD": {
+          "row_count": 17,
+          "column_count": 52
+        },
+        "Validation_Log": {
+          "row_count": 601,
+          "column_count": 21
+        }
+      }
+    },
+    "repeated_summary_mean_std.csv": {
+      "exists": true,
+      "sha256": "b6f27ee32e350e23899d451fe4ab0758a76944633873f018bdac9ce16b94ae5b",
+      "size": 11273,
+      "row_count": 16,
+      "column_count": 52,
+      "column_names": [
+        "experiment",
+        "model",
+        "avg_precision_mean",
+        "avg_precision_std",
+        "avg_precision_count",
+        "roc_auc_mean",
+        "roc_auc_std",
+        "roc_auc_count",
+        "mcc_mean",
+        "mcc_std",
+        "mcc_count",
+        "f1_mean",
+        "f1_std",
+        "f1_count",
+        "balanced_accuracy_mean",
+        "balanced_accuracy_std",
+        "balanced_accuracy_count",
+        "precision_mean",
+        "precision_std",
+        "precision_count",
+        "recall_mean",
+        "recall_std",
+        "recall_count",
+        "brier_mean",
+        "brier_std",
+        "brier_count",
+        "precision_at_10pct_mean",
+        "precision_at_10pct_std",
+        "precision_at_10pct_count",
+        "recall_at_10pct_mean",
+        "recall_at_10pct_std",
+        "recall_at_10pct_count",
+        "lift_at_10pct_mean",
+        "lift_at_10pct_std",
+        "lift_at_10pct_count",
+        "precision_at_20pct_mean",
+        "precision_at_20pct_std",
+        "precision_at_20pct_count",
+        "recall_at_20pct_mean",
+        "recall_at_20pct_std",
+        "recall_at_20pct_count",
+        "lift_at_20pct_mean",
+        "lift_at_20pct_std",
+        "lift_at_20pct_count",
+        "rank_mcc_mean",
+        "rank_avg_precision_mean",
+        "rank_f1_mean",
+        "rank_balanced_accuracy_mean",
+        "rank_precision_at_10pct_mean",
+        "rank_recall_at_10pct_mean",
+        "rank_lift_at_10pct_mean",
+        "rank_brier_mean"
+      ],
+      "duplicate_full_rows": 0,
+      "total_null_count": 0
+    },
+    "validation_log.csv": {
+      "exists": true,
+      "sha256": "d18dbb6b7a71f356203aa34fe41ab7d531daa1f8499fc06d06ab643b088f0272",
+      "size": 187902,
+      "row_count": 600,
+      "column_count": 21,
+      "column_names": [
+        "experiment",
+        "target_project",
+        "seed",
+        "candidate",
+        "mode",
+        "val_threshold",
+        "val_selection_score",
+        "val_avg_precision",
+        "val_roc_auc",
+        "val_mcc",
+        "val_f1",
+        "val_balanced_accuracy",
+        "val_precision",
+        "val_recall",
+        "val_brier",
+        "val_precision_at_10pct",
+        "val_recall_at_10pct",
+        "val_lift_at_10pct",
+        "val_precision_at_20pct",
+        "val_recall_at_20pct",
+        "val_lift_at_20pct"
+      ],
+      "duplicate_full_rows": 0,
+      "total_null_count": 0
+    }
+  },
+  "canonical_manuscript_tables": {
+    "table_within_project_mean_sd.csv": {
+      "exists": true,
+      "sha256": "cccaeb1553ac942dbe26f33673a3683ea181f06a4cf4ceb2466f0c3556086160",
+      "size": 771,
+      "row_count": 8,
+      "column_count": 7,
+      "column_names": [
+        "Model",
+        "MCC",
+        "AP",
+        "F1",
+        "BA",
+        "P@10%",
+        "R@10%"
+      ],
+      "duplicate_full_rows": 0,
+      "total_null_count": 0,
+      "duplicate_key_count": 0
+    },
+    "table_cross_project_mean_sd.csv": {
+      "exists": true,
+      "sha256": "1753444c5b8a0c3a34179c644f6998cc663a3eb1da80e81b8fcf6d285e53731c",
+      "size": 771,
+      "row_count": 8,
+      "column_count": 7,
+      "column_names": [
+        "Model",
+        "MCC",
+        "AP",
+        "F1",
+        "BA",
+        "P@10%",
+        "R@10%"
+      ],
+      "duplicate_full_rows": 0,
+      "total_null_count": 0,
+      "duplicate_key_count": 0
+    },
+    "table_soft_top3_delta_vs_best_baseline.csv": {
+      "exists": true,
+      "sha256": "bf5cac180bf9701299dfd1c1b410224d34b8f32269b49fb8203df7567ff7a60b",
+      "size": 1423,
+      "row_count": 16,
+      "column_count": 8,
+      "column_names": [
+        "Setting",
+        "Metric",
+        "Direction",
+        "Soft-top-3 mean",
+        "Best baseline",
+        "Best baseline mean",
+        "Delta",
+        "AQRPE outcome"
+      ],
+      "duplicate_full_rows": 0,
+      "total_null_count": 0,
+      "duplicate_key_count": 0
+    }
+  },
+  "manifest_validation_status": "all_checks_passed"
+}
