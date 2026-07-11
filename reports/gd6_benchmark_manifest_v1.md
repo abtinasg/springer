@@ -1,5 +1,6 @@
 # G.D6 Benchmark Manifest
 
+**Stage:** Part 3B.2R.1-G.D6-F0.1
 **Benchmark ID:** SEMIT-GD6-BENCHMARK
 **Version:** 1.0
 **Contract ID:** SEMIT-GD6-ACCEPTANCE-CONTRACT
@@ -12,7 +13,7 @@
 |-------|-------|----------------|-----------|
 | BG-01 | Semantic Policy Tests | 35 | CLAIM-A |
 | BG-02 | Historical Fixture Parity | 9 | CLAIM-A |
-| BG-03 | Write-Guard Matrix | 45 | CLAIM-C, CLAIM-D |
+| BG-03 | Write-Guard Matrix | 240 | CLAIM-C, CLAIM-D |
 | BG-04 | Production Entry-Point Guards | 4 | CLAIM-B |
 | BG-05 | Restoration Identity Set | 20 | CLAIM-D |
 | BG-06 | Forced-Exception Fixture Set | 3 | CLAIM-C, CLAIM-D |
@@ -26,7 +27,7 @@
 
 - **BG-01:** 35
 - **BG-02:** 9
-- **BG-03:** 45
+- **BG-03:** 240
 - **BG-04:** 4
 - **BG-05:** 20
 - **BG-06:** 3
@@ -148,6 +149,57 @@
 - policy_specification_contract_mutation_rejected
 - identity_hardcoded_implementation_detector_passes
 - frozen_nine_fixture_parity_with_gd5_2
+
+### Write-Guard Target Paths (16)
+
+- scripts/freeze_part3b_et_reconciliation_policy.py
+- reports/part3b_et_reconciliation_policy.json
+- reports/part3b_et_reconciliation_policy.md
+- scripts/audit_part3b_et_canonical_reconciliation.py
+- reports/part3b_et_canonical_reconciliation.json
+- reports/part3b_et_canonical_reconciliation.md
+- results/part3b_prediction_ledger/et_canonical_mismatch_matrix.csv
+- results/part3b_prediction_ledger/sample_registry.csv
+- results/part3b_prediction_ledger/split_membership_within.csv.gz
+- results/part3b_prediction_ledger/canonical_result_reconstruction.csv
+- results/part3b_prediction_ledger/ledger_manifest.json
+- results/part3b_prediction_ledger/prediction_ledger_within.csv.gz
+- results/part3b_prediction_ledger/split_membership_cross.csv.gz
+- results/part3b_prediction_ledger/event_manifest.csv
+- results/part3b_prediction_ledger/prediction_ledger_cross.csv.gz
+- results/part3b_prediction_ledger/validation_reconstruction.csv
+
+### Preservation Conditions (17)
+
+- model_fits_executed = 0
+- prediction_calls_executed = 0
+- production_model_evaluation_builds_executed = 0
+- production_builder_entries = 0
+- production_artifact_writes = 0
+- canonical_file_writes = 0
+- protected_artifacts_changed = 0
+- protected_files_added = 0
+- protected_files_removed = 0
+- protected_files_modified = 0
+- production_run_executed = False
+- policy_executed_on_production_artifacts = False
+- policy_approved = False
+- policy_enforced = False
+- production_execution_authorized = False
+- part3b_complete = False
+- part3c_authorized = False
+
+### Report Integrity Conditions (9)
+
+- final_json_parses
+- markdown_generated_from_final_json
+- render_markdown_equals_final_markdown
+- no_self_referential_publication_result_hash_persisted
+- no_stale_preliminary_publication_hash_persisted
+- repository_relative_paths_only
+- no_local_absolute_path
+- no_editor_specific_cci_reference
+- no_unsupported_scientific_claim
 
 ## Future Verifier Requirement
 

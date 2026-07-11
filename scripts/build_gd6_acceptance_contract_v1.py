@@ -2,6 +2,7 @@
 """Part 3B.2R.1-G.D6-F0: Build acceptance contract and benchmark v1.0."""
 from __future__ import annotations
 
+import argparse
 import hashlib
 import importlib.util
 import json
@@ -19,6 +20,7 @@ BENCHMARK_ID = "SEMIT-GD6-BENCHMARK"
 BENCHMARK_VERSION = "1.0"
 FREEZE_MANIFEST_ID = "SEMIT-GD6-CONTRACT-FREEZE-MANIFEST"
 FREEZE_MANIFEST_VERSION = "1.0"
+STAGE = "Part 3B.2R.1-G.D6-F0.1"
 
 CONTRACT_JSON_PATH = "reports/gd6_acceptance_contract_v1.json"
 CONTRACT_MD_PATH = "reports/gd6_acceptance_contract_v1.md"
@@ -59,9 +61,22 @@ WRITE_GUARD_MECHANISMS = [
 ]
 
 WRITE_GUARD_TARGET_PATHS = [
-    "results/part1_full_reproduction/canonical.csv",
-    "results/part3b_prediction_ledger/ledger.csv",
-    "reports/part3b_et_policy_implementation.json",
+    "scripts/freeze_part3b_et_reconciliation_policy.py",
+    "reports/part3b_et_reconciliation_policy.json",
+    "reports/part3b_et_reconciliation_policy.md",
+    "scripts/audit_part3b_et_canonical_reconciliation.py",
+    "reports/part3b_et_canonical_reconciliation.json",
+    "reports/part3b_et_canonical_reconciliation.md",
+    "results/part3b_prediction_ledger/et_canonical_mismatch_matrix.csv",
+    "results/part3b_prediction_ledger/sample_registry.csv",
+    "results/part3b_prediction_ledger/split_membership_within.csv.gz",
+    "results/part3b_prediction_ledger/canonical_result_reconstruction.csv",
+    "results/part3b_prediction_ledger/ledger_manifest.json",
+    "results/part3b_prediction_ledger/prediction_ledger_within.csv.gz",
+    "results/part3b_prediction_ledger/split_membership_cross.csv.gz",
+    "results/part3b_prediction_ledger/event_manifest.csv",
+    "results/part3b_prediction_ledger/prediction_ledger_cross.csv.gz",
+    "results/part3b_prediction_ledger/validation_reconstruction.csv",
 ]
 
 PRODUCTION_ENTRY_POINTS = [
@@ -120,12 +135,12 @@ ROLLBACK_MUTATIONS = [
 ]
 
 PRESERVATION_CONDITIONS = [
-    {"condition": "model_fits", "expected": 0},
-    {"condition": "prediction_calls", "expected": 0},
-    {"condition": "production_model_evaluation_builds", "expected": 0},
+    {"condition": "model_fits_executed", "expected": 0},
+    {"condition": "prediction_calls_executed", "expected": 0},
+    {"condition": "production_model_evaluation_builds_executed", "expected": 0},
     {"condition": "production_builder_entries", "expected": 0},
     {"condition": "production_artifact_writes", "expected": 0},
-    {"condition": "canonical_writes", "expected": 0},
+    {"condition": "canonical_file_writes", "expected": 0},
     {"condition": "protected_artifacts_changed", "expected": 0},
     {"condition": "protected_files_added", "expected": 0},
     {"condition": "protected_files_removed", "expected": 0},
@@ -186,26 +201,91 @@ SCIENTIFIC_CLAIMS = [
         "claim_id": "CLAIM-A",
         "title": "Correct Classification",
         "statement": "The frozen policy implementation classifies the defined valid and invalid cases according to the frozen reconciliation policy and benchmark. This claim is bounded to the listed benchmark and invariants. It is not a claim of universal correctness.",
+        "basis": [
+            {
+                "basis_type": "internal_project_evidence",
+                "source_id": "scripts/build_part3b_prediction_ledger.py",
+                "supported_proposition": "run_et_reconciliation_policy_self_tests() defines the exact test cases for classification",
+            },
+            {
+                "basis_type": "external_methodological_source",
+                "source_id": "MB-01",
+                "supported_proposition": "bounded testing scope",
+            },
+        ],
     },
     {
         "claim_id": "CLAIM-B",
         "title": "No Unauthorized Approval or Enforcement",
         "statement": "G.D6 classification must never independently produce final approval, policy enforcement, production authorization, Part 3B completion, or Part 3C authorization.",
+        "basis": [
+            {
+                "basis_type": "internal_project_evidence",
+                "source_id": "reports/part3b_et_policy_implementation.json",
+                "supported_proposition": "policy_approved, policy_enforced, production_execution_authorized, part3b_complete, part3c_authorized are all false",
+            },
+            {
+                "basis_type": "external_methodological_source",
+                "source_id": "MB-02",
+                "supported_proposition": "test completion criteria",
+            },
+        ],
     },
     {
         "claim_id": "CLAIM-C",
         "title": "Artifact Preservation",
         "statement": "The G.D6 verification process must not alter canonical Part 1 artifacts, existing Part 3B artifacts, frozen policy evidence, or frozen reconciliation evidence.",
+        "basis": [
+            {
+                "basis_type": "internal_project_evidence",
+                "source_id": "reports/part3b_et_policy_implementation.json",
+                "supported_proposition": "protected_files_unchanged is true and recursive_snapshot_changed is 0",
+            },
+            {
+                "basis_type": "external_methodological_source",
+                "source_id": "MB-05",
+                "supported_proposition": "versioned development evidence",
+            },
+        ],
     },
     {
         "claim_id": "CLAIM-D",
         "title": "Recoverability",
         "statement": "After an injected exception or transactional-publication failure, patched global objects must be restored, protected files must retain their prior state, temporary and backup files must not remain, and publication state must be restored.",
+        "basis": [
+            {
+                "basis_type": "internal_project_evidence",
+                "source_id": "reports/part3b_et_policy_implementation.json",
+                "supported_proposition": "forced_exception_test_passed is true and rollback_all_scenarios_passed is true",
+            },
+            {
+                "basis_type": "external_methodological_source",
+                "source_id": "MB-02",
+                "supported_proposition": "planned and documented test processes",
+            },
+        ],
     },
     {
         "claim_id": "CLAIM-E",
         "title": "Reproducible Verification",
         "statement": "An independent evaluator must be able to execute the frozen verifier in a clean environment using the documented command and obtain the same Pass/Fail decision.",
+        "basis": [
+            {
+                "basis_type": "internal_project_evidence",
+                "source_id": "scripts/audit_part3b_et_policy_implementation.py",
+                "supported_proposition": "existing verifier pattern with documented execution command",
+            },
+            {
+                "basis_type": "external_methodological_source",
+                "source_id": "MB-03",
+                "supported_proposition": "documenting research sufficiently for independent verification",
+            },
+            {
+                "basis_type": "external_methodological_source",
+                "source_id": "MB-04",
+                "supported_proposition": "independent evaluation of computational artifacts",
+            },
+        ],
     },
 ]
 
@@ -670,6 +750,7 @@ def build_provenance() -> Dict[str, Any]:
 
 def build_contract(semantic_test_info: Dict[str, Any], fixture_parity_records: List[Dict[str, Any]]) -> Dict[str, Any]:
     return {
+        "stage": STAGE,
         "contract_id": CONTRACT_ID,
         "version": CONTRACT_VERSION,
         "title": "G.D6 Acceptance Contract",
@@ -688,6 +769,7 @@ def build_contract(semantic_test_info: Dict[str, Any], fixture_parity_records: L
         "limitations": build_limitations(),
         "methodological_basis": METHODOLOGICAL_BASIS,
         "prohibited_claims": PROHIBITED_CLAIMS,
+        "unresolved_required_facts": [],
         "normative_clauses": build_normative_clauses(),
         "provenance": build_provenance(),
     }
@@ -713,9 +795,9 @@ def build_benchmark_items(semantic_test_info: Dict[str, Any], fixture_parity_rec
         })
 
     # BG-02: Historical Fixture Parity
-    for rec in fixture_parity_records:
+    for i, rec in enumerate(fixture_parity_records):
         items.append({
-            "benchmark_id": f"BG-02-{rec['event_id']}-{rec['column']}",
+            "benchmark_id": f"BG-02-{i:03d}-{rec['event_id']}-{rec['model']}-{rec['column']}",
             "category": "BG-02",
             "expected_result": rec["expected_result"],
             "claim_ids": ["CLAIM-A"],
@@ -723,7 +805,7 @@ def build_benchmark_items(semantic_test_info: Dict[str, Any], fixture_parity_rec
             "provenance": {
                 "starting_commit": STARTING_COMMIT,
                 "source_file": "reports/part3b_et_reconciliation_policy.json",
-                "source_symbol": f"regression_fixtures[event_id={rec['event_id']},column={rec['column']}]",
+                "source_symbol": f"regression_fixtures[{i}]",
                 "extraction_method": "existing_frozen_artifact",
             },
         })
@@ -837,7 +919,7 @@ def build_benchmark_items(semantic_test_info: Dict[str, Any], fixture_parity_rec
                 "starting_commit": STARTING_COMMIT,
                 "source_file": "scripts/audit_part3b_et_policy_implementation.py",
                 "source_symbol": f"run_audit().measured_activity_counters[{cond['condition']}]",
-                "extraction_method": "runtime_output",
+                "extraction_method": "contract_fixed_requirement",
             },
         })
 
@@ -853,7 +935,7 @@ def build_benchmark_items(semantic_test_info: Dict[str, Any], fixture_parity_rec
                 "starting_commit": STARTING_COMMIT,
                 "source_file": "scripts/audit_part3b_et_policy_implementation.py",
                 "source_symbol": f"run_audit().report[{cond}]",
-                "extraction_method": "runtime_output",
+                "extraction_method": "contract_fixed_requirement",
             },
         })
 
@@ -868,7 +950,7 @@ def build_benchmark_items(semantic_test_info: Dict[str, Any], fixture_parity_rec
             "starting_commit": STARTING_COMMIT,
             "source_file": "scripts/audit_part3b_et_policy_implementation.py",
             "source_symbol": "run_audit() verifier pattern",
-            "extraction_method": "constant",
+            "extraction_method": "contract_fixed_requirement",
         },
     })
 
@@ -951,6 +1033,7 @@ def build_benchmark(semantic_test_info: Dict[str, Any], fixture_parity_records: 
     ]
 
     return {
+        "stage": STAGE,
         "benchmark_id": BENCHMARK_ID,
         "version": BENCHMARK_VERSION,
         "contract_id": CONTRACT_ID,
@@ -979,6 +1062,8 @@ def build_benchmark(semantic_test_info: Dict[str, Any], fixture_parity_records: 
             "rollback_scenarios": ROLLBACK_SCENARIOS,
             "rollback_mutations": ROLLBACK_MUTATIONS,
             "semantic_test_ids": semantic_test_info["test_ids"],
+            "preservation_conditions": PRESERVATION_CONDITIONS,
+            "report_integrity_conditions": REPORT_INTEGRITY_CONDITIONS,
         },
         "benchmark_items": items,
         "future_verifier_requirement": {
@@ -1008,6 +1093,7 @@ def render_contract_markdown(contract: Dict[str, Any]) -> str:
     lines: List[str] = []
     lines.append(f"# {contract['title']}")
     lines.append("")
+    lines.append(f"**Stage:** {contract.get('stage', '')}")
     lines.append(f"**Contract ID:** {contract['contract_id']}")
     lines.append(f"**Version:** {contract['version']}")
     lines.append(f"**Status:** {contract['status']}")
@@ -1025,6 +1111,12 @@ def render_contract_markdown(contract: Dict[str, Any]) -> str:
         lines.append("")
         lines.append(claim["statement"])
         lines.append("")
+        if "basis" in claim:
+            lines.append("Basis:")
+            lines.append("")
+            for b in claim["basis"]:
+                lines.append(f"- **{b['basis_type']}** — {b['source_id']}: {b['supported_proposition']}")
+            lines.append("")
     lines.append("## Trust Boundary")
     lines.append("")
     lines.append("### Trusted Infrastructure")
@@ -1149,6 +1241,7 @@ def render_benchmark_markdown(benchmark: Dict[str, Any]) -> str:
     lines: List[str] = []
     lines.append("# G.D6 Benchmark Manifest")
     lines.append("")
+    lines.append(f"**Stage:** {benchmark.get('stage', '')}")
     lines.append(f"**Benchmark ID:** {benchmark['benchmark_id']}")
     lines.append(f"**Version:** {benchmark['version']}")
     lines.append(f"**Contract ID:** {benchmark['contract_id']}")
@@ -1205,6 +1298,21 @@ def render_benchmark_markdown(benchmark: Dict[str, Any]) -> str:
     for tid in es["semantic_test_ids"]:
         lines.append(f"- {tid}")
     lines.append("")
+    lines.append(f"### Write-Guard Target Paths ({len(es['write_guard_target_paths'])})")
+    lines.append("")
+    for tp in es["write_guard_target_paths"]:
+        lines.append(f"- {tp}")
+    lines.append("")
+    lines.append(f"### Preservation Conditions ({len(es['preservation_conditions'])})")
+    lines.append("")
+    for pc in es["preservation_conditions"]:
+        lines.append(f"- {pc['condition']} = {pc['expected']}")
+    lines.append("")
+    lines.append(f"### Report Integrity Conditions ({len(es['report_integrity_conditions'])})")
+    lines.append("")
+    for ric in es["report_integrity_conditions"]:
+        lines.append(f"- {ric}")
+    lines.append("")
     lines.append("## Future Verifier Requirement")
     lines.append("")
     fv = benchmark["future_verifier_requirement"]
@@ -1249,8 +1357,18 @@ def build_freeze_manifest(root: Path) -> Dict[str, Any]:
     }
 
 
-def main() -> None:
-    root = repo_root()
+def main(argv: Optional[List[str]] = None) -> None:
+    parser = argparse.ArgumentParser(
+        description="Build G.D6 acceptance contract and benchmark v1.0"
+    )
+    parser.add_argument(
+        "--output-root",
+        default=None,
+        help="Alternative output root directory. Defaults to repository root.",
+    )
+    args = parser.parse_args(argv)
+
+    root = Path(args.output_root) if args.output_root else repo_root()
 
     print("Extracting semantic test IDs...")
     semantic_test_info = extract_semantic_test_ids()

@@ -1,5 +1,6 @@
 # G.D6 Acceptance Contract
 
+**Stage:** Part 3B.2R.1-G.D6-F0.1
 **Contract ID:** SEMIT-GD6-ACCEPTANCE-CONTRACT
 **Version:** 1.0
 **Status:** freeze_candidate
@@ -16,21 +17,47 @@ Define and freeze the scientific and engineering claims, trusted-computing bound
 
 The frozen policy implementation classifies the defined valid and invalid cases according to the frozen reconciliation policy and benchmark. This claim is bounded to the listed benchmark and invariants. It is not a claim of universal correctness.
 
+Basis:
+
+- **internal_project_evidence** — scripts/build_part3b_prediction_ledger.py: run_et_reconciliation_policy_self_tests() defines the exact test cases for classification
+- **external_methodological_source** — MB-01: bounded testing scope
+
 ### CLAIM-B — No Unauthorized Approval or Enforcement
 
 G.D6 classification must never independently produce final approval, policy enforcement, production authorization, Part 3B completion, or Part 3C authorization.
+
+Basis:
+
+- **internal_project_evidence** — reports/part3b_et_policy_implementation.json: policy_approved, policy_enforced, production_execution_authorized, part3b_complete, part3c_authorized are all false
+- **external_methodological_source** — MB-02: test completion criteria
 
 ### CLAIM-C — Artifact Preservation
 
 The G.D6 verification process must not alter canonical Part 1 artifacts, existing Part 3B artifacts, frozen policy evidence, or frozen reconciliation evidence.
 
+Basis:
+
+- **internal_project_evidence** — reports/part3b_et_policy_implementation.json: protected_files_unchanged is true and recursive_snapshot_changed is 0
+- **external_methodological_source** — MB-05: versioned development evidence
+
 ### CLAIM-D — Recoverability
 
 After an injected exception or transactional-publication failure, patched global objects must be restored, protected files must retain their prior state, temporary and backup files must not remain, and publication state must be restored.
 
+Basis:
+
+- **internal_project_evidence** — reports/part3b_et_policy_implementation.json: forced_exception_test_passed is true and rollback_all_scenarios_passed is true
+- **external_methodological_source** — MB-02: planned and documented test processes
+
 ### CLAIM-E — Reproducible Verification
 
 An independent evaluator must be able to execute the frozen verifier in a clean environment using the documented command and obtain the same Pass/Fail decision.
+
+Basis:
+
+- **internal_project_evidence** — scripts/audit_part3b_et_policy_implementation.py: existing verifier pattern with documented execution command
+- **external_methodological_source** — MB-03: documenting research sufficiently for independent verification
+- **external_methodological_source** — MB-04: independent evaluation of computational artifacts
 
 ## Trust Boundary
 

@@ -1,12 +1,12 @@
 {
   "files": {
-    "reports/gd6_acceptance_contract_v1.json": "bbc4d58e67fc5558da711dac1b9a47a52e838503a98ca5454c98fe427ca24209",
-    "reports/gd6_acceptance_contract_v1.md": "50cc48841c6838a50adb36c6359ace340a97f9b15d6ddc8cd8a6f2288d9d7a53",
-    "reports/gd6_benchmark_manifest_v1.json": "f6dd52b3d1d608f6654b1f9d621896c99d5a7a85fc24768bef4e1528fd91d493",
-    "reports/gd6_benchmark_manifest_v1.md": "593cd62f8f008468abb16f3acb48a171f24afa49c5c1510b840bbe559f412a54",
+    "reports/gd6_acceptance_contract_v1.json": "eb32dfa0e1989465123d011c7f1ed4be1f49ccfa56b69659ed61f831752ab7ad",
+    "reports/gd6_acceptance_contract_v1.md": "b8a36f24218bb32a7de030833930a47f08d687ca9472fd0108e860803b90945e",
+    "reports/gd6_benchmark_manifest_v1.json": "82363c10d14a4e7cfb12ac34a4ade9019168a7980cd157235e3e8c8d0ba28580",
+    "reports/gd6_benchmark_manifest_v1.md": "a0ede2ecd2bd0b0d89e4fba85648156e566ca8e1cabf8681c220bd4afd706a6d",
     "reports/gd6_reference_environment_v1.json": "2aff7e19b699d6b8b92e63db2e5abeda6d093e65d468c8a675f5f65bdcb2af48",
-    "scripts/build_gd6_acceptance_contract_v1.py": "b487b834c7bbb8942c77d4373fd56778681845b08242c48bc49c6ad7720c1f6a",
-    "scripts/verify_gd6_acceptance_contract_v1.py": "0455d559c1f4e6ef3b3b204ee9d81605c09178f713768cbcde2a3f5fe718f319"
+    "scripts/build_gd6_acceptance_contract_v1.py": "ed1a3110a4b8ff6156b0584bae20aa9920c478f6b84a93a001d3da9a914b7500",
+    "scripts/verify_gd6_acceptance_contract_v1.py": "f587d9af17d56cabfa3ce5815b71c3bc8056cd2dcad0912a6b67ea451fdc5bbb"
   },
   "hash_algorithm": "SHA-256",
   "manifest_id": "SEMIT-GD6-CONTRACT-FREEZE-MANIFEST",

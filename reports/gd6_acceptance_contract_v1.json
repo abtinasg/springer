@@ -344,26 +344,91 @@
   },
   "scientific_claims": [
     {
+      "basis": [
+        {
+          "basis_type": "internal_project_evidence",
+          "source_id": "scripts/build_part3b_prediction_ledger.py",
+          "supported_proposition": "run_et_reconciliation_policy_self_tests() defines the exact test cases for classification"
+        },
+        {
+          "basis_type": "external_methodological_source",
+          "source_id": "MB-01",
+          "supported_proposition": "bounded testing scope"
+        }
+      ],
       "claim_id": "CLAIM-A",
       "statement": "The frozen policy implementation classifies the defined valid and invalid cases according to the frozen reconciliation policy and benchmark. This claim is bounded to the listed benchmark and invariants. It is not a claim of universal correctness.",
       "title": "Correct Classification"
     },
     {
+      "basis": [
+        {
+          "basis_type": "internal_project_evidence",
+          "source_id": "reports/part3b_et_policy_implementation.json",
+          "supported_proposition": "policy_approved, policy_enforced, production_execution_authorized, part3b_complete, part3c_authorized are all false"
+        },
+        {
+          "basis_type": "external_methodological_source",
+          "source_id": "MB-02",
+          "supported_proposition": "test completion criteria"
+        }
+      ],
       "claim_id": "CLAIM-B",
       "statement": "G.D6 classification must never independently produce final approval, policy enforcement, production authorization, Part 3B completion, or Part 3C authorization.",
       "title": "No Unauthorized Approval or Enforcement"
     },
     {
+      "basis": [
+        {
+          "basis_type": "internal_project_evidence",
+          "source_id": "reports/part3b_et_policy_implementation.json",
+          "supported_proposition": "protected_files_unchanged is true and recursive_snapshot_changed is 0"
+        },
+        {
+          "basis_type": "external_methodological_source",
+          "source_id": "MB-05",
+          "supported_proposition": "versioned development evidence"
+        }
+      ],
       "claim_id": "CLAIM-C",
       "statement": "The G.D6 verification process must not alter canonical Part 1 artifacts, existing Part 3B artifacts, frozen policy evidence, or frozen reconciliation evidence.",
       "title": "Artifact Preservation"
     },
     {
+      "basis": [
+        {
+          "basis_type": "internal_project_evidence",
+          "source_id": "reports/part3b_et_policy_implementation.json",
+          "supported_proposition": "forced_exception_test_passed is true and rollback_all_scenarios_passed is true"
+        },
+        {
+          "basis_type": "external_methodological_source",
+          "source_id": "MB-02",
+          "supported_proposition": "planned and documented test processes"
+        }
+      ],
       "claim_id": "CLAIM-D",
       "statement": "After an injected exception or transactional-publication failure, patched global objects must be restored, protected files must retain their prior state, temporary and backup files must not remain, and publication state must be restored.",
       "title": "Recoverability"
     },
     {
+      "basis": [
+        {
+          "basis_type": "internal_project_evidence",
+          "source_id": "scripts/audit_part3b_et_policy_implementation.py",
+          "supported_proposition": "existing verifier pattern with documented execution command"
+        },
+        {
+          "basis_type": "external_methodological_source",
+          "source_id": "MB-03",
+          "supported_proposition": "documenting research sufficiently for independent verification"
+        },
+        {
+          "basis_type": "external_methodological_source",
+          "source_id": "MB-04",
+          "supported_proposition": "independent evaluation of computational artifacts"
+        }
+      ],
       "claim_id": "CLAIM-E",
       "statement": "An independent evaluator must be able to execute the frozen verifier in a clean environment using the documented command and obtain the same Pass/Fail decision.",
       "title": "Reproducible Verification"
@@ -383,6 +448,7 @@
       "effect": "recorded but does not block acceptance"
     }
   },
+  "stage": "Part 3B.2R.1-G.D6-F0.1",
   "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd",
   "status": "freeze_candidate",
   "stopping_rule": {
@@ -422,5 +488,6 @@
     ],
     "trusted_infrastructure_note": "These components are trusted assumptions, not verified conclusions."
   },
+  "unresolved_required_facts": [],
   "version": "1.0"
 }
