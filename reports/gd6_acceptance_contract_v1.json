@@ -448,7 +448,7 @@
       "effect": "recorded but does not block acceptance"
     }
   },
-  "stage": "Part 3B.2R.1-G.D6-F0.1",
+  "stage": "Part 3B.2R.1-G.D6-F0.2",
   "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd",
   "status": "freeze_candidate",
   "stopping_rule": {

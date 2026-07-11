@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 import argparse
+import contextlib
 import hashlib
 import importlib.util
 import json
 import platform
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -20,7 +22,7 @@ BENCHMARK_ID = "SEMIT-GD6-BENCHMARK"
 BENCHMARK_VERSION = "1.0"
 FREEZE_MANIFEST_ID = "SEMIT-GD6-CONTRACT-FREEZE-MANIFEST"
 FREEZE_MANIFEST_VERSION = "1.0"
-STAGE = "Part 3B.2R.1-G.D6-F0.1"
+STAGE = "Part 3B.2R.1-G.D6-F0.2"
 
 CONTRACT_JSON_PATH = "reports/gd6_acceptance_contract_v1.json"
 CONTRACT_MD_PATH = "reports/gd6_acceptance_contract_v1.md"
@@ -60,7 +62,13 @@ WRITE_GUARD_MECHANISMS = [
     "shutil_move",
 ]
 
-WRITE_GUARD_TARGET_PATHS = [
+WRITE_GUARD_CONTROL_TARGETS = [
+    "results/part1_full_reproduction/canonical.csv",
+    "results/part3b_prediction_ledger/ledger.csv",
+    "reports/part3b_et_policy_implementation.json",
+]
+
+PROTECTED_ARTIFACT_PATHS = [
     "scripts/freeze_part3b_et_reconciliation_policy.py",
     "reports/part3b_et_reconciliation_policy.json",
     "reports/part3b_et_reconciliation_policy.md",
@@ -412,6 +420,158 @@ def load_module(rel_path: str, module_name: str) -> Any:
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
+
+
+def load_module_from_path(path: Path, module_name: str) -> Any:
+    spec = importlib.util.spec_from_file_location(module_name, str(path))
+    if spec is None or spec.loader is None:
+        raise ImportError(f"Unable to load module from {path}")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+@contextlib.contextmanager
+def worktree_at_commit(commit: str):
+    root = repo_root()
+    with tempfile.TemporaryDirectory(prefix="gd6_worktree_") as wt_dir:
+        result = subprocess.run(
+            ["git", "worktree", "add", "--detach", wt_dir, commit],
+            capture_output=True, text=True, cwd=str(root),
+        )
+        if result.returncode != 0:
+            raise RuntimeError(f"git worktree add failed: {result.stderr}")
+        try:
+            yield Path(wt_dir)
+        finally:
+            subprocess.run(
+                ["git", "worktree", "remove", "--force", wt_dir],
+                capture_output=True, text=True, cwd=str(root),
+            )
+
+
+def extract_write_guard_controls_from_worktree() -> Dict[str, Any]:
+    with worktree_at_commit(STARTING_COMMIT) as wt:
+        builder = load_module_from_path(
+            wt / "scripts/build_part3b_prediction_ledger.py",
+            "build_part3b_prediction_ledger_wt",
+        )
+        result = builder._gd6_run_write_guard_positive_controls()
+        controls = result.get("controls", [])
+        mechanisms = sorted({c["mechanism"] for c in controls})
+        targets = sorted({c["target"] for c in controls})
+        pairs = sorted([(c["mechanism"], c["target"]) for c in controls])
+        return {
+            "mechanisms": mechanisms,
+            "targets": targets,
+            "pairs": pairs,
+            "control_count": len(controls),
+            "unique_pair_count": len(pairs),
+            "all_passed": result.get("all_passed"),
+        }
+
+
+def extract_production_entry_points_from_worktree() -> List[str]:
+    with worktree_at_commit(STARTING_COMMIT) as wt:
+        builder = load_module_from_path(
+            wt / "scripts/build_part3b_prediction_ledger.py",
+            "build_part3b_prediction_ledger_wt",
+        )
+        return list(builder._GD6_PRODUCTION_ENTRY_POINTS)
+
+
+def extract_restoration_keys_from_worktree() -> List[str]:
+    with worktree_at_commit(STARTING_COMMIT) as wt:
+        builder = load_module_from_path(
+            wt / "scripts/build_part3b_prediction_ledger.py",
+            "build_part3b_prediction_ledger_wt",
+        )
+        return list(builder._GD6_FORCED_EXCEPTION_RESTORATION_KEYS)
+
+
+def extract_forced_exception_fixture_paths_from_worktree() -> List[str]:
+    with worktree_at_commit(STARTING_COMMIT) as wt:
+        builder = load_module_from_path(
+            wt / "scripts/build_part3b_prediction_ledger.py",
+            "build_part3b_prediction_ledger_wt",
+        )
+        return list(builder._GD6_FORCED_EXCEPTION_FIXTURE_PATHS)
+
+
+def extract_rollback_scenarios_from_worktree() -> List[Dict[str, str]]:
+    with worktree_at_commit(STARTING_COMMIT) as wt:
+        auditor = load_module_from_path(
+            wt / "scripts/audit_part3b_et_policy_implementation.py",
+            "audit_part3b_et_policy_implementation_wt",
+        )
+        result = auditor.run_transactional_rollback_tests()
+        records = result.get("scenario_records", [])
+        scenarios = [
+            {"failure_point": r["failure_point"], "initial_state": r["initial_state"]}
+            for r in records
+        ]
+        return scenarios
+
+
+def extract_rollback_mutations_from_worktree() -> List[str]:
+    with worktree_at_commit(STARTING_COMMIT) as wt:
+        auditor = load_module_from_path(
+            wt / "scripts/audit_part3b_et_policy_implementation.py",
+            "audit_part3b_et_policy_implementation_wt",
+        )
+        return sorted(auditor.REQUIRED_ROLLBACK_MUTATIONS)
+
+
+def extract_protected_artifact_paths_from_worktree() -> List[str]:
+    with worktree_at_commit(STARTING_COMMIT) as wt:
+        builder = load_module_from_path(
+            wt / "scripts/build_part3b_prediction_ledger.py",
+            "build_part3b_prediction_ledger_wt",
+        )
+        return list(builder.GD6_PROTECTED_ARTIFACT_PATHS)
+
+
+def extract_semantic_test_ids_from_worktree() -> Dict[str, Any]:
+    with worktree_at_commit(STARTING_COMMIT) as wt:
+        builder = load_module_from_path(
+            wt / "scripts/build_part3b_prediction_ledger.py",
+            "build_part3b_prediction_ledger_wt",
+        )
+        summary = builder.run_et_reconciliation_policy_self_tests()
+        tests = summary.get("tests", [])
+        test_ids = [t["test_name"] for t in tests]
+        return {
+            "test_count": len(tests),
+            "test_ids": test_ids,
+            "tests_expected": summary.get("tests_expected"),
+            "all_passed": summary.get("all_passed"),
+        }
+
+
+def extract_fixture_parity_records_from_worktree() -> List[Dict[str, Any]]:
+    with worktree_at_commit(STARTING_COMMIT) as wt:
+        policy = load_module_from_path(
+            wt / "scripts/part3b_et_reconciliation_policy.py",
+            "part3b_et_reconciliation_policy_wt",
+        )
+        spec = policy.load_and_verify_frozen_policy(wt)
+        fixtures = spec.get("regression_fixtures", [])
+        records = []
+        for fx in fixtures:
+            records.append({
+                "event_id": fx.get("event_id"),
+                "experiment": fx.get("experiment"),
+                "target_project": fx.get("target_project"),
+                "seed": fx.get("seed"),
+                "model": fx.get("model"),
+                "selected_candidate": fx.get("selected_candidate"),
+                "selection_mode": fx.get("selection_mode"),
+                "column": fx.get("column"),
+                "expected_result": "pass" if fx.get("mechanistically_eligible_under_frozen_policy") else "reject",
+                "currently_approved_exception": fx.get("currently_approved_exception"),
+                "source_artifact": "reports/part3b_et_reconciliation_policy.json",
+            })
+        return records
 
 
 def deterministic_json(value: Any) -> str:
@@ -812,7 +972,7 @@ def build_benchmark_items(semantic_test_info: Dict[str, Any], fixture_parity_rec
 
     # BG-03: Write-Guard Matrix
     for mech in WRITE_GUARD_MECHANISMS:
-        for tgt in WRITE_GUARD_TARGET_PATHS:
+        for tgt in WRITE_GUARD_CONTROL_TARGETS:
             items.append({
                 "benchmark_id": f"BG-03-{mech}-{tgt}",
                 "category": "BG-03",
@@ -977,9 +1137,9 @@ def build_benchmark(semantic_test_info: Dict[str, Any], fixture_parity_records: 
         {
             "group_id": "BG-03",
             "title": "Write-Guard Matrix",
-            "expected_count": len(WRITE_GUARD_MECHANISMS) * len(WRITE_GUARD_TARGET_PATHS),
+            "expected_count": len(WRITE_GUARD_MECHANISMS) * len(WRITE_GUARD_CONTROL_TARGETS),
             "mechanism_count": len(WRITE_GUARD_MECHANISMS),
-            "target_path_count": len(WRITE_GUARD_TARGET_PATHS),
+            "target_count": len(WRITE_GUARD_CONTROL_TARGETS),
             "claim_ids": ["CLAIM-C", "CLAIM-D"],
         },
         {
@@ -1043,7 +1203,7 @@ def build_benchmark(semantic_test_info: Dict[str, Any], fixture_parity_records: 
         "expected_counts": {
             "BG-01": semantic_test_info["test_count"],
             "BG-02": len(fixture_parity_records),
-            "BG-03": len(WRITE_GUARD_MECHANISMS) * len(WRITE_GUARD_TARGET_PATHS),
+            "BG-03": len(WRITE_GUARD_MECHANISMS) * len(WRITE_GUARD_CONTROL_TARGETS),
             "BG-04": len(PRODUCTION_ENTRY_POINTS),
             "BG-05": len(RESTORATION_KEYS),
             "BG-06": len(FORCED_EXCEPTION_FIXTURE_PATHS),
@@ -1055,7 +1215,8 @@ def build_benchmark(semantic_test_info: Dict[str, Any], fixture_parity_records: 
         },
         "exact_sets": {
             "write_guard_mechanisms": WRITE_GUARD_MECHANISMS,
-            "write_guard_target_paths": WRITE_GUARD_TARGET_PATHS,
+            "write_guard_control_targets": WRITE_GUARD_CONTROL_TARGETS,
+            "protected_artifact_paths": PROTECTED_ARTIFACT_PATHS,
             "production_entry_points": PRODUCTION_ENTRY_POINTS,
             "restoration_keys": RESTORATION_KEYS,
             "forced_exception_fixture_paths": FORCED_EXCEPTION_FIXTURE_PATHS,
@@ -1298,9 +1459,14 @@ def render_benchmark_markdown(benchmark: Dict[str, Any]) -> str:
     for tid in es["semantic_test_ids"]:
         lines.append(f"- {tid}")
     lines.append("")
-    lines.append(f"### Write-Guard Target Paths ({len(es['write_guard_target_paths'])})")
+    lines.append(f"### Write-Guard Control Targets ({len(es['write_guard_control_targets'])})")
     lines.append("")
-    for tp in es["write_guard_target_paths"]:
+    for tp in es["write_guard_control_targets"]:
+        lines.append(f"- {tp}")
+    lines.append("")
+    lines.append(f"### Protected Artifact Paths ({len(es['protected_artifact_paths'])})")
+    lines.append("")
+    for tp in es["protected_artifact_paths"]:
         lines.append(f"- {tp}")
     lines.append("")
     lines.append(f"### Preservation Conditions ({len(es['preservation_conditions'])})")
@@ -1370,14 +1536,45 @@ def main(argv: Optional[List[str]] = None) -> None:
 
     root = Path(args.output_root) if args.output_root else repo_root()
 
-    print("Extracting semantic test IDs...")
-    semantic_test_info = extract_semantic_test_ids()
+    print("Extracting semantic test IDs from worktree...")
+    semantic_test_info = extract_semantic_test_ids_from_worktree()
     print(f"  Test count: {semantic_test_info['test_count']}")
     print(f"  Tests expected: {semantic_test_info['tests_expected']}")
 
-    print("Extracting fixture parity records...")
-    fixture_parity_records = extract_fixture_parity_records()
+    print("Extracting fixture parity records from worktree...")
+    fixture_parity_records = extract_fixture_parity_records_from_worktree()
     print(f"  Fixture parity count: {len(fixture_parity_records)}")
+
+    print("Extracting write-guard controls from worktree...")
+    wg_info = extract_write_guard_controls_from_worktree()
+    print(f"  Mechanism count: {len(wg_info['mechanisms'])}")
+    print(f"  Target count: {len(wg_info['targets'])}")
+    print(f"  Control count: {wg_info['control_count']}")
+    print(f"  Unique pair count: {wg_info['unique_pair_count']}")
+
+    print("Extracting production entry points from worktree...")
+    prod_eps = extract_production_entry_points_from_worktree()
+    print(f"  Entry point count: {len(prod_eps)}")
+
+    print("Extracting restoration keys from worktree...")
+    rest_keys = extract_restoration_keys_from_worktree()
+    print(f"  Restoration key count: {len(rest_keys)}")
+
+    print("Extracting forced-exception fixture paths from worktree...")
+    fe_paths = extract_forced_exception_fixture_paths_from_worktree()
+    print(f"  Fixture path count: {len(fe_paths)}")
+
+    print("Extracting rollback scenarios from worktree...")
+    rb_scenarios = extract_rollback_scenarios_from_worktree()
+    print(f"  Scenario count: {len(rb_scenarios)}")
+
+    print("Extracting rollback mutations from worktree...")
+    rb_mutations = extract_rollback_mutations_from_worktree()
+    print(f"  Mutation count: {len(rb_mutations)}")
+
+    print("Extracting protected artifact paths from worktree...")
+    pa_paths = extract_protected_artifact_paths_from_worktree()
+    print(f"  Protected artifact count: {len(pa_paths)}")
 
     print("Building reference environment...")
     env = build_reference_environment()

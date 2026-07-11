@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
-"""Part 3B.2R.1-G.D6-F0.1: Verify frozen acceptance contract package v1.0."""
+"""Part 3B.2R.1-G.D6-F0.2: Verify frozen acceptance contract package v1.0."""
 from __future__ import annotations
 
+import contextlib
 import hashlib
 import importlib.util
 import json
@@ -77,7 +78,13 @@ EXPECTED_WRITE_GUARD_MECHANISMS = [
     "shutil_move",
 ]
 
-EXPECTED_WRITE_GUARD_TARGET_PATHS = [
+EXPECTED_WRITE_GUARD_CONTROL_TARGETS = [
+    "results/part1_full_reproduction/canonical.csv",
+    "results/part3b_prediction_ledger/ledger.csv",
+    "reports/part3b_et_policy_implementation.json",
+]
+
+EXPECTED_PROTECTED_ARTIFACT_PATHS = [
     "scripts/freeze_part3b_et_reconciliation_policy.py",
     "reports/part3b_et_reconciliation_policy.json",
     "reports/part3b_et_reconciliation_policy.md",
@@ -192,7 +199,37 @@ VALID_EXTRACTION_METHODS = {
     "contract_fixed_requirement",
 }
 
-PROTECTED_PATHS = EXPECTED_WRITE_GUARD_TARGET_PATHS
+PROTECTED_PATHS = EXPECTED_PROTECTED_ARTIFACT_PATHS
+
+EXPECTED_IN_SCOPE_COMPONENTS = [
+    "frozen_reconciliation_policy_implementation",
+    "integration_points_used_by_gd6",
+    "benchmark_fixtures",
+    "benchmark_expected_outcomes",
+    "write_guards",
+    "production_entry_guards",
+    "restoration_logic",
+    "rollback_logic",
+    "protected_artifact_comparison",
+    "report_generation",
+    "json_markdown_consistency",
+    "frozen_verifier",
+    "environment_and_provenance_records",
+]
+
+EXPECTED_GROUP_COUNTS = {
+    "BG-01": 35,
+    "BG-02": 9,
+    "BG-03": 45,
+    "BG-04": 4,
+    "BG-05": 20,
+    "BG-06": 3,
+    "BG-07": 6,
+    "BG-08": 7,
+    "BG-09": 17,
+    "BG-10": 9,
+    "BG-11": 1,
+}
 
 
 def repo_root() -> Path:
@@ -218,6 +255,97 @@ def git_file_exists_at_commit(root: Path, commit: str, rel_path: str) -> bool:
         cwd=str(root),
     )
     return result.returncode == 0
+
+
+def _load_module_from_path(path: Path, module_name: str) -> Any:
+    spec = importlib.util.spec_from_file_location(module_name, str(path))
+    if spec is None or spec.loader is None:
+        raise ImportError(f"Unable to load module from {path}")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+@contextlib.contextmanager
+def _worktree_at_commit(root: Path, commit: str):
+    with tempfile.TemporaryDirectory(prefix="gd6_verify_wt_") as wt_dir:
+        result = subprocess.run(
+            ["git", "worktree", "add", "--detach", wt_dir, commit],
+            capture_output=True, text=True, cwd=str(root),
+        )
+        if result.returncode != 0:
+            raise RuntimeError(f"git worktree add failed: {result.stderr}")
+        try:
+            yield Path(wt_dir)
+        finally:
+            subprocess.run(
+                ["git", "worktree", "remove", "--force", wt_dir],
+                capture_output=True, text=True, cwd=str(root),
+            )
+
+
+def _extract_bg03_from_worktree(root: Path) -> Dict[str, Any]:
+    with _worktree_at_commit(root, STARTING_COMMIT) as wt:
+        builder = _load_module_from_path(
+            wt / "scripts/build_part3b_prediction_ledger.py",
+            "build_part3b_prediction_ledger_vt",
+        )
+        result = builder._gd6_run_write_guard_positive_controls()
+        controls = result.get("controls", [])
+        mechanisms = sorted({c["mechanism"] for c in controls})
+        targets = sorted({c["target"] for c in controls})
+        pairs = sorted([(c["mechanism"], c["target"]) for c in controls])
+        return {
+            "mechanisms": mechanisms,
+            "targets": targets,
+            "pairs": pairs,
+            "control_count": len(controls),
+            "unique_pair_count": len(pairs),
+        }
+
+
+def _extract_all_sets_from_worktree(root: Path) -> Dict[str, Any]:
+    with _worktree_at_commit(root, STARTING_COMMIT) as wt:
+        builder = _load_module_from_path(
+            wt / "scripts/build_part3b_prediction_ledger.py",
+            "build_part3b_prediction_ledger_vt",
+        )
+        auditor = _load_module_from_path(
+            wt / "scripts/audit_part3b_et_policy_implementation.py",
+            "audit_part3b_et_policy_implementation_vt",
+        )
+
+        wg_result = builder._gd6_run_write_guard_positive_controls()
+        wg_controls = wg_result.get("controls", [])
+        wg_mechanisms = sorted({c["mechanism"] for c in wg_controls})
+        wg_targets = sorted({c["target"] for c in wg_controls})
+        wg_pairs = sorted([(c["mechanism"], c["target"]) for c in wg_controls])
+
+        semantic = builder.run_et_reconciliation_policy_self_tests()
+        semantic_ids = [t["test_name"] for t in semantic.get("tests", [])]
+
+        rb_result = auditor.run_transactional_rollback_tests()
+        rb_records = rb_result.get("scenario_records", [])
+        rb_scenarios = [
+            {"failure_point": r["failure_point"], "initial_state": r["initial_state"]}
+            for r in rb_records
+        ]
+
+        return {
+            "write_guard_mechanisms": wg_mechanisms,
+            "write_guard_targets": wg_targets,
+            "write_guard_pairs": wg_pairs,
+            "write_guard_control_count": len(wg_controls),
+            "write_guard_unique_pair_count": len(wg_pairs),
+            "production_entry_points": list(builder._GD6_PRODUCTION_ENTRY_POINTS),
+            "restoration_keys": list(builder._GD6_FORCED_EXCEPTION_RESTORATION_KEYS),
+            "forced_exception_fixture_paths": list(builder._GD6_FORCED_EXCEPTION_FIXTURE_PATHS),
+            "rollback_scenarios": rb_scenarios,
+            "rollback_mutations": sorted(auditor.REQUIRED_ROLLBACK_MUTATIONS),
+            "protected_artifact_paths": list(builder.GD6_PROTECTED_ARTIFACT_PATHS),
+            "semantic_test_ids": semantic_ids,
+            "semantic_test_count": len(semantic_ids),
+        }
 
 
 class VerificationResult:
@@ -426,7 +554,8 @@ def verify_benchmark_json(root: Path, vr: VerificationResult) -> Dict[str, Any]:
 
     es = benchmark.get("exact_sets", {})
     vr.check("exact_sets_write_guard_mechanisms", es.get("write_guard_mechanisms") == EXPECTED_WRITE_GUARD_MECHANISMS, "")
-    vr.check("exact_sets_write_guard_target_paths", es.get("write_guard_target_paths") == EXPECTED_WRITE_GUARD_TARGET_PATHS, "")
+    vr.check("exact_sets_write_guard_control_targets", es.get("write_guard_control_targets") == EXPECTED_WRITE_GUARD_CONTROL_TARGETS, "")
+    vr.check("exact_sets_protected_artifact_paths", es.get("protected_artifact_paths") == EXPECTED_PROTECTED_ARTIFACT_PATHS, "")
     vr.check("exact_sets_production_entry_points", es.get("production_entry_points") == EXPECTED_PRODUCTION_ENTRY_POINTS, "")
     vr.check("exact_sets_restoration_keys", es.get("restoration_keys") == EXPECTED_RESTORATION_KEYS, "")
     vr.check("exact_sets_forced_exception_fixture_paths", es.get("forced_exception_fixture_paths") == EXPECTED_FORCED_EXCEPTION_FIXTURE_PATHS, "")
@@ -691,6 +820,132 @@ def verify_no_production_action(root: Path, vr: VerificationResult) -> None:
 
 
 # ---------------------------------------------------------------------------
+# 14. Independent BG-03 extraction verification
+# ---------------------------------------------------------------------------
+
+def verify_bg03_independent_extraction(root: Path, vr: VerificationResult) -> None:
+    try:
+        bg03 = _extract_bg03_from_worktree(root)
+    except Exception as exc:
+        vr.check("bg03_extraction_succeeded", False, str(exc))
+        return
+    vr.check("bg03_extraction_succeeded", True, "")
+
+    observed_mechanisms = bg03["mechanisms"]
+    observed_targets = bg03["targets"]
+    observed_pairs = bg03["pairs"]
+    observed_count = bg03["control_count"]
+    unique_count = bg03["unique_pair_count"]
+
+    vr.check("bg03_mechanism_count", len(observed_mechanisms) == 15, f"observed={len(observed_mechanisms)}")
+    vr.check("bg03_target_count", len(observed_targets) == 3, f"observed={len(observed_targets)}")
+    vr.check("bg03_control_count", observed_count == 45, f"observed={observed_count}")
+    vr.check("bg03_unique_pair_count", unique_count == 45, f"observed={unique_count}")
+
+    expected_mechanisms = sorted(EXPECTED_WRITE_GUARD_MECHANISMS)
+    vr.check("bg03_mechanism_set_exact", observed_mechanisms == expected_mechanisms, f"observed={observed_mechanisms}, expected={expected_mechanisms}")
+
+    expected_targets = sorted(EXPECTED_WRITE_GUARD_CONTROL_TARGETS)
+    vr.check("bg03_target_set_exact", observed_targets == expected_targets, f"observed={observed_targets}, expected={expected_targets}")
+
+    expected_pairs = sorted([(m, t) for m in EXPECTED_WRITE_GUARD_MECHANISMS for t in EXPECTED_WRITE_GUARD_CONTROL_TARGETS])
+    vr.check("bg03_pair_set_exact", observed_pairs == expected_pairs, f"observed={observed_pairs}, expected={expected_pairs}")
+
+    missing = [p for p in expected_pairs if p not in observed_pairs]
+    unexpected = [p for p in observed_pairs if p not in expected_pairs]
+    duplicates = [p for p in observed_pairs if observed_pairs.count(p) > 1]
+    vr.check("bg03_missing_pairs", len(missing) == 0, f"missing={missing}")
+    vr.check("bg03_unexpected_pairs", len(unexpected) == 0, f"unexpected={unexpected}")
+    vr.check("bg03_duplicate_pairs", len(duplicates) == 0, f"duplicates={duplicates}")
+
+
+# ---------------------------------------------------------------------------
+# 15. In-scope component set verification
+# ---------------------------------------------------------------------------
+
+def verify_in_scope_components(root: Path, vr: VerificationResult) -> None:
+    contract = load_json(root / CONTRACT_JSON_PATH)
+    tb = contract.get("trust_boundary", {})
+    in_scope = tb.get("in_scope_components", [])
+    vr.check("in_scope_count", len(in_scope) == len(EXPECTED_IN_SCOPE_COMPONENTS), f"observed={len(in_scope)}, expected={len(EXPECTED_IN_SCOPE_COMPONENTS)}")
+    vr.check("in_scope_exact", in_scope == EXPECTED_IN_SCOPE_COMPONENTS, f"observed={in_scope}, expected={EXPECTED_IN_SCOPE_COMPONENTS}")
+    missing = [c for c in EXPECTED_IN_SCOPE_COMPONENTS if c not in in_scope]
+    unexpected = [c for c in in_scope if c not in EXPECTED_IN_SCOPE_COMPONENTS]
+    vr.check("in_scope_no_missing", len(missing) == 0, f"missing={missing}")
+    vr.check("in_scope_no_unexpected", len(unexpected) == 0, f"unexpected={unexpected}")
+
+
+# ---------------------------------------------------------------------------
+# 16. Group-count verification
+# ---------------------------------------------------------------------------
+
+def verify_group_counts(root: Path, vr: VerificationResult) -> None:
+    benchmark = load_json(root / BENCHMARK_JSON_PATH)
+    items = benchmark.get("benchmark_items", [])
+    expected_counts = benchmark.get("expected_counts", {})
+
+    for bg_id, expected_count in EXPECTED_GROUP_COUNTS.items():
+        group_items = [item for item in items if item.get("category") == bg_id]
+        observed_count = len(group_items)
+        vr.check(f"group_count_{bg_id}_expected", expected_counts.get(bg_id) == expected_count, f"benchmark_says={expected_counts.get(bg_id)}, required={expected_count}")
+        vr.check(f"group_count_{bg_id}_observed", observed_count == expected_count, f"observed={observed_count}, expected={expected_count}")
+
+        seen_ids = [item.get("benchmark_id", "") for item in group_items]
+        unique_ids = set(seen_ids)
+        vr.check(f"group_count_{bg_id}_unique_ids", len(unique_ids) == expected_count, f"unique={len(unique_ids)}, expected={expected_count}")
+
+        missing_ids = [bid for bid in seen_ids if seen_ids.count(bid) > 1]
+        vr.check(f"group_count_{bg_id}_no_duplicates", len(missing_ids) == 0, f"duplicates={missing_ids}")
+
+
+# ---------------------------------------------------------------------------
+# 17. Repository-derived sets mechanically grounded
+# ---------------------------------------------------------------------------
+
+def verify_repo_derived_sets_grounded(root: Path, vr: VerificationResult) -> None:
+    try:
+        observed = _extract_all_sets_from_worktree(root)
+    except Exception as exc:
+        vr.check("repo_derived_extraction_succeeded", False, str(exc))
+        return
+    vr.check("repo_derived_extraction_succeeded", True, "")
+
+    benchmark = load_json(root / BENCHMARK_JSON_PATH)
+    es = benchmark.get("exact_sets", {})
+
+    # BG-01: semantic test IDs
+    vr.check("grounded_bg01_semantic_test_count", observed["semantic_test_count"] == len(es.get("semantic_test_ids", [])), f"observed={observed['semantic_test_count']}, benchmark={len(es.get('semantic_test_ids', []))}")
+
+    # BG-03: write-guard mechanisms
+    vr.check("grounded_bg03_mechanisms", observed["write_guard_mechanisms"] == sorted(es.get("write_guard_mechanisms", [])), f"observed={observed['write_guard_mechanisms']}, benchmark={sorted(es.get('write_guard_mechanisms', []))}")
+
+    # BG-03: write-guard targets
+    vr.check("grounded_bg03_targets", observed["write_guard_targets"] == sorted(es.get("write_guard_control_targets", [])), f"observed={observed['write_guard_targets']}, benchmark={sorted(es.get('write_guard_control_targets', []))}")
+
+    # BG-03: control count
+    vr.check("grounded_bg03_control_count", observed["write_guard_control_count"] == 45, f"observed={observed['write_guard_control_count']}")
+    vr.check("grounded_bg03_unique_pair_count", observed["write_guard_unique_pair_count"] == 45, f"observed={observed['write_guard_unique_pair_count']}")
+
+    # BG-04: production entry points
+    vr.check("grounded_bg04_entry_points", observed["production_entry_points"] == es.get("production_entry_points", []), f"observed={observed['production_entry_points']}, benchmark={es.get('production_entry_points', [])}")
+
+    # BG-05: restoration keys
+    vr.check("grounded_bg05_restoration_keys", observed["restoration_keys"] == es.get("restoration_keys", []), f"observed={observed['restoration_keys']}, benchmark={es.get('restoration_keys', [])}")
+
+    # BG-06: forced exception fixture paths
+    vr.check("grounded_bg06_fixture_paths", observed["forced_exception_fixture_paths"] == es.get("forced_exception_fixture_paths", []), f"observed={observed['forced_exception_fixture_paths']}, benchmark={es.get('forced_exception_fixture_paths', [])}")
+
+    # BG-07: rollback scenarios
+    vr.check("grounded_bg07_rollback_scenarios", observed["rollback_scenarios"] == es.get("rollback_scenarios", []), f"observed={observed['rollback_scenarios']}, benchmark={es.get('rollback_scenarios', [])}")
+
+    # BG-08: rollback mutations
+    vr.check("grounded_bg08_rollback_mutations", observed["rollback_mutations"] == sorted(es.get("rollback_mutations", [])), f"observed={observed['rollback_mutations']}, benchmark={sorted(es.get('rollback_mutations', []))}")
+
+    # Protected artifact paths
+    vr.check("grounded_protected_artifact_paths", observed["protected_artifact_paths"] == es.get("protected_artifact_paths", []), f"observed={observed['protected_artifact_paths']}, benchmark={es.get('protected_artifact_paths', [])}")
+
+
+# ---------------------------------------------------------------------------
 # 13. No prohibited claims in content
 # ---------------------------------------------------------------------------
 
@@ -759,6 +1014,18 @@ def main() -> int:
 
     print("[13] Verifying no production action...")
     verify_no_production_action(root, vr)
+
+    print("[14] Verifying independent BG-03 extraction...")
+    verify_bg03_independent_extraction(root, vr)
+
+    print("[15] Verifying in-scope component set...")
+    verify_in_scope_components(root, vr)
+
+    print("[16] Verifying group counts...")
+    verify_group_counts(root, vr)
+
+    print("[17] Verifying repository-derived sets mechanically grounded...")
+    verify_repo_derived_sets_grounded(root, vr)
 
     report = vr.as_dict()
     report_json = json.dumps(report, ensure_ascii=False, sort_keys=True, indent=2)

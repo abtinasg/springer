@@ -23,10 +23,10 @@
         "CLAIM-C",
         "CLAIM-D"
       ],
-      "expected_count": 240,
+      "expected_count": 45,
       "group_id": "BG-03",
       "mechanism_count": 15,
-      "target_path_count": 16,
+      "target_count": 3,
       "title": "Write-Guard Matrix"
     },
     {
@@ -759,7 +759,7 @@
       }
     },
     {
-      "benchmark_id": "BG-03-builtins_open-scripts/freeze_part3b_et_reconciliation_policy.py",
+      "benchmark_id": "BG-03-builtins_open-results/part1_full_reproduction/canonical.csv",
       "category": "BG-03",
       "claim_ids": [
         "CLAIM-C",
@@ -770,12 +770,12 @@
       "provenance": {
         "extraction_method": "runtime_output",
         "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=builtins_open,target=scripts/freeze_part3b_et_reconciliation_policy.py]",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=builtins_open,target=results/part1_full_reproduction/canonical.csv]",
         "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
       }
     },
     {
-      "benchmark_id": "BG-03-builtins_open-reports/part3b_et_reconciliation_policy.json",
+      "benchmark_id": "BG-03-builtins_open-results/part3b_prediction_ledger/ledger.csv",
       "category": "BG-03",
       "claim_ids": [
         "CLAIM-C",
@@ -786,12 +786,12 @@
       "provenance": {
         "extraction_method": "runtime_output",
         "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=builtins_open,target=reports/part3b_et_reconciliation_policy.json]",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=builtins_open,target=results/part3b_prediction_ledger/ledger.csv]",
         "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
       }
     },
     {
-      "benchmark_id": "BG-03-builtins_open-reports/part3b_et_reconciliation_policy.md",
+      "benchmark_id": "BG-03-builtins_open-reports/part3b_et_policy_implementation.json",
       "category": "BG-03",
       "claim_ids": [
         "CLAIM-C",
@@ -802,12 +802,12 @@
       "provenance": {
         "extraction_method": "runtime_output",
         "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=builtins_open,target=reports/part3b_et_reconciliation_policy.md]",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=builtins_open,target=reports/part3b_et_policy_implementation.json]",
         "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
       }
     },
     {
-      "benchmark_id": "BG-03-builtins_open-scripts/audit_part3b_et_canonical_reconciliation.py",
+      "benchmark_id": "BG-03-io_open-results/part1_full_reproduction/canonical.csv",
       "category": "BG-03",
       "claim_ids": [
         "CLAIM-C",
@@ -818,12 +818,12 @@
       "provenance": {
         "extraction_method": "runtime_output",
         "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=builtins_open,target=scripts/audit_part3b_et_canonical_reconciliation.py]",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=io_open,target=results/part1_full_reproduction/canonical.csv]",
         "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
       }
     },
     {
-      "benchmark_id": "BG-03-builtins_open-reports/part3b_et_canonical_reconciliation.json",
+      "benchmark_id": "BG-03-io_open-results/part3b_prediction_ledger/ledger.csv",
       "category": "BG-03",
       "claim_ids": [
         "CLAIM-C",
@@ -834,12 +834,12 @@
       "provenance": {
         "extraction_method": "runtime_output",
         "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=builtins_open,target=reports/part3b_et_canonical_reconciliation.json]",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=io_open,target=results/part3b_prediction_ledger/ledger.csv]",
         "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
       }
     },
     {
-      "benchmark_id": "BG-03-builtins_open-reports/part3b_et_canonical_reconciliation.md",
+      "benchmark_id": "BG-03-io_open-reports/part3b_et_policy_implementation.json",
       "category": "BG-03",
       "claim_ids": [
         "CLAIM-C",
@@ -850,12 +850,12 @@
       "provenance": {
         "extraction_method": "runtime_output",
         "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=builtins_open,target=reports/part3b_et_canonical_reconciliation.md]",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=io_open,target=reports/part3b_et_policy_implementation.json]",
         "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
       }
     },
     {
-      "benchmark_id": "BG-03-builtins_open-results/part3b_prediction_ledger/et_canonical_mismatch_matrix.csv",
+      "benchmark_id": "BG-03-path_open-results/part1_full_reproduction/canonical.csv",
       "category": "BG-03",
       "claim_ids": [
         "CLAIM-C",
@@ -866,12 +866,12 @@
       "provenance": {
         "extraction_method": "runtime_output",
         "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=builtins_open,target=results/part3b_prediction_ledger/et_canonical_mismatch_matrix.csv]",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_open,target=results/part1_full_reproduction/canonical.csv]",
         "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
       }
     },
     {
-      "benchmark_id": "BG-03-builtins_open-results/part3b_prediction_ledger/sample_registry.csv",
+      "benchmark_id": "BG-03-path_open-results/part3b_prediction_ledger/ledger.csv",
       "category": "BG-03",
       "claim_ids": [
         "CLAIM-C",
@@ -882,12 +882,12 @@
       "provenance": {
         "extraction_method": "runtime_output",
         "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=builtins_open,target=results/part3b_prediction_ledger/sample_registry.csv]",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_open,target=results/part3b_prediction_ledger/ledger.csv]",
         "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
       }
     },
     {
-      "benchmark_id": "BG-03-builtins_open-results/part3b_prediction_ledger/split_membership_within.csv.gz",
+      "benchmark_id": "BG-03-path_open-reports/part3b_et_policy_implementation.json",
       "category": "BG-03",
       "claim_ids": [
         "CLAIM-C",
@@ -898,12 +898,12 @@
       "provenance": {
         "extraction_method": "runtime_output",
         "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=builtins_open,target=results/part3b_prediction_ledger/split_membership_within.csv.gz]",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_open,target=reports/part3b_et_policy_implementation.json]",
         "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
       }
     },
     {
-      "benchmark_id": "BG-03-builtins_open-results/part3b_prediction_ledger/canonical_result_reconstruction.csv",
+      "benchmark_id": "BG-03-path_write_text-results/part1_full_reproduction/canonical.csv",
       "category": "BG-03",
       "claim_ids": [
         "CLAIM-C",
@@ -914,12 +914,12 @@
       "provenance": {
         "extraction_method": "runtime_output",
         "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=builtins_open,target=results/part3b_prediction_ledger/canonical_result_reconstruction.csv]",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_write_text,target=results/part1_full_reproduction/canonical.csv]",
         "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
       }
     },
     {
-      "benchmark_id": "BG-03-builtins_open-results/part3b_prediction_ledger/ledger_manifest.json",
+      "benchmark_id": "BG-03-path_write_text-results/part3b_prediction_ledger/ledger.csv",
       "category": "BG-03",
       "claim_ids": [
         "CLAIM-C",
@@ -930,12 +930,12 @@
       "provenance": {
         "extraction_method": "runtime_output",
         "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=builtins_open,target=results/part3b_prediction_ledger/ledger_manifest.json]",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_write_text,target=results/part3b_prediction_ledger/ledger.csv]",
         "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
       }
     },
     {
-      "benchmark_id": "BG-03-builtins_open-results/part3b_prediction_ledger/prediction_ledger_within.csv.gz",
+      "benchmark_id": "BG-03-path_write_text-reports/part3b_et_policy_implementation.json",
       "category": "BG-03",
       "claim_ids": [
         "CLAIM-C",
@@ -946,12 +946,12 @@
       "provenance": {
         "extraction_method": "runtime_output",
         "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=builtins_open,target=results/part3b_prediction_ledger/prediction_ledger_within.csv.gz]",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_write_text,target=reports/part3b_et_policy_implementation.json]",
         "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
       }
     },
     {
-      "benchmark_id": "BG-03-builtins_open-results/part3b_prediction_ledger/split_membership_cross.csv.gz",
+      "benchmark_id": "BG-03-path_write_bytes-results/part1_full_reproduction/canonical.csv",
       "category": "BG-03",
       "claim_ids": [
         "CLAIM-C",
@@ -962,12 +962,12 @@
       "provenance": {
         "extraction_method": "runtime_output",
         "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=builtins_open,target=results/part3b_prediction_ledger/split_membership_cross.csv.gz]",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_write_bytes,target=results/part1_full_reproduction/canonical.csv]",
         "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
       }
     },
     {
-      "benchmark_id": "BG-03-builtins_open-results/part3b_prediction_ledger/event_manifest.csv",
+      "benchmark_id": "BG-03-path_write_bytes-results/part3b_prediction_ledger/ledger.csv",
       "category": "BG-03",
       "claim_ids": [
         "CLAIM-C",
@@ -978,12 +978,12 @@
       "provenance": {
         "extraction_method": "runtime_output",
         "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=builtins_open,target=results/part3b_prediction_ledger/event_manifest.csv]",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_write_bytes,target=results/part3b_prediction_ledger/ledger.csv]",
         "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
       }
     },
     {
-      "benchmark_id": "BG-03-builtins_open-results/part3b_prediction_ledger/prediction_ledger_cross.csv.gz",
+      "benchmark_id": "BG-03-path_write_bytes-reports/part3b_et_policy_implementation.json",
       "category": "BG-03",
       "claim_ids": [
         "CLAIM-C",
@@ -994,12 +994,12 @@
       "provenance": {
         "extraction_method": "runtime_output",
         "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=builtins_open,target=results/part3b_prediction_ledger/prediction_ledger_cross.csv.gz]",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_write_bytes,target=reports/part3b_et_policy_implementation.json]",
         "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
       }
     },
     {
-      "benchmark_id": "BG-03-builtins_open-results/part3b_prediction_ledger/validation_reconstruction.csv",
+      "benchmark_id": "BG-03-path_touch-results/part1_full_reproduction/canonical.csv",
       "category": "BG-03",
       "claim_ids": [
         "CLAIM-C",
@@ -1010,12 +1010,12 @@
       "provenance": {
         "extraction_method": "runtime_output",
         "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=builtins_open,target=results/part3b_prediction_ledger/validation_reconstruction.csv]",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_touch,target=results/part1_full_reproduction/canonical.csv]",
         "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
       }
     },
     {
-      "benchmark_id": "BG-03-io_open-scripts/freeze_part3b_et_reconciliation_policy.py",
+      "benchmark_id": "BG-03-path_touch-results/part3b_prediction_ledger/ledger.csv",
       "category": "BG-03",
       "claim_ids": [
         "CLAIM-C",
@@ -1026,12 +1026,12 @@
       "provenance": {
         "extraction_method": "runtime_output",
         "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=io_open,target=scripts/freeze_part3b_et_reconciliation_policy.py]",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_touch,target=results/part3b_prediction_ledger/ledger.csv]",
         "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
       }
     },
     {
-      "benchmark_id": "BG-03-io_open-reports/part3b_et_reconciliation_policy.json",
+      "benchmark_id": "BG-03-path_touch-reports/part3b_et_policy_implementation.json",
       "category": "BG-03",
       "claim_ids": [
         "CLAIM-C",
@@ -1042,12 +1042,12 @@
       "provenance": {
         "extraction_method": "runtime_output",
         "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=io_open,target=reports/part3b_et_reconciliation_policy.json]",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_touch,target=reports/part3b_et_policy_implementation.json]",
         "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
       }
     },
     {
-      "benchmark_id": "BG-03-io_open-reports/part3b_et_reconciliation_policy.md",
+      "benchmark_id": "BG-03-path_replace-results/part1_full_reproduction/canonical.csv",
       "category": "BG-03",
       "claim_ids": [
         "CLAIM-C",
@@ -1058,12 +1058,12 @@
       "provenance": {
         "extraction_method": "runtime_output",
         "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=io_open,target=reports/part3b_et_reconciliation_policy.md]",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_replace,target=results/part1_full_reproduction/canonical.csv]",
         "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
       }
     },
     {
-      "benchmark_id": "BG-03-io_open-scripts/audit_part3b_et_canonical_reconciliation.py",
+      "benchmark_id": "BG-03-path_replace-results/part3b_prediction_ledger/ledger.csv",
       "category": "BG-03",
       "claim_ids": [
         "CLAIM-C",
@@ -1074,12 +1074,12 @@
       "provenance": {
         "extraction_method": "runtime_output",
         "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=io_open,target=scripts/audit_part3b_et_canonical_reconciliation.py]",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_replace,target=results/part3b_prediction_ledger/ledger.csv]",
         "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
       }
     },
     {
-      "benchmark_id": "BG-03-io_open-reports/part3b_et_canonical_reconciliation.json",
+      "benchmark_id": "BG-03-path_replace-reports/part3b_et_policy_implementation.json",
       "category": "BG-03",
       "claim_ids": [
         "CLAIM-C",
@@ -1090,12 +1090,12 @@
       "provenance": {
         "extraction_method": "runtime_output",
         "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=io_open,target=reports/part3b_et_canonical_reconciliation.json]",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_replace,target=reports/part3b_et_policy_implementation.json]",
         "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
       }
     },
     {
-      "benchmark_id": "BG-03-io_open-reports/part3b_et_canonical_reconciliation.md",
+      "benchmark_id": "BG-03-path_rename-results/part1_full_reproduction/canonical.csv",
       "category": "BG-03",
       "claim_ids": [
         "CLAIM-C",
@@ -1106,12 +1106,12 @@
       "provenance": {
         "extraction_method": "runtime_output",
         "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=io_open,target=reports/part3b_et_canonical_reconciliation.md]",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_rename,target=results/part1_full_reproduction/canonical.csv]",
         "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
       }
     },
     {
-      "benchmark_id": "BG-03-io_open-results/part3b_prediction_ledger/et_canonical_mismatch_matrix.csv",
+      "benchmark_id": "BG-03-path_rename-results/part3b_prediction_ledger/ledger.csv",
       "category": "BG-03",
       "claim_ids": [
         "CLAIM-C",
@@ -1122,12 +1122,12 @@
       "provenance": {
         "extraction_method": "runtime_output",
         "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=io_open,target=results/part3b_prediction_ledger/et_canonical_mismatch_matrix.csv]",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_rename,target=results/part3b_prediction_ledger/ledger.csv]",
         "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
       }
     },
     {
-      "benchmark_id": "BG-03-io_open-results/part3b_prediction_ledger/sample_registry.csv",
+      "benchmark_id": "BG-03-path_rename-reports/part3b_et_policy_implementation.json",
       "category": "BG-03",
       "claim_ids": [
         "CLAIM-C",
@@ -1138,12 +1138,12 @@
       "provenance": {
         "extraction_method": "runtime_output",
         "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=io_open,target=results/part3b_prediction_ledger/sample_registry.csv]",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_rename,target=reports/part3b_et_policy_implementation.json]",
         "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
       }
     },
     {
-      "benchmark_id": "BG-03-io_open-results/part3b_prediction_ledger/split_membership_within.csv.gz",
+      "benchmark_id": "BG-03-os_open-results/part1_full_reproduction/canonical.csv",
       "category": "BG-03",
       "claim_ids": [
         "CLAIM-C",
@@ -1154,12 +1154,12 @@
       "provenance": {
         "extraction_method": "runtime_output",
         "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=io_open,target=results/part3b_prediction_ledger/split_membership_within.csv.gz]",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=os_open,target=results/part1_full_reproduction/canonical.csv]",
         "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
       }
     },
     {
-      "benchmark_id": "BG-03-io_open-results/part3b_prediction_ledger/canonical_result_reconstruction.csv",
+      "benchmark_id": "BG-03-os_open-results/part3b_prediction_ledger/ledger.csv",
       "category": "BG-03",
       "claim_ids": [
         "CLAIM-C",
@@ -1170,12 +1170,12 @@
       "provenance": {
         "extraction_method": "runtime_output",
         "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=io_open,target=results/part3b_prediction_ledger/canonical_result_reconstruction.csv]",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=os_open,target=results/part3b_prediction_ledger/ledger.csv]",
         "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
       }
     },
     {
-      "benchmark_id": "BG-03-io_open-results/part3b_prediction_ledger/ledger_manifest.json",
+      "benchmark_id": "BG-03-os_open-reports/part3b_et_policy_implementation.json",
       "category": "BG-03",
       "claim_ids": [
         "CLAIM-C",
@@ -1186,12 +1186,12 @@
       "provenance": {
         "extraction_method": "runtime_output",
         "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=io_open,target=results/part3b_prediction_ledger/ledger_manifest.json]",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=os_open,target=reports/part3b_et_policy_implementation.json]",
         "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
       }
     },
     {
-      "benchmark_id": "BG-03-io_open-results/part3b_prediction_ledger/prediction_ledger_within.csv.gz",
+      "benchmark_id": "BG-03-os_replace-results/part1_full_reproduction/canonical.csv",
       "category": "BG-03",
       "claim_ids": [
         "CLAIM-C",
@@ -1202,12 +1202,12 @@
       "provenance": {
         "extraction_method": "runtime_output",
         "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=io_open,target=results/part3b_prediction_ledger/prediction_ledger_within.csv.gz]",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=os_replace,target=results/part1_full_reproduction/canonical.csv]",
         "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
       }
     },
     {
-      "benchmark_id": "BG-03-io_open-results/part3b_prediction_ledger/split_membership_cross.csv.gz",
+      "benchmark_id": "BG-03-os_replace-results/part3b_prediction_ledger/ledger.csv",
       "category": "BG-03",
       "claim_ids": [
         "CLAIM-C",
@@ -1218,12 +1218,12 @@
       "provenance": {
         "extraction_method": "runtime_output",
         "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=io_open,target=results/part3b_prediction_ledger/split_membership_cross.csv.gz]",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=os_replace,target=results/part3b_prediction_ledger/ledger.csv]",
         "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
       }
     },
     {
-      "benchmark_id": "BG-03-io_open-results/part3b_prediction_ledger/event_manifest.csv",
+      "benchmark_id": "BG-03-os_replace-reports/part3b_et_policy_implementation.json",
       "category": "BG-03",
       "claim_ids": [
         "CLAIM-C",
@@ -1234,12 +1234,12 @@
       "provenance": {
         "extraction_method": "runtime_output",
         "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=io_open,target=results/part3b_prediction_ledger/event_manifest.csv]",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=os_replace,target=reports/part3b_et_policy_implementation.json]",
         "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
       }
     },
     {
-      "benchmark_id": "BG-03-io_open-results/part3b_prediction_ledger/prediction_ledger_cross.csv.gz",
+      "benchmark_id": "BG-03-os_rename-results/part1_full_reproduction/canonical.csv",
       "category": "BG-03",
       "claim_ids": [
         "CLAIM-C",
@@ -1250,12 +1250,12 @@
       "provenance": {
         "extraction_method": "runtime_output",
         "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=io_open,target=results/part3b_prediction_ledger/prediction_ledger_cross.csv.gz]",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=os_rename,target=results/part1_full_reproduction/canonical.csv]",
         "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
       }
     },
     {
-      "benchmark_id": "BG-03-io_open-results/part3b_prediction_ledger/validation_reconstruction.csv",
+      "benchmark_id": "BG-03-os_rename-results/part3b_prediction_ledger/ledger.csv",
       "category": "BG-03",
       "claim_ids": [
         "CLAIM-C",
@@ -1266,12 +1266,12 @@
       "provenance": {
         "extraction_method": "runtime_output",
         "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=io_open,target=results/part3b_prediction_ledger/validation_reconstruction.csv]",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=os_rename,target=results/part3b_prediction_ledger/ledger.csv]",
         "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
       }
     },
     {
-      "benchmark_id": "BG-03-path_open-scripts/freeze_part3b_et_reconciliation_policy.py",
+      "benchmark_id": "BG-03-os_rename-reports/part3b_et_policy_implementation.json",
       "category": "BG-03",
       "claim_ids": [
         "CLAIM-C",
@@ -1282,12 +1282,12 @@
       "provenance": {
         "extraction_method": "runtime_output",
         "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_open,target=scripts/freeze_part3b_et_reconciliation_policy.py]",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=os_rename,target=reports/part3b_et_policy_implementation.json]",
         "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
       }
     },
     {
-      "benchmark_id": "BG-03-path_open-reports/part3b_et_reconciliation_policy.json",
+      "benchmark_id": "BG-03-shutil_copy-results/part1_full_reproduction/canonical.csv",
       "category": "BG-03",
       "claim_ids": [
         "CLAIM-C",
@@ -1298,12 +1298,12 @@
       "provenance": {
         "extraction_method": "runtime_output",
         "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_open,target=reports/part3b_et_reconciliation_policy.json]",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_copy,target=results/part1_full_reproduction/canonical.csv]",
         "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
       }
     },
     {
-      "benchmark_id": "BG-03-path_open-reports/part3b_et_reconciliation_policy.md",
+      "benchmark_id": "BG-03-shutil_copy-results/part3b_prediction_ledger/ledger.csv",
       "category": "BG-03",
       "claim_ids": [
         "CLAIM-C",
@@ -1314,12 +1314,12 @@
       "provenance": {
         "extraction_method": "runtime_output",
         "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_open,target=reports/part3b_et_reconciliation_policy.md]",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_copy,target=results/part3b_prediction_ledger/ledger.csv]",
         "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
       }
     },
     {
-      "benchmark_id": "BG-03-path_open-scripts/audit_part3b_et_canonical_reconciliation.py",
+      "benchmark_id": "BG-03-shutil_copy-reports/part3b_et_policy_implementation.json",
       "category": "BG-03",
       "claim_ids": [
         "CLAIM-C",
@@ -1330,12 +1330,12 @@
       "provenance": {
         "extraction_method": "runtime_output",
         "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_open,target=scripts/audit_part3b_et_canonical_reconciliation.py]",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_copy,target=reports/part3b_et_policy_implementation.json]",
         "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
       }
     },
     {
-      "benchmark_id": "BG-03-path_open-reports/part3b_et_canonical_reconciliation.json",
+      "benchmark_id": "BG-03-shutil_copy2-results/part1_full_reproduction/canonical.csv",
       "category": "BG-03",
       "claim_ids": [
         "CLAIM-C",
@@ -1346,12 +1346,12 @@
       "provenance": {
         "extraction_method": "runtime_output",
         "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_open,target=reports/part3b_et_canonical_reconciliation.json]",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_copy2,target=results/part1_full_reproduction/canonical.csv]",
         "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
       }
     },
     {
-      "benchmark_id": "BG-03-path_open-reports/part3b_et_canonical_reconciliation.md",
+      "benchmark_id": "BG-03-shutil_copy2-results/part3b_prediction_ledger/ledger.csv",
       "category": "BG-03",
       "claim_ids": [
         "CLAIM-C",
@@ -1362,12 +1362,12 @@
       "provenance": {
         "extraction_method": "runtime_output",
         "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_open,target=reports/part3b_et_canonical_reconciliation.md]",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_copy2,target=results/part3b_prediction_ledger/ledger.csv]",
         "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
       }
     },
     {
-      "benchmark_id": "BG-03-path_open-results/part3b_prediction_ledger/et_canonical_mismatch_matrix.csv",
+      "benchmark_id": "BG-03-shutil_copy2-reports/part3b_et_policy_implementation.json",
       "category": "BG-03",
       "claim_ids": [
         "CLAIM-C",
@@ -1378,12 +1378,12 @@
       "provenance": {
         "extraction_method": "runtime_output",
         "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_open,target=results/part3b_prediction_ledger/et_canonical_mismatch_matrix.csv]",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_copy2,target=reports/part3b_et_policy_implementation.json]",
         "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
       }
     },
     {
-      "benchmark_id": "BG-03-path_open-results/part3b_prediction_ledger/sample_registry.csv",
+      "benchmark_id": "BG-03-shutil_copyfile-results/part1_full_reproduction/canonical.csv",
       "category": "BG-03",
       "claim_ids": [
         "CLAIM-C",
@@ -1394,12 +1394,12 @@
       "provenance": {
         "extraction_method": "runtime_output",
         "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_open,target=results/part3b_prediction_ledger/sample_registry.csv]",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_copyfile,target=results/part1_full_reproduction/canonical.csv]",
         "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
       }
     },
     {
-      "benchmark_id": "BG-03-path_open-results/part3b_prediction_ledger/split_membership_within.csv.gz",
+      "benchmark_id": "BG-03-shutil_copyfile-results/part3b_prediction_ledger/ledger.csv",
       "category": "BG-03",
       "claim_ids": [
         "CLAIM-C",
@@ -1410,12 +1410,12 @@
       "provenance": {
         "extraction_method": "runtime_output",
         "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_open,target=results/part3b_prediction_ledger/split_membership_within.csv.gz]",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_copyfile,target=results/part3b_prediction_ledger/ledger.csv]",
         "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
       }
     },
     {
-      "benchmark_id": "BG-03-path_open-results/part3b_prediction_ledger/canonical_result_reconstruction.csv",
+      "benchmark_id": "BG-03-shutil_copyfile-reports/part3b_et_policy_implementation.json",
       "category": "BG-03",
       "claim_ids": [
         "CLAIM-C",
@@ -1426,12 +1426,12 @@
       "provenance": {
         "extraction_method": "runtime_output",
         "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_open,target=results/part3b_prediction_ledger/canonical_result_reconstruction.csv]",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_copyfile,target=reports/part3b_et_policy_implementation.json]",
         "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
       }
     },
     {
-      "benchmark_id": "BG-03-path_open-results/part3b_prediction_ledger/ledger_manifest.json",
+      "benchmark_id": "BG-03-shutil_move-results/part1_full_reproduction/canonical.csv",
       "category": "BG-03",
       "claim_ids": [
         "CLAIM-C",
@@ -1442,12 +1442,12 @@
       "provenance": {
         "extraction_method": "runtime_output",
         "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_open,target=results/part3b_prediction_ledger/ledger_manifest.json]",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_move,target=results/part1_full_reproduction/canonical.csv]",
         "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
       }
     },
     {
-      "benchmark_id": "BG-03-path_open-results/part3b_prediction_ledger/prediction_ledger_within.csv.gz",
+      "benchmark_id": "BG-03-shutil_move-results/part3b_prediction_ledger/ledger.csv",
       "category": "BG-03",
       "claim_ids": [
         "CLAIM-C",
@@ -1458,12 +1458,12 @@
       "provenance": {
         "extraction_method": "runtime_output",
         "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_open,target=results/part3b_prediction_ledger/prediction_ledger_within.csv.gz]",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_move,target=results/part3b_prediction_ledger/ledger.csv]",
         "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
       }
     },
     {
-      "benchmark_id": "BG-03-path_open-results/part3b_prediction_ledger/split_membership_cross.csv.gz",
+      "benchmark_id": "BG-03-shutil_move-reports/part3b_et_policy_implementation.json",
       "category": "BG-03",
       "claim_ids": [
         "CLAIM-C",
@@ -1474,3127 +1474,7 @@
       "provenance": {
         "extraction_method": "runtime_output",
         "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_open,target=results/part3b_prediction_ledger/split_membership_cross.csv.gz]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-path_open-results/part3b_prediction_ledger/event_manifest.csv",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_open,target=results/part3b_prediction_ledger/event_manifest.csv]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-path_open-results/part3b_prediction_ledger/prediction_ledger_cross.csv.gz",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_open,target=results/part3b_prediction_ledger/prediction_ledger_cross.csv.gz]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-path_open-results/part3b_prediction_ledger/validation_reconstruction.csv",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_open,target=results/part3b_prediction_ledger/validation_reconstruction.csv]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-path_write_text-scripts/freeze_part3b_et_reconciliation_policy.py",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_write_text,target=scripts/freeze_part3b_et_reconciliation_policy.py]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-path_write_text-reports/part3b_et_reconciliation_policy.json",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_write_text,target=reports/part3b_et_reconciliation_policy.json]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-path_write_text-reports/part3b_et_reconciliation_policy.md",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_write_text,target=reports/part3b_et_reconciliation_policy.md]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-path_write_text-scripts/audit_part3b_et_canonical_reconciliation.py",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_write_text,target=scripts/audit_part3b_et_canonical_reconciliation.py]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-path_write_text-reports/part3b_et_canonical_reconciliation.json",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_write_text,target=reports/part3b_et_canonical_reconciliation.json]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-path_write_text-reports/part3b_et_canonical_reconciliation.md",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_write_text,target=reports/part3b_et_canonical_reconciliation.md]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-path_write_text-results/part3b_prediction_ledger/et_canonical_mismatch_matrix.csv",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_write_text,target=results/part3b_prediction_ledger/et_canonical_mismatch_matrix.csv]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-path_write_text-results/part3b_prediction_ledger/sample_registry.csv",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_write_text,target=results/part3b_prediction_ledger/sample_registry.csv]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-path_write_text-results/part3b_prediction_ledger/split_membership_within.csv.gz",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_write_text,target=results/part3b_prediction_ledger/split_membership_within.csv.gz]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-path_write_text-results/part3b_prediction_ledger/canonical_result_reconstruction.csv",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_write_text,target=results/part3b_prediction_ledger/canonical_result_reconstruction.csv]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-path_write_text-results/part3b_prediction_ledger/ledger_manifest.json",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_write_text,target=results/part3b_prediction_ledger/ledger_manifest.json]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-path_write_text-results/part3b_prediction_ledger/prediction_ledger_within.csv.gz",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_write_text,target=results/part3b_prediction_ledger/prediction_ledger_within.csv.gz]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-path_write_text-results/part3b_prediction_ledger/split_membership_cross.csv.gz",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_write_text,target=results/part3b_prediction_ledger/split_membership_cross.csv.gz]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-path_write_text-results/part3b_prediction_ledger/event_manifest.csv",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_write_text,target=results/part3b_prediction_ledger/event_manifest.csv]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-path_write_text-results/part3b_prediction_ledger/prediction_ledger_cross.csv.gz",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_write_text,target=results/part3b_prediction_ledger/prediction_ledger_cross.csv.gz]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-path_write_text-results/part3b_prediction_ledger/validation_reconstruction.csv",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_write_text,target=results/part3b_prediction_ledger/validation_reconstruction.csv]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-path_write_bytes-scripts/freeze_part3b_et_reconciliation_policy.py",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_write_bytes,target=scripts/freeze_part3b_et_reconciliation_policy.py]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-path_write_bytes-reports/part3b_et_reconciliation_policy.json",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_write_bytes,target=reports/part3b_et_reconciliation_policy.json]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-path_write_bytes-reports/part3b_et_reconciliation_policy.md",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_write_bytes,target=reports/part3b_et_reconciliation_policy.md]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-path_write_bytes-scripts/audit_part3b_et_canonical_reconciliation.py",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_write_bytes,target=scripts/audit_part3b_et_canonical_reconciliation.py]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-path_write_bytes-reports/part3b_et_canonical_reconciliation.json",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_write_bytes,target=reports/part3b_et_canonical_reconciliation.json]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-path_write_bytes-reports/part3b_et_canonical_reconciliation.md",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_write_bytes,target=reports/part3b_et_canonical_reconciliation.md]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-path_write_bytes-results/part3b_prediction_ledger/et_canonical_mismatch_matrix.csv",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_write_bytes,target=results/part3b_prediction_ledger/et_canonical_mismatch_matrix.csv]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-path_write_bytes-results/part3b_prediction_ledger/sample_registry.csv",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_write_bytes,target=results/part3b_prediction_ledger/sample_registry.csv]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-path_write_bytes-results/part3b_prediction_ledger/split_membership_within.csv.gz",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_write_bytes,target=results/part3b_prediction_ledger/split_membership_within.csv.gz]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-path_write_bytes-results/part3b_prediction_ledger/canonical_result_reconstruction.csv",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_write_bytes,target=results/part3b_prediction_ledger/canonical_result_reconstruction.csv]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-path_write_bytes-results/part3b_prediction_ledger/ledger_manifest.json",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_write_bytes,target=results/part3b_prediction_ledger/ledger_manifest.json]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-path_write_bytes-results/part3b_prediction_ledger/prediction_ledger_within.csv.gz",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_write_bytes,target=results/part3b_prediction_ledger/prediction_ledger_within.csv.gz]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-path_write_bytes-results/part3b_prediction_ledger/split_membership_cross.csv.gz",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_write_bytes,target=results/part3b_prediction_ledger/split_membership_cross.csv.gz]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-path_write_bytes-results/part3b_prediction_ledger/event_manifest.csv",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_write_bytes,target=results/part3b_prediction_ledger/event_manifest.csv]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-path_write_bytes-results/part3b_prediction_ledger/prediction_ledger_cross.csv.gz",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_write_bytes,target=results/part3b_prediction_ledger/prediction_ledger_cross.csv.gz]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-path_write_bytes-results/part3b_prediction_ledger/validation_reconstruction.csv",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_write_bytes,target=results/part3b_prediction_ledger/validation_reconstruction.csv]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-path_touch-scripts/freeze_part3b_et_reconciliation_policy.py",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_touch,target=scripts/freeze_part3b_et_reconciliation_policy.py]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-path_touch-reports/part3b_et_reconciliation_policy.json",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_touch,target=reports/part3b_et_reconciliation_policy.json]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-path_touch-reports/part3b_et_reconciliation_policy.md",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_touch,target=reports/part3b_et_reconciliation_policy.md]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-path_touch-scripts/audit_part3b_et_canonical_reconciliation.py",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_touch,target=scripts/audit_part3b_et_canonical_reconciliation.py]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-path_touch-reports/part3b_et_canonical_reconciliation.json",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_touch,target=reports/part3b_et_canonical_reconciliation.json]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-path_touch-reports/part3b_et_canonical_reconciliation.md",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_touch,target=reports/part3b_et_canonical_reconciliation.md]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-path_touch-results/part3b_prediction_ledger/et_canonical_mismatch_matrix.csv",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_touch,target=results/part3b_prediction_ledger/et_canonical_mismatch_matrix.csv]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-path_touch-results/part3b_prediction_ledger/sample_registry.csv",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_touch,target=results/part3b_prediction_ledger/sample_registry.csv]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-path_touch-results/part3b_prediction_ledger/split_membership_within.csv.gz",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_touch,target=results/part3b_prediction_ledger/split_membership_within.csv.gz]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-path_touch-results/part3b_prediction_ledger/canonical_result_reconstruction.csv",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_touch,target=results/part3b_prediction_ledger/canonical_result_reconstruction.csv]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-path_touch-results/part3b_prediction_ledger/ledger_manifest.json",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_touch,target=results/part3b_prediction_ledger/ledger_manifest.json]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-path_touch-results/part3b_prediction_ledger/prediction_ledger_within.csv.gz",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_touch,target=results/part3b_prediction_ledger/prediction_ledger_within.csv.gz]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-path_touch-results/part3b_prediction_ledger/split_membership_cross.csv.gz",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_touch,target=results/part3b_prediction_ledger/split_membership_cross.csv.gz]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-path_touch-results/part3b_prediction_ledger/event_manifest.csv",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_touch,target=results/part3b_prediction_ledger/event_manifest.csv]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-path_touch-results/part3b_prediction_ledger/prediction_ledger_cross.csv.gz",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_touch,target=results/part3b_prediction_ledger/prediction_ledger_cross.csv.gz]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-path_touch-results/part3b_prediction_ledger/validation_reconstruction.csv",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_touch,target=results/part3b_prediction_ledger/validation_reconstruction.csv]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-path_replace-scripts/freeze_part3b_et_reconciliation_policy.py",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_replace,target=scripts/freeze_part3b_et_reconciliation_policy.py]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-path_replace-reports/part3b_et_reconciliation_policy.json",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_replace,target=reports/part3b_et_reconciliation_policy.json]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-path_replace-reports/part3b_et_reconciliation_policy.md",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_replace,target=reports/part3b_et_reconciliation_policy.md]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-path_replace-scripts/audit_part3b_et_canonical_reconciliation.py",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_replace,target=scripts/audit_part3b_et_canonical_reconciliation.py]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-path_replace-reports/part3b_et_canonical_reconciliation.json",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_replace,target=reports/part3b_et_canonical_reconciliation.json]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-path_replace-reports/part3b_et_canonical_reconciliation.md",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_replace,target=reports/part3b_et_canonical_reconciliation.md]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-path_replace-results/part3b_prediction_ledger/et_canonical_mismatch_matrix.csv",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_replace,target=results/part3b_prediction_ledger/et_canonical_mismatch_matrix.csv]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-path_replace-results/part3b_prediction_ledger/sample_registry.csv",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_replace,target=results/part3b_prediction_ledger/sample_registry.csv]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-path_replace-results/part3b_prediction_ledger/split_membership_within.csv.gz",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_replace,target=results/part3b_prediction_ledger/split_membership_within.csv.gz]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-path_replace-results/part3b_prediction_ledger/canonical_result_reconstruction.csv",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_replace,target=results/part3b_prediction_ledger/canonical_result_reconstruction.csv]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-path_replace-results/part3b_prediction_ledger/ledger_manifest.json",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_replace,target=results/part3b_prediction_ledger/ledger_manifest.json]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-path_replace-results/part3b_prediction_ledger/prediction_ledger_within.csv.gz",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_replace,target=results/part3b_prediction_ledger/prediction_ledger_within.csv.gz]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-path_replace-results/part3b_prediction_ledger/split_membership_cross.csv.gz",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_replace,target=results/part3b_prediction_ledger/split_membership_cross.csv.gz]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-path_replace-results/part3b_prediction_ledger/event_manifest.csv",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_replace,target=results/part3b_prediction_ledger/event_manifest.csv]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-path_replace-results/part3b_prediction_ledger/prediction_ledger_cross.csv.gz",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_replace,target=results/part3b_prediction_ledger/prediction_ledger_cross.csv.gz]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-path_replace-results/part3b_prediction_ledger/validation_reconstruction.csv",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_replace,target=results/part3b_prediction_ledger/validation_reconstruction.csv]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-path_rename-scripts/freeze_part3b_et_reconciliation_policy.py",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_rename,target=scripts/freeze_part3b_et_reconciliation_policy.py]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-path_rename-reports/part3b_et_reconciliation_policy.json",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_rename,target=reports/part3b_et_reconciliation_policy.json]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-path_rename-reports/part3b_et_reconciliation_policy.md",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_rename,target=reports/part3b_et_reconciliation_policy.md]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-path_rename-scripts/audit_part3b_et_canonical_reconciliation.py",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_rename,target=scripts/audit_part3b_et_canonical_reconciliation.py]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-path_rename-reports/part3b_et_canonical_reconciliation.json",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_rename,target=reports/part3b_et_canonical_reconciliation.json]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-path_rename-reports/part3b_et_canonical_reconciliation.md",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_rename,target=reports/part3b_et_canonical_reconciliation.md]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-path_rename-results/part3b_prediction_ledger/et_canonical_mismatch_matrix.csv",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_rename,target=results/part3b_prediction_ledger/et_canonical_mismatch_matrix.csv]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-path_rename-results/part3b_prediction_ledger/sample_registry.csv",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_rename,target=results/part3b_prediction_ledger/sample_registry.csv]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-path_rename-results/part3b_prediction_ledger/split_membership_within.csv.gz",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_rename,target=results/part3b_prediction_ledger/split_membership_within.csv.gz]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-path_rename-results/part3b_prediction_ledger/canonical_result_reconstruction.csv",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_rename,target=results/part3b_prediction_ledger/canonical_result_reconstruction.csv]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-path_rename-results/part3b_prediction_ledger/ledger_manifest.json",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_rename,target=results/part3b_prediction_ledger/ledger_manifest.json]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-path_rename-results/part3b_prediction_ledger/prediction_ledger_within.csv.gz",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_rename,target=results/part3b_prediction_ledger/prediction_ledger_within.csv.gz]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-path_rename-results/part3b_prediction_ledger/split_membership_cross.csv.gz",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_rename,target=results/part3b_prediction_ledger/split_membership_cross.csv.gz]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-path_rename-results/part3b_prediction_ledger/event_manifest.csv",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_rename,target=results/part3b_prediction_ledger/event_manifest.csv]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-path_rename-results/part3b_prediction_ledger/prediction_ledger_cross.csv.gz",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_rename,target=results/part3b_prediction_ledger/prediction_ledger_cross.csv.gz]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-path_rename-results/part3b_prediction_ledger/validation_reconstruction.csv",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=path_rename,target=results/part3b_prediction_ledger/validation_reconstruction.csv]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-os_open-scripts/freeze_part3b_et_reconciliation_policy.py",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=os_open,target=scripts/freeze_part3b_et_reconciliation_policy.py]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-os_open-reports/part3b_et_reconciliation_policy.json",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=os_open,target=reports/part3b_et_reconciliation_policy.json]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-os_open-reports/part3b_et_reconciliation_policy.md",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=os_open,target=reports/part3b_et_reconciliation_policy.md]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-os_open-scripts/audit_part3b_et_canonical_reconciliation.py",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=os_open,target=scripts/audit_part3b_et_canonical_reconciliation.py]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-os_open-reports/part3b_et_canonical_reconciliation.json",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=os_open,target=reports/part3b_et_canonical_reconciliation.json]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-os_open-reports/part3b_et_canonical_reconciliation.md",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=os_open,target=reports/part3b_et_canonical_reconciliation.md]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-os_open-results/part3b_prediction_ledger/et_canonical_mismatch_matrix.csv",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=os_open,target=results/part3b_prediction_ledger/et_canonical_mismatch_matrix.csv]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-os_open-results/part3b_prediction_ledger/sample_registry.csv",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=os_open,target=results/part3b_prediction_ledger/sample_registry.csv]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-os_open-results/part3b_prediction_ledger/split_membership_within.csv.gz",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=os_open,target=results/part3b_prediction_ledger/split_membership_within.csv.gz]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-os_open-results/part3b_prediction_ledger/canonical_result_reconstruction.csv",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=os_open,target=results/part3b_prediction_ledger/canonical_result_reconstruction.csv]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-os_open-results/part3b_prediction_ledger/ledger_manifest.json",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=os_open,target=results/part3b_prediction_ledger/ledger_manifest.json]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-os_open-results/part3b_prediction_ledger/prediction_ledger_within.csv.gz",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=os_open,target=results/part3b_prediction_ledger/prediction_ledger_within.csv.gz]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-os_open-results/part3b_prediction_ledger/split_membership_cross.csv.gz",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=os_open,target=results/part3b_prediction_ledger/split_membership_cross.csv.gz]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-os_open-results/part3b_prediction_ledger/event_manifest.csv",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=os_open,target=results/part3b_prediction_ledger/event_manifest.csv]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-os_open-results/part3b_prediction_ledger/prediction_ledger_cross.csv.gz",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=os_open,target=results/part3b_prediction_ledger/prediction_ledger_cross.csv.gz]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-os_open-results/part3b_prediction_ledger/validation_reconstruction.csv",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=os_open,target=results/part3b_prediction_ledger/validation_reconstruction.csv]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-os_replace-scripts/freeze_part3b_et_reconciliation_policy.py",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=os_replace,target=scripts/freeze_part3b_et_reconciliation_policy.py]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-os_replace-reports/part3b_et_reconciliation_policy.json",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=os_replace,target=reports/part3b_et_reconciliation_policy.json]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-os_replace-reports/part3b_et_reconciliation_policy.md",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=os_replace,target=reports/part3b_et_reconciliation_policy.md]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-os_replace-scripts/audit_part3b_et_canonical_reconciliation.py",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=os_replace,target=scripts/audit_part3b_et_canonical_reconciliation.py]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-os_replace-reports/part3b_et_canonical_reconciliation.json",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=os_replace,target=reports/part3b_et_canonical_reconciliation.json]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-os_replace-reports/part3b_et_canonical_reconciliation.md",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=os_replace,target=reports/part3b_et_canonical_reconciliation.md]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-os_replace-results/part3b_prediction_ledger/et_canonical_mismatch_matrix.csv",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=os_replace,target=results/part3b_prediction_ledger/et_canonical_mismatch_matrix.csv]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-os_replace-results/part3b_prediction_ledger/sample_registry.csv",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=os_replace,target=results/part3b_prediction_ledger/sample_registry.csv]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-os_replace-results/part3b_prediction_ledger/split_membership_within.csv.gz",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=os_replace,target=results/part3b_prediction_ledger/split_membership_within.csv.gz]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-os_replace-results/part3b_prediction_ledger/canonical_result_reconstruction.csv",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=os_replace,target=results/part3b_prediction_ledger/canonical_result_reconstruction.csv]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-os_replace-results/part3b_prediction_ledger/ledger_manifest.json",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=os_replace,target=results/part3b_prediction_ledger/ledger_manifest.json]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-os_replace-results/part3b_prediction_ledger/prediction_ledger_within.csv.gz",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=os_replace,target=results/part3b_prediction_ledger/prediction_ledger_within.csv.gz]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-os_replace-results/part3b_prediction_ledger/split_membership_cross.csv.gz",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=os_replace,target=results/part3b_prediction_ledger/split_membership_cross.csv.gz]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-os_replace-results/part3b_prediction_ledger/event_manifest.csv",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=os_replace,target=results/part3b_prediction_ledger/event_manifest.csv]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-os_replace-results/part3b_prediction_ledger/prediction_ledger_cross.csv.gz",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=os_replace,target=results/part3b_prediction_ledger/prediction_ledger_cross.csv.gz]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-os_replace-results/part3b_prediction_ledger/validation_reconstruction.csv",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=os_replace,target=results/part3b_prediction_ledger/validation_reconstruction.csv]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-os_rename-scripts/freeze_part3b_et_reconciliation_policy.py",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=os_rename,target=scripts/freeze_part3b_et_reconciliation_policy.py]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-os_rename-reports/part3b_et_reconciliation_policy.json",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=os_rename,target=reports/part3b_et_reconciliation_policy.json]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-os_rename-reports/part3b_et_reconciliation_policy.md",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=os_rename,target=reports/part3b_et_reconciliation_policy.md]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-os_rename-scripts/audit_part3b_et_canonical_reconciliation.py",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=os_rename,target=scripts/audit_part3b_et_canonical_reconciliation.py]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-os_rename-reports/part3b_et_canonical_reconciliation.json",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=os_rename,target=reports/part3b_et_canonical_reconciliation.json]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-os_rename-reports/part3b_et_canonical_reconciliation.md",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=os_rename,target=reports/part3b_et_canonical_reconciliation.md]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-os_rename-results/part3b_prediction_ledger/et_canonical_mismatch_matrix.csv",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=os_rename,target=results/part3b_prediction_ledger/et_canonical_mismatch_matrix.csv]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-os_rename-results/part3b_prediction_ledger/sample_registry.csv",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=os_rename,target=results/part3b_prediction_ledger/sample_registry.csv]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-os_rename-results/part3b_prediction_ledger/split_membership_within.csv.gz",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=os_rename,target=results/part3b_prediction_ledger/split_membership_within.csv.gz]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-os_rename-results/part3b_prediction_ledger/canonical_result_reconstruction.csv",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=os_rename,target=results/part3b_prediction_ledger/canonical_result_reconstruction.csv]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-os_rename-results/part3b_prediction_ledger/ledger_manifest.json",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=os_rename,target=results/part3b_prediction_ledger/ledger_manifest.json]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-os_rename-results/part3b_prediction_ledger/prediction_ledger_within.csv.gz",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=os_rename,target=results/part3b_prediction_ledger/prediction_ledger_within.csv.gz]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-os_rename-results/part3b_prediction_ledger/split_membership_cross.csv.gz",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=os_rename,target=results/part3b_prediction_ledger/split_membership_cross.csv.gz]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-os_rename-results/part3b_prediction_ledger/event_manifest.csv",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=os_rename,target=results/part3b_prediction_ledger/event_manifest.csv]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-os_rename-results/part3b_prediction_ledger/prediction_ledger_cross.csv.gz",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=os_rename,target=results/part3b_prediction_ledger/prediction_ledger_cross.csv.gz]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-os_rename-results/part3b_prediction_ledger/validation_reconstruction.csv",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=os_rename,target=results/part3b_prediction_ledger/validation_reconstruction.csv]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-shutil_copy-scripts/freeze_part3b_et_reconciliation_policy.py",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_copy,target=scripts/freeze_part3b_et_reconciliation_policy.py]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-shutil_copy-reports/part3b_et_reconciliation_policy.json",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_copy,target=reports/part3b_et_reconciliation_policy.json]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-shutil_copy-reports/part3b_et_reconciliation_policy.md",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_copy,target=reports/part3b_et_reconciliation_policy.md]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-shutil_copy-scripts/audit_part3b_et_canonical_reconciliation.py",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_copy,target=scripts/audit_part3b_et_canonical_reconciliation.py]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-shutil_copy-reports/part3b_et_canonical_reconciliation.json",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_copy,target=reports/part3b_et_canonical_reconciliation.json]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-shutil_copy-reports/part3b_et_canonical_reconciliation.md",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_copy,target=reports/part3b_et_canonical_reconciliation.md]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-shutil_copy-results/part3b_prediction_ledger/et_canonical_mismatch_matrix.csv",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_copy,target=results/part3b_prediction_ledger/et_canonical_mismatch_matrix.csv]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-shutil_copy-results/part3b_prediction_ledger/sample_registry.csv",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_copy,target=results/part3b_prediction_ledger/sample_registry.csv]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-shutil_copy-results/part3b_prediction_ledger/split_membership_within.csv.gz",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_copy,target=results/part3b_prediction_ledger/split_membership_within.csv.gz]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-shutil_copy-results/part3b_prediction_ledger/canonical_result_reconstruction.csv",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_copy,target=results/part3b_prediction_ledger/canonical_result_reconstruction.csv]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-shutil_copy-results/part3b_prediction_ledger/ledger_manifest.json",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_copy,target=results/part3b_prediction_ledger/ledger_manifest.json]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-shutil_copy-results/part3b_prediction_ledger/prediction_ledger_within.csv.gz",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_copy,target=results/part3b_prediction_ledger/prediction_ledger_within.csv.gz]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-shutil_copy-results/part3b_prediction_ledger/split_membership_cross.csv.gz",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_copy,target=results/part3b_prediction_ledger/split_membership_cross.csv.gz]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-shutil_copy-results/part3b_prediction_ledger/event_manifest.csv",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_copy,target=results/part3b_prediction_ledger/event_manifest.csv]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-shutil_copy-results/part3b_prediction_ledger/prediction_ledger_cross.csv.gz",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_copy,target=results/part3b_prediction_ledger/prediction_ledger_cross.csv.gz]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-shutil_copy-results/part3b_prediction_ledger/validation_reconstruction.csv",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_copy,target=results/part3b_prediction_ledger/validation_reconstruction.csv]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-shutil_copy2-scripts/freeze_part3b_et_reconciliation_policy.py",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_copy2,target=scripts/freeze_part3b_et_reconciliation_policy.py]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-shutil_copy2-reports/part3b_et_reconciliation_policy.json",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_copy2,target=reports/part3b_et_reconciliation_policy.json]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-shutil_copy2-reports/part3b_et_reconciliation_policy.md",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_copy2,target=reports/part3b_et_reconciliation_policy.md]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-shutil_copy2-scripts/audit_part3b_et_canonical_reconciliation.py",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_copy2,target=scripts/audit_part3b_et_canonical_reconciliation.py]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-shutil_copy2-reports/part3b_et_canonical_reconciliation.json",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_copy2,target=reports/part3b_et_canonical_reconciliation.json]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-shutil_copy2-reports/part3b_et_canonical_reconciliation.md",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_copy2,target=reports/part3b_et_canonical_reconciliation.md]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-shutil_copy2-results/part3b_prediction_ledger/et_canonical_mismatch_matrix.csv",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_copy2,target=results/part3b_prediction_ledger/et_canonical_mismatch_matrix.csv]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-shutil_copy2-results/part3b_prediction_ledger/sample_registry.csv",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_copy2,target=results/part3b_prediction_ledger/sample_registry.csv]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-shutil_copy2-results/part3b_prediction_ledger/split_membership_within.csv.gz",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_copy2,target=results/part3b_prediction_ledger/split_membership_within.csv.gz]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-shutil_copy2-results/part3b_prediction_ledger/canonical_result_reconstruction.csv",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_copy2,target=results/part3b_prediction_ledger/canonical_result_reconstruction.csv]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-shutil_copy2-results/part3b_prediction_ledger/ledger_manifest.json",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_copy2,target=results/part3b_prediction_ledger/ledger_manifest.json]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-shutil_copy2-results/part3b_prediction_ledger/prediction_ledger_within.csv.gz",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_copy2,target=results/part3b_prediction_ledger/prediction_ledger_within.csv.gz]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-shutil_copy2-results/part3b_prediction_ledger/split_membership_cross.csv.gz",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_copy2,target=results/part3b_prediction_ledger/split_membership_cross.csv.gz]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-shutil_copy2-results/part3b_prediction_ledger/event_manifest.csv",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_copy2,target=results/part3b_prediction_ledger/event_manifest.csv]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-shutil_copy2-results/part3b_prediction_ledger/prediction_ledger_cross.csv.gz",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_copy2,target=results/part3b_prediction_ledger/prediction_ledger_cross.csv.gz]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-shutil_copy2-results/part3b_prediction_ledger/validation_reconstruction.csv",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_copy2,target=results/part3b_prediction_ledger/validation_reconstruction.csv]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-shutil_copyfile-scripts/freeze_part3b_et_reconciliation_policy.py",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_copyfile,target=scripts/freeze_part3b_et_reconciliation_policy.py]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-shutil_copyfile-reports/part3b_et_reconciliation_policy.json",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_copyfile,target=reports/part3b_et_reconciliation_policy.json]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-shutil_copyfile-reports/part3b_et_reconciliation_policy.md",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_copyfile,target=reports/part3b_et_reconciliation_policy.md]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-shutil_copyfile-scripts/audit_part3b_et_canonical_reconciliation.py",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_copyfile,target=scripts/audit_part3b_et_canonical_reconciliation.py]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-shutil_copyfile-reports/part3b_et_canonical_reconciliation.json",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_copyfile,target=reports/part3b_et_canonical_reconciliation.json]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-shutil_copyfile-reports/part3b_et_canonical_reconciliation.md",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_copyfile,target=reports/part3b_et_canonical_reconciliation.md]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-shutil_copyfile-results/part3b_prediction_ledger/et_canonical_mismatch_matrix.csv",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_copyfile,target=results/part3b_prediction_ledger/et_canonical_mismatch_matrix.csv]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-shutil_copyfile-results/part3b_prediction_ledger/sample_registry.csv",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_copyfile,target=results/part3b_prediction_ledger/sample_registry.csv]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-shutil_copyfile-results/part3b_prediction_ledger/split_membership_within.csv.gz",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_copyfile,target=results/part3b_prediction_ledger/split_membership_within.csv.gz]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-shutil_copyfile-results/part3b_prediction_ledger/canonical_result_reconstruction.csv",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_copyfile,target=results/part3b_prediction_ledger/canonical_result_reconstruction.csv]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-shutil_copyfile-results/part3b_prediction_ledger/ledger_manifest.json",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_copyfile,target=results/part3b_prediction_ledger/ledger_manifest.json]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-shutil_copyfile-results/part3b_prediction_ledger/prediction_ledger_within.csv.gz",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_copyfile,target=results/part3b_prediction_ledger/prediction_ledger_within.csv.gz]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-shutil_copyfile-results/part3b_prediction_ledger/split_membership_cross.csv.gz",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_copyfile,target=results/part3b_prediction_ledger/split_membership_cross.csv.gz]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-shutil_copyfile-results/part3b_prediction_ledger/event_manifest.csv",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_copyfile,target=results/part3b_prediction_ledger/event_manifest.csv]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-shutil_copyfile-results/part3b_prediction_ledger/prediction_ledger_cross.csv.gz",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_copyfile,target=results/part3b_prediction_ledger/prediction_ledger_cross.csv.gz]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-shutil_copyfile-results/part3b_prediction_ledger/validation_reconstruction.csv",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_copyfile,target=results/part3b_prediction_ledger/validation_reconstruction.csv]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-shutil_move-scripts/freeze_part3b_et_reconciliation_policy.py",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_move,target=scripts/freeze_part3b_et_reconciliation_policy.py]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-shutil_move-reports/part3b_et_reconciliation_policy.json",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_move,target=reports/part3b_et_reconciliation_policy.json]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-shutil_move-reports/part3b_et_reconciliation_policy.md",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_move,target=reports/part3b_et_reconciliation_policy.md]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-shutil_move-scripts/audit_part3b_et_canonical_reconciliation.py",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_move,target=scripts/audit_part3b_et_canonical_reconciliation.py]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-shutil_move-reports/part3b_et_canonical_reconciliation.json",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_move,target=reports/part3b_et_canonical_reconciliation.json]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-shutil_move-reports/part3b_et_canonical_reconciliation.md",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_move,target=reports/part3b_et_canonical_reconciliation.md]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-shutil_move-results/part3b_prediction_ledger/et_canonical_mismatch_matrix.csv",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_move,target=results/part3b_prediction_ledger/et_canonical_mismatch_matrix.csv]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-shutil_move-results/part3b_prediction_ledger/sample_registry.csv",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_move,target=results/part3b_prediction_ledger/sample_registry.csv]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-shutil_move-results/part3b_prediction_ledger/split_membership_within.csv.gz",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_move,target=results/part3b_prediction_ledger/split_membership_within.csv.gz]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-shutil_move-results/part3b_prediction_ledger/canonical_result_reconstruction.csv",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_move,target=results/part3b_prediction_ledger/canonical_result_reconstruction.csv]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-shutil_move-results/part3b_prediction_ledger/ledger_manifest.json",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_move,target=results/part3b_prediction_ledger/ledger_manifest.json]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-shutil_move-results/part3b_prediction_ledger/prediction_ledger_within.csv.gz",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_move,target=results/part3b_prediction_ledger/prediction_ledger_within.csv.gz]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-shutil_move-results/part3b_prediction_ledger/split_membership_cross.csv.gz",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_move,target=results/part3b_prediction_ledger/split_membership_cross.csv.gz]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-shutil_move-results/part3b_prediction_ledger/event_manifest.csv",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_move,target=results/part3b_prediction_ledger/event_manifest.csv]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-shutil_move-results/part3b_prediction_ledger/prediction_ledger_cross.csv.gz",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_move,target=results/part3b_prediction_ledger/prediction_ledger_cross.csv.gz]",
-        "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
-      }
-    },
-    {
-      "benchmark_id": "BG-03-shutil_move-results/part3b_prediction_ledger/validation_reconstruction.csv",
-      "category": "BG-03",
-      "claim_ids": [
-        "CLAIM-C",
-        "CLAIM-D"
-      ],
-      "expected_result": "reject",
-      "mandatory": true,
-      "provenance": {
-        "extraction_method": "runtime_output",
-        "source_file": "scripts/build_part3b_prediction_ledger.py",
-        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_move,target=results/part3b_prediction_ledger/validation_reconstruction.csv]",
+        "source_symbol": "_gd6_run_write_guard_positive_controls().controls[mechanism=shutil_move,target=reports/part3b_et_policy_implementation.json]",
         "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
       }
     },
@@ -5708,6 +2588,24 @@
       "build_prediction_rows",
       "execute_postbuild_integration"
     ],
+    "protected_artifact_paths": [
+      "scripts/freeze_part3b_et_reconciliation_policy.py",
+      "reports/part3b_et_reconciliation_policy.json",
+      "reports/part3b_et_reconciliation_policy.md",
+      "scripts/audit_part3b_et_canonical_reconciliation.py",
+      "reports/part3b_et_canonical_reconciliation.json",
+      "reports/part3b_et_canonical_reconciliation.md",
+      "results/part3b_prediction_ledger/et_canonical_mismatch_matrix.csv",
+      "results/part3b_prediction_ledger/sample_registry.csv",
+      "results/part3b_prediction_ledger/split_membership_within.csv.gz",
+      "results/part3b_prediction_ledger/canonical_result_reconstruction.csv",
+      "results/part3b_prediction_ledger/ledger_manifest.json",
+      "results/part3b_prediction_ledger/prediction_ledger_within.csv.gz",
+      "results/part3b_prediction_ledger/split_membership_cross.csv.gz",
+      "results/part3b_prediction_ledger/event_manifest.csv",
+      "results/part3b_prediction_ledger/prediction_ledger_cross.csv.gz",
+      "results/part3b_prediction_ledger/validation_reconstruction.csv"
+    ],
     "report_integrity_conditions": [
       "final_json_parses",
       "markdown_generated_from_final_json",
@@ -5813,6 +2711,11 @@
       "identity_hardcoded_implementation_detector_passes",
       "frozen_nine_fixture_parity_with_gd5_2"
     ],
+    "write_guard_control_targets": [
+      "results/part1_full_reproduction/canonical.csv",
+      "results/part3b_prediction_ledger/ledger.csv",
+      "reports/part3b_et_policy_implementation.json"
+    ],
     "write_guard_mechanisms": [
       "builtins_open",
       "io_open",
@@ -5829,30 +2732,12 @@
       "shutil_copy2",
       "shutil_copyfile",
       "shutil_move"
-    ],
-    "write_guard_target_paths": [
-      "scripts/freeze_part3b_et_reconciliation_policy.py",
-      "reports/part3b_et_reconciliation_policy.json",
-      "reports/part3b_et_reconciliation_policy.md",
-      "scripts/audit_part3b_et_canonical_reconciliation.py",
-      "reports/part3b_et_canonical_reconciliation.json",
-      "reports/part3b_et_canonical_reconciliation.md",
-      "results/part3b_prediction_ledger/et_canonical_mismatch_matrix.csv",
-      "results/part3b_prediction_ledger/sample_registry.csv",
-      "results/part3b_prediction_ledger/split_membership_within.csv.gz",
-      "results/part3b_prediction_ledger/canonical_result_reconstruction.csv",
-      "results/part3b_prediction_ledger/ledger_manifest.json",
-      "results/part3b_prediction_ledger/prediction_ledger_within.csv.gz",
-      "results/part3b_prediction_ledger/split_membership_cross.csv.gz",
-      "results/part3b_prediction_ledger/event_manifest.csv",
-      "results/part3b_prediction_ledger/prediction_ledger_cross.csv.gz",
-      "results/part3b_prediction_ledger/validation_reconstruction.csv"
     ]
   },
   "expected_counts": {
     "BG-01": 35,
     "BG-02": 9,
-    "BG-03": 240,
+    "BG-03": 45,
     "BG-04": 4,
     "BG-05": 20,
     "BG-06": 3,
@@ -5881,7 +2766,7 @@
     "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd"
   },
   "reopening_rule_reference": "See gd6_acceptance_contract_v1.json reopening_rule",
-  "stage": "Part 3B.2R.1-G.D6-F0.1",
+  "stage": "Part 3B.2R.1-G.D6-F0.2",
   "starting_commit": "7dbc206037250b1181aed94bfa7326d79df814fd",
   "version": "1.0"
 }

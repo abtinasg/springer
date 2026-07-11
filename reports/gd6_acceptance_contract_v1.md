@@ -1,6 +1,6 @@
 # G.D6 Acceptance Contract
 
-**Stage:** Part 3B.2R.1-G.D6-F0.1
+**Stage:** Part 3B.2R.1-G.D6-F0.2
 **Contract ID:** SEMIT-GD6-ACCEPTANCE-CONTRACT
 **Version:** 1.0
 **Status:** freeze_candidate

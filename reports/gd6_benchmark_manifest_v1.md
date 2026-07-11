@@ -1,6 +1,6 @@
 # G.D6 Benchmark Manifest
 
-**Stage:** Part 3B.2R.1-G.D6-F0.1
+**Stage:** Part 3B.2R.1-G.D6-F0.2
 **Benchmark ID:** SEMIT-GD6-BENCHMARK
 **Version:** 1.0
 **Contract ID:** SEMIT-GD6-ACCEPTANCE-CONTRACT
@@ -13,7 +13,7 @@
 |-------|-------|----------------|-----------|
 | BG-01 | Semantic Policy Tests | 35 | CLAIM-A |
 | BG-02 | Historical Fixture Parity | 9 | CLAIM-A |
-| BG-03 | Write-Guard Matrix | 240 | CLAIM-C, CLAIM-D |
+| BG-03 | Write-Guard Matrix | 45 | CLAIM-C, CLAIM-D |
 | BG-04 | Production Entry-Point Guards | 4 | CLAIM-B |
 | BG-05 | Restoration Identity Set | 20 | CLAIM-D |
 | BG-06 | Forced-Exception Fixture Set | 3 | CLAIM-C, CLAIM-D |
@@ -27,7 +27,7 @@
 
 - **BG-01:** 35
 - **BG-02:** 9
-- **BG-03:** 240
+- **BG-03:** 45
 - **BG-04:** 4
 - **BG-05:** 20
 - **BG-06:** 3
@@ -150,7 +150,13 @@
 - identity_hardcoded_implementation_detector_passes
 - frozen_nine_fixture_parity_with_gd5_2
 
-### Write-Guard Target Paths (16)
+### Write-Guard Control Targets (3)
+
+- results/part1_full_reproduction/canonical.csv
+- results/part3b_prediction_ledger/ledger.csv
+- reports/part3b_et_policy_implementation.json
+
+### Protected Artifact Paths (16)
 
 - scripts/freeze_part3b_et_reconciliation_policy.py
 - reports/part3b_et_reconciliation_policy.json
