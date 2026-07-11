@@ -1,14 +1,14 @@
 {
-  "stage": "Part 3B.2R.1-G.D6.3",
-  "starting_commit": "27d103b6fa14c6810d0e33a1141d4739e5f7e34b",
-  "current_commit": "27d103b6fa14c6810d0e33a1141d4739e5f7e34b",
+  "stage": "Part 3B.2R.1-G.D6.4",
+  "starting_commit": "0bca24f26c486514bb99071a2b78387a4a3286a0",
+  "current_commit": "0bca24f26c486514bb99071a2b78387a4a3286a0",
   "starting_commit_verified": true,
   "frozen_policy_path": "reports/part3b_et_reconciliation_policy.json",
   "frozen_policy_sha256": "6bc043b7c890256fd369eb8747f54dd9f2f1944b03b0dd1c70b5f6d85b8719f5",
   "frozen_policy_contract_verified": true,
-  "implementation_module_sha256": "9e572121f4f1cad54f0811a1ff7cd96a921cb696f19eb4604eed0a4a3ad1c3ce",
+  "implementation_module_sha256": "231d316441e97166f51487c736d2846ed17244037cadee4e7e34b5013cab79a4",
   "production_validator_sha_before": "d269bb2eb9b6b4959c9bccb287314249b08da52ad895fa6285ec2af9b6abce49",
-  "production_validator_sha_after": "1fb18f08430c4401a7344c90d5e6be54848994935879c82c7e636951681d567e",
+  "production_validator_sha_after": "ccfa40fc43f743793ee005353638790e3be1d5fb4d8592a2c3d730f53fde070f",
   "production_validator_code_changed": true,
   "production_authorization_remains_false": true,
   "implemented_constants": {
@@ -3078,14 +3078,19 @@
     "exact_snapshot_equality": true,
     "pre_snapshot": {
       "entries": {
-        "results/part3b_prediction_ledger/et_canonical_mismatch_matrix.csv": {
+        "results/part1_full_reproduction/canonical.csv": {
           "exists": true,
-          "sha256": "d280fe1924e4f0e0afde2be24eb67d4dc46e3f3f03a60f325e6be8b9b4976741",
+          "sha256": "c6f6e2cd67a44d35db8426068cc76a32e63d3c21fbc1332307f836a03da20fbd",
+          "is_dir": false
+        },
+        "results/part3b_prediction_ledger/ledger.csv": {
+          "exists": true,
+          "sha256": "9b37646532b535f3cb5b23b19cb4620cd7be0e1a7c48d9ebd3201c2b11df2bfc",
           "is_dir": false
         },
         "reports/part3b_et_reconciliation_policy.json": {
-          "exists": true,
-          "sha256": "e3d4e59bab932e2eff7c22699b592d5fc6f02ce19d78af77a0a9addb945aae01",
+          "exists": false,
+          "sha256": null,
           "is_dir": false
         },
         "reports/part3b_et_reconciliation_policy.md": {
@@ -3118,14 +3123,19 @@
     },
     "post_snapshot": {
       "entries": {
-        "results/part3b_prediction_ledger/et_canonical_mismatch_matrix.csv": {
+        "results/part1_full_reproduction/canonical.csv": {
           "exists": true,
-          "sha256": "d280fe1924e4f0e0afde2be24eb67d4dc46e3f3f03a60f325e6be8b9b4976741",
+          "sha256": "c6f6e2cd67a44d35db8426068cc76a32e63d3c21fbc1332307f836a03da20fbd",
+          "is_dir": false
+        },
+        "results/part3b_prediction_ledger/ledger.csv": {
+          "exists": true,
+          "sha256": "9b37646532b535f3cb5b23b19cb4620cd7be0e1a7c48d9ebd3201c2b11df2bfc",
           "is_dir": false
         },
         "reports/part3b_et_reconciliation_policy.json": {
-          "exists": true,
-          "sha256": "e3d4e59bab932e2eff7c22699b592d5fc6f02ce19d78af77a0a9addb945aae01",
+          "exists": false,
+          "sha256": null,
           "is_dir": false
         },
         "reports/part3b_et_reconciliation_policy.md": {
@@ -3166,6 +3176,73 @@
       "after_file_count": 2
     },
     "counters_derived": true,
+    "expected_fixture_paths": [
+      "reports/part3b_et_policy_implementation.json",
+      "results/part1_full_reproduction/canonical.csv",
+      "results/part3b_prediction_ledger/ledger.csv"
+    ],
+    "observed_fixture_paths": [
+      "reports/part3b_et_policy_implementation.json",
+      "results/part1_full_reproduction/canonical.csv",
+      "results/part3b_prediction_ledger/ledger.csv"
+    ],
+    "fixture_paths_exact": true,
+    "expected_fixture_file_count": 3,
+    "observed_fixture_file_count": 3,
+    "fixture_pre_snapshot": {
+      "entries": {
+        "reports/part3b_et_policy_implementation.json": {
+          "relative_path": "reports/part3b_et_policy_implementation.json",
+          "exists": true,
+          "sha256": "93ffd7c8eea71a8986cc946534f3763227a1556c0821a44243bd20c1a6ccdcda",
+          "path_type": "file"
+        },
+        "results/part1_full_reproduction/canonical.csv": {
+          "relative_path": "results/part1_full_reproduction/canonical.csv",
+          "exists": true,
+          "sha256": "c6f6e2cd67a44d35db8426068cc76a32e63d3c21fbc1332307f836a03da20fbd",
+          "path_type": "file"
+        },
+        "results/part3b_prediction_ledger/ledger.csv": {
+          "relative_path": "results/part3b_prediction_ledger/ledger.csv",
+          "exists": true,
+          "sha256": "9b37646532b535f3cb5b23b19cb4620cd7be0e1a7c48d9ebd3201c2b11df2bfc",
+          "path_type": "file"
+        }
+      },
+      "file_count": 3
+    },
+    "fixture_post_snapshot": {
+      "entries": {
+        "reports/part3b_et_policy_implementation.json": {
+          "relative_path": "reports/part3b_et_policy_implementation.json",
+          "exists": true,
+          "sha256": "93ffd7c8eea71a8986cc946534f3763227a1556c0821a44243bd20c1a6ccdcda",
+          "path_type": "file"
+        },
+        "results/part1_full_reproduction/canonical.csv": {
+          "relative_path": "results/part1_full_reproduction/canonical.csv",
+          "exists": true,
+          "sha256": "c6f6e2cd67a44d35db8426068cc76a32e63d3c21fbc1332307f836a03da20fbd",
+          "path_type": "file"
+        },
+        "results/part3b_prediction_ledger/ledger.csv": {
+          "relative_path": "results/part3b_prediction_ledger/ledger.csv",
+          "exists": true,
+          "sha256": "9b37646532b535f3cb5b23b19cb4620cd7be0e1a7c48d9ebd3201c2b11df2bfc",
+          "path_type": "file"
+        }
+      },
+      "file_count": 3
+    },
+    "fixture_exact_snapshot_equality": true,
+    "all_fixtures_present_pre": true,
+    "all_fixtures_present_post": true,
+    "fixture_no_file_added": true,
+    "fixture_no_file_removed": true,
+    "fixture_no_file_modified": true,
+    "fixture_no_path_type_change": true,
+    "fixture_paths_valid": true,
     "passed": true
   },
   "forced_exception_test_passed": true,
@@ -3180,6 +3257,68 @@
   "forced_exception_files_removed": 0,
   "forced_exception_files_modified": 0,
   "forced_exception_path_type_changes": 0,
+  "forced_exception_fixture_paths_exact": true,
+  "forced_exception_expected_fixture_paths": [
+    "reports/part3b_et_policy_implementation.json",
+    "results/part1_full_reproduction/canonical.csv",
+    "results/part3b_prediction_ledger/ledger.csv"
+  ],
+  "forced_exception_observed_fixture_paths": [
+    "reports/part3b_et_policy_implementation.json",
+    "results/part1_full_reproduction/canonical.csv",
+    "results/part3b_prediction_ledger/ledger.csv"
+  ],
+  "forced_exception_expected_file_count": 3,
+  "forced_exception_observed_file_count": 3,
+  "forced_exception_fixture_exact_snapshot_equality": true,
+  "forced_exception_all_fixtures_present_pre": true,
+  "forced_exception_all_fixtures_present_post": true,
+  "forced_exception_fixture_pre_snapshot": {
+    "entries": {
+      "reports/part3b_et_policy_implementation.json": {
+        "relative_path": "reports/part3b_et_policy_implementation.json",
+        "exists": true,
+        "sha256": "93ffd7c8eea71a8986cc946534f3763227a1556c0821a44243bd20c1a6ccdcda",
+        "path_type": "file"
+      },
+      "results/part1_full_reproduction/canonical.csv": {
+        "relative_path": "results/part1_full_reproduction/canonical.csv",
+        "exists": true,
+        "sha256": "c6f6e2cd67a44d35db8426068cc76a32e63d3c21fbc1332307f836a03da20fbd",
+        "path_type": "file"
+      },
+      "results/part3b_prediction_ledger/ledger.csv": {
+        "relative_path": "results/part3b_prediction_ledger/ledger.csv",
+        "exists": true,
+        "sha256": "9b37646532b535f3cb5b23b19cb4620cd7be0e1a7c48d9ebd3201c2b11df2bfc",
+        "path_type": "file"
+      }
+    },
+    "file_count": 3
+  },
+  "forced_exception_fixture_post_snapshot": {
+    "entries": {
+      "reports/part3b_et_policy_implementation.json": {
+        "relative_path": "reports/part3b_et_policy_implementation.json",
+        "exists": true,
+        "sha256": "93ffd7c8eea71a8986cc946534f3763227a1556c0821a44243bd20c1a6ccdcda",
+        "path_type": "file"
+      },
+      "results/part1_full_reproduction/canonical.csv": {
+        "relative_path": "results/part1_full_reproduction/canonical.csv",
+        "exists": true,
+        "sha256": "c6f6e2cd67a44d35db8426068cc76a32e63d3c21fbc1332307f836a03da20fbd",
+        "path_type": "file"
+      },
+      "results/part3b_prediction_ledger/ledger.csv": {
+        "relative_path": "results/part3b_prediction_ledger/ledger.csv",
+        "exists": true,
+        "sha256": "9b37646532b535f3cb5b23b19cb4620cd7be0e1a7c48d9ebd3201c2b11df2bfc",
+        "path_type": "file"
+      }
+    },
+    "file_count": 3
+  },
   "rollback_scenarios_count": 6,
   "rollback_all_scenarios_passed": true,
   "rollback_all_scenarios_final_state_restored": true,
@@ -3196,8 +3335,31 @@
   "rollback_scenarios_all_hashes_restored": true,
   "rollback_scenarios_all_path_types_restored": true,
   "rollback_mutations_count": 7,
+  "rollback_unique_mutation_count": 7,
+  "rollback_mutation_names_exact": true,
+  "rollback_mutations_no_duplicates": true,
+  "rollback_mutations_no_missing": true,
+  "rollback_mutations_no_unexpected": true,
   "rollback_all_mutations_rejected": true,
   "rollback_all_mutations_passed": true,
+  "rollback_observed_mutation_names": [
+    "deleted_original_file",
+    "extensionless_temp_leftover",
+    "modified_original_json",
+    "modified_original_markdown",
+    "path_type_change",
+    "pubbak_leftover",
+    "unexpected_extra_file"
+  ],
+  "rollback_expected_mutation_names": [
+    "deleted_original_file",
+    "extensionless_temp_leftover",
+    "modified_original_json",
+    "modified_original_markdown",
+    "path_type_change",
+    "pubbak_leftover",
+    "unexpected_extra_file"
+  ],
   "recursive_snapshot_changed": 0,
   "recursive_snapshot_added": 0,
   "recursive_snapshot_removed": 0,
@@ -3281,11 +3443,6 @@
   "implementation_report_json_markdown_consistency": true,
   "transactional_report_publication": true,
   "transactional_report_publication_ready": true,
-  "audit_passed": true,
-  "publication_result": {
-    "json_path": "reports/part3b_et_policy_implementation.json",
-    "md_path": "reports/part3b_et_policy_implementation.md",
-    "json_sha256": "c2feb29e5edcaf7c83e5437beed1736ebe83a49a30e6204ab43254885aeefd5a",
-    "md_sha256": "0293fe44ae44c5969c41dc0f3ee367f19c341144c9813dde2a1b649a8d5593f5"
-  }
+  "stale_publication_hashes_present": false,
+  "audit_passed": true
 }

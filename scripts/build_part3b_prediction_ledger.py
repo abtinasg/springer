@@ -12685,6 +12685,66 @@ def _gd6_run_production_entry_point_positive_controls() -> Dict[str, Any]:
     }
 
 
+_GD6_FORCED_EXCEPTION_FIXTURE_PATHS = [
+    "reports/part3b_et_policy_implementation.json",
+    "results/part1_full_reproduction/canonical.csv",
+    "results/part3b_prediction_ledger/ledger.csv",
+]
+
+
+def _gd6_forced_exception_snapshot(
+    root: Path, fixture_paths: List[str]
+) -> Dict[str, Any]:
+    """Explicit snapshot of exact fixture path set for forced-exception test.
+
+    Records for each path: relative path, existence, SHA-256, path type.
+    """
+    entries: Dict[str, Dict[str, Any]] = {}
+    file_count = 0
+    for rel in sorted(fixture_paths):
+        path = root / rel
+        if path.is_file():
+            entries[rel] = {
+                "relative_path": rel,
+                "exists": True,
+                "sha256": sha256_file(path),
+                "path_type": "file",
+            }
+            file_count += 1
+        elif path.is_dir():
+            entries[rel] = {
+                "relative_path": rel,
+                "exists": True,
+                "sha256": None,
+                "path_type": "dir",
+            }
+        else:
+            entries[rel] = {
+                "relative_path": rel,
+                "exists": False,
+                "sha256": None,
+                "path_type": "nonexistent",
+            }
+    return {
+        "entries": entries,
+        "file_count": file_count,
+    }
+
+
+def _gd6_forced_exception_snapshot_equal(
+    before: Dict[str, Any], after: Dict[str, Any]
+) -> bool:
+    """Check exact equality of two forced-exception snapshots."""
+    before_entries = before.get("entries", {})
+    after_entries = after.get("entries", {})
+    if set(before_entries.keys()) != set(after_entries.keys()):
+        return False
+    for key in before_entries:
+        if before_entries[key] != after_entries[key]:
+            return False
+    return True
+
+
 _GD6_FORCED_EXCEPTION_RESTORATION_KEYS = [
     "sys_profile_restored",
     "builtins_open_restored",
@@ -12720,19 +12780,24 @@ def _gd6_run_forced_exception_restoration_test() -> Dict[str, Any]:
     Also captures exact object identity for all 20 patched objects before
     and after, and persists a restoration map.
     """
-    with tempfile.TemporaryDirectory(prefix="gd63_exc_") as temp_dir:
+    with tempfile.TemporaryDirectory(prefix="gd64_exc_") as temp_dir:
         synthetic_root = Path(temp_dir)
 
-        # Populate representative protected files
-        protected_files = {
-            "reports/part3b_et_reconciliation_policy.json": '{"frozen": true}\n',
-            "results/part3b_prediction_ledger/et_canonical_mismatch_matrix.csv": "col\nval\n",
-            "reports/part3b_et_policy_implementation.json": '{"stage": "test"}\n',
+        # Populate exactly the three required fixture files with deterministic content
+        fixture_files = {
+            "results/part1_full_reproduction/canonical.csv": "event_id,score\nsynth_001,0.5\n",
+            "results/part3b_prediction_ledger/ledger.csv": "event_id,prediction\nsynth_001,1\n",
+            "reports/part3b_et_policy_implementation.json": '{"stage":"test"}\n',
         }
-        for rel, content in protected_files.items():
+        for rel, content in fixture_files.items():
             p = synthetic_root / rel
             p.parent.mkdir(parents=True, exist_ok=True)
             p.write_text(content, encoding="utf-8")
+
+        # Capture explicit pre-exception snapshot of the exact fixture path set
+        fixture_pre_snapshot = _gd6_forced_exception_snapshot(
+            synthetic_root, _GD6_FORCED_EXCEPTION_FIXTURE_PATHS
+        )
 
         # Capture a full recursive pre-exception snapshot
         pre_snapshot = _gd6_recursive_snapshot(synthetic_root)
@@ -12773,6 +12838,11 @@ def _gd6_run_forced_exception_restoration_test() -> Dict[str, Any]:
 
         # Capture the post-exception recursive snapshot
         post_snapshot = _gd6_recursive_snapshot(synthetic_root)
+
+        # Capture explicit post-exception snapshot of the exact fixture path set
+        fixture_post_snapshot = _gd6_forced_exception_snapshot(
+            synthetic_root, _GD6_FORCED_EXCEPTION_FIXTURE_PATHS
+        )
 
         # Compare snapshots mechanically
         snapshot_diff = _gd6_count_recursive_changes(pre_snapshot, post_snapshot)
@@ -12828,6 +12898,49 @@ def _gd6_run_forced_exception_restoration_test() -> Dict[str, Any]:
 
         no_repository_file_changed = exact_snapshot_equality
 
+        # Validate exact fixture path set
+        observed_fixture_paths = sorted(fixture_pre_snapshot.get("entries", {}).keys())
+        expected_fixture_paths = sorted(_GD6_FORCED_EXCEPTION_FIXTURE_PATHS)
+        fixture_paths_exact = observed_fixture_paths == expected_fixture_paths
+        expected_fixture_file_count = len(_GD6_FORCED_EXCEPTION_FIXTURE_PATHS)
+        observed_fixture_file_count = fixture_pre_snapshot.get("file_count", 0)
+        fixture_file_count_match = observed_fixture_file_count == expected_fixture_file_count
+        all_fixtures_present_pre = all(
+            fixture_pre_snapshot.get("entries", {}).get(rel, {}).get("exists") is True
+            for rel in _GD6_FORCED_EXCEPTION_FIXTURE_PATHS
+        )
+        all_fixtures_present_post = all(
+            fixture_post_snapshot.get("entries", {}).get(rel, {}).get("exists") is True
+            for rel in _GD6_FORCED_EXCEPTION_FIXTURE_PATHS
+        )
+        fixture_exact_snapshot_equality = _gd6_forced_exception_snapshot_equal(
+            fixture_pre_snapshot, fixture_post_snapshot
+        )
+        fixture_no_file_added = (
+            fixture_post_snapshot.get("file_count", 0) == fixture_pre_snapshot.get("file_count", 0)
+        )
+        fixture_no_file_removed = all_fixtures_present_post
+        fixture_no_file_modified = fixture_exact_snapshot_equality
+        fixture_no_path_type_change = all(
+            fixture_pre_snapshot.get("entries", {}).get(rel, {}).get("path_type")
+            == fixture_post_snapshot.get("entries", {}).get(rel, {}).get("path_type")
+            for rel in _GD6_FORCED_EXCEPTION_FIXTURE_PATHS
+        )
+
+        fixture_paths_valid = (
+            fixture_paths_exact
+            and fixture_file_count_match
+            and all_fixtures_present_pre
+            and all_fixtures_present_post
+            and fixture_exact_snapshot_equality
+            and fixture_no_file_added
+            and fixture_no_file_removed
+            and fixture_no_file_modified
+            and fixture_no_path_type_change
+            and fixture_pre_snapshot.get("file_count", 0) == 3
+            and fixture_post_snapshot.get("file_count", 0) == 3
+        )
+
         passed = (
             raised
             and all_globals_restored
@@ -12836,6 +12949,7 @@ def _gd6_run_forced_exception_restoration_test() -> Dict[str, Any]:
             and restoration_keys_match
             and restoration_field_count == expected_restoration_field_count
             and counters_derived
+            and fixture_paths_valid
         )
 
     return {
@@ -12858,12 +12972,27 @@ def _gd6_run_forced_exception_restoration_test() -> Dict[str, Any]:
         "post_snapshot": post_snapshot,
         "snapshot_diff": snapshot_diff,
         "counters_derived": counters_derived,
+        "expected_fixture_paths": expected_fixture_paths,
+        "observed_fixture_paths": observed_fixture_paths,
+        "fixture_paths_exact": fixture_paths_exact,
+        "expected_fixture_file_count": expected_fixture_file_count,
+        "observed_fixture_file_count": observed_fixture_file_count,
+        "fixture_pre_snapshot": fixture_pre_snapshot,
+        "fixture_post_snapshot": fixture_post_snapshot,
+        "fixture_exact_snapshot_equality": fixture_exact_snapshot_equality,
+        "all_fixtures_present_pre": all_fixtures_present_pre,
+        "all_fixtures_present_post": all_fixtures_present_post,
+        "fixture_no_file_added": fixture_no_file_added,
+        "fixture_no_file_removed": fixture_no_file_removed,
+        "fixture_no_file_modified": fixture_no_file_modified,
+        "fixture_no_path_type_change": fixture_no_path_type_change,
+        "fixture_paths_valid": fixture_paths_valid,
         "passed": passed,
     }
 
 
 def run_et_reconciliation_policy_self_tests() -> Dict[str, Any]:
-    """Synthetic self-tests for frozen ET reconciliation policy (G.D6.3)."""
+    """Synthetic self-tests for frozen ET reconciliation policy (G.D6.4)."""
     policy = import_et_reconciliation_policy()
     root = repo_root()
     tracker = _Gd6RuntimeActivityTracker(root)

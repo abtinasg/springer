@@ -1,19 +1,19 @@
 # Part 3B ET Reconciliation Policy Implementation Report
 
-**Stage:** Part 3B.2R.1-G.D6.3
-**Starting commit:** `27d103b6fa14c6810d0e33a1141d4739e5f7e34b`
+**Stage:** Part 3B.2R.1-G.D6.4
+**Starting commit:** `0bca24f26c486514bb99071a2b78387a4a3286a0`
 
 ## Policy Specification
 
 - **Frozen policy path:** `reports/part3b_et_reconciliation_policy.json`
 - **Frozen policy SHA-256:** `6bc043b7c890256fd369eb8747f54dd9f2f1944b03b0dd1c70b5f6d85b8719f5`
 - **Frozen policy contract verified:** True
-- **Implementation module SHA-256:** `9e572121f4f1cad54f0811a1ff7cd96a921cb696f19eb4604eed0a4a3ad1c3ce`
+- **Implementation module SHA-256:** `231d316441e97166f51487c736d2846ed17244037cadee4e7e34b5013cab79a4`
 
 ## Production Validator
 
 - **Production validator SHA before:** `d269bb2eb9b6b4959c9bccb287314249b08da52ad895fa6285ec2af9b6abce49`
-- **Production validator SHA after:** `1fb18f08430c4401a7344c90d5e6be54848994935879c82c7e636951681d567e`
+- **Production validator SHA after:** `ccfa40fc43f743793ee005353638790e3be1d5fb4d8592a2c3d730f53fde070f`
 - **Production validator code changed:** True
 - **Production authorization remains false:** True
 
@@ -131,6 +131,17 @@
 - **Counters derived:** True
 - **Forced exception test passed:** True
 
+### Forced-Exception Fixture Path Evidence
+
+- **Fixture paths exact:** True
+- **Expected fixture paths:** ['reports/part3b_et_policy_implementation.json', 'results/part1_full_reproduction/canonical.csv', 'results/part3b_prediction_ledger/ledger.csv']
+- **Observed fixture paths:** ['reports/part3b_et_policy_implementation.json', 'results/part1_full_reproduction/canonical.csv', 'results/part3b_prediction_ledger/ledger.csv']
+- **Expected fixture file count:** 3
+- **Observed fixture file count:** 3
+- **Fixture exact snapshot equality:** True
+- **All fixtures present (pre):** True
+- **All fixtures present (post):** True
+
 ### Forced-Exception Restoration Map
 
 - **build_core_bundle_restored:** True
@@ -183,6 +194,7 @@
 - **Transactional report publication:** True
 - **Transactional report publication ready:** True
 - **Implementation report JSON/Markdown consistency:** True
+- **Stale publication hashes present:** False
 
 ## Transactional Rollback Tests
 
@@ -210,4 +222,21 @@
 - **modified_original_markdown:** verifier_rejected=True, passed=True
 - **deleted_original_file:** verifier_rejected=True, passed=True
 - **path_type_change:** verifier_rejected=True, passed=True
+
+### Rollback Mutation-Name Validation
+
+- **Mutation names exact:** True
+- **Mutations no duplicates:** True
+- **Mutations no missing:** True
+- **Mutations no unexpected:** True
+- **Mutation count:** 7
+- **Unique mutation count:** 7
+- **Expected mutation names:** ['deleted_original_file', 'extensionless_temp_leftover', 'modified_original_json', 'modified_original_markdown', 'path_type_change', 'pubbak_leftover', 'unexpected_extra_file']
+- **Observed mutation names:** ['deleted_original_file', 'extensionless_temp_leftover', 'modified_original_json', 'modified_original_markdown', 'path_type_change', 'pubbak_leftover', 'unexpected_extra_file']
+- **All mutations rejected:** True
+- **All mutations passed:** True
+
+## Audit Result
+
+- **Audit passed:** True
 

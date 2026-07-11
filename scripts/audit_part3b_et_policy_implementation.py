@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Part 3B.2R.1-G.D6.3: Audit frozen ET reconciliation policy implementation."""
+"""Part 3B.2R.1-G.D6.4: Audit frozen ET reconciliation policy implementation."""
 from __future__ import annotations
 
 import argparse
@@ -13,8 +13,8 @@ import tempfile
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
-STAGE = "Part 3B.2R.1-G.D6.3"
-STARTING_COMMIT = "27d103b6fa14c6810d0e33a1141d4739e5f7e34b"
+STAGE = "Part 3B.2R.1-G.D6.4"
+STARTING_COMMIT = "0bca24f26c486514bb99071a2b78387a4a3286a0"
 JSON_OUTPUT_PATH = "reports/part3b_et_policy_implementation.json"
 MD_OUTPUT_PATH = "reports/part3b_et_policy_implementation.md"
 FROZEN_POLICY_JSON_PATH = "reports/part3b_et_reconciliation_policy.json"
@@ -72,6 +72,22 @@ REQUIRED_PUBLIC_FUNCTIONS = [
     "evaluate_et_rank_metric_reconciliation_eligibility",
     "validate_dual_build_reconciliation_context",
     "classify_dual_build_mismatches",
+]
+
+REQUIRED_ROLLBACK_MUTATIONS = {
+    "extensionless_temp_leftover",
+    "pubbak_leftover",
+    "unexpected_extra_file",
+    "modified_original_json",
+    "modified_original_markdown",
+    "deleted_original_file",
+    "path_type_change",
+}
+
+EXPECTED_FORCED_EXCEPTION_FIXTURE_PATHS = [
+    "reports/part3b_et_policy_implementation.json",
+    "results/part1_full_reproduction/canonical.csv",
+    "results/part3b_prediction_ledger/ledger.csv",
 ]
 
 
@@ -247,6 +263,17 @@ def render_markdown(report: Dict[str, Any]) -> str:
             f"- **Counters derived:** {report.get('forced_exception_restoration', {}).get('counters_derived')}",
             f"- **Forced exception test passed:** {report.get('forced_exception_restoration', {}).get('passed')}",
             "",
+            "### Forced-Exception Fixture Path Evidence",
+            "",
+            f"- **Fixture paths exact:** {report.get('forced_exception_fixture_paths_exact')}",
+            f"- **Expected fixture paths:** {report.get('forced_exception_expected_fixture_paths')}",
+            f"- **Observed fixture paths:** {report.get('forced_exception_observed_fixture_paths')}",
+            f"- **Expected fixture file count:** {report.get('forced_exception_expected_file_count')}",
+            f"- **Observed fixture file count:** {report.get('forced_exception_observed_file_count')}",
+            f"- **Fixture exact snapshot equality:** {report.get('forced_exception_fixture_exact_snapshot_equality')}",
+            f"- **All fixtures present (pre):** {report.get('forced_exception_all_fixtures_present_pre')}",
+            f"- **All fixtures present (post):** {report.get('forced_exception_all_fixtures_present_post')}",
+            "",
             "### Forced-Exception Restoration Map",
             "",
         ]
@@ -286,6 +313,7 @@ def render_markdown(report: Dict[str, Any]) -> str:
             f"- **Transactional report publication:** {report['transactional_report_publication']}",
             f"- **Transactional report publication ready:** {report.get('transactional_report_publication_ready')}",
             f"- **Implementation report JSON/Markdown consistency:** {report['implementation_report_json_markdown_consistency']}",
+            f"- **Stale publication hashes present:** {report.get('stale_publication_hashes_present')}",
             "",
             "## Transactional Rollback Tests",
             "",
@@ -310,6 +338,27 @@ def render_markdown(report: Dict[str, Any]) -> str:
     )
     for mut in report.get('transactional_rollback_tests', {}).get('rollback_verifier_mutations', []):
         lines.append(f"- **{mut.get('mutation_name')}:** verifier_rejected={mut.get('verifier_rejected')}, passed={mut.get('passed')}")
+    lines.extend(
+        [
+            "",
+            "### Rollback Mutation-Name Validation",
+            "",
+            f"- **Mutation names exact:** {report.get('rollback_mutation_names_exact')}",
+            f"- **Mutations no duplicates:** {report.get('rollback_mutations_no_duplicates')}",
+            f"- **Mutations no missing:** {report.get('rollback_mutations_no_missing')}",
+            f"- **Mutations no unexpected:** {report.get('rollback_mutations_no_unexpected')}",
+            f"- **Mutation count:** {report.get('rollback_mutations_count')}",
+            f"- **Unique mutation count:** {report.get('rollback_unique_mutation_count')}",
+            f"- **Expected mutation names:** {report.get('rollback_expected_mutation_names')}",
+            f"- **Observed mutation names:** {report.get('rollback_observed_mutation_names')}",
+            f"- **All mutations rejected:** {report.get('rollback_all_mutations_rejected')}",
+            f"- **All mutations passed:** {report.get('rollback_all_mutations_passed')}",
+            "",
+            "## Audit Result",
+            "",
+            f"- **Audit passed:** {report.get('audit_passed')}",
+        ]
+    )
     lines.append("")
     return "\n".join(lines) + "\n"
 
@@ -769,15 +818,15 @@ def run_transactional_rollback_tests() -> Dict[str, Any]:
         json_path = base / "temp_files_cleaned.json"
         md_path = base / "temp_files_cleaned.md"
         temp_cleaned = False
+        pre_state_temp = _capture_pre_publication_state(json_path, md_path)
         try:
             publish_outputs_transactionally(
                 sample_report, json_path, md_path,
                 inject_failure="before_any_replacement",
             )
         except RuntimeError:
-            pre_state = _capture_pre_publication_state(json_path, md_path)
             temp_files, backup_files, unexpected_files = _detect_temp_and_unexpected(
-                json_path.parent, pre_state, json_path, md_path
+                json_path.parent, pre_state_temp, json_path, md_path
             )
             temp_cleaned = len(temp_files) == 0 and len(backup_files) == 0 and len(unexpected_files) == 0
         _record("temp_files_cleaned_after_rollback", temp_cleaned)
@@ -1153,6 +1202,24 @@ def run_audit() -> Dict[str, Any]:
     rollback_all_mutations_rejected = all(m.get("verifier_rejected") for m in rollback_mutations)
     rollback_all_mutations_passed = all(m.get("passed") for m in rollback_mutations)
 
+    observed_mutation_names = {m.get("mutation_name") for m in rollback_mutations}
+    rollback_mutation_names_exact = observed_mutation_names == REQUIRED_ROLLBACK_MUTATIONS
+    rollback_mutations_no_duplicates = len(observed_mutation_names) == len(rollback_mutations)
+    rollback_mutations_no_missing = len(REQUIRED_ROLLBACK_MUTATIONS - observed_mutation_names) == 0
+    rollback_mutations_no_unexpected = len(observed_mutation_names - REQUIRED_ROLLBACK_MUTATIONS) == 0
+    rollback_unique_mutation_count = len(observed_mutation_names)
+
+    forced_exception_fixture_paths_exact = forced_exception_restoration.get("fixture_paths_exact") is True
+    forced_exception_expected_fixture_paths = forced_exception_restoration.get("expected_fixture_paths", [])
+    forced_exception_observed_fixture_paths = forced_exception_restoration.get("observed_fixture_paths", [])
+    forced_exception_expected_file_count = forced_exception_restoration.get("expected_fixture_file_count", 0)
+    forced_exception_observed_file_count = forced_exception_restoration.get("observed_fixture_file_count", 0)
+    forced_exception_fixture_exact_snapshot_equality = forced_exception_restoration.get("fixture_exact_snapshot_equality") is True
+    forced_exception_all_fixtures_present_pre = forced_exception_restoration.get("all_fixtures_present_pre") is True
+    forced_exception_all_fixtures_present_post = forced_exception_restoration.get("all_fixtures_present_post") is True
+    forced_exception_fixture_pre_snapshot = forced_exception_restoration.get("fixture_pre_snapshot", {})
+    forced_exception_fixture_post_snapshot = forced_exception_restoration.get("fixture_post_snapshot", {})
+
     recursive_snapshot_changed = synthetic_summary.get("recursive_snapshot_changed", -1)
     recursive_snapshot_added = synthetic_summary.get("protected_files_added", 0)
     recursive_snapshot_removed = synthetic_summary.get("protected_files_removed", 0)
@@ -1289,6 +1356,16 @@ def run_audit() -> Dict[str, Any]:
         "forced_exception_files_removed": forced_exception_files_removed,
         "forced_exception_files_modified": forced_exception_files_modified,
         "forced_exception_path_type_changes": forced_exception_path_type_changes,
+        "forced_exception_fixture_paths_exact": forced_exception_fixture_paths_exact,
+        "forced_exception_expected_fixture_paths": forced_exception_expected_fixture_paths,
+        "forced_exception_observed_fixture_paths": forced_exception_observed_fixture_paths,
+        "forced_exception_expected_file_count": forced_exception_expected_file_count,
+        "forced_exception_observed_file_count": forced_exception_observed_file_count,
+        "forced_exception_fixture_exact_snapshot_equality": forced_exception_fixture_exact_snapshot_equality,
+        "forced_exception_all_fixtures_present_pre": forced_exception_all_fixtures_present_pre,
+        "forced_exception_all_fixtures_present_post": forced_exception_all_fixtures_present_post,
+        "forced_exception_fixture_pre_snapshot": forced_exception_fixture_pre_snapshot,
+        "forced_exception_fixture_post_snapshot": forced_exception_fixture_post_snapshot,
         "rollback_scenarios_count": rollback_scenarios_count,
         "rollback_all_scenarios_passed": rollback_all_scenarios_passed,
         "rollback_all_scenarios_final_state_restored": rollback_all_scenarios_final_state_restored,
@@ -1305,8 +1382,15 @@ def run_audit() -> Dict[str, Any]:
         "rollback_scenarios_all_hashes_restored": rollback_scenarios_all_hashes_restored,
         "rollback_scenarios_all_path_types_restored": rollback_scenarios_all_path_types_restored,
         "rollback_mutations_count": rollback_mutations_count,
+        "rollback_unique_mutation_count": rollback_unique_mutation_count,
+        "rollback_mutation_names_exact": rollback_mutation_names_exact,
+        "rollback_mutations_no_duplicates": rollback_mutations_no_duplicates,
+        "rollback_mutations_no_missing": rollback_mutations_no_missing,
+        "rollback_mutations_no_unexpected": rollback_mutations_no_unexpected,
         "rollback_all_mutations_rejected": rollback_all_mutations_rejected,
         "rollback_all_mutations_passed": rollback_all_mutations_passed,
+        "rollback_observed_mutation_names": sorted(observed_mutation_names),
+        "rollback_expected_mutation_names": sorted(REQUIRED_ROLLBACK_MUTATIONS),
         "recursive_snapshot_changed": recursive_snapshot_changed,
         "recursive_snapshot_added": recursive_snapshot_added,
         "recursive_snapshot_removed": recursive_snapshot_removed,
@@ -1338,7 +1422,8 @@ def run_audit() -> Dict[str, Any]:
         "part3c_authorized": False,
         "implementation_report_json_markdown_consistency": True,
         "transactional_report_publication": False,
-        "transactional_report_publication_ready": rollback_summary.get("all_passed") is True,
+        "transactional_report_publication_ready": False,
+        "stale_publication_hashes_present": False,
     }
 
     audit_passed = (
@@ -1399,8 +1484,19 @@ def run_audit() -> Dict[str, Any]:
         and rollback_scenarios_all_hashes_restored
         and rollback_scenarios_all_path_types_restored
         and rollback_mutations_count == 7
+        and rollback_unique_mutation_count == 7
+        and rollback_mutation_names_exact
+        and rollback_mutations_no_duplicates
+        and rollback_mutations_no_missing
+        and rollback_mutations_no_unexpected
         and rollback_all_mutations_rejected
         and rollback_all_mutations_passed
+        and forced_exception_fixture_paths_exact
+        and forced_exception_expected_file_count == 3
+        and forced_exception_observed_file_count == 3
+        and forced_exception_fixture_exact_snapshot_equality
+        and forced_exception_all_fixtures_present_pre
+        and forced_exception_all_fixtures_present_post
         and executable_checks["missing_dual_build_context_rejected"]
         and executable_checks["dual_build_evidence_required"]
         and executable_checks["single_build_final_approval_prohibited"]
@@ -1414,26 +1510,37 @@ def run_audit() -> Dict[str, Any]:
         and _test_detail_passed(synthetic_summary, "dual_build_missing_et_delta_classification_no_final_approval")
         and _test_detail_passed(synthetic_summary, "validator_single_build_pending_no_final_approval")
     )
+
+    report["transactional_report_publication_ready"] = audit_passed
     report["audit_passed"] = audit_passed
 
     if audit_passed:
-        publication = publish_outputs_transactionally(
-            report,
-            root / JSON_OUTPUT_PATH,
-            root / MD_OUTPUT_PATH,
-        )
         report["transactional_report_publication"] = True
-        report["publication_result"] = publication
-        final_json = json.loads((root / JSON_OUTPUT_PATH).read_text(encoding="utf-8"))
-        final_md = (root / MD_OUTPUT_PATH).read_text(encoding="utf-8")
-        report["implementation_report_json_markdown_consistency"] = (
-            render_markdown(final_json) == final_md
-        )
+        report["implementation_report_json_markdown_consistency"] = True
+        report["stale_publication_hashes_present"] = False
         publish_outputs_transactionally(
             report,
             root / JSON_OUTPUT_PATH,
             root / MD_OUTPUT_PATH,
         )
+        final_json = json.loads((root / JSON_OUTPUT_PATH).read_text(encoding="utf-8"))
+        final_md = (root / MD_OUTPUT_PATH).read_text(encoding="utf-8")
+        json_md_consistent = render_markdown(final_json) == final_md
+        if not json_md_consistent:
+            audit_passed = False
+            report["audit_passed"] = audit_passed
+            report["implementation_report_json_markdown_consistency"] = False
+            report["transactional_report_publication"] = False
+            publish_outputs_transactionally(
+                report,
+                root / JSON_OUTPUT_PATH,
+                root / MD_OUTPUT_PATH,
+            )
+        else:
+            final_json_sha = sha256_file(root / JSON_OUTPUT_PATH)
+            final_md_sha = sha256_file(root / MD_OUTPUT_PATH)
+            print(f"Final JSON SHA-256: {final_json_sha}")
+            print(f"Final Markdown SHA-256: {final_md_sha}")
 
     return report
 
